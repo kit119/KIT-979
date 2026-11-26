@@ -23,7 +23,7 @@ Currently in **Early Development**—establishing repository structure, data sch
 3. Create a clean parallel reading interface starting with **Thai** and **English**
 4. Expand regional and international languages and open clear contribution workflows for developers, Pāḷi scholars, and translators
 
-==================================================================
+====================
 
 # KIT-979 (ก้าวเจ็ดก้าว)
 
