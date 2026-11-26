@@ -1,0 +1,3161 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e0907n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Sarabun"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">บาลี | แปล</button><button type="button" data-mode="view-stack">บาลี — แปล</button><button type="button" data-mode="view-pali-only">เฉพาะบาลี</button><button type="button" data-mode="view-trans-only">เฉพาะแปล</button><button type="button" id="toggle-meta-btn">เชิงอรรถ</button></div>
+<div class="pair-row" data-id="e0907n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre"> นโม ตสฺส ภควโต อรหโต สมฺมาสมฺพุทฺธสฺส</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ขอนอบน้อมแด่พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้าพระองค์นั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="chapter">อฏฺฐกถา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">อรรถกถา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="subhead">สํคายนสฺส ปุจฺฉา-วิสฺสชฺชนา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">การถามตอบในการสังคายนา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สเทวโกปิ <span class="pb hidden-meta" data-ed="M" data-n="1.0025">[M 1.0025]</span> เจ โลโก, อาคนฺตวา ตาสเยยฺย มํ;</p>
+<p rend="gathalast">น เม ปฏิพโล อสฺส, ชเนตุํ ภยเภรวํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">แม้โลกพร้อมทั้งเทวดา มาคุกคามเรา ก็ไม่สามารถทำให้เราเกิดความกลัวและความหวาดสะดุ้งได้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สเจปิ ตฺวํ มหิํ สพฺพํ, สสมุทฺทํ สปพฺพตํ;</p>
+<p rend="gatha2">อุกฺขิปิตฺวา มหานาค, ขิเปยฺยาสิ มมูปริ;</p>
+<p rend="gatha3">เนว เม สกฺกุเณยฺยาสิ, ชเนตุํ ภยเภรวํ;</p>
+<p rend="gathalast">อญฺญทตฺถุ ตเววสฺส, วิฆาโต อุรคาธิป.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ดูก่อนพญานาค แม้ท่านจะยกแผ่นดินทั้งหมดพร้อมด้วยมหาสมุทรและภูเขาขึ้น แล้วเหวี่ยงลงบนเรา ท่านก็ไม่สามารถทำให้เราเกิดความกลัวและความหวาดสะดุ้งได้ ที่แท้ความพินาศจะพึงมีแก่ท่านเท่านั้น ดูก่อนพญางู</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1">มา <span class="pb hidden-meta" data-ed="M" data-n="1.0026">[M 1.0026]</span> ทานิ โกธํ ชนยิตฺถ, อิโต อุทฺธํ ยถา ปุเร;</p>
+<p rend="gatha2">สสฺสฆาตญฺจ มากตฺถ, สุขกามา หิ ปาณิโน;</p>
+<p rend="gathalast">กโรถ เมตฺตํ สตฺเตสุ, วสนฺตุ มนุชา สุขํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">บัดนี้ ท่านทั้งหลายอย่าได้ยังความโกรธให้เกิดขึ้นอีกต่อไปเหมือนแต่ก่อน อย่าทำลายพืชพรรณ เพราะสัตว์ทั้งหลายย่อมปรารถนาความสุข จงทำเมตตาในสัตว์ทั้งหลาย ขอให้มนุษย์ทั้งหลายจงอยู่เป็นสุขเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="bodytext">จตฺตาโร <span class="pb hidden-meta" data-ed="M" data-n="1.0030">[M 1.0030]</span> อาสีวิสา อุคฺคเตชา โฆรวิสาติ โข ภิกฺขเว จตุนฺเนตํ มหาภูตานํ อธิวจนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุทั้งหลาย อสรพิษ ๔ ตัว มีพิษร้ายแรง มีพิษน่ากลัว นี้เป็นชื่อของมหาภูตรูป ๔</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปญฺจ <span class="pb hidden-meta" data-ed="M" data-n="1.0033">[M 1.0033]</span> วธกา ปจฺจตฺถิกาติ โข ภิกฺขเว ปญฺจนฺเนตํ อุปาทานกฺขนฺธานํ อธิวจนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุทั้งหลาย เพชฌฆาตผู้เป็นข้าศึก ๕ คน นี้เป็นชื่อของอุปาทานขันธ์ ๕</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ฉฏฺโฐ <span class="pb hidden-meta" data-ed="M" data-n="1.0035">[M 1.0035]</span> อนฺตรจโร วธโก อุกฺขิตฺตาสิโกติ โข ภิกฺขเว นนฺทีราคสฺเสตํ อธิวจนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุทั้งหลาย เพชฌฆาตผู้เที่ยวไปในระหว่างคนที่ ๖ ผู้เงื้อดาบ นี้เป็นชื่อของนันทิราคะ (ความกำหนัดด้วยอำนาจความเพลิน)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สุญฺโญ <span class="pb hidden-meta" data-ed="M" data-n="1.0036">[M 1.0036]</span> คาโมติ โข ภิกฺขเว ฉนฺเนตํ อชฺฌตฺติกานํ อายตนานํ อธิวจนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุทั้งหลาย หมู่บ้านว่างเปล่า นี้เป็นชื่อของอายตนะภายใน ๖</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="bodytext">โจรา <span class="pb hidden-meta" data-ed="M" data-n="1.0038">[M 1.0038]</span> คามฆาตกาติ โข ภิกฺขเว ฉนฺเนตํ พาหิรานํ อายตนานํ อธิวจนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุทั้งหลาย โจรผู้ปล้นหมู่บ้าน นี้เป็นชื่อของอายตนะภายนอก ๖</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มหาอุทกณฺณโว <span class="pb hidden-meta" data-ed="M" data-n="1.0041">[M 1.0041]</span> โข ภิกฺขเว จตุนฺเนตํ โอฆานํ อธิวจนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุทั้งหลาย ห้วงน้ำใหญ่ นี้เป็นชื่อของโอฆะ ๔</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="bodytext">โอริมํ <span class="pb hidden-meta" data-ed="M" data-n="1.0042">[M 1.0042]</span> ตีรํ สาสงฺกํ สปฺปฏิภยนฺติ โข ภิกฺขเว สกฺกายสฺเสตํ อธิวจนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุทั้งหลาย ฝั่งข้างนี้ที่น่าหวาดเสียว น่าสะพรึงกลัว นี้เป็นชื่อของสักกายะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปาริมํ <span class="pb hidden-meta" data-ed="M" data-n="1.0044">[M 1.0044]</span> ตีรํ เขมํ อปฺปฏิภยนฺติ โข ภิกฺขเว นิพฺพานสฺเสตํ อธิวจนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุทั้งหลาย ฝั่งข้างโน้นที่เกษม ไม่มีภัย นี้เป็นชื่อของนิพพาน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="bodytext">วีริยารมฺภสฺเสตํ <span class="pb hidden-meta" data-ed="M" data-n="1.0045">[M 1.0045]</span> อธิวจนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">นี้เป็นชื่อของการปรารภความเพียร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="gatha1">คนฺตวา <span class="pb hidden-meta" data-ed="M" data-n="1.0046">[M 1.0046]</span> กสฺมีรคนฺธารํ, อิสิ มชฺฌนฺติกา ตทา;</p>
+<p rend="gathalast">ทุฏฺฐํ นาคํ ปสาเทตฺวา, โมเจสิ พนฺธนา พหู.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ครั้งนั้น พระมัชฌันติกฤๅษี ไปยังแคว้นกัศมีระและคันธาระ ยังพญานาคผู้ดุร้ายให้เลื่อมใสแล้ว ปลดปล่อยสัตว์เป็นอันมากจากเครื่องผูก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปุนปิ <span class="pb hidden-meta" data-ed="M" data-n="1.0056">[M 1.0056]</span> ภนฺเต ทกฺเขมุ สงฺคติ เจ ภวิสฺสติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่ท่านผู้เจริญ ถ้ามีการประชุมกันอีก เราจักได้เห็นท่านอีก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อชฺชาปิ <span class="pb hidden-meta" data-ed="M" data-n="1.0063">[M 1.0063]</span> สนฺตานมยํ, มาลํ คนฺเถนฺติ นนฺทเน;</p>
+<p rend="gathalast">เทวปุตฺโต ชโว นาม, โย เม มาลํ ปฏิจฺฉติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">แม้ในวันนี้ เทพบุตรชื่อชวะ ผู้รับพวงมาลัยของเรา ย่อมร้อยพวงมาลัยอันเป็นทิพย์อยู่ในสวนนันทวัน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="gatha1">มุหุตฺโตวิย <span class="pb hidden-meta" data-ed="M" data-n="1.0064">[M 1.0064]</span> โส ทิพฺโพ, อิธ วสฺสานิ โสฬส;</p>
+<p rend="gathalast">รตฺตินฺทิโว จ โส ทิพฺโพ, มานุสิํ สรโท สตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กาลเพียงชั่วขณะหนึ่งในสวรรค์นั้น เท่ากับ ๑๖ ปีในโลกมนุษย์ และราตรีหนึ่งกับวันหนึ่งในสวรรค์นั้น เท่ากับ ๑๐๐ ปีในโลกมนุษย์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อิติ กมฺมานิ อนฺเวนฺติ, อสงฺเขยฺยาปิ ชาติโย;</p>
+<p rend="gathalast">กลฺยาณํ ยทิ วา ปาปํ, น หิ กมฺมํ วินสฺสติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กรรมทั้งหลายย่อมติดตามไปอย่างนี้ แม้ตลอดภพชาติอันนับไม่ถ้วน กรรมดีหรือกรรมชั่ว ย่อมไม่สูญหายไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1">โย <span class="pb hidden-meta" data-ed="M" data-n="1.0065">[M 1.0065]</span> อิจฺเฉ ปุริโส โหตุํ, ชาติ ชาติ ปุนปฺปุนํ;</p>
+<p rend="gathalast">ปรทารํ วิวชฺเชยฺย, โธตปาโทว กทฺทมํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ชายใดปรารถนาจะเป็นชายในภพชาติใหม่ซ้ำๆ อีก พึงเว้นภรรยาของผู้อื่น เหมือนคนล้างเท้าแล้วเว้นโคลน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ยา <span class="pb hidden-meta" data-ed="M" data-n="1.0066">[M 1.0066]</span> อิจฺเฉ ปุริโส โหตุํ, ชาติ ชาติ ปุนปฺปุนํ;</p>
+<p rend="gathalast">สามิกํ อปจาเยยฺย, อินฺทํว ปริจาริกา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หญิงใดปรารถนาจะเป็นชายในภพชาติใหม่ซ้ำๆ อีก พึงเคารพสามี เหมือนนางบำเรอเคารพพระอินทร์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="gatha1">โย <span class="pb hidden-meta" data-ed="M" data-n="1.0067">[M 1.0067]</span> อิจฺเฉ ทิพฺพโภคญฺจ, ทิพฺพมายุํ ยสํ สุขํ;</p>
+<p rend="gathalast">ปาปานิ ปริวชฺเชตฺวา, ติวิธํ ธมฺมมาจเร.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้ใดปรารถนาโภคะอันเป็นทิพย์ อายุอันเป็นทิพย์ ยศ และความสุข พึงละเว้นบาปทั้งหลาย แล้วประพฤติธรรม ๓ ประการ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยํ <span class="pb hidden-meta" data-ed="M" data-n="1.0073">[M 1.0073]</span> ภิกฺขเว สเทวกสฺส โลกสฺส สมารกสฺส สพฺรหฺมกสฺส สสฺสมณพฺราหฺมณิยา ปชาย สเทวมนุสฺสาย ทิฏฺฐํ สุตํ มุตํ วิญฺญาตํ ปตฺตํ ปริเยสิตํ อนุวิจริตํ มนสา, ตมหํ ชานามิ ตมหํ อภิญฺญาสิํ, ตํ ตถาคตสฺส วิทิตํ, ตํ ตถาคโต น อุปฏฺฐาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุทั้งหลาย สิ่งใดที่โลกพร้อมทั้งเทวดา มาร พรหม หมู่สัตว์พร้อมทั้งสมณพราหมณ์ เทวดาและมนุษย์ ได้เห็น ได้ยิน ได้ทราบ ได้รู้แจ้ง ได้บรรลุ ได้แสวงหา ได้ใคร่ครวญด้วยใจ สิ่งนั้นเราย่อมรู้ สิ่งนั้นเราย่อมรู้ยิ่ง สิ่งนั้นเป็นที่รู้ของตถาคต สิ่งนั้นตถาคตไม่ยึดมั่น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิติ <span class="pb hidden-meta" data-ed="M" data-n="1.0074">[M 1.0074]</span> โข ภิกฺขเว ตถาคโต ทิฏฺฐสุตมุตวิญฺญาตพฺเพสุ ธมฺเมสุ ตาทีเยว ตาที, ตุมฺหา จ ปน ตาทิมฺหา อญฺโญ ตาที อุตฺตริตโร วา ปณีตตโร วา นตฺถีติ วทามิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุทั้งหลาย ตถาคตเป็นผู้คงที่ในธรรมที่พึงเห็น พึงได้ยิน พึงทราบ พึงรู้แจ้ง อย่างนี้แล และเรากล่าวว่า นอกจากตถาคตผู้คงที่นี้แล้ว ไม่มีผู้คงที่อื่นที่ยิ่งกว่าหรือประณีตกว่า</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สุวณฺณภูมิํ <span class="pb hidden-meta" data-ed="M" data-n="1.0081">[M 1.0081]</span> คนฺตวาน, โสณุตฺตรา มหิทฺธิกา;</p>
+<p rend="gathalast">ปิสาเจ นิทฺธเมตฺวาน, พฺรหฺมชาลมเทสิสุํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พระโสณะและพระอุตตระผู้มีฤทธิ์มาก ไปยังสุวรรณภูมิ ขับไล่พวกปีศาจแล้ว แสดงพรหมชาลสูตร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สมณา <span class="pb hidden-meta" data-ed="M" data-n="1.0086">[M 1.0086]</span> มยํ มหาราช, ธมฺมราชสฺส สาวกา;</p>
+<p rend="gathalast">ตเวว อนุกมฺปาย, ชมฺพุทีปา อิธาคตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่มหาราช พวกข้าพระองค์เป็นสมณะ เป็นสาวกของพระธรรมราชา มาที่นี่จากชมพูทวีป ด้วยความอนุเคราะห์พระองค์เท่านั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อหํ พุทฺธญฺจ ธมฺมญฺจ, สงฺฆญฺจ สรณํ คโต,</p>
+<p rend="gathalast">อุปาสกตฺตํ เทเสสิํ, สกฺยปุตฺตสฺส สาสเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าถึงพระพุทธเจ้า พระธรรม และพระสงฆ์ว่าเป็นสรณะแล้ว ได้แสดงความเป็นอุบาสกในพระศาสนาของพระศากยบุตร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เตน <span class="pb hidden-meta" data-ed="M" data-n="1.0092">[M 1.0092]</span> สมเยน พุทฺโธ ภควา เวรญฺชายํ วิหรติ นเฬรุปุจิ มนฺทมูเล.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">สมัยนั้น พระผู้มีพระภาคพุทธเจ้าประทับอยู่ที่โคนต้นสะเดาชื่อนเฬรุ ในเมืองเวรัญชา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สคฺคาโรหณโสปาณํ<span class="pb hidden-meta" data-ed="M" data-n="1.0125">[M 1.0125]</span>, อญฺญํ สีลสมํ กุโต;</p>
+<p rend="gathalast">ทฺวารํ วา ปน นิพฺพาน, นครสฺส ปเวสเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">บันไดสำหรับขึ้นสู่สวรรค์อื่นที่เสมอด้วยศีลจะพึงมีแต่ที่ไหน หรือประตูสำหรับเข้าไปยังพระนิพพานนครเล่า</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อลเมว <span class="pb hidden-meta" data-ed="M" data-n="1.0133">[M 1.0133]</span> กาตุํ กลฺยาณํ, ทานํ ทาตุํ ยถารหํ;</p>
+<p rend="gathalast">ปาณิํ กามททํ ทิสฺวา, โก ปุญฺญํ นกริสฺสติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เป็นการสมควรแท้ที่จะทำความดี จะให้ทานตามสมควร; เมื่อเห็นมือที่ให้สิ่งที่น่าปรารถนาแล้ว ใครเล่าจะไม่ทำบุญ?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ทสฺสามนฺนญฺจ <span class="pb hidden-meta" data-ed="M" data-n="1.0134">[M 1.0134]</span> ปานญฺจ, วตฺถเสนาสนานิ จ;</p>
+<p rend="gathalast">ปปญฺจ อุทปานญฺจ, ทุคฺเค สงฺกมนานิ จ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เราจักถวายทั้งข้าวและน้ำ ทั้งผ้าและเสนาสนะ; ทั้งโรงทานน้ำและบ่อน้ำ และสะพานในที่กันดารด้วย.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="gatha1">มหาอฏฺฐกถญฺเจว<span class="pb hidden-meta" data-ed="M" data-n="1.0147">[M 1.0147]</span>, มหาปจฺจริเมวจ;</p>
+<p rend="gatha2">กุรุนฺทิญฺจาติ ติสฺโสปิ, สีหฬฏฺฐกถา อิมา;</p>
+<p rend="gatha3">พุทฺธมิตฺโตติ นาเมน, วิสุตสฺส ยสสฺสิโน;</p>
+<p rend="gathalast">วินยญฺญุสฺส ธีรสฺส, สุตฺวา เถรสฺส สนฺติเก.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">มหาอรรถกถา มหาปัจจรี และกุรุนที ทั้งสามนี้ เป็นอรรถกถาสิงหล; ข้าพเจ้าได้ฟังมาจากสำนักของพระเถระผู้มีชื่อเสียงโด่งดังนามว่า พุทธมิตร ผู้เป็นปราชญ์และทรงพระวินัย.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อุปทฺทวากุเล <span class="pb hidden-meta" data-ed="M" data-n="1.0149">[M 1.0149]</span> โลเก, นิรุปทฺทวโต อยํ;</p>
+<p rend="gatha2">เอกสํวจฺฉเรเนว, ยถา นิฏฺฐํ อุปาคตา;</p>
+<p rend="gatha3">เอวํ สพฺพสฺส โลกสฺส, นิฏฺฐํ ธมฺมูปสํหิตา;</p>
+<p rend="gathalast">สีฆํ คจฺฉนฺตุ อารมฺภา, สพฺเพปิ นิรุปทฺทวา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในโลกที่เกลื่อนกล่นด้วยอุปัทวะนี้ อรรถกถานี้สำเร็จลงได้โดยปราศจากอุปัทวะภายในปีเดียวเท่านั้น; ขอความริเริ่มทั้งปวงของชาวโลกทั้งสิ้นที่ประกอบด้วยธรรม จงถึงความสำเร็จโดยเร็วพลัน ปราศจากอุปัทวะทั้งปวงเถิด.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="gatha1">จิรฏฺฐิตตฺถํ <span class="pb hidden-meta" data-ed="M" data-n="1.0151">[M 1.0151]</span> ธมฺมสฺส, กโรนฺเตน มยา อิมํ;</p>
+<p rend="gatha2">สทฺธมฺมพหุมาเนน, ยญฺจ ปุญฺญํ สมาจิตํ;</p>
+<p rend="gatha3">สพฺพสฺส อานุภาเวน, ตสฺส สพฺเพปิ ปาณิโน;</p>
+<p rend="gathalast">ภวนฺตุ ธมฺมราชสฺส, สทฺธมฺมรสเสวิโน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">บุญใดที่ข้าพเจ้าผู้ทำอรรถกถานี้เพื่อความดำรงมั่นแห่งพระธรรม ได้สั่งสมไว้ด้วยความเคารพอย่างยิ่งในพระสัทธรรม; ด้วยอานุภาพแห่งบุญนั้นทั้งหมด ขอสัตว์ทั้งปวงจงเป็นผู้ดื่มรสแห่งพระสัทธรรมของพระธรรมราชาเถิด.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1">จิรํ <span class="pb hidden-meta" data-ed="M" data-n="1.0152">[M 1.0152]</span> ติฏฺฐตุ สทฺธมฺโม, กาเล วสฺสํ จิรํ ปชํ;</p>
+<p rend="gathalast">ตปฺเปตุ เทโว ธมฺเมน, ราชา รกฺขตุ เมทินิํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ขอพระสัทธรรมจงดำรงอยู่ตลอดกาลนาน ขอฝนจงตกตามกาล ขอเทวดาจงยังหมู่สัตว์ให้เอิบอิ่มโดยชอบ ขอพระราชาจงรักษาแผ่นดิน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ตาว ติฏฺฐตุ โลกสฺมิํ, โลกนิตฺถรเณสินํ;</p>
+<p rend="gatha2">ทสฺเสนฺตี กุลปุตฺตานํ, นยํ สีลวิสุทฺธิยา;</p>
+<p rend="gatha3">ยาว พุทฺโธติ นามมฺปิ, สุทฺธจิตฺตสฺส ตาทิโน;</p>
+<p rend="gathalast">โลกมฺหิ โลกเชฏฺฐสฺส, ปวตฺตติ มเหสิโน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อรรถกถานี้จงดำรงอยู่ในโลกเพื่อแสดงแนวทางแห่งศีลวิสุทธิแก่กุลบุตรผู้แสวงหาทางข้ามพ้นโลก ตราบเท่าที่พระนามว่า 'พุทธะ' ของพระมหามุนีผู้เป็นเชษฐ์ของโลก ผู้มีพระทัยบริสุทธิ์ ผู้คงที่ ยังดำเนินไปอยู่ในโลก.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1">กรุณาสีตลหทยํ<span class="pb hidden-meta" data-ed="M" data-n="1.0155">[M 1.0155]</span>, ปญฺญาปชฺโชตวิหตโมหตมํ;</p>
+<p rend="gathalast">สนรามรโลกครุํ, วนฺเท สุคตํ คติวิมุตฺตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนมัสการพระสุคตผู้พ้นแล้วจากคติ ผู้มีพระหทัยเย็นด้วยพระกรุณา ผู้ทรงกำจัดมืดคือโมหะด้วยประทีปคือปัญญา ผู้เป็นครูของโลกพร้อมทั้งเทวดาและมนุษย์.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="gatha1">พุทฺโธปิ <span class="pb hidden-meta" data-ed="M" data-n="1.0157">[M 1.0157]</span> พุทฺธภาวํ, ภาเวตฺวา เจว สจฺฉิกตฺวาจ;</p>
+<p rend="gathalast">ยํ อุปคโต คตมลํ, วนฺเท ตมนุตฺตรํ ธมฺมํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนมัสการพระธรรมอันยอดเยี่ยมนั้น ที่ปราศจากมลทิน ซึ่งแม้พระพุทธเจ้าทรงเจริญพุทธภาวะและทรงทำให้แจ้งแล้วจึงได้บรรลุ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สุคตสฺส โอรสานํ, ปุตฺตานํ มารเสนมถนานํ;</p>
+<p rend="gathalast">อฏฺฐนฺนมฺปิ สมูหํ, สิรสา วนฺเท อริยสงฺฆํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอไหว้ด้วยเศียรเกล้าซึ่งหมู่พระอริยสงฆ์ทั้ง ๘ ผู้เป็นโอรสอันเกิดจากพระอุระของพระสุคต ผู้ย่ำยีเสียซึ่งกองทัพมาร.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ทีฆสฺส <span class="pb hidden-meta" data-ed="M" data-n="1.0158">[M 1.0158]</span> ทีฆสุตฺตงฺกิตสฺส, นิปุณสฺส อาคมวรสฺส;</p>
+<p rend="gathalast">พุทฺธานุพุทฺธสํวณฺณิตสฺส, สทฺธาวหคุณสฺส.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">(อรรถกถา) แห่งพระอาคมอันประเสริฐ (ทีฆนิกาย) อันประกอบด้วยสูตรยาว มีเนื้อหาละเอียดลึกซึ้ง อันพระพุทธเจ้าและพระอนุพุทธะทั้งหลายพรรณนาไว้ มีคุณอันนำมาซึ่งศรัทธา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สมฺมาสมฺพุทฺเธเนว <span class="pb hidden-meta" data-ed="M" data-n="1.0159">[M 1.0159]</span> หิ ติณฺณมฺปิ ปิฏกานํ อตฺถวณฺณนากฺกโม ภาสิโต, ยาปกิณฺณกเทสนาติ วุจฺจติ, ตโต สํคายนาทิวเสน สาวเกหีติ อาจริยา วทนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ด้วยว่าพระสัมมาสัมพุทธเจ้าได้ทรงภาษิตระเบียบการอธิบายเนื้อความแห่งพระไตรปิฎกทั้งสามไว้เองทีเดียว ซึ่งเรียกว่าปกิณณกเทศนา ต่อจากนั้นพระอาจารย์ทั้งหลายกล่าวว่า พระสาวกทั้งหลายได้รวบรวมไว้ด้วยอำนาจแห่งการสังคายนาเป็นต้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อตฺถปฺปกาสนตฺถํ, อฏฺฐกถา อาทิโต วสิสเตหิ;</p>
+<p rend="gathalast">ปญฺจหิ ยาสงฺคีตา, อนุสงฺคีตา จ ปจฺฉาปิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อรรถกถาใดอันพระขีณาสพ ๕๐๐ รูปสังคายนาไว้ในเบื้องต้น และสังคายนาสืบต่อกันมาในภายหลัง เพื่อประกาศเนื้อความ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1">มชฺเฌ <span class="pb hidden-meta" data-ed="M" data-n="1.0161">[M 1.0161]</span> วิสุทฺธิมคฺคา, เอส จตุนฺนมฺปิ อาคมานญฺหิ;</p>
+<p rend="gatha2">ฐตฺวา ปกาสยิสฺสติ, ตตฺถ ยถา ภาสิตมตฺถํ;</p>
+<p rend="gatha3">อิจฺเจว กโต ตสฺมา, ตมฺปิ คเหตฺวาน สทฺธิเมตาย;</p>
+<p rend="gathalast">อฏฺฐกถาย วิชานาถ, ทีฆาคมนิสฺสิตํ อตฺถํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อรรถกถานี้ตั้งอยู่ในระหว่างวิสุทธิมรรค จักประกาศเนื้อความตามที่ภาษิตไว้ในพระอาคมทั้ง ๔ นั้น เพราะเหตุที่อรรถกถานี้ข้าพเจ้าทำไว้เช่นนี้ ฉะนั้น ท่านทั้งหลายจงถือเอาวิสุทธิมรรคนั้นพร้อมกับอรรถกถานี้ แล้วทราบเนื้อความที่อาศัยทีฆอาคมเถิด.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อตฺถานํ <span class="pb hidden-meta" data-ed="M" data-n="1.0165">[M 1.0165]</span> สูจนโต, สุวุตฺตโต สวนโตถสูทนโต,</p>
+<p rend="gathalast">สุตฺตาณา สุตฺตสภาคโตจ, สุตฺตนฺติ อกฺขาตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ท่านเรียกว่า 'สูตร' เพราะแสดงเนื้อความ เพราะกล่าวไว้ดี เพราะหลั่งออก (ซึ่งเนื้อความ) เพราะชำระ (เนื้อความ) เพราะคุ้มครอง และเพราะมีส่วนเสมอกับด้าย.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สุทุทฺทสํ <span class="pb hidden-meta" data-ed="M" data-n="1.0177">[M 1.0177]</span> สุนิปุณํ, ยตฺถกามนิปาตินํ;</p>
+<p rend="gathalast">จิตฺตํ รกฺเขถ เมธาวี, จิตฺตํ คุตฺตํ สุขาวหํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้มีปัญญาพึงรักษาจิตที่เห็นได้ยากยิ่ง ละเอียดอ่อน มักตกไปในอารมณ์ตามความใคร่; จิตที่คุ้มครองดีแล้วย่อมนำสุขมาให้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="bodytext">โส <span class="pb hidden-meta" data-ed="M" data-n="1.0180">[M 1.0180]</span> เอวํ สมาหิเต จิตฺเต ปริสุทฺเธ ปริโยทาเต อนงฺคเณ วิคตูปกฺกิเลเส มุทุภูเต กมฺมนิเย ฐิเต อานญฺชปฺปตฺเต ญาณทสฺสนาย จิตฺตํ อภินีหรติ อภินินฺนาเมติ –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เมื่อจิตเป็นสมาธิ บริสุทธิ์ผ่องใส ไม่มีกิเลสเพียงดังเนิน ปราศจากอุปกิเลส อ่อนโยน ควรแก่การงาน ตั้งมั่น ถึงความไม่หวั่นไหวอย่างนี้แล้ว เธอย่อมน้อมจิตไป เฉพาะจิตไปเพื่อญาณทัสสนะ —</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยํหิตํ <span class="pb hidden-meta" data-ed="M" data-n="1.0206">[M 1.0206]</span> ภิกฺขเว สมฺมาวทมาเน วเทยฺย สมนฺตปาโส มารสฺสาติ, มาตุคามํเยว สมฺมา วทมาโน วเทยฺย สมนฺตปาโส มารสฺสาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุทั้งหลาย สิ่งใดที่เมื่อจะกล่าวให้ถูก พึงกล่าวว่า 'บ่วงที่ดักไว้โดยรอบของมาร' สิ่งนั้นคือมาตุคามนั่นเอง ซึ่งเมื่อจะกล่าวให้ถูก พึงกล่าวว่า 'บ่วงที่ดักไว้โดยรอบของมาร'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="bodytext">โย <span class="pb hidden-meta" data-ed="M" data-n="1.0209">[M 1.0209]</span> ภิกฺขุ ทิวสํ จงฺกเมน นิสชฺชาย จ อาวรณีเยหิ ธมฺเมหิ จิตฺตํ ปริโสเธตฺวา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุใดชำระจิตให้บริสุทธิ์จากธรรมอันเป็นเครื่องกั้น ด้วยการเดินจงกรมและการนั่งตลอดวัน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิติ <span class="pb hidden-meta" data-ed="M" data-n="1.0228">[M 1.0228]</span> จิตฺตกิริยวาโยธาตุวิปฺผารวเสน อยํ กายสมฺมโต อฏฺฐิสงฺฆาโต อภิกฺกมติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ด้วยประการฉะนี้ ร่างกายที่สมมติว่าเป็นกองกระดูกนี้ ย่อมก้าวไปได้ด้วยอำนาจการแผ่ไปของวาโยธาตุที่มีจิตเป็นสมุฏฐาน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="gatha1">กรุณา <span class="pb hidden-meta" data-ed="M" data-n="1.0231">[M 1.0231]</span> วิย สตฺเตสุ, ปญฺญา ยสฺส มเหสิโน;</p>
+<p rend="gathalast">เญยฺยธมฺเมสุ สพฺเพสุ, ปวตฺติตฺถ ยถารุจิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พระปัญญาของพระมหามุนีพระองค์ใด เป็นไปในเญยยธรรมทั้งปวงตามพระประสงค์ ดุจพระกรุณาในหมู่สัตว์.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ทสาย <span class="pb hidden-meta" data-ed="M" data-n="1.0235">[M 1.0235]</span> ตาย สตฺเตสุ, สมุสฺสาหิตมานโส;</p>
+<p rend="gatha2">ปาฏิหีราวสานมฺหิ, วสนฺโต ติทสาลเย;</p>
+<p rend="gatha3">ปาริจฺฉตฺตกมูลมฺหิ, ปณฺฑุกมฺพลนามเก;</p>
+<p rend="gathalast">สิลาสเน สนฺนิสินฺโน, อาทิจฺโจว ยุคนฺธเร.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พระองค์ผู้มีพระทัยอันประคองไว้ด้วยพระทศพลญาณนั้นในหมู่สัตว์ เมื่อจบปาฏิหาริย์แล้ว ประทับอยู่ในภพดาวดึงส์ ประทับนั่งบนบัณฑุกัมพลศิลาอาสน์ ณ โคนต้นปาริจฉัตตกะ ดุจพระอาทิตย์บนยอดเขายุคันธร.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="gatha1">จกฺกวาฬสหสฺเสหิ, ทสาหาคมฺม สพฺพโส;</p>
+<p rend="gatha2">สนฺนิสินฺเนน เทวานํ, คเณน ปริวาริโต;</p>
+<p rend="gatha3">มาตรํ ปมุขํ กตฺวา, ตสฺสา ปญฺญาย เตชสา;</p>
+<p rend="gathalast">อภิธมฺมกถามคฺคํ, เทวานํ สมฺปวตฺตยิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">แวดล้อมด้วยหมู่เทพที่มาประชุมกันจากหมื่นจักรวาลโดยรอบ ทรงกระทำพระพุทธมารดาให้เป็นประธาน ทรงประกาศทางแห่งพระอภิธรรมกถาแก่เหล่าเทพด้วยเดชแห่งพระปัญญาของพระองค์.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ตสฺส <span class="pb hidden-meta" data-ed="M" data-n="1.0236">[M 1.0236]</span> ปาเท นมสฺสิตฺวา, สมฺพุทฺธสฺส สิรีมโต;</p>
+<p rend="gathalast">สทฺธมฺมญฺจสฺส ปูเชตฺวา, กตฺวา สงฺฆสฺส จญฺชลิํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนมัสการพระบาทของพระสัมพุทธเจ้าผู้มีสิริพระองค์นั้น บูชาพระสัทธรรมของพระองค์ และประนมมือต่อพระสงฆ์.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ยํ <span class="pb hidden-meta" data-ed="M" data-n="1.0237">[M 1.0237]</span> เทวเทโว เทวานํ, เทเสตฺวา นยโต ปุน;</p>
+<p rend="gathalast">เถรสฺส สาริปุตฺตสฺส, สมาจิกฺขิ วินายโก.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พระวินายกผู้เป็นเทพยิ่งกว่าเทพ ทรงแสดงธรรมใดแก่เหล่าเทพแล้ว ทรงบอกธรรมนั้นโดยนัยแก่พระสารีบุตรเถระอีกครั้งหนึ่ง.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อโนตตฺตทเห กตฺวา, อุปฏฺฐานํ มเหสิโน;</p>
+<p rend="gathalast">ยญฺจ สุตฺวาน โส เถโร, อาหริตฺวา มหีตลํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พระเถระนั้นกระทำอุปัฏฐากพระมหามุนีที่สระอโนดาต ได้ฟังธรรมใดแล้ว ก็นำธรรมนั้นมาสู่พื้นแผ่นดิน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ภิกฺขูนํ ปริรุทาหาสิ, อิติ ภิกฺขูหิ ธาริโต;</p>
+<p rend="gathalast">สงฺคีติกาเล สํงฺคีโต, เวเทหมุนินา ปุน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ได้บอกแก่ภิกษุทั้งหลาย ภิกษุทั้งหลายจึงทรงจำไว้ และพระมุนีชาววิเทหะได้สังคายนาอีกครั้งในคราวสังคายนา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ยํ <span class="pb hidden-meta" data-ed="M" data-n="1.0238">[M 1.0238]</span> กโรมสิ พฺรหฺมุโน, สมํ เทเวหิ มาริส;</p>
+<p rend="gathalast">ตทชฺช ตุยฺหํ กสฺสาม, หนฺท สามํ กโรม เต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ท่านผู้นิรทุกข์ การปรนนิบัติใดที่เราทำแก่พรหมพร้อมกับเหล่าเทพ วันนี้เราจะทำความปรนนิบัตินั้นแก่ท่าน มาเถิด เราจะทำการปรนนิบัติแก่ท่าน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อตฺถํ <span class="pb hidden-meta" data-ed="M" data-n="1.0241">[M 1.0241]</span> ปกาสยิสฺสามิ, อาคมฏฺฐกถาสุปิ;</p>
+<p rend="gathalast">คเหตพฺพํ คเหตฺวาน, โตสยนฺโต วิจกฺขเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าจะประกาศเนื้อความแม้ในอรรถกถาแห่งพระอาคมทั้งหลาย โดยคัดเลือกเอาสิ่งที่ควรรับ และยังบัณฑิตทั้งหลายให้ยินดี.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อิติเม <span class="pb hidden-meta" data-ed="M" data-n="1.0242">[M 1.0242]</span> ภาสมานสฺส, อภิธมฺมกถํ อิมํ;</p>
+<p rend="gathalast">อวิกฺขิตฺตา นิสาเมถ, ทุลฺลภาหิอยํกถา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เมื่อข้าพเจ้ากำลังกล่าวพระอภิธรรมกถานี้อยู่ ท่านทั้งหลายจงตั้งใจฟังโดยไม่ฟุ้งซ่าน เพราะว่ากถานี้หาฟังได้ยาก.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เอตฺเถเต <span class="pb hidden-meta" data-ed="M" data-n="1.0263">[M 1.0263]</span> ปาปกา อกุสลา ธมฺมา อปริเสสา นิรุชฺฌนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อกุศลธรรมอันเป็นบาปเหล่านี้ ย่อมดับไปโดยไม่เหลือในที่นี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="bodytext">จกฺขุํ <span class="pb hidden-meta" data-ed="M" data-n="1.0266">[M 1.0266]</span> จาวุโส ปฏิจฺจ รูเปจ อุปฺปชฺชติ จกฺขุวิญฺญาณํ, ติณฺณํ สงฺคติ ผสฺโส, ผสฺสปจฺจยา เวทนา, ยํ เวเทติ, ตํ สญฺชานาติ. ยํ สญฺชานาติ, ตํ วิตกฺเกติ, ยํ วิตกฺเกติ, ตํ ปปญฺเจติ, ยํ ปปญฺเจติ, ตโต นิทานํ ปุริสํ ปปญฺจสญฺญาสงฺขา สมุทาจรนฺติ อตีตานาคตปจฺจุปฺปนฺเนสุ จกฺขุวิญฺเญยฺยสุ รูเปสุ –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนท่านผู้มีอายุ เพราะอาศัยตาและรูป จักขุวิญญาณย่อมเกิดขึ้น การประชุมกันของธรรม ๓ ประการนั้นเป็นผัสสะ เพราะผัสสะเป็นปัจจัย จึงเกิดเวทนา สิ่งใดที่เขารู้สึก สิ่งนั้นเขาย่อมจำได้ สิ่งใดที่เขาจำได้ สิ่งนั้นเขาย่อมตรึก สิ่งใดที่เขาตรึก สิ่งนั้นเขาย่อมคิดปรุงแต่ง สิ่งใดที่เขาคิดปรุงแต่ง เพราะสิ่งนั้นเป็นเหตุ สัญญาเครื่องคิดปรุงแต่งย่อมครอบงำบุรุษในรูปทั้งหลายอันพึงรู้แจ้งด้วยตา ทั้งที่เป็นอดีต อนาคต และปัจจุบัน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปุริมา <span class="pb hidden-meta" data-ed="M" data-n="1.0274">[M 1.0274]</span> ภิกฺขเว โกฏิ น ปญฺญายติ อวิชฺชาย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนภิกษุทั้งหลาย ที่สุดเบื้องต้นของอวิชชาย่อมไม่ปรากฏ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อตฺเถว <span class="pb hidden-meta" data-ed="M" data-n="1.0277">[M 1.0277]</span> คมฺภีรคตํ สุทุพฺพุธํ,</p>
+<p rend="gatha2">สยํ อภิญฺญาย สเหตุสมฺภวํ;</p>
+<p rend="gatha3">ยถานุปุพฺพํ นิขิเลน เทสิตํ,</p>
+<p rend="gathalast">มเหสินา รูปคตํว ปสฺสติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธรรมนั้นลึกซึ้ง เข้าใจได้ยากยิ่ง ทรงรู้ยิ่งด้วยพระองค์เองซึ่งเหตุและที่มา ทรงแสดงโดยลำดับทั้งหมด พระมหาสีทรงเห็น (ธรรมนั้น) เหมือนเห็นรูปที่ปรากฏ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อภิกฺกมิสฺสามิ <span class="pb hidden-meta" data-ed="M" data-n="1.0286">[M 1.0286]</span> ปฏิกฺกมิสฺสามีติ หิ จิตฺตํ อุปฺปชฺชมานํ รูปํ สมุฏฺฐาเปติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">จิตที่เกิดขึ้นว่า 'เราจะก้าวไป เราจะถอยกลับ' ย่อมยังรูปให้ตั้งขึ้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="gatha1">น <span class="pb hidden-meta" data-ed="M" data-n="1.0308">[M 1.0308]</span> อนฺตลิกฺเขน น สมุทฺทมชฺเฌ,</p>
+<p rend="gatha2">น ปพฺพตานํ วิวรํ ปวิสฺส;</p>
+<p rend="gatha3">น วิชฺชเต โส ชคติปฺปเทโส,</p>
+<p rend="gathalast">ยตฺถฏฺฐิโต มุจฺเจยฺย ปาปกมฺมา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ไม่ว่าในอากาศ ไม่ว่ากลางมหาสมุทร ไม่ว่าเข้าไปในซอกเขา สถานที่นั้นย่อมไม่มีในโลก ที่ซึ่งบุคคลผู้ตั้งอยู่แล้วจะพ้นจากกรรมชั่วได้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ยํ <span class="pb hidden-meta" data-ed="M" data-n="1.0311">[M 1.0311]</span> ปตฺตํ กุสลํ ตสฺส, อานุภาเวน ปาณิโน;</p>
+<p rend="gatha2">สพฺเพ สทฺธมฺมราชสฺส, ญตฺวา ธมฺมํ สุขาวหํ;</p>
+<p rend="gatha3">ปาปุณนฺตุ วิสุทฺธาย, สุขาย ปฏิปตฺติยา;</p>
+<p rend="gathalast">อโสกมนุปายาสํ, นิพฺพานสุขมุตฺตมํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ด้วยอานุภาพแห่งกุศลที่ถึงแล้วนั้น สัตว์ทั้งหลายทั้งปวงจงรู้ธรรมของพระสัทธรรมราชาผู้ทรงนำมาซึ่งความสุข จงถึงความบริสุทธิ์ เพื่อความสุขในการปฏิบัติ ซึ่งความสุขคือนิพพานอันสูงสุด ปราศจากความเศร้าโศกและความคับแค้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="gatha1">จิรํ ติฏฺฐตุ สทฺธมฺโม, ธมฺเม โหนฺตุ สคารวา;</p>
+<p rend="gatha2">สพฺเพปิ สตฺตา กาเลน, สมฺมา เทโว ปวสฺสตุ;</p>
+<p rend="gatha3">ยถา รกฺขิํสุ โปราณา, สุราชาโน ตเถวิมํ;</p>
+<p rend="gathalast">ราชา รกฺขตุ ธมฺเมน, อตฺตโนว ปชํปชํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ขอพระสัทธรรมจงตั้งอยู่ตลอดกาลนาน ขอสัตว์ทั้งหลายจงมีความเคารพในธรรม ขอเทพยดาจงบันดาลฝนให้ตกต้องตามฤดูกาลแก่สัตว์ทั้งปวง ขอพระราชาผู้ทรงธรรมจงทรงปกครองประชาชนของพระองค์ เหมือนพระราชาผู้ทรงธรรมในกาลก่อนทรงปกครอง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ตาว <span class="pb hidden-meta" data-ed="M" data-n="1.0312">[M 1.0312]</span> ติฏฺฐตุ โลกสฺมิํ, โลกนิตฺถรเณสินํ;</p>
+<p rend="gatha2">ทสฺเสนฺตี กุลปุตฺตานํ, นยํ ปญฺญาวิสุทฺธิยา;</p>
+<p rend="gatha3">ยาว พุทฺโธติ นามมฺปิ, สุทฺธจิตฺตสฺส ตาทิโน;</p>
+<p rend="gathalast">โลกมฺหิ โลกเชฏฺฐสฺส, ปวตฺตติ มเหสิโน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ขอพระธรรมจงตั้งอยู่ในโลก ตราบเท่าที่ผู้แสวงหาทางข้ามพ้นโลก ยังแสดงนัยแห่งความบริสุทธิ์ด้วยปัญญาแก่กุลบุตรทั้งหลาย ตราบเท่าที่แม้พระนามว่า 'พุทธะ' ของพระมหาสีผู้มีจิตบริสุทธิ์ ผู้คงที่ ผู้เป็นใหญ่ในโลก ยังดำเนินไปอยู่ในโลก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="subhead">ทุติยสนฺนิปาต</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">สังคายนาครั้งที่สอง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="subhead">มหาปทานสุตฺต อฏฺฐกถา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อรรถกถามหาปทานสูตร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อฏฺฐกถา <span class="pb hidden-meta" data-ed="M" data-n="2.0001">[M 2.0001]</span> สํคีติยา อาวุโส ปฐเม สนฺนิปาเต สกลา จ วินยสํวณฺณนา ทีฆนิกาเย จ สีลกฺขนฺธวคฺควณฺณนา อภิธมฺเม จ ธมฺมสงฺคหสํวณฺณนา สํคีตา เถเรหิ ฉฏฺฐสํคีติกาเรหิ. อิทานิ ปน ทุติเย สนฺนิปาเต ทีฆนิกาเย มหาวคฺควณฺณนาโต ปฏฺฐาย ตทวเสสานํ ยถาววตฺถิตสํวณฺณนานํ สํคายโนกาโส อนุปฺปตฺโต. ตสฺมา อิมิสฺสา ทุติยสนฺนิปาตสํคีติยา ปุพฺพกิจฺจวเสน ยถานุปฺปตฺตาย มหาวคฺเค มหาปทานสุตฺตสํวณฺณนาย ปุจฺฉาวิสฺสชฺชนํ กาตุํ สมารภาม. มหาปทานสุตฺตสฺส อาวุโส นิทาเน ปริยาปนฺนสฺส “กเรริกุฏิกาย”นฺติปทสฺส อตฺโถ กถํ อฏฺฐกถาจริเยน กถิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ ในการสังคายนาอรรถกถา ในการประชุมครั้งที่ ๑ อรรถกถาวินัยทั้งหมด อรรถกถาสีลขันธวรรคในทีฆนิกาย และอรรถกถาธรรมสังคณีในพระอภิธรรม พระเถระทั้งหลายผู้ทำสังคายนาครั้งที่ ๖ ได้สังคายนาไว้แล้ว แต่บัดนี้ ในการประชุมครั้งที่ ๒ โอกาสแห่งการสังคายนาอรรถกถาที่เหลือตามที่กำหนดไว้ โดยเริ่มตั้งแต่อรรถกถามหาวรรคในทีฆนิกายมาถึงแล้ว เพราะฉะนั้น เราจะเริ่มทำการถามตอบอรรถกถามหาปทานสูตรในมหาวรรคที่มาถึงตามลำดับ เพื่อเป็นบุพกิจแห่งการสังคายนาในการประชุมครั้งที่ ๒ นี้ ดูก่อนท่านผู้มีอายุ อรรถกถาจารย์กล่าวอธิบายความหมายของบทว่า 'กเรริกุฏิกาย' ซึ่งนับเนื่องในนิทานแห่งมหาปทานสูตรไว้อย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> มหาปทานสุตฺตสฺส ภนฺเต นิทาเน ปริยาปนฺนสฺส กเรริกุฏิกายนฺติปทสฺส อตฺโถ “กเรริกุฏิกาย”นฺติ กเรรีติ วรุณรุกฺขสฺส นามํ. กเรริมณฺฑโป ตสฺสา กุฏิกาย <span class="pb hidden-meta" data-ed="M" data-n="2.0002">[M 2.0002]</span> ทฺวาเร ฐิโต, ตสฺมา กเรริกุฏิกาติ วุจฺจติ. ยถา โกสมฺพรุกฺขสฺส ทฺวาเรฐิตตฺตา โกสมฺพกุฏิกาติ เอวมาทินา ภนฺเต อฏฺฐกถาจริเยน กถิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำตอบ – ข้าแต่ท่านผู้เจริญ อรรถกถาจารย์กล่าวอธิบายความหมายของบทว่า 'กเรริกุฏิกาย' ซึ่งนับเนื่องในนิทานแห่งมหาปทานสูตรไว้ว่า บทว่า 'กเรริกุฏิกาย' ความว่า คำว่า 'กเรรี' เป็นชื่อของต้นวรุณ มณฑปต้นกเรรีตั้งอยู่ที่ประตูของกุฏิหลังนั้น เพราะฉะนั้น กุฏินั้นจึงเรียกว่า 'กเรริกุฏิ' ข้าแต่ท่านผู้เจริญ อรรถกถาจารย์กล่าวไว้ดังนี้ เหมือนอย่างที่เรียกว่า 'โกสัมพกุฏิ' เพราะตั้งอยู่ที่ประตูต้นโกสัมพีเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กเรริกุฏิกายนฺติ <span class="pb hidden-meta" data-ed="M" data-n="2.0003">[M 2.0003]</span> กเรรีติ วรุณรุกฺขสฺส นามํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">บทว่า กเรริกุฏิกาย กเรรี เป็นชื่อของต้นวรุณ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กเรริมณฺฑโป <span class="pb hidden-meta" data-ed="M" data-n="2.0004">[M 2.0004]</span> ตสฺสา กุฏิกาย ทฺวาเร ฐิโต, ตสฺมา กเรริกุฏิกาติ วุจฺจติ. ยถา โกสมฺพรุกฺขสฺส ทฺวาเร ฐิตตฺตา เอกาสมฺพกุฏิกาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">มณฑปต้นกเรรีตั้งอยู่ที่ประตูของกุฏิหลังนั้น เพราะฉะนั้นจึงเรียกว่า กเรริกุฏิ เหมือนกับที่เรียกว่า โกสัมพกุฏิ เพราะตั้งอยู่ที่ประตูของต้นโกสัมพี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อนฺโตเชตวเน กิร กเรริกุฏิ โกสมฺพกุฏิ คนฺธกุฏิ สลฬาคารนฺติ จตฺตาริ มหาเคหานิ –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ได้ยินว่า ภายในพระเชตวัน กเรริกุฏิ โกสัมพกุฏิ คันธกุฏิ และสลฬคฤหะ เป็นเรือนใหญ่ ๔ หลัง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เอเกกํ สตสหสฺสปริจฺจาเคน นิปฺผนฺนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">แต่ละหลังสำเร็จด้วยการบริจาคหนึ่งแสน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เตสุ สลฬาคารํ รญฺญา ปเสนทินา การิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ในบรรดาเรือนเหล่านั้น สลฬคฤหะ พระเจ้าปเสนทิโกศลทรงสร้าง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="subhead">ปุพฺเพนิวาส</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">บุพเพนิวาส</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ตตฺเถว <span class="pb hidden-meta" data-ed="M" data-n="2.0005">[M 2.0005]</span> อาวุโส นิทาเน ปุพฺเพนิวาสปฏิสํยุตฺตา ธมฺมีกถา อุทปาทีติวจนสฺส อตฺโถ กถํ อฏฺฐกถาจริเยน กถิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ ในนิทานนั้นเอง อรรถกถาจารย์กล่าวอธิบายความหมายของคำว่า 'ปุพเพนิวาสปฏิสํยุตฺตา ธมฺมีกถา อุทปาทิ' ไว้อย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ตตฺเถว ภนฺเต นิทาเน ปุพฺเพนิวาสปฏิสํยุตฺตา ธมฺมีกถา อุทปาทีติ วจนสฺส อตฺโถ ปุพฺเพนิวาสปฏิสํยุตฺตาติ เอกมฺปิชาติํ ทฺเวปิ ชาติโยติ เอวํ นิพทฺเธน ปุพฺเพนิวุฏฺฐขนฺธสนฺตานสงฺขาเตน ปุพฺเพนิวาเสน สทฺธิํ โยเชตฺวา ปวตฺติตา. ธมฺมีติ ธมฺมสํยุตฺตา. อุทปาทีติ อโห อจฺฉริยํ ทสพลสฺส ปุพฺเพนิวาสญาณํ. ปุพฺเพนิวาสํ นาม เก อนุสฺสรนฺติ เก นานุสฺสรนฺตีติ ทิฏฺฐิยา อนุสฺสรนฺติ, สาวกา ส ปจฺเจกพุทฺธา จ พุทฺธา จ อนุสฺสรนฺติ. กตรทิฏฺฐิโย อนุสฺสรนฺติ. เย อคฺคปตฺตา กมฺมวาทิโน เตปิ จตฺตาลีสํเยว กปฺเป อนุสฺสรนฺติ, น ตโต ปรนฺติ เอวมาทินา ภนฺเต อฏฺฐกถาจริเยน กถิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำตอบ – ข้าแต่ท่านผู้เจริญ ในนิทานนั้นเอง ความหมายของคำว่า 'ปุพเพนิวาสปฏิสํยุตฺตา ธมฺมีกถา อุทปาทิ' คือ บทว่า 'ปุพเพนิวาสปฏิสํยุตฺตา' ได้แก่ ดำเนินไปโดยประกอบกับบุพเพนิวาส อันได้แก่ขันธสันดานที่เคยอยู่อาศัยมาแล้วในก่อน ซึ่งผูกพันกันอย่างนี้ว่า 'แม้ชาติหนึ่ง แม้สองชาติ' เป็นต้น. คำว่า 'ธมฺมี' คือ ประกอบด้วยธรรม. คำว่า 'อุทปาทิ' คือ (เกิดความระลึกว่า) โอ! น่าอัศจรรย์จริงหนอ บุพเพนิวาสานุสสติญาณของพระทศพล. ใครบ้างระลึกถึงบุพเพนิวาสได้ ใครระลึกไม่ได้? (พวกเดียรถีย์) ระลึกได้ด้วยทิฐิ, พระสาวก พระปัจเจกพุทธเจ้า และพระพุทธเจ้าทั้งหลาย ย่อมระลึกได้. พวกทิฐิเหล่าไหนระลึกได้? แม้พวกกัมมวาทีผู้บรรลุถึงยอด ก็ระลึกได้เพียง ๔๐ กัปเท่านั้น ไม่เกินไปกว่านั้น ข้าแต่ท่านผู้เจริญ อรรถกถาจารย์กล่าวไว้ดังนี้เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปุพฺเพนิวาสปฏิสํยุตฺตาติ <span class="pb hidden-meta" data-ed="M" data-n="2.0006">[M 2.0006]</span> เอกมฺปิ ชาติํ ทฺเวปิ ชาติโยติ เอวํ นิพทฺเธน ปุพฺเพนิวุฏฺฐขนฺธสนฺตานสงฺขาเตน ปุพฺเพนิวาเสน สทฺธิํ โยเชตฺวา ปวตฺติตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">บทว่า 'ปุพเพนิวาสปฏิสํยุตฺตา' หมายถึง ดำเนินไปโดยประกอบกับบุพเพนิวาส อันได้แก่ขันธสันดานที่เคยอยู่อาศัยมาแล้วในก่อน ซึ่งผูกพันกันอย่างนี้ว่า 'แม้ชาติหนึ่ง แม้สองชาติ' เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="subhead">กปฺปปริจฺเฉทวาร</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">วาระกำหนดกัป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ตสฺมิํ <span class="pb hidden-meta" data-ed="M" data-n="2.0007">[M 2.0007]</span> อาวุโส มหาปทานสุตฺเต อุทฺเทสวาเร นวสุ ปริจฺเฉทวาเรสุ ปฐเม กปฺปปริจฺเฉทวาเร ภทฺทกปฺเปติ ปทสฺส อตฺโถ อฏฺฐกถาจริเยน กถํ กถิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ ในอุเทศวารแห่งมหาปทานสูตรนั้น ในบรรดาวาระที่กำหนดไว้ ๙ วาระ อรรถกถาจารย์กล่าวอธิบายความหมายของบทว่า 'ภทฺทกปฺเป' ในวาระที่ ๑ คือกัปปปริจเฉทวาร ไว้อย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ตสฺมิํ <span class="pb hidden-meta" data-ed="M" data-n="2.0008">[M 2.0008]</span> ภนฺเต มหาปทานสุตฺเต อุทฺเทสวาเร นวสุ ปริจฺเฉทวาเรสุ ปฐเม กปฺปปริจฺเฉทวาเร ภทฺทกปฺเปติ ปทสฺส อตฺโถ ภทฺทกปฺเปติ ปญฺจพุทฺธุปฺปาทปฏิมณฺฑิตตฺตา สุนฺทรกปฺเป สารกปฺเปติ ภควา อิมํ กปฺปํ โถเมนฺโต เอวมาห. ยโต ปฏฺฐาย กิร อมฺหากํ ภควา อภินีหาโร กโต, เอกสฺมิํ อนฺตเร เอกสฺมิมฺปิ กปฺเป ปญฺจพุทฺธา นิพฺพตฺตา นาม นตฺถีติ เอวมาทินา ภนฺเต อฏฺฐกถาจริเยน กถิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำตอบ – ข้าแต่ท่านผู้เจริญ ในมหาปทานสูตรนั้น ในอุเทศวาร บรรดาปริจเฉทวารทั้ง ๙ ในปริจเฉทวารที่ ๑ คือกัปปปริจเฉทวาร ความหมายของบทว่า ภัททกัป คือ พระผู้มีพระภาคเมื่อจะทรงสรรเสริญกัปนี้ ได้ตรัสว่า ภัททกัป เพราะประดับด้วยการอุบัติขึ้นของพระพุทธเจ้า ๕ พระองค์ เป็นกัปที่งดงาม เป็นกัปที่เป็นสาระ. ได้ยินว่า ตั้งแต่พระผู้มีพระภาคของเราทรงตั้งความปรารถนามา ในระหว่างนั้น แม้ในกัปหนึ่งก็ไม่มีพระพุทธเจ้า ๕ พระองค์บังเกิดเลย ดังนี้เป็นต้น ข้าแต่ท่านผู้เจริญ พระอรรถกถาจารย์ได้กล่าวไว้แล้ว.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="bodytext">วิปสฺสิสฺส <span class="pb hidden-meta" data-ed="M" data-n="2.0009">[M 2.0009]</span> ภิกฺขเว ภควโต อิโต โส ภิกฺขเว ฉนวุติกปฺเป ยํ วิปสฺสี ภควา อรหํ สมฺมาสมฺพุทฺโธ โลเก อุทปาทิ –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนภิกษุทั้งหลาย ในกัปที่ ๙๖ นับจากกัปนี้ไป พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้าพระนามว่าวิปัสสี ได้อุบัติขึ้นในโลก –</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สทฺทกปฺเปติ ปญฺจพุทฺธุปฺปาทปฏิมณฺฑิตตฺตา สุนฺทรกปฺเป สารกปฺเปติ ภควา อิมํ กปฺปํ โถเมนฺโต เอวมาห –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">บทว่า ภัททกัป พระผู้มีพระภาคเมื่อจะทรงสรรเสริญกัปนี้ ได้ตรัสอย่างนี้ว่า เป็นกัปที่งดงาม เป็นกัปที่เป็นสาระ เพราะประดับด้วยการอุบัติขึ้นของพระพุทธเจ้า ๕ พระองค์ –</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="bodytext">“ยโต ปฏฺฐาย กิร อมฺหากํ ภควตาภินีหาโร กโต, เอตสฺมิํ อนฺตเร เอกสฺมิมฺปิ กปฺเป ปญฺจพุทฺธา นิพฺพตฺตา นาม นตฺถิ” –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">“ได้ยินว่า ตั้งแต่พระผู้มีพระภาคเจ้าของเราทรงตั้งความปรารถนามา ในระหว่างนั้น แม้ในกัปหนึ่งก็ไม่มีพระพุทธเจ้า ๕ พระองค์บังเกิดเลย” –</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="subhead">อายุปริจฺเฉทวาร</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">วาระว่าด้วยการกำหนดอายุ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> จตุตฺเถ <span class="pb hidden-meta" data-ed="M" data-n="2.0010">[M 2.0010]</span> ปนาวุโส อายุปริจฺเฉทวาเร อปฺปํ วา ภิยฺโยติ เอเตสํ ปทานํ อตฺโถ กถํ อฏฺฐกถาจริเยน กถิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ ในวาระที่ ๔ ว่าด้วยการกำหนดอายุ อรรถกถาจารย์ได้อธิบายความหมายของบทว่า "น้อยหรือมาก" ไว้อย่างไร.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> จตุตฺเถ ปน ภนฺเต อายุปริจฺเฉทวาเร อปฺปํ วา ภิยฺโยติ เอเตสํ ปทานํ อตฺโถ “อปฺปํ วา ภิยฺโยติ วสฺสสตโต วา อุปริ อปฺปํ, อญฺญํ วสฺสสตํ อปตฺวา วีสํ วา ติํสํ วา จตฺตาลีสํ วา ปณฺณาสํ วา สฏฺฐิ วา วสฺสานิ ชีวติ. เอวํ ทีฆายุโก ปน อติทุลฺลโภ, อสุโก กิร เอวํ จิรํ ชีวตีติ ตตฺถ ตตฺถ คนฺตวา ทฏฺฐพฺโพ โหตี”ติ เอวมาทินา ภนฺเต ตตฺถ อฏฺฐกถาจริเยน กถิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำตอบ – ข้าแต่ท่านผู้เจริญ ในวาระที่ ๔ ว่าด้วยการกำหนดอายุ ความหมายของบทว่า "น้อยหรือมาก" คือ "น้อยหรือมาก" หมายถึง มากกว่า ๑๐๐ ปีไปเล็กน้อย หรือไม่ถึง ๑๐๐ ปีอื่น (คือศตวรรษถัดไป) แต่มีชีวิตอยู่ ๒๐ ปี ๓๐ ปี ๔๐ ปี ๕๐ ปี หรือ ๖๐ ปี. ส่วนผู้มีอายุยืนเช่นนี้หาได้ยากยิ่งนัก (จนต้องกล่าวว่า) ได้ยินว่า ผู้นั้นมีชีวิตอยู่ยืนยาวเพียงนี้ พึงไปดูในที่นั้นๆ ดังนี้เป็นต้น ข้าแต่ท่านผู้เจริญ พระอรรถกถาจารย์ได้กล่าวไว้ในที่นั้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มยฺหํ <span class="pb hidden-meta" data-ed="M" data-n="2.0011">[M 2.0011]</span> ภิกฺขเว เอตรหิ อปฺปกํ อายุปฺปมาณํ ปริตฺตํ ลหุกํ โย จิรํ ชีวติ โส วสฺสสตํ อปฺปํ วา ภิยฺโย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนภิกษุทั้งหลาย บัดนี้ประมาณอายุของตถาคตน้อยนิด เบาบาง ผู้ใดมีชีวิตยืนยาว ผู้นั้นมีอายุ ๑๐๐ ปี หรือมากกว่านั้นเล็กน้อย.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อปฺปํ วา ภิยฺโยติ วสฺสสตโต วา อุปริ อปฺปํ, อยฺยํ วสฺสสตํ อปตฺวา วีสํ วา ติํสํ วา จตฺตาลีสํวา วา ปณฺณาสํ วา สฏฺฐิ วา วสฺสานิ ชีวติ–</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">บทว่า "น้อยหรือมาก" หมายถึง มากกว่า ๑๐๐ ปีไปเล็กน้อย หรือไม่ถึง ๑๐๐ ปีอื่น แต่มีชีวิตอยู่ ๒๐ ปี ๓๐ ปี ๔๐ ปี ๕๐ ปี หรือ ๖๐ ปี –</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="subhead">อุปฏฺฐากปริจฺเฉทวาร</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">วาระว่าด้วยการกำหนดอุปัฏฐาก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อฏฺฐเม <span class="pb hidden-meta" data-ed="M" data-n="2.0012">[M 2.0012]</span> ปนาวุโส อุปฏฺฐากปริจฺเฉทวาเร อานนฺโทติปเท กถํ อฏฺฐกถาจริเยน วณฺณิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ ในวาระที่ ๘ ว่าด้วยการกำหนดอุปัฏฐาก อาจารย์อรรถกถาได้พรรณนาบทว่า “อานันทะ” ไว้อย่างไร.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อฏฺฐเม ปน ภนฺเต อุปฏฺฐากปริจฺเฉเท ปน อานนฺโทติ นิพทฺธุปฏฺฐากภาวํ สนฺธาย วุตฺตนฺติ เอวมาทินา ภนฺเต อฏฺฐกถาจริเยน วณฺณิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำตอบ – ข้าแต่ท่านผู้เจริญ ในวาระที่ ๘ ว่าด้วยการกำหนดอุปัฏฐาก บทว่า “อานันทะ” นั้น พระอรรถกถาจารย์ได้พรรณนาไว้โดยหมายถึงความเป็นอุปัฏฐากประจำ ดังนี้เป็นต้น ข้าแต่ท่านผู้เจริญ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มยฺหํ <span class="pb hidden-meta" data-ed="M" data-n="2.0013">[M 2.0013]</span> ภิกฺขเว เอตรหิ อานนฺโท นาม ภิกฺขุ อุปฏฺฐาโก อโหสิ อคฺคุปฏฺฐาโก–</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนภิกษุทั้งหลาย บัดนี้ ภิกษุชื่อว่าอานนท์เป็นอุปัฏฐากของตถาคต เป็นอุปัฏฐากผู้เลิศ –</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ภควโตหิ <span class="pb hidden-meta" data-ed="M" data-n="2.0014">[M 2.0014]</span> ปฐมโพธิยํ อนิพทฺธา อุปฏฺฐากา อเหสุํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ในปฐมโพธิกาล อุปัฏฐากของพระผู้มีพระภาคเจ้ายังไม่เป็นประจำ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เอกทา นาคสมาโล ปตฺตจีวรํ คเหตฺวา วิจริ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ครั้งหนึ่ง พระนาคสมาละถือบาตรและจีวรเที่ยวไป.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิทเมว <span class="pb hidden-meta" data-ed="M" data-n="2.0015">[M 2.0015]</span> เต การณํ สลฺลกฺเขตฺวา นิวารยิมฺห.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เราพิจารณาเห็นเหตุนี้แล้วจึงห้ามท่าน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เอกจฺเจ <span class="pb hidden-meta" data-ed="M" data-n="2.0016">[M 2.0016]</span> ภิกฺขู อิมินา มคฺเคน คจฺฉามาติ วุตฺเต อญฺเญน คจฺฉนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุบางรูป เมื่อถูกกล่าวว่า “เราจะไปทางนี้” ก็ไปทางอื่น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อุฏฺเฐหิ <span class="pb hidden-meta" data-ed="M" data-n="2.0017">[M 2.0017]</span> อาวุโส อานนฺท, อุฏฺเฐหิ อาวุโส อานนฺท.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ลุกขึ้นเถิด ท่านอานนท์ ลุกขึ้นเถิด ท่านอานนท์.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กํ ปเนตฺถ อานนฺท อาทีนวํ ปสฺสสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนอานนท์ ท่านเห็นโทษอะไรในเรื่องนี้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กํ <span class="pb hidden-meta" data-ed="M" data-n="2.0018">[M 2.0018]</span> ปเนตฺถ อานนฺท อานิสํสํ ปสฺสสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนอานนท์ ท่านเห็นอานิสงส์อะไรในเรื่องนี้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สมวตฺตกฺขนฺโธ <span class="pb hidden-meta" data-ed="M" data-n="2.0028">[M 2.0028]</span> อตุโล, สุปฺปพุทฺโธ จ อุตฺตโร;</p>
+<p rend="gathalast">สตฺตวาโห วิชิตเสโน, ราหุโล ภวติ สตฺตโม –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พระสมวัตตขันธ์ พระอตุละ พระสุปปพุทธะ และพระอุตตระ; พระสัตตวาหะ พระวิชิตเสนะ และราหุลเป็นที่ ๗ –</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สุตนา <span class="pb hidden-meta" data-ed="M" data-n="2.0029">[M 2.0029]</span> สพฺพกามาจ, สุจิตฺตา อถ โรจินี;</p>
+<p rend="gathalast">รุจคฺคตี สุนนฺทาจ, พิมฺพา ภวติ สตฺตมา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พระนางสุตนา พระนางสัพพกามา พระนางสุจิตตา และพระนางโรจินี; พระนางรุจัคคตี พระนางสุนันทา และพระนางพิมพาเป็นที่ ๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อเนกชาติสํสารํ<span class="pb hidden-meta" data-ed="M" data-n="2.0037">[M 2.0037]</span>, สนฺธาวิสฺสํ อนิพฺพิสํ;</p>
+<p rend="gatha2">คหการํ คเวสนฺโต, ทุกฺขา ชาติ ปุนปฺปุนํ;</p>
+<p rend="gathalast">คหการก ทิฏฺโฐสิ, ปุน เคหํ น กาหสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เราแสวงหาช่างผู้ทำเรือน เมื่อไม่ประสบ จึงได้ท่องเที่ยวไปสู่สงสารมีชาติเป็นอเนก การเกิดบ่อยๆ เป็นทุกข์, แน่ะช่างผู้ทำเรือน เราเห็นเจ้าแล้ว เจ้าจะทำเรือนอีกไม่ได้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สพฺพา เต ผาสุกา ภคฺคา, คหกูฏํ วิสงฺขตํ;</p>
+<p rend="gathalast">วิสงฺขารคตํ จิตฺตํ, ตณฺหานํ ขยมชฺฌคา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ซี่โครงทั้งหลายของเจ้าเราหักเสียแล้ว ยอดเรือนเราก็รื้อเสียแล้ว จิตของเราถึงธรรมปราศจากเครื่องปรุงแต่งแล้ว เราได้บรรลุความสิ้นไปแห่งตัณหาทั้งหลายแล้ว.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อโยฆนหตสฺเสว<span class="pb hidden-meta" data-ed="M" data-n="2.0040">[M 2.0040]</span>, ชลโต ชาตเวทโส;</p>
+<p rend="gatha2">อนุปุพฺพูปสนฺตสฺส, ยถา น ญาญเต คติ;</p>
+<p rend="gatha3">เอวํ สมฺมาวิมุตฺตานํ, กามพนฺโธฆตารินํ;</p>
+<p rend="gathalast">ปญฺญาเปตุํ คติ นตฺถิ, ปตฺตานํ อจลํ สุขํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คติของไฟที่รุ่งเรืองเพราะถูกตีด้วยค้อนเหล็ก ดับไปโดยลำดับ ย่อมไม่รู้ได้ฉันใด คติของท่านผู้หลุดพ้นแล้วโดยชอบ ผู้ข้ามโอฆะคือกามเครื่องผูกได้แล้ว บรรลุถึงสุขอันไม่หวั่นไหว ก็ย่อมบัญญัติไม่ได้ฉันนั้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น <span class="pb hidden-meta" data-ed="M" data-n="2.0044">[M 2.0044]</span> ปน ภควา มิลกฺขุสทิโส โหติ นาปิ อามุตฺตมณิกุณฺฑโล.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">แต่พระผู้มีพระภาคเจ้ามิได้เหมือนคนป่าเถื่อน และมิได้ทรงประดับต่างหูแก้วมณี.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เต ปน อตฺตโน สมานสณฺฐานเมว ปสฺสนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">แต่พวกเขาย่อมเห็นแต่รูปร่างที่เหมือนตนเอง.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น <span class="pb hidden-meta" data-ed="M" data-n="2.0048">[M 2.0048]</span> โข อานนฺท เอตฺตาวตา ตถาคโต สกฺกโต วา โหติ ครุกโต วา มานิโต วา ปูชิโต วา อปจิโต วา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนอานนท์ ตถาคตมิได้เป็นที่สักการะ เคารพ นับถือ บูชา หรือยำเกรง ด้วยเหตุเพียงเท่านี้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กสฺมา <span class="pb hidden-meta" data-ed="M" data-n="2.0050">[M 2.0050]</span> ปน ภควา อญฺญตฺถ เอกํ อุมาปุปฺผมตฺตมฺปิ คเหตฺวา พุทฺธ คุเณ อาวชฺเชตฺวา กตาย ปูชาย พุทฺธญาเณนาปิ อปริจฺฉินฺนํ วิปากํ วณฺเณตฺวา–</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">แต่เพราะเหตุใด พระผู้มีพระภาคเจ้าจึงทรงพรรณนาวิบากอันพุทธญาณก็กำหนดไม่ได้ ของการบูชาที่บุคคลถือเอาเพียงดอกผักตบดอกเดียวแล้วระลึกถึงพุทธคุณกระทำแล้วในที่อื่นว่า –</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="bodytext">โย <span class="pb hidden-meta" data-ed="M" data-n="2.0055">[M 2.0055]</span> โข อานนฺท ภิกฺขุ วา ภิกฺขุนี วา อุปาสโก วา อุปาสิกา วา ธมฺมานุธมฺมปฺปฏิปนฺโน วิหรติ สามีจิปฺปฏิปนฺโน อนุธมฺมจารี โส ตถา คตํ สกฺกโรติ ครุกโรติ มาเนติ ปูเชติ อปจิยติ ปรมาย –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนอานนท์ ภิกษุ ภิกษุณี อุบาสก หรืออุบาสิกาใด เป็นผู้ปฏิบัติธรรมสมควรแก่ธรรม ปฏิบัติชอบ ประพฤติตามธรรมอยู่ ผู้นั้นชื่อว่าย่อมสักการะ เคารพ นับถือ บูชา ยำเกรงตถาคตด้วยการบูชาอย่างยิ่ง –</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สิยา <span class="pb hidden-meta" data-ed="M" data-n="2.0059">[M 2.0059]</span> โข ปนานนฺท ตุมฺหากํ เอวมสฺส ‘อตีตสตฺถุกํ ปาวจนํ, นตฺถิ โน สตฺถา’ติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนอานนท์ บางทีพวกเธออาจจะคิดอย่างนี้ว่า ‘ปาพจน์มีพระศาสดาล่วงลับไปแล้ว พระศาสดาของพวกเราไม่มี’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น <span class="pb hidden-meta" data-ed="M" data-n="2.0060">[M 2.0060]</span> โข ปเนตํ อานนฺท เอวํ ทฏฺฐพฺพํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนอานนท์ ข้อนั้นไม่พึงเห็นอย่างนั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ธมฺโมปิ เทสิโต เจว ปญฺญตฺโตจ, วินโยปิ เทสิโต เจว ปญฺญตฺโต จ–</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พระธรรมก็แสดงแล้วและบัญญัติแล้ว พระวินัยก็แสดงแล้วและบัญญัติแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อสฺโสสิ <span class="pb hidden-meta" data-ed="M" data-n="2.0067">[M 2.0067]</span> โข ราชา มาคโธ อชาตสตฺตุ เวเทหิปุตฺโต ภควา กิร กุสินารายํ ปรินิพฺพุโตติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พระเจ้าอชาตศัตรู เวเทหิบุตร ผู้เป็นพระราชาแห่งแคว้นมคธ ได้ทรงสดับว่า พระผู้มีพระภาคเจ้าปรินิพพานแล้วที่เมืองกุสินารา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สตฺถา นาม ปรินิพฺพุโต, น โส สกฺกา ปุน อาหริตุํ, โปถุชฺชนิกสทฺธาย ปน อมฺหากํ รญฺญา สทิโส นตฺถิ, สเจ เอส อิมินาว นิยาเมน สุณิสฺสติ, หทยมสฺส ผลิสฺสติ. ราชา โข ปน อมฺเหหิ อนุรกฺขิตพฺโพติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พระศาสดาปรินิพพานแล้ว ไม่สามารถนำกลับมาได้อีก แต่ในเรื่องศรัทธาแบบปุถุชนแล้ว ไม่มีใครเสมอด้วยพระราชาของเรา หากพระองค์ทรงสดับโดยทำนองนี้แล พระหทัยของพระองค์จักแตกสลาย เราทั้งหลายพึงรักษาพระราชาไว้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เทว <span class="pb hidden-meta" data-ed="M" data-n="2.0068">[M 2.0068]</span> อมฺเหหิ สุปินโก ทิฏฺโฐ, ตสฺส ปฏิฆาตตฺถํ ตุมฺเหหิ ทุกูลทุปฏฺฏํ นิวาเสตฺวา ยถา นาสาปุฏมตฺตํ ปญฺญายติ, เอวํ จตุมธุรโทณิยา นิปชฺชิตุํ วฏฺฏตีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ขอเดชะ พวกข้าพระองค์ได้เห็นสุบิน เพื่อป้องกันสุบินนั้น ขอพระองค์ทรงนุ่งผ้าดุกูลสองชั้น แล้วบรรทมในรางที่เต็มด้วยรสหวาน ๔ อย่าง โดยให้ปรากฏเพียงช่องพระนาสิกเท่านั้น จึงจะควร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เทว <span class="pb hidden-meta" data-ed="M" data-n="2.0069">[M 2.0069]</span> มรณโต มุจฺจนกสตฺโต นาม นตฺถิ, อมฺหากํ อายุวฑฺฒโน เจติยฏฺฐานํ ปุญฺญกฺเขตฺตํ อภิเสกสิญฺจโก โส ภควา สตฺถา กุสินาราย ปรินิพฺพุโตติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ขอเดชะ สัตว์ที่พ้นจากความตายไม่มีเลย พระผู้มีพระภาคพระศาสดาพระองค์นั้น ผู้เป็นที่ตั้งแห่งเจดีย์อันเป็นที่เจริญอายุของพวกข้าพระองค์ เป็นเนื้อนาบุญ เป็นผู้ประทานอภิเษก ได้ปรินิพพานแล้วที่กรุงกุสินารา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ภควา <span class="pb hidden-meta" data-ed="M" data-n="2.0071">[M 2.0071]</span> สพฺพญฺญุ นนุ อิมสฺมิํ ฐาเน นิสีทิตฺวา ธมฺมํ เทสยิตฺถ, โสกสลฺลํ เม วิโนทยิตฺถ, ตุมฺเห มยฺหํ โสกสลฺลํ นีหริตฺถ, อหํ ตุมฺหากํ สรณํ คโต, อิทานิ ปน เม ปฏิวจนมฺปิ น เทถ ภควาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่พระผู้มีพระภาค พระองค์ผู้ทรงรู้แจ้งทุกสิ่ง มิใช่หรือที่ประทับนั่งแสดงธรรมในที่นี้ ทรงบรรเทาลูกศรคือความโศกของข้าพระองค์ พระองค์ได้ทรงถอนลูกศรคือความโศกของข้าพระองค์ออกไป ข้าพระองค์ถึงพระองค์เป็นสรณะ แต่บัดนี้ พระองค์ไม่ประทานแม้แต่คำตอบแก่ข้าพระองค์เลย พระเจ้าข้า</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:123">
+  <div class="pair-col col-pali">
+<p rend="bodytext">นนุ <span class="pb hidden-meta" data-ed="M" data-n="2.0072">[M 2.0072]</span> ภควา อหํ อญฺญทา เอวรูเป กาเล ตุมฺเห มหาภิกฺขุ สงฺฆปริวารา ชมฺพุทีปตเล จาริกํ จรถาติ สุโณมิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่พระผู้มีพระภาค มิใช่หรือที่ในกาลอื่นในเวลาเช่นนี้ ข้าพระองค์ย่อมได้ยินว่า พระองค์มีหมู่ภิกษุสงฆ์หมู่ใหญ่เป็นบริวาร เสด็จจาริกไปในพื้นชมพูทวีป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:124">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มม ปริเทวิเตเนว น สิชฺฌติ, ทสพลสฺส ธาตุโย อาหราเปสฺสามีติ เอวํ อสฺโสสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เพียงการคร่ำครวญของข้าพเจ้า ย่อมไม่สำเร็จประโยชน์ ข้าพเจ้าจักให้คนไปนำพระธาตุของพระทศพลมา เขาได้ยิน (ข่าว) อย่างนี้แล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:125">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สเจ <span class="pb hidden-meta" data-ed="M" data-n="2.0073">[M 2.0073]</span> ทสฺสนฺติ, สุนฺทรํ. โน เจ ทสฺสนฺติ, อาหรณุปาเยน อาหริสฺสามีติ จตุรงฺคินิํ เสนํ สนฺนยฺหิตฺวา สยมฺปิ นิกฺขนฺโตเยว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถ้าพวกเขาจักให้ ก็เป็นการดี หากไม่ให้ เราจักนำมาด้วยอุบายในการนำมา ดังนี้ จึงทรงจัดกองทัพ ๔ เหล่า แล้วเสด็จออกไปด้วยพระองค์เองทีเดียว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:126">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยถา จ อชาตสตฺตุ, เอวํ ลิจฺฉวี อาทโยปิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พระเจ้าอชาตศัตรูเป็นอย่างไร พวกเจ้าลิจฉวีเป็นต้นก็เป็นอย่างนั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:127">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อมฺหากํ <span class="pb hidden-meta" data-ed="M" data-n="2.0074">[M 2.0074]</span> ธาตุโย วา เทนฺตุ, ยุทฺธํ วาติ กุสินารานครํ ปริวาเรตฺวา ฐิเต เอตํ ภควา อมฺหากํ คามกฺเขตฺเตหิ ปฏิวจนํ อโวจุํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เมื่อกษัตริย์เหล่านั้นล้อมกรุงกุสินาราอยู่แล้วกล่าวว่า 'จงให้พระธาตุแก่พวกเรา หรือไม่ก็จงรบกัน' พวกเขาจึงกล่าวคำตอบว่า 'พระผู้มีพระภาคปรินิพพานในเขตบ้านของพวกเรา'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:128">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น มยํ สตฺถุ สาสนํ ปหิณิมฺห, นาปิ คนฺตวา อานยิมฺห. สตฺถา ปน สยเมว อาคนฺตวา สาสนํ เปเสตฺวา อมฺเห ปกฺโกสาเปสิ. ตุมฺเหปิ โข ปน ยํ ตุมฺหากํ คามกฺเขตฺเต รตนํ อุปฺปชฺชติ. น ตํ อมฺหากํ เทถ. สเทวเก จ โลเก พุทฺธรตนสมํ รตนํ นาม นตฺถิ<span class="pb hidden-meta" data-ed="M" data-n="2.0075">[M 2.0075]</span>, เอวรูปํ อุตฺตมรตนํ ลภิตฺวา มยํ นทสฺสาม, น โข ปน ตุมฺเหหิเยว มาตุถนโต ขีรํ ปีตํ. อมฺเหหิปิ มาตุถนโต ขีรํ ปีตํ, น ตุมฺเหเยว ปุริสา, อมฺเหปิ ปุริสา. โหตูติ อญฺญมญฺญํ อหํการํ กตฺวา สาสนปฏิสาสนํ เปเสนฺติ. อญฺญมญฺญํ มานคชฺชิตํ คชฺชนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พวกเรามิได้ส่งข่าวสารของพระศาสดาไป และมิได้ไปรับพระองค์มา แต่พระศาสดาเสด็จมาเอง ทรงส่งข่าวสารมาเรียกพวกเรา แม้พวกท่านเล่า สิ่งใดที่เป็นรัตนะเกิดขึ้นในเขตบ้านของพวกท่าน พวกท่านก็ไม่ให้สิ่งนั้นแก่พวกเรา อนึ่ง ในโลกพร้อมทั้งเทวโลก รัตนะที่เสมอด้วยพุทธรัตนะไม่มี พวกเราได้รัตนะอันสูงสุดเช่นนี้แล้วจักไม่ให้ อนึ่ง มิใช่พวกท่านเท่านั้นที่ดื่มน้ำนมจากอกมารดา แม้พวกเราก็ดื่มน้ำนมจากอกมารดา มิใช่พวกท่านเท่านั้นที่เป็นบุรุษ แม้พวกเราก็เป็นบุรุษ 'จงเป็นไปเถิด' ดังนี้ ต่างก็ทำความถือตัว ส่งข่าวสารตอบโต้กัน ต่างก็บันลือเสียงด้วยความมานะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:129">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เอเต <span class="pb hidden-meta" data-ed="M" data-n="2.0076">[M 2.0076]</span> ราชาโน ภควโต ปรินิพฺพุตฏฺฐาเน วิวาทํ กโรนฺติ, น โข ปเนตํ ปติรูปํ, อลํ อิมินา กลเหน, วูปสเมสฺสามิ นนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พระราชาเหล่านี้กำลังวิวาทกันในสถานที่ปรินิพพานของพระผู้มีพระภาค การนี้ไม่สมควรเลย พอทีกับการทะเลาะนี้ เราจักระงับการทะเลาะนั้นเสีย ดังนี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:130">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อาจริยสฺส <span class="pb hidden-meta" data-ed="M" data-n="2.0077">[M 2.0077]</span> วิย โภ สทฺโท, อาจริยสฺส วิย โภ สทฺโทติ สพฺเพ นิรวา อเหสุํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ท่านผู้เจริญ เสียงเหมือนของอาจารย์ ท่านผู้เจริญ เสียงเหมือนของอาจารย์ ดังนี้ ทุกคนต่างก็นิ่งเงียบไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:131">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(๑)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(๑)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:132">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สุณนฺตุ โภนฺโต มม เอกวาจํ,</p>
+<p rend="gatha2">อมฺหาก พุทฺโธ อหุ ขนฺติวาโท;</p>
+<p rend="gatha3">นหิ <span class="pb hidden-meta" data-ed="M" data-n="2.0078">[M 2.0078]</span> สาธุยํ อุตฺตมปุคฺคลสฺส,</p>
+<p rend="gathalast">สรีรภาเค สิยา สมฺปหาโร.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ท่านผู้เจริญทั้งหลาย โปรดฟังคำหนึ่งของข้าพเจ้า พระพุทธเจ้าของพวกเราเป็นผู้กล่าวสรรเสริญขันติ การที่จะมีการประหัตประหารกันเพราะส่วนพระสรีระของบุคคลผู้สูงสุดนั้น ไม่ดีเลย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:133">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(๒)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(๒)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:134">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สพฺเพว โภนฺโต สหิตา สมคฺคา,</p>
+<p rend="gatha2">สมฺโมทมานา กโรมฏฺฐภาเค;</p>
+<p rend="gatha3">วิตฺถาริกา โหนฺตุ, ทิสาสุ ถูปา;</p>
+<p rend="gathalast">พหู ชนา จกฺขุมโต ปสนฺนา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ท่านผู้เจริญทั้งหลาย ขอทุกท่านจงพร้อมเพรียงสามัคคีกัน บันเทิงใจร่วมกันแบ่ง (พระสรีระ) ออกเป็น ๘ ส่วน ขอพระสถูปจงแพร่หลายไปในทิศทั้งหลาย ชนเป็นอันมากผู้เลื่อมใสในพระองค์ผู้มีพระจักษุมีอยู่มาก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:135">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น <span class="pb hidden-meta" data-ed="M" data-n="2.0079">[M 2.0079]</span> หิ สาธุกํ อุตฺตมปุคฺคลสฺส, สรีรภาเค สิยา สมฺปหาโรติ น หิ สาธุยนฺติ น หิ สาธุ อยํ –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การประหัตประหารกันเพราะส่วนพระสรีระของบุคคลผู้สูงสุดนั้น ไม่ดีเลย ดังนี้ บทว่า 'น หิ สาธุยํ' ความว่า 'น หิ สาธุ อยํ' (การนี้ไม่ดีเลย)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:136">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ภควา <span class="pb hidden-meta" data-ed="M" data-n="2.0081">[M 2.0081]</span> สพฺพสุ ปุพฺเพ มยํ ตุมฺหากํ ทฺวตฺติํสมหาปุริสลกฺขณปฏิมณฺฑิตํ ฉพฺพณฺณพุทฺธรสฺมิขจิตํ อสีติอนุพฺยญฺชนสมุชฺชลิตโสภํ สุวณฺณวณฺณํ สรีรํ อทฺทสาม, อิทานิ ปน สุวณฺณวณฺณาว ธาตุโย อวสิฏฺฐา ชาตา, นยุตฺตมิทํ ภควา ตุมฺหากนฺติ ปริเทวิํสุ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่พระผู้มีพระภาค ในกาลก่อนพวกข้าพระองค์ได้เห็นพระสรีระของพระองค์อันประดับด้วยมหาปุริสลักษณะ ๓๒ ประการ แกมด้วยพระพุทธรัศมี ๖ ประการ รุ่งเรืองด้วยพระอนุพยัญชนะ ๘๐ ประการ มีพระฉวีวรรณดุจทองคำ แต่บัดนี้ เหลืออยู่เพียงพระธาตุที่มีสีดุจทองคำเท่านั้น ข้าแต่พระผู้มีพระภาค การนี้ไม่สมควรแก่พระองค์เลย ดังนี้ พวกเขาร่ำไห้แล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:137">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เกน <span class="pb hidden-meta" data-ed="M" data-n="2.0082">[M 2.0082]</span> นุ โข สเทวกสฺส โลกสฺส กงฺขจฺเฉทนตฺถาย จตุสจฺจกถาย ปจฺจยภูตา ภควโต ทกฺขิณทาฐา คหิตาติ โอโลเกนฺโต พฺราหฺมเณน คหิตาติ ทิสฺวา พฺราหฺมโณปิ ทฐาย อนุจฺฉวิกํ สกฺการํ นสกฺขิสฺสติ คณฺหามิ นตฺถิ เวฏฺฐนฺตรโต คเหตฺวา สุวณฺณจงฺโกฏเก ฐเปตฺวา เทวโลกํ เนตฺวา จูฬามณิเจติเย ปติฏฺฐเปสิ –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เมื่อ (ท้าวสักกะ) ทรงพิจารณาว่า 'ใครหนอถือเอาพระเขี้ยวแก้วเบื้องขวาของพระผู้มีพระภาค ซึ่งเป็นปัจจัยแห่งกถาว่าด้วยสัจจะ ๔ เพื่อตัดความสงสัยของโลกพร้อมทั้งเทวโลกไป' ทรงเห็นว่าพราหมณ์ถือเอาไปแล้ว ทรงดำริว่า 'พราหมณ์จักไม่สามารถทำการสักการะที่คู่ควรแก่พระเขี้ยวแก้วได้ เราจะถือเอา' ดังนี้ จึงทรงถือเอาจากระหว่างผ้าโพกศีรษะ (ของพราหมณ์) บรรจุลงในผอบทองคำ นำไปสู่เทวโลก ประดิษฐานไว้ในพระจุฬามณีเจดีย์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:138">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ราชคเห <span class="pb hidden-meta" data-ed="M" data-n="2.0084">[M 2.0084]</span> ภควโต สรีรานํ ถูปญฺจ มหญฺจ อกาสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ในกรุงราชคฤห์ (พระเจ้าอชาตศัตรู) ได้ทรงสร้างพระสถูปและทำการบูชาพระสรีระของพระผู้มีพระภาค</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:139">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สมณสฺส <span class="pb hidden-meta" data-ed="M" data-n="2.0085">[M 2.0085]</span> โคตมสฺส ปรินิพฺพุตกาลโต ปฏฺฐาย พลกฺกาเรน สาธุกีฬิตาย อุปทฺทุตุมฺห, สพฺเพ โน กมฺมนฺตา นฏฺฐาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตั้งแต่วันที่พระสมณโคดมปรินิพพาน พวกเราถูกรบกวนด้วยการฉลองพระธาตุโดยบังคับ การงานทั้งปวงของพวกเราเสียหายหมดแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:140">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มหาชโน มนํ ปโทเสตฺวา อปาเย นิพฺพตฺตีติ ทิสฺวา สกฺกํ เทวราชานํ ธาตุอาหรณูปายํ กาเรสฺสามาติ ตสฺส สนฺติกํ <span class="pb hidden-meta" data-ed="M" data-n="2.0086">[M 2.0086]</span> คนฺตวา ตมตฺถํ อาโรเจตฺวา ธาตุอาหรณูปายํ กโรมิ มหาราชาติ อาหํสุ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เมื่อเห็นว่ามหาชนทำจิตให้ประทุษร้ายแล้วจะไปเกิดในอบาย จึงคิดว่า 'เราจักให้ท้าวสักกะเทวราชทำอุบายนำพระธาตุมา' จึงไปหาท้าวสักกะ แจ้งเนื้อความนั้นแล้วกราบทูลว่า 'ข้าแต่มหาราช ข้าพระองค์จะทำอุบายนำพระธาตุมา'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:141">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ภนฺเต ปุถุชฺชโน นาม อชาตสตฺตุนา สโม สทฺโธ นาม นตฺถิ, น โส มม วจนํ กริสฺสติ, อปิจ โข มารวิภิํ สกสทิสํ วิภิํสกํ ทสฺเสสฺสามิ มหาสทฺทํ สาเวสฺสามิ ยกฺขคาหกขิปิตกอโรจเก กริสฺสามิ, ตุมฺเห อมนุสฺสา มหาราช กุปิตา ธาตุโย อาหราเปถาติ วเทยฺยาถ, เอวํ โส อาหราเปสฺสตีติ–</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่ท่านผู้เจริญ ปุถุชนที่มีศรัทธาเสมอด้วยพระเจ้าอชาตศัตรูไม่มีเลย พระองค์จักไม่ทำตามคำของข้าพเจ้า แต่ว่าข้าพเจ้าจักแสดงสิ่งที่น่าสะพรึงกลัวประดุจความน่าสะพรึงกลัวของมาร จักให้ได้ยินเสียงกึกก้อง จักทำให้คนบอกข่าวเป็นเหมือนถูกยักษ์จับเหวี่ยงไป ท่านทั้งหลายพึงกราบทูลว่า 'ข้าแต่มหาราช พวกอมนุษย์โกรธแล้ว ขอพระองค์โปรดให้คนไปนำพระธาตุมาเถิด' เมื่อเป็นเช่นนี้ พระองค์ก็จักให้คนไปนำมา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:142">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มหาราช <span class="pb hidden-meta" data-ed="M" data-n="2.0087">[M 2.0087]</span> อมนุสฺสา กุปิตา, ธาตุโย อาหราเปหีติ ภณิํสุ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่มหาราช พวกอมนุษย์โกรธแล้ว ขอพระองค์โปรดให้คนไปนำพระธาตุมาเถิด ดังนี้ พวกเขากราบทูลแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:143">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น ตาว ภนฺเต มยฺหํ จิตฺตํ ตุสฺสติ, เอวํ สนฺเตปิ อาหรนฺตูติ อาห.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่ท่านผู้เจริญ จิตของข้าพเจ้ายังไม่ยินดีเลย ถึงอย่างนั้น ก็จงนำมาเถิด ดังนี้ (พระราชา) ตรัสแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:144">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มหาราช <span class="pb hidden-meta" data-ed="M" data-n="2.0088">[M 2.0088]</span> เอกํ ธาตุนิธานํ กาตุํ วฏฺฏตีติ อาห.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่มหาราช ควรสร้างที่บรรจุพระธาตุแห่งหนึ่ง ดังนี้ (ท้าวสักกะ) กราบทูลแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:145">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อนาคเต <span class="pb hidden-meta" data-ed="M" data-n="2.0089">[M 2.0089]</span> ลงฺกาทีเป มหาวิหาเร มหาเจติยมฺหิ นิทหิสฺสนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ในอนาคต จักบรรจุไว้ในมหาเจดีย์ในมหาวิหารที่เกาะลังกา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:146">
+  <div class="pair-col col-pali">
+<p rend="subhead">มหาสาวก เจตี</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">เจดีย์ของพระมหาสาวก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:147">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิมสฺมิํ <span class="pb hidden-meta" data-ed="M" data-n="2.0090">[M 2.0090]</span> ฐาเน โย ปาสาโณ อตฺถิ, โส อนฺตรธายตุ, ปํสุ สุวิสุทฺธา โหตุ, อุทกํ มา อุฏฺฐหตูติ อธิฏฺฐาสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">หินใดมีอยู่ในที่นี้ ขอหินนั้นจงอันตรธานไป ขอฝุ่นจงบริสุทธิ์ยิ่ง ขออย่าให้น้ำขึ้นมา ดังนี้ ท่านอธิษฐานแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:148">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิธ ราชา กิํ กาเรตีติ ปุจฺฉนฺตานมฺปิ มหาสาวกานํ เจติยานีติ วทนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">แม้เมื่อมีผู้ถามว่า ‘พระราชาทรงสร้างอะไรในที่นี้’ ก็กล่าวว่า ‘เจดีย์ของพระมหาสาวกทั้งหลาย’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:149">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มาลา <span class="pb hidden-meta" data-ed="M" data-n="2.0093">[M 2.0093]</span> มา มิลายนฺตุ, คนฺธา มา วินสฺสนฺตุ, ทีปา มา วิชฺฌายนฺตูติ อธิฏฺฐหิตฺวา สุวณฺณปฏฺเฏ อกฺขรานิ ฉินฺทาเปสิ –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ขอพวงมาลาอย่าได้เหี่ยวแห้งไป ขอของหอมอย่าได้เสื่อมเสียไป ขอประทีปอย่าได้ดับไป ดังนี้ อธิษฐานแล้ว จึงให้จารึกอักษรลงบนแผ่นทองคำ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:150">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อนาคเต ปิยโทโส นาม กุมาโร ฉตฺตํ อุสฺสาเปตฺวา อโสโก ธมฺมราชา ภวิสฺสติ, โส อิมา ธาตุโย วิตฺถาริกา กริสฺสตีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ในอนาคต กุมารชื่อปิยทัสสี จักทรงยกฉัตรขึ้นแล้ว เป็นพระเจ้าอโศกธรรมราช พระองค์จักทรงขยายพระธาตุเหล่านี้ให้แพร่หลาย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:151">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อนาคเต <span class="pb hidden-meta" data-ed="M" data-n="2.0094">[M 2.0094]</span> ทลิทฺทราชา อิมํ มณิํ คเหตฺวา ธาตูนํ สกฺการํ กโรตูติ อกฺขรํ ฉินฺทาเปสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ในอนาคต พระเจ้าผู้ยากจน จงทรงถือเอามณีนี้ กระทำการสักการะพระธาตุทั้งหลายเถิด ดังนี้ แล้วทรงจารึกอักษรไว้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:152">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ตาต อชาตสตฺตุนา ธาตุนิธานํ กตํ, เอตฺถ อารกฺขํ ปฏฺฐเปหีติ ปหิณิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พ่อเอ๋ย พระเจ้าอชาตศัตรูได้ทรงทำที่เก็บพระธาตุไว้แล้ว จงตั้งการอารักขาไว้ ณ ที่นี้เถิด ดังนี้ แล้วส่งไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:153">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปริกฺขีโณทานิ <span class="pb hidden-meta" data-ed="M" data-n="2.0099">[M 2.0099]</span> เม อายูติ อญฺญาสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ทรงทราบว่า บัดนี้อายุของเราสิ้นแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:154">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เยสญฺจ เทวปุตฺตานํ มรณนิมิตฺตานิ อาวิ ภวนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">และนิมิตแห่งความตายย่อมปรากฏแก่เทวดาเหล่าใด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:155">
+  <div class="pair-col col-pali">
+<p rend="bodytext">นสฺสติ <span class="pb hidden-meta" data-ed="M" data-n="2.0100">[M 2.0100]</span> วต โภ เม อยํ สมฺปตฺตีติ ภยาภิภูโต อโหสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">โอ้หนอ สมบัติของเรานี้จักพินาศเสียแล้ว ดังนี้ แล้วทรงถูกความกลัวครอบงำ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:156">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อตฺถิ นุ โข โกจิ สมโณ วา พฺราหฺมโณ วา โลกปิตา มโห มหาพฺรหฺมาวา, โย เม หทยนิสฺสิตํ โสกสลฺลํ สมุทฺธริตฺวา อิมํ สมฺปตฺติํ ถาวรํ กเรยฺยาติ โอโลเกนฺโต กญฺจิ อทิสฺวา ปุน อทฺทส มาทิสานํ สตสหสฺสานมฺปิ อุปฺปนฺนํ โสกสลฺลํ สมฺมาสมฺพุทฺโธ อุทฺธริตุํ ปฏิพโลติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">มีสมณะหรือพราหมณ์ หรือท้าวมหาพรหมผู้เป็นบิดาของโลกผู้ใดบ้างหนอ ผู้ที่สามารถถอนลูกศรคือความโศกที่อาศัยอยู่ในใจของเราออกได้ และทำให้สมบัตินี้มั่นคงได้ ดังนี้ เมื่อทรงมองหาแล้วไม่เห็นใคร จึงทรงเห็นอีกว่า แม้ลูกศรคือความโศกที่เกิดขึ้นแก่คนเช่นเราเป็นแสนๆ พระสัมมาสัมพุทธเจ้าก็ทรงสามารถถอนออกได้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:157">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อปริปกฺกํ <span class="pb hidden-meta" data-ed="M" data-n="2.0102">[M 2.0102]</span> ตาวสฺส ญาณํ, กติปาหํ ปน อติกฺกมิตฺวา มยิ อินฺทสาลคุหายํ วิหรนฺเต ปญฺจ ปุพฺพนิมิตฺตานิ ทิสฺวา มรณภยภีโต ทฺวีสุ เทวโลเกสุ เทวตาหิ สทฺธิํ อุปสงฺกมิตฺวา จุทฺทส ปญฺเห ปุจฺฉิตฺวา อุเปกฺขาปญฺหวิสฺสชฺชนาวสาเน อสีติยา เทวตาสหสฺเสหิ สทฺธิํ โสตาปตฺติผเล ปติฏฺฐหิสฺสตีติ จินฺเตตฺวา โอกาสํ นากาสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ญาณของเขายังไม่แก่กล้า แต่เมื่อล่วงไปสองสามวัน เมื่อเราอยู่ในถ้ำอินทสาละ เขาจักเห็นบุพนิมิต ๕ ประการ แล้วจักกลัวภัยคือความตาย จักเข้าไปหาเราพร้อมด้วยเทวดาในสองเทวโลก จักทูลถามปัญหา ๑๔ ข้อ เมื่อจบการวิสัชนาปัญหาอุเบกขา จักตั้งอยู่ในโสดาปัตติผลพร้อมด้วยเทวดาแปดหมื่นองค์ ดังนี้ ทรงดำริแล้วจึงไม่ทรงให้โอกาส</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:158">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มม <span class="pb hidden-meta" data-ed="M" data-n="2.0103">[M 2.0103]</span> ปุพฺเพปิ เอกกสฺส คตตฺตา สตฺถารา โอกาโส นกโต, อทฺธา เม นตฺถิ มคฺคผลสฺส อุปนิสฺสโย, เอกสฺส ปน อุปนิสฺสเย สติ จกฺกวาฬปริยนฺตายปิ ปริสาย ภควา ธมฺมํ เทเสติเยว. อวสฺสํ โข ปน ทฺวีสุ เทวโลเกสุ กสฺสจิ เทวสฺส อุปนิสฺสโย ภวิสฺสติ, ตํ สนฺธาย สตฺถา ทมฺมํ เทเสสฺสติ. ตํ สุตฺวา อหมฺปิ อตฺตโน โทมนสฺสํ วูปสเมสฺสามีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">แม้เมื่อก่อนเราไปคนเดียว พระศาสดาก็ไม่ทรงให้โอกาส แน่นอนว่าเราไม่มีอุปนิสัยแห่งมรรคผล แต่เมื่อมีอุปนิสัยของคนคนหนึ่ง พระผู้มีพระภาคก็ทรงแสดงธรรมแก่บริษัทแม้มีจักรวาลเป็นที่สุด แต่แน่นอนว่าจักมีอุปนิสัยของเทวดาบางองค์ในสองเทวโลก พระศาสดาจักทรงแสดงธรรมปรารภเทวดานั้น เมื่อเราได้ฟังธรรมนั้นแล้ว ก็จักระงับความโทมนัสของตนได้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:159">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ทฺวีสุ <span class="pb hidden-meta" data-ed="M" data-n="2.0104">[M 2.0104]</span> เทวโลเกสุ เทวตา คเหตฺวา ธุเรน ปหรนฺตสฺส วิย สตฺถารํ อุปสงฺกมิตุํ นยุตฺตํ, อยํปน ปญฺจสิโข ทสพลสฺส อุปฏฺฐาโก <span class="pb hidden-meta" data-ed="M" data-n="2.0105">[M 2.0105]</span> วลฺลโภ อิจฺฉิติจฺฉิตกฺขเณ คนฺตวา ปญฺหํ ปุจฺฉิตฺวา ธมฺมํ สุณาติ, อิมํ ปุรโต เปเสตฺวา โอกาสํ กาเรตฺวา อิมินา กโตกาเส อุปสงฺกมิตฺวา ปญฺหํ ปุจฺฉิสฺสามีติ โอกาสกรณตฺถํ อามนฺเตสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การพาเทวดาในสองเทวโลกไป ไม่สมควรที่จะเข้าไปหาพระศาสดาเหมือนคนเบียดเสียดกัน แต่ปัญจสิขะนี้เป็นอุปัฏฐากที่รักของพระทศพล ย่อมไปทูลถามปัญหาและฟังธรรมในขณะที่ปรารถนา เราจักส่งปัญจสิขะนี้ไปก่อน ให้เขาทำโอกาส แล้วเมื่อเขาทำโอกาสแล้ว เราจักเข้าไปทูลถามปัญหา ดังนี้ จึงเรียกปัญจสิขะมาเพื่อทำโอกาส</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:160">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เอวํ มหาราช โหตุ, ภทฺทํ ตว โย ตฺวํ มํ เอหิ มาริส อุยฺยาน กีฬาทีนิ วา นฏสมชฺชาทีนิ วา ทสฺสนาย คจฺฉามาติ อวตฺวา พุทฺธํ ปสฺสิสฺสาม ธมฺมํ โสสฺสามาติ วทสีติ ทฬฺหตรํ อุปตฺถมฺเภนฺโต เทวานมินฺทสฺส วจนํ ปฏิสฺสุตฺวา อนุจริยํ สหจรณํ เอกโต คมนํ อุปาคมิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ขอเป็นเช่นนั้นเถิด มหาบพิตร ความเจริญจงมีแก่พระองค์ ผู้ไม่ตรัสว่า มาเถิด ท่านผู้เจริญ เราไปดูการเล่นในอุทยานเป็นต้น หรือการมหรสพของนักฟ้อนเป็นต้นกันเถิด แต่ตรัสว่า เราจักไปเฝ้าพระพุทธเจ้า จักฟังธรรม ดังนี้ ทรงสนับสนุนอย่างหนักแน่นยิ่งขึ้น ทรงรับคำของท้าวสักกะเทวราชแล้ว ทรงติดตามไปร่วมทางไปด้วยกัน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:161">
+  <div class="pair-col col-pali">
+<p rend="gatha1">วนฺเท <span class="pb hidden-meta" data-ed="M" data-n="2.0113">[M 2.0113]</span> เต ปิตรํ ภทฺเท, ติมฺพรุํ สูริยวจฺฉเส;</p>
+<p rend="gathalast">เยน ชาตาสิ กลฺยาณี, อานนฺทชนนี มม.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอไหว้บิดาของท่านผู้เจริญ คือทิมพรู ผู้มีรัศมีดุจพระอาทิตย์ ผู้ที่ท่านผู้มีรูปงามได้เกิดมา ผู้เป็นที่ยังความยินดีให้เกิดแก่ข้าพเจ้า</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:162">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เอวํ วุตฺเต ภควา ปญฺจสิขํ คนฺธพฺพเทวปุตฺตํ เอตทโวจ. สํสนฺทติ โข เต ปญฺจสิข ตนฺติสฺสโร คีตสฺสเรน คีตสฺสโร จ ตนฺติสฺสเรน, นจ ปน เต ปญฺจสิข ตนฺติสฺสโร คีตสฺสรํ อติวตฺตติ คีตสฺสโร จ ตนฺติสฺสรํ. กทา สํยูฬฺหา ปน เต ปญฺจสิข วฺมิ คาถา พุทฺธูปสญฺหิตา ธมฺมูปสญฺหิตา สํยูปสญฺหิตา อรหนฺตูปสญฺหิตา กามูปสญฺหิตาติ –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เมื่อปัญจสิขะกล่าวอย่างนั้นแล้ว พระผู้มีพระภาคได้ตรัสกับปัญจสิขะคันธัพพเทวบุตรว่า ดูกรปัญจสิขะ เสียงพิณของท่านย่อมเข้ากันได้กับเสียงขับ และเสียงขับก็เข้ากันได้กับเสียงพิณ ดูกรปัญจสิขะ เสียงพิณของท่านไม่ล้ำเสียงขับ และเสียงขับก็ไม่ล้ำเสียงพิณ ก็เมื่อไรเล่าที่คาถาเหล่านี้ของท่านที่ประกอบด้วยพระพุทธเจ้า ประกอบด้วยพระธรรม ประกอบด้วยพระสงฆ์ ประกอบด้วยพระอรหันต์ ประกอบด้วยกาม ได้ถูกประพันธ์ขึ้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:163">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ภควตา <span class="pb hidden-meta" data-ed="M" data-n="2.0116">[M 2.0116]</span> ปญฺจสิขสฺส โอกาโส นกโตติ เทวตา คเหตฺวา ตโตว ปฏินิวตฺเตยฺย. ตโต มหาชานิโย ภเวยฺย, วณฺเณ ปน กถิเต กโต ภควตา ปญฺจสิขสฺส โอกาโสติ เทวตาหิ สทฺธิํ อุปสงฺกมิตฺวา ปญฺหํ ปุจฺฉิตฺวา วิสฺสชฺชนาวสาเน อสีติยา เทวตาสหสฺเสหิ สทฺธิํ โสตาปตฺติผเล ปติฏฺฐหิสฺสตีติ ญตฺวา วณฺณํ กเถสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถ้าพระผู้มีพระภาคไม่ทรงให้โอกาสแก่ปัญจสิขะ ท้าวสักกะก็จักพาเทวดาทั้งหลายกลับไปจากที่นั้น เมื่อนั้นก็จักเกิดความเสียหายใหญ่หลวง แต่เมื่อทรงกล่าวพรรณนาคุณแล้ว พระผู้มีพระภาคก็ทรงให้โอกาสแก่ปัญจสิขะ ทรงทราบว่าท้าวสักกะจักเข้าไปเฝ้าพร้อมด้วยเทวดาทั้งหลาย ทูลถามปัญหา และเมื่อจบการวิสัชนา ก็จักตั้งอยู่ในโสดาปัตติผลพร้อมด้วยเทวดาแปดหมื่นองค์ จึงทรงกล่าวพรรณนาคุณ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:164">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อถ <span class="pb hidden-meta" data-ed="M" data-n="2.0118">[M 2.0118]</span> โข ภควา สกฺกํ เทวานมินฺทํ เอตทโวจ “อจฺฉริยมิทํ อายสฺมโต โกสิยสฺส, อพฺภุตมิทํ อายสฺมโต โกสิยสฺส ตาว พหุกิจฺจสฺส พหุกรณียสฺส ยทิทํ อิธาคมน”นฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ครั้งนั้น พระผู้มีพระภาคได้ตรัสกับท้าวสักกะจอมเทพว่า น่าอัศจรรย์จริงหนอ ท่านโกสิยะ น่าประหลาดจริงหนอ ท่านโกสิยะ ที่ท่านผู้มีกิจมาก มีกรณียกิจมาก ถึงมาที่นี่ได้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:165">
+  <div class="pair-col col-pali">
+<p rend="bodytext">จิรปฏิกาหํ ภนฺเต ภควนฺตํ ทสฺสนาย อุปสงฺกมิตุกาโม, อปิ จ เทวานํ ตาวติํสานํ เกหิจิ เกหิจิ กิจฺจกรณีเยหิ พฺยาวโฏ, เอวาหํ นาสกฺขิํ ภควนฺตํ ทสฺสนาย อุปสงฺกมิตุํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่พระองค์ผู้เจริญ ข้าพระองค์ปรารถนาจะมาเฝ้าพระผู้มีพระภาคเพื่อทัศนามานานแล้ว แต่ข้าพระองค์ติดพันอยู่ด้วยกิจการบางอย่างของเทวดาชั้นดาวดึงส์ จึงไม่สามารถมาเฝ้าพระผู้มีพระภาคเพื่อทัศนาได้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:166">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เต <span class="pb hidden-meta" data-ed="M" data-n="2.0120">[M 2.0120]</span> “ตว สนฺตกา, มม สนฺตกา”ติ นิจฺเฉตุํ อสกฺโกนฺตา อฑฺฑํ กโรนฺติ, สกฺกํ เทวราชานํ ปุจฺฉนฺติ, โส “ยสฺส วิมานํ อาสนฺนตรํ, ตสฺส สนฺตกา”ติ วทติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พวกเขากำหนดไม่ได้ว่า เป็นของท่าน เป็นของฉัน จึงทะเลาะกัน จึงทูลถามท้าวสักกะเทวราช พระองค์ตรัสว่า เป็นของใครที่วิมานอยู่ใกล้กว่า ก็เป็นของผู้นั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:167">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยสฺส <span class="pb hidden-meta" data-ed="M" data-n="2.0121">[M 2.0121]</span> วิมานํ โอโลเกนฺตี ฐิตา, ตสฺส สนฺตกาติ วทติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ยืนมองวิมานของใคร ก็เป็นของผู้นั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:168">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิเธว <span class="pb hidden-meta" data-ed="M" data-n="2.0122">[M 2.0122]</span> ภนฺเต กปิลวตฺถุสฺมิํ โคปิกา นาม สกฺยธีตา อโหสิ พุทฺเธ ปสนฺนา ธมฺเม ปสนฺนา สงฺเฆ ปสนฺนา สีเลสุ ปริปูรการินี, สา อิตฺถิตฺตํ วิราเชตฺวา ปุริสตฺตํ ภาเวตฺวา กายสฺส เภทา ปรํ มรณา สุคติํ สคฺคํ โลกํ อุปปนฺนา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่พระองค์ผู้เจริญ ในกรุงกบิลพัสดุ์นี้เอง มีธิดาของพระศากยะชื่อโคปิกา เป็นผู้เลื่อมใสในพระพุทธเจ้า เลื่อมใสในพระธรรม เลื่อมใสในพระสงฆ์ บำเพ็ญศีลให้บริบูรณ์ นางนั้นละเพศหญิงแล้ว บำเพ็ญเพศชาย เมื่อร่างกายแตกทำลาย หลังจากความตาย ได้ไปเกิดในสุคติโลกสวรรค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:169">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ตสฺส <span class="pb hidden-meta" data-ed="M" data-n="2.0128">[M 2.0128]</span> ธมฺมสฺส ปตฺติยา, อาคตมฺหาสิ มาริส;</p>
+<p rend="gathalast">กตาวกาสา ภควตา, ปญฺหํ ปุจฺเฉมุ มาริส.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่ท่านผู้เจริญ ข้าพระองค์มาแล้ว เพื่อบรรลุธรรมนั้น เมื่อพระผู้มีพระภาคทรงให้โอกาสแล้ว ข้าแต่ท่านผู้เจริญ ข้าพระองค์จักทูลถามปัญหา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:170">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ปุจฺฉ วาสว มํ ปญฺหํ, ยํ กิญฺจิ มนสิจฺฉสิ;</p>
+<p rend="gathalast">ตสฺส ตสฺเสว ปญฺหสฺส, อหํ อนฺตํ กโรมิ เต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ดูกรวาสวะ ท่านจงถามปัญหาแก่เราตามที่ท่านปรารถนาในใจเถิด ปัญหาข้อนั้นๆ นั่นแหละ เราจักกระทำที่สุดแก่ท่าน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:171">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กิํ <span class="pb hidden-meta" data-ed="M" data-n="2.0129">[M 2.0129]</span> สํโยชนา นุ โข มาริส เทวา มนุสฺสา อสุรา นาคา คนฺธพฺพา เย จญฺเญ สนฺติ ปุถุกายา, เต อเวรา อทณฺฑา อสปตฺตา อพฺยาปชฺชา วิหเรมุ อเวริโนติ อิติ จ เนสํ โหติ. อถ จ ปน สเวรา สทณฺฑา สสปตฺตา สพฺยาปชฺชา วิหรนฺติ สเวริโนติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่ท่านผู้เจริญ เทวดา มนุษย์ อสูร นาค คนธรรพ์ และสัตว์อื่นๆ เป็นอันมากที่มีกายต่างกัน มีเครื่องผูกพันอะไรหนอ พวกเขามีความปรารถนาว่า 'เราทั้งหลายพึงเป็นผู้ไม่มีเวร ไม่มีอาชญา ไม่มีศัตรู ไม่มีความเบียดเบียนกัน อยู่เป็นผู้ไม่มีเวรเถิด' แต่พวกเขากลับเป็นผู้มีเวร มีอาชญา มีศัตรู มีความเบียดเบียนกัน อยู่เป็นผู้มีเวร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:172">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิสฺสามจฺฉริยสํโยชนา <span class="pb hidden-meta" data-ed="M" data-n="2.0130">[M 2.0130]</span> โข เทวานมินฺท เทวา มนุสฺสา อสุรา นาคา คนฺธพฺพา เยจญฺเญ สนฺติ ปุถุกายา, เต อเวรา อทณฺฑา อสปตฺตา อพฺยาปชฺชา วิหเรมุ อเวริโนติ อิติ จ เนสํโหติ, อถ จ ปน สเวรา สทณฺฑา สสปตฺตา สพฺยาปชฺชา วิหรนฺติ สเวริโนติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูกรจอมเทพ เทวดา มนุษย์ อสูร นาค คนธรรพ์ และสัตว์อื่นๆ เป็นอันมากที่มีกายต่างกัน มีเครื่องผูกพันคือความริษยาและความตระหนี่ พวกเขามีความปรารถนาว่า 'เราทั้งหลายพึงเป็นผู้ไม่มีเวร ไม่มีอาชญา ไม่มีศัตรู ไม่มีความเบียดเบียนกัน อยู่เป็นผู้ไม่มีเวรเถิด' แต่พวกเขากลับเป็นผู้มีเวร มีอาชญา มีศัตรู มีความเบียดเบียนกัน อยู่เป็นผู้มีเวร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:173">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิสฺสตีติ <span class="pb hidden-meta" data-ed="M" data-n="2.0132">[M 2.0132]</span> อิสฺสา, สา ปรสมฺปตฺตีนํ อุสูยนลกฺขณา, ตตฺเถว อนภิรติรสา, ตโต วิมุขภาวปจฺจุปฏฺฐานา, ปรสมฺปตฺติ ปทฏฺฐานา, สํโยชนนฺติ ทฏฺฐพฺพา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ชื่อว่าอิสสา เพราะอรรถว่าริษยา มีลักษณะคือความริษยาในสมบัติของผู้อื่น มีรสคือความไม่ยินดีในสมบัตินั้นนั่นเอง มีอาการปรากฏคือความเป็นผู้เบือนหน้าหนีจากสมบัตินั้น มีสมบัติของผู้อื่นเป็นเหตุใกล้ พึงทราบว่าเป็นสังโยชน์ (เครื่องผูกพัน)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:174">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มจฺเฉรภาโว <span class="pb hidden-meta" data-ed="M" data-n="2.0133">[M 2.0133]</span> มจฺฉริยํ, ตํลทฺธานํ วา ลภิตพฺพานํ วา อตฺตโน สมฺปตฺตีนํ นิคูหนลกฺขณํ, ตาสํเยว ปเรหิ สาธารณภาว อกฺขมนรสํ, สงฺโกจนปจฺจุปฏฺฐานํ, กฏุกญฺจุกตา ปจฺจุปฏฺฐานํ วา, อตฺตสมฺปตฺติปทฏฺฐานํ, เจตโส วิรูปภาโวติ ทฏฺฐพฺพํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ความเป็นผู้ตระหนี่ ชื่อว่ามัจฉริยะ มีลักษณะคือการปกปิดสมบัติของตนที่ได้แล้วหรือที่พึงได้ มีรสคือความไม่อดทนต่อความเป็นสาธารณะแห่งสมบัติเหล่านั้นกับผู้อื่น มีอาการปรากฏคือความหดหู่ หรือมีอาการปรากฏคือความตระหนี่ถี่เหนียว มีสมบัติของตนเป็นเหตุใกล้ พึงทราบว่าเป็นความวิปริตแห่งจิต</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:175">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กิํ <span class="pb hidden-meta" data-ed="M" data-n="2.0136">[M 2.0136]</span> วณฺโณ เอโสติ ตํ ตํ โทสํ วทนฺโต ปริยตฺติญฺจ กสฺสจิ กิญฺจิ อเทนฺโต ทุพฺพณฺโณ เจว เอฬมูโคจ โหติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ผู้นี้มีผิวพรรณอย่างไร? ผู้ที่กล่าวโทษนั้นๆ และไม่ให้ปริยัติธรรมแก่ใครๆ เลย ย่อมเป็นผู้มีผิวพรรณทรามและเป็นใบ้น้ำลายไหล</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:176">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยาว <span class="pb hidden-meta" data-ed="M" data-n="2.0138">[M 2.0138]</span> ตํ นปฺปหียติ, ตาว เทวมนุสฺสา อเวรตาทีนิ ปตฺถยนฺตาปิ เวราทีนิ นปริมุจฺจนฺติเยว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตราบใดที่สังโยชน์นั้นยังละไม่ได้ ตราบนั้นเทวดาและมนุษย์ทั้งหลาย แม้จะปรารถนาความไม่มีเวรเป็นต้น ก็ยังไม่พ้นไปจากเวรเป็นต้นนั่นเอง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:177">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อถ <span class="pb hidden-meta" data-ed="M" data-n="2.0139">[M 2.0139]</span> โข สกฺโก เทวานมินฺโท ภควนฺตํ อุตฺตริ ปญฺหํ อปุจฺฉิ–</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ครั้งนั้น ท้าวสักกะจอมเทพได้ทูลถามปัญหาที่ยิ่งขึ้นไปอีกกับพระผู้มีพระภาคว่า</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:178">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิสฺสามจฺฉริยํ ปน มาริส กิํ นิทานํ กิํ สมุทยํ กิํ ชาติกํ กิํ ปภวํ, กิสฺมิํ สติ อิสฺสามจฺฉริยํ โหติ, กิสฺมิํ อสติ อิสฺสามจฺฉริยํ น โหตีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่ท่านผู้เจริญ ก็ความริษยาและความตระหนี่ มีอะไรเป็นเหตุ มีอะไรเป็นสมุทัย มีอะไรเป็นกำเนิด มีอะไรเป็นแดนเกิด เมื่อมีอะไรอยู่ ความริษยาและความตระหนี่จึงมี เมื่อไม่มีอะไรอยู่ ความริษยาและความตระหนี่จึงไม่มี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:179">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิสฺสามจฺฉริยํ <span class="pb hidden-meta" data-ed="M" data-n="2.0140">[M 2.0140]</span> โข เทวานมินฺท ปิยาปฺปิยนิทานํ ปิยาปฺปิยสมุทยํ ปิยาปฺปิยชาติกํ ปิยาปฺปิยปภวํ, ปิยาปฺปิเย สติ อิสฺสามจฺฉริยํ โหติ, ปิยาปฺปิเย อสติ อิสฺสามจฺฉริยํ นโหตีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูกรจอมเทพ ความริษยาและความตระหนี่ มีสิ่งเป็นที่รักและสิ่งไม่เป็นที่รักเป็นเหตุ มีสิ่งเป็นที่รักและสิ่งไม่เป็นที่รักเป็นสมุทัย มีสิ่งเป็นที่รักและสิ่งไม่เป็นที่รักเป็นกำเนิด มีสิ่งเป็นที่รักและสิ่งไม่เป็นที่รักเป็นแดนเกิด เมื่อมีสิ่งเป็นที่รักและสิ่งไม่เป็นที่รักอยู่ ความริษยาและความตระหนี่จึงมี เมื่อไม่มีสิ่งเป็นที่รักและสิ่งไม่เป็นที่รัก ความริษยาและความตระหนี่จึงไม่มี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:180">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น <span class="pb hidden-meta" data-ed="M" data-n="2.0141">[M 2.0141]</span> สกฺกา ทาตุํ, กิลมิสฺสติ วา อุกฺกณฺฐิสฺสติ วาติอาทีนิ วตฺวา มจฺฉริยํ กโรติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">กล่าวว่า 'ไม่สามารถจะให้ได้ หรือเขาจะลำบาก หรือเขาจะระอา' ดังนี้เป็นต้นแล้ว ย่อมทำความตระหนี่</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:181">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อโห <span class="pb hidden-meta" data-ed="M" data-n="2.0142">[M 2.0142]</span> วตสฺส เอวรูปํ น ภเวยฺยาติ อิสฺสํ กโรติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ย่อมทำความริษยาว่า 'โอหนอ ขอสิ่งเช่นนี้อย่าได้มีแก่ผู้นี้เลย'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:182">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มยมฺเปตํ มมายนฺตา น ปริภุญฺชาม, น สกฺกา ทาตุนฺติ มจฺฉริย กโรติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ย่อมทำความตระหนี่ว่า 'แม้เราทั้งหลายเมื่อยึดถือสิ่งนี้ว่าเป็นของเรา ก็ยังไม่ได้บริโภค ไม่สามารถจะให้ได้'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:183">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ฐเปตฺวา <span class="pb hidden-meta" data-ed="M" data-n="2.0143">[M 2.0143]</span> มํ โก อญฺโญ เอวรูปสฺส ลาภีติ อิสฺสํ วา กโรติ, ยาจิโต ตาวกาลิกมฺปิ อททมาโน มจฺฉริยํ วา กโรติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ย่อมทำความริษยาว่า 'ยกเว้นเราเสียแล้ว ใครอื่นเล่าจะเป็นผู้ได้สิ่งเห็นปานนี้' หรือเมื่อถูกขออยู่ ไม่ให้แม้เพียงชั่วคราว ย่อมทำความตระหนี่</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:184">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปิยาปฺปิยํ โข ปน มาริส กิํนิทานํ กิํสมุทยํ กิํชาติกํ กิํปภวํ, กิสฺมิํ สติ ปิยาปฺปิยํ โหติ, กิสฺมิํ อสติ ปิยาปฺปิยํ น โหตีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่ท่านผู้เจริญ ก็สิ่งเป็นที่รักและสิ่งไม่เป็นที่รัก มีอะไรเป็นเหตุ มีอะไรเป็นสมุทัย มีอะไรเป็นกำเนิด มีอะไรเป็นแดนเกิด เมื่อมีอะไรอยู่ สิ่งเป็นที่รักและสิ่งไม่เป็นที่รักจึงมี เมื่อไม่มีอะไรอยู่ สิ่งเป็นที่รักและสิ่งไม่เป็นที่รักจึงไม่มี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:185">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปิยาปฺปิยํ <span class="pb hidden-meta" data-ed="M" data-n="2.0144">[M 2.0144]</span> โข เทวานมินฺท ฉนฺทนิทานํ ฉนฺทสมุทยํ ฉนฺทชาติกํ ฉนฺทปภวํ, ฉนฺเท สติ ปิยาปฺปิยํ โหติ, ฉนฺเท อสติ ปิยาปฺปิยํ น โหตีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูกรจอมเทพ สิ่งเป็นที่รักและสิ่งไม่เป็นที่รัก มีฉันทะเป็นเหตุ มีฉันทะเป็นสมุทัย มีฉันทะเป็นกำเนิด มีฉันทะเป็นแดนเกิด เมื่อมีฉันทะอยู่ สิ่งเป็นที่รักและสิ่งไม่เป็นที่รักจึงมี เมื่อไม่มีฉันทะ สิ่งเป็นที่รักและสิ่งไม่เป็นที่รักจึงไม่มี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:186">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ฉนฺทนิทานนฺติเอตฺถ <span class="pb hidden-meta" data-ed="M" data-n="2.0145">[M 2.0145]</span> ปริเยสนฉนฺโท, ปฏิลาภฉนฺโท, ปริโภค ฉนฺโท, สนฺนิธิฉนฺโท, วิสฺสชฺชนฉนฺโทติ ปญฺจวิโธ ฉนฺโท.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ในคำว่า 'มีฉันทะเป็นเหตุ' นี้ ฉันทะมี ๕ อย่าง คือ ฉันทะในการแสวงหา ฉันทะในการได้มา ฉันทะในการบริโภค ฉันทะในการเก็บสะสม และฉันทะในการสละออก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:187">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิเม <span class="pb hidden-meta" data-ed="M" data-n="2.0147">[M 2.0147]</span> มํ รกฺขิสฺสนฺติ โคปิสฺสนฺติ มมายิสฺสนฺติ สมฺปริวารยิสฺสนฺตีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คนเหล่านี้จักรักษาเรา จักคุ้มครองเรา จักถือว่าเราเป็นของตน จักแวดล้อมเรา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:188">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ฉนฺโท โข ปน มาริส กิํนิทาโน กิํสมุทโย กิํชาติโก กิํปภโว, กิสฺมิํ สติ ฉนฺโท โหติ, กิสฺมิํ อสติ ฉนฺโท นโหตีติ. ฉนฺโท โข เทวานมินฺท วิตกฺกนิทาโน วิตกฺกสมุทโย วิตกฺกชาติโก วิตกฺกปภโว, วิตกฺเก สติ ฉนฺโท โหติ, วิตกฺเก อสติ ฉนฺโท น โหตีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่ท่านผู้เจริญ ก็ฉันทะมีอะไรเป็นเหตุ มีอะไรเป็นสมุทัย มีอะไรเป็นกำเนิด มีอะไรเป็นแดนเกิด เมื่อมีอะไรอยู่ ฉันทะจึงมี เมื่อไม่มีอะไรอยู่ ฉันทะจึงไม่มี? ดูกรจอมเทพ ฉันทะมีวิตกเป็นเหตุ มีวิตกเป็นสมุทัย มีวิตกเป็นกำเนิด มีวิตกเป็นแดนเกิด เมื่อมีวิตกอยู่ ฉันทะจึงมี เมื่อไม่มีวิตก ฉันทะจึงไม่มี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:189">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เอตฺตกํ <span class="pb hidden-meta" data-ed="M" data-n="2.0150">[M 2.0150]</span> รูปสฺส ภวิสฺสติ, เอตฺตกํ สทฺทสฺส, เอตฺตกํ คนฺธสฺส, เอตฺตกํ รสสฺส, เอตฺตกํ โผฏฺฐพฺพสฺส ภวิสฺสติ, เอตฺตกํ มยฺหํ ภวิสฺสติ, เอตฺตกํ ปรสฺส ภวิสฺสติ, เอตฺตกํ นิทหิสฺสามิ, เอตฺตกํ ปรสฺส ทสฺสามีติ ววตฺถานํ วิตกฺกวินิจฺฉเยน โหติ. เตนาห ฉนฺโท โข เทวานมินฺท วิตกฺกนิทาโนติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การกำหนดว่า 'รูปจักมีประมาณเท่านี้ เสียงจักมีประมาณเท่านี้ กลิ่นจักมีประมาณเท่านี้ รสจักมีประมาณเท่านี้ โผฏฐัพพะจักมีประมาณเท่านี้ ของเราจักมีประมาณเท่านี้ ของผู้อื่นจักมีประมาณเท่านี้ เราจักเก็บไว้เท่านี้ เราจักให้แก่ผู้อื่นเท่านี้' ย่อมมีด้วยการวินิจฉัยแห่งวิตก เพราะเหตุนั้น พระผู้มีพระภาคจึงตรัสว่า 'ดูกรจอมเทพ ฉันทะมีวิตกเป็นเหตุ'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:190">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กถํ <span class="pb hidden-meta" data-ed="M" data-n="2.0152">[M 2.0152]</span> ปฏิปนฺโน ปน มาริส ภิกฺขุ ปปญฺจสญฺญาสงฺขานิโรธสารุปฺปคามินิํ ปฏิปทํ ปฏิปนฺโน โหตีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่ท่านผู้เจริญ ก็ภิกษุผู้ปฏิบัติอย่างไร จึงชื่อว่าปฏิบัติปฏิปทาที่สมควรซึ่งให้ถึงความดับแห่งส่วนแห่งสัญญาอันเป็นเครื่องเนิ่นช้า?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:191">
+  <div class="pair-col col-pali">
+<p rend="bodytext">โสมนสฺสํปาหํ <span class="pb hidden-meta" data-ed="M" data-n="2.0153">[M 2.0153]</span> เทวานมินฺท ทุวิเธน วทามิ เสวิตพฺพํปิ อเสวิตพฺพํปิ. โทมนสฺสํปาหํ เทวานมินฺท ทุวิเธน วทามิ เสวิตพฺพํปิ อเสวิตพฺพํปิ. อุเปกฺขํปาหํ เทวานมินฺท ทุวิเธน วทามิ เสวิตพฺพํปิ อเสวิตพฺพํปิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูกรจอมเทพ เรากล่าวโสมนัสว่ามี ๒ อย่าง คือที่ควรเสพก็มี ที่ไม่ควรเสพก็มี เรากล่าวโทมนัสว่ามี ๒ อย่าง คือที่ควรเสพก็มี ที่ไม่ควรเสพก็มี เรากล่าวอุเบกขาว่ามี ๒ อย่าง คือที่ควรเสพก็มี ที่ไม่ควรเสพก็มี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:192">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กิํ <span class="pb hidden-meta" data-ed="M" data-n="2.0154">[M 2.0154]</span> ปน ภควตา ปุจฺฉิตํ กถิตํ อปุจฺฉิตํ, สานุสนฺธิกํ อนนุสนฺธิกนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ก็พระผู้มีพระภาคตรัสสิ่งที่ถูกถาม หรือสิ่งที่ไม่ได้ถูกถาม? ตรัสโดยมีอนุสนธิ (ความสืบเนื่อง) หรือไม่มีอนุสนธิ?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:193">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปุจฺฉิตเมว กถิตํ โน อปุจฺฉิตํ. สานุสนฺธิกเมว โน อนนุสนฺธิกํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตรัสสิ่งที่ถูกถามเท่านั้น ไม่ใช่สิ่งที่ไม่ได้ถูกถาม ตรัสโดยมีอนุสนธิเท่านั้น ไม่ใช่ไม่มีอนุสนธิ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:194">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิเม <span class="pb hidden-meta" data-ed="M" data-n="2.0158">[M 2.0158]</span> ปญฺจกฺขนฺธา กิํ เหตุกาติ อุปปริกฺขนฺโธ อวิชฺชาทิเหตุกาติ ปสฺสติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เมื่อพิจารณาว่า 'ขันธ์ ๕ เหล่านี้มีอะไรเป็นเหตุ?' ก็ย่อมเห็นว่า 'มีอวิชชาเป็นต้นเป็นเหตุ'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:195">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อโหสุขํ <span class="pb hidden-meta" data-ed="M" data-n="2.0160">[M 2.0160]</span> อโหสุขนฺติ วาจํ นิจฺฉารยมานวเสน อุปฺปชฺชติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ย่อมเกิดขึ้นด้วยอำนาจแห่งการเปล่งวาจาว่า 'สุขหนอ สุขหนอ'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:196">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อโหทุกฺขํ <span class="pb hidden-meta" data-ed="M" data-n="2.0161">[M 2.0161]</span> อโหทุกฺขนฺติ วิปฺปลาปยมานเมว อุปฺปชฺชติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ย่อมเกิดขึ้นด้วยอาการคร่ำครวญนั่นเองว่า 'ทุกข์หนอ ทุกข์หนอ'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:197">
+  <div class="pair-col col-pali">
+<p rend="bodytext">“โสมนสฺสํปาหํ <span class="pb hidden-meta" data-ed="M" data-n="2.0163">[M 2.0163]</span> เทวานมินฺท ทุวิเธน วทามิ เสวิตพฺพํปิ อเสวิตพฺพํปี”ติ อิติโข ปเนตํ วุตฺตํ, กิญฺเจตํ ปฏิจฺจ วุตฺตํ. ตตฺถ ยํ ชญฺญา โสมนสฺสํ “อิมํ โข เม โสมนสฺสํ เสวโต อกุสลา ธมฺมา อภิวฑฺฒนฺติ, กุสลา ธมฺมา ปริหายนฺตี”ติ, เอวรูปํ โสมนสฺสํ น <span class="pb hidden-meta" data-ed="M" data-n="2.0164">[M 2.0164]</span> เสวิตพฺพํ. ตตฺถ ยํ ชญฺญา โสมนสฺสํ “อิมํ โข เม โสมนสฺสํ เสวโต อกุสลา ธมฺมา ปริหายนฺติ, กุสลา ธมฺมา อภิวฑฺฒนฺตี”ติ, เอวรูปํ โสมนสฺสํ เสวิตพฺพํ. ตตฺถ ยํ เจ สวิตกฺกํ สวิจารํ, ยํเจ อวิตกฺกํ อวิจารํ, เย อวิตกฺเก อวิจาเร, เต ปณีตตเร. “โสมนสฺสํปาหํ เทวานมินฺท ทุวิเธน วทามิ เสวิตพฺพํปิ อเสวิตพฺพํปี”ติ อิติ ยํ ตํ วุตฺตํ, อิทเมตํ ปฏิจฺจ วุตฺตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ก็คำว่า 'ข้าแต่ท่านจอมเทพ ข้าพระองค์กล่าวโสมนัสเป็น ๒ อย่าง คือ ที่ควรเสพก็มี ที่ไม่ควรเสพก็มี' ดังนี้แล พระผู้มีพระภาคตรัสไว้แล้ว, พระผู้มีพระภาคตรัสคำนี้อาศัยอะไร? ในโสมนัสเหล่านั้น โสมนัสใดที่บุคคลพึงรู้ว่า 'เมื่อเราเสพโสมนัสนี้ อกุศลธรรมทั้งหลายย่อมเจริญ กุศลธรรมทั้งหลายย่อมเสื่อมไป' โสมนัสเช่นนั้นไม่ควรเสพ. ในโสมนัสเหล่านั้น โสมนัสใดที่บุคคลพึงรู้ว่า 'เมื่อเราเสพโสมนัสนี้ อกุศลธรรมทั้งหลายย่อมเสื่อมไป กุศลธรรมทั้งหลายย่อมเจริญ' โสมนัสเช่นนั้นควรเสพ. ในโสมนัสเหล่านั้น โสมนัสใดที่มีวิตกมีวิจาร และโสมนัสใดที่ไม่มีวิตกไม่มีวิจาร, โสมนัสที่ไม่มีวิตกไม่มีวิจารเหล่านั้นประณีตกว่า. คำที่ตรัสไว้ว่า 'ข้าแต่ท่านจอมเทพ ข้าพระองค์กล่าวโสมนัสเป็น ๒ อย่าง คือ ที่ควรเสพก็มี ที่ไม่ควรเสพก็มี' ดังนี้แล พระผู้มีพระภาคตรัสอาศัยเหตุนี้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:198">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น <span class="pb hidden-meta" data-ed="M" data-n="2.0176">[M 2.0176]</span> ลทฺธํ วต เม สพฺรหฺมจารีหิ สทฺธิํ วิสุทฺธิปวารณํ ปวาเรตุนฺติ อาวชฺชโต โทมนสฺสํ อุปฺปชฺชติ, อสฺสุธารา ปวตฺตนฺติ คามนฺต ปพฺภารวาสี มหาสีวตฺเถรสฺส วิย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เมื่อรำพึงว่า 'โอหนอ เราไม่ได้ปวารณาความบริสุทธิ์ร่วมกับเพื่อนพรหมจารีเลย' โทมนัสก็เกิดขึ้น น้ำตาไหลหลั่ง เหมือนกรณีของพระมหาเถระสีวะผู้อยู่ในถ้ำใกล้หมู่บ้าน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:199">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อมฺหากํ <span class="pb hidden-meta" data-ed="M" data-n="2.0177">[M 2.0177]</span> อาจริโย อญฺเญสํ อวสฺสโย โหติ, อตฺตโน ภวิตุํ น สกฺโกติ, โอวาทมสฺส ทสฺสามีติ อากาเสน คนฺตวา วิหารสมีเป โอตริตฺวา ทิวาฏฺฐาเน นิสินฺนํ อาจริยํ อุปสงฺกมิตฺวา วตฺตํ ทสฺเสตฺวา เอกมนฺตํ นิสีทิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อาจารย์ของเราเป็นที่พึ่งของผู้อื่นได้ แต่ไม่สามารถเป็นที่พึ่งของตนเองได้ เราจักให้โอวาทแก่ท่าน' ดังนี้แล้ว ก็เหาะไปทางอากาศ ลงมาใกล้ที่อยู่ เข้าไปหาอาจารย์ผู้นั่งอยู่ในที่พักกลางวัน แสดงวัตรแล้วนั่งอยู่ ณ ที่สมควรส่วนหนึ่ง.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:200">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กิํ การณา อาคโตสิ ปิณฺฑปาติกาติ อาห.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ท่านถามว่า 'ท่านผู้ถือบิณฑบาตเป็นวัตร ท่านมาด้วยเหตุผลอะไร?'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:201">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น <span class="pb hidden-meta" data-ed="M" data-n="2.0179">[M 2.0179]</span> เต ตุมฺหากํ อนุโมทนาย อตฺโถติ อากาเส อุปฺปติตฺวา อคมาสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ท่านกล่าวว่า 'ประโยชน์ด้วยการอนุโมทนาของท่าน ไม่มีแก่พวกท่าน' แล้วก็เหาะขึ้นไปในอากาศ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:202">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิมสฺส <span class="pb hidden-meta" data-ed="M" data-n="2.0180">[M 2.0180]</span> ภิกฺขุโน ปริยตฺติยา กมฺมํ นตฺถิ, มยฺหํ ปน องฺกุสโก ภวิสฺสามีติ อาคโตติ ญตฺวา อิทานิ โอกาโส น ภวิสฺสติ, ปจฺจูสกาเล คมิสฺสามีติ ปตฺตจีวรํ สมีเป กตฺวา สพฺพํ ทิวสภาคํ ปฐมยาม มชฺฌิมยามญฺจ ธมฺมํ วาเจตฺวา ปจฺฉิมยาเม เอกสฺมิํ เถเร อุทฺเทสํ คเหตฺวา นิกฺขนฺเต ปตฺตจีวรํ คเหตฺวา เตเนว สทฺธิํ นิกฺขนฺโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เมื่อรู้ว่า 'ภิกษุรูปนี้ไม่มีกิจในการปริยัติ แต่มาเพื่อเป็นผู้คอยเตือนเรา' จึงคิดว่า 'บัดนี้จะไม่มีโอกาสแล้ว เราจักไปในเวลาเช้ามืด' แล้วก็วางบาตรและจีวรไว้ใกล้ตัว สอนธรรมตลอดวันตลอดปฐมยามและมัชฌิมยาม เมื่อพระเถระรูปหนึ่งรับบทเรียนในปัจฉิมยามแล้วออกไป ท่านก็ถือบาตรและจีวรออกไปพร้อมกับพระเถระรูปนั้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:203">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ตโต <span class="pb hidden-meta" data-ed="M" data-n="2.0182">[M 2.0182]</span> “น มญฺเจ มยฺหํ จตูหิ อิริยาปเถหิ มคฺคผลํ อุปฺปชฺชิสฺสติ อรหตฺตํ อปตฺวา เนว มญฺเจ ปิฏฺฐิํ ปสาเรสฺสามิ, น ปาเท โธวิสฺสามีติ มญฺจํ อุสฺสาเปตฺวา ฐเปสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">จากนั้น ท่านก็ยกเตียงขึ้นตั้งไว้ (แล้วคิดว่า) 'หากมรรคผลไม่เกิดขึ้นแก่เราด้วยอิริยาบถทั้ง ๔ เราจักไม่เหยียดหลังลงบนเตียง และจักไม่ล้างเท้า จนกว่าจะบรรลุอรหัตตผล'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:204">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิทานิ <span class="pb hidden-meta" data-ed="M" data-n="2.0183">[M 2.0183]</span> เม ติํสวสฺสานิ สมณธมฺมํ กโรนฺตสฺส, นาสกฺขิํ อรหตฺตํ ปาปุณิตุํ, อทฺธา เม อิมสฺมิํ อตฺตภาเว มคฺโควา ผลํวา นตฺถิ, น เม ลทฺธํ สพฺรหฺมจารีหิ สทฺธิํ วิสุทฺธิปวารณํ ปวาเรตุนฺติ จินฺเตสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">บัดนี้ เราประพฤติสมณธรรมมา ๓๐ ปีแล้ว แต่ก็ยังไม่สามารถบรรลุอรหัตตผลได้ ในอัตภาพนี้ มรรคหรือผลคงไม่มีแก่เราแน่แท้ เราจึงไม่ได้ปวารณาความบริสุทธิ์ร่วมกับเพื่อนพรหมจารีเลย' ดังนี้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:205">
+  <div class="pair-col col-pali">
+<p rend="bodytext">โภ <span class="pb hidden-meta" data-ed="M" data-n="2.0184">[M 2.0184]</span> มหาสีวตฺเถร เทวตาปิ ตยา สทฺธิํ เกฬิํ กโรนฺติ, อนุจฺฉวิกํ นุ โข เต เอตนฺติ วิปสฺสนํ วฑฺเฒตฺวา สห ปฏิสมฺภิทาหิ อรหตฺตํ อคฺคเหสิ. โส อิทานิ นิปชฺชิสฺสามีติ เสนาสนํ ปฏิชคฺคิตฺวา มญฺจกํ ปญฺญเปตฺวา อุทกฏฺฐาเน อุทกํ ปจฺจุปฏฺฐเปตฺวา ปาเท โธวิสฺสามีติ โสปานผลเก นิสีทิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ท่านมหาเถระสีวะเอ๋ย แม้เทพยดาก็ยังล้อเลียนท่าน สิ่งนี้สมควรแก่ท่านแล้วหรือ?' ดังนี้แล้ว ท่านก็เจริญวิปัสสนาจนบรรลุอรหัตตผลพร้อมด้วยปฏิสัมภิทา บัดนี้ ท่านคิดว่า 'เราจักนอน' จึงจัดแจงเสนาสนะ ปูเตียง จัดน้ำไว้ที่ที่สำหรับน้ำ แล้วนั่งลงบนแผ่นกระดานบันไดเพื่อจะล้างเท้า.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:206">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อเปถ <span class="pb hidden-meta" data-ed="M" data-n="2.0186">[M 2.0186]</span> ภนฺเต มาตุคาโมติ โอกาสํ กาเรตฺวา เถรํ อุปสงฺกมิตฺวา วนฺทิตฺวา ปุรโต อุกฺกุฏิโก นิสีทิตฺวา ปาเท โธวิสฺสามีติ อาห.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ท่านกล่าวขอโอกาสว่า 'ท่านผู้เจริญ สตรีจงหลีกไป' แล้วเข้าไปหาพระเถระ ไหว้แล้วนั่งยองๆ ข้างหน้า กล่าวว่า 'ข้าพเจ้าจักล้างเท้าให้'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:207">
+  <div class="pair-col col-pali">
+<p rend="gatha1">เต <span class="pb hidden-meta" data-ed="M" data-n="2.0194">[M 2.0194]</span> ปณีตตรา เทวา,</p>
+<p rend="gatha2">อกนิฏฺฐา ยสสฺสิโน;</p>
+<p rend="gatha3">อนฺติเม วตฺตมานมฺหิ,</p>
+<p rend="gathalast">โส นิวาโส ภวิสฺสติ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เทพเหล่านั้นประณีตกว่า คือเหล่าเทพชั้นอกนิฏฐะผู้มียศ; ในภพสุดท้ายที่กำลังเป็นไปอยู่ นั่นจักเป็นที่อยู่อาศัย (ของท่าน).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:208">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ธมฺมทายาทา <span class="pb hidden-meta" data-ed="M" data-n="2.0197">[M 2.0197]</span> เม ภิกฺขเว ภวถ, มา อามิสทายาทา, อตฺถิ เม ตุมฺเหสุ อนุกมฺปา, กินฺติ เม สาวกา ธมฺมทายาทา ภเวยฺยุํ, โน อามิสทายาทาติ. ตุมฺเห จ ภิกฺขเว อามิสทายาทา ภเวยฺยาถ, โน ธมฺมทายาทา. ตุมฺเหปิ เตน อาทิยา ภเวยฺยาถ, อามิส ทายาทา สตฺถุสาวกา วิหรนฺติ, โน ธมฺมทายาทาติ. อหมฺปิเตน อาทิโย ภเวยฺยํ อามิสทายาทา สตฺถุ สาวกา วิหรนฺติ, โน ธมฺมทายาทาติ. ตุมฺเห จ เม ภิกฺขเว ธมฺมทายาทา ภเวยฺยาถ โน อามิสทายาทา. ตุมฺเหปิ เตน อาทิยา ภเวยฺยาถ ธมฺมทายาทา สตฺถุ สาวกา วิหรนฺติ, โน อามิสทายาทาติ. อหมฺปิ เตน น อาทิโย ภเวยฺยํ. ธมฺมทายาทา สตฺถุ สาวกา วิหรนฺติ, โน อามิสทายาทาติ. ตสฺมาติห เม ภิกฺขเว ธมฺมทายาทา ภวถ, มา อามิสทายาทา, อตฺถิเม ตุมฺเหสุ อนุกมฺปา, กินฺติ เม สาวกา ธมฺมทายาทา ภเวยฺยุํ, โน อามิสทายาทาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุทั้งหลาย พวกเธอจงเป็นทายาทแห่งธรรมของเราเถิด อย่าเป็นทายาทแห่งอามิสเลย เรามีความเอ็นดูในพวกเธอว่า ไฉนหนอสาวกของเราพึงเป็นทายาทแห่งธรรม ไม่เป็นทายาทแห่งอามิสเล่า ถ้าพวกเธอเป็นทายาทแห่งอามิส ไม่เป็นทายาทแห่งธรรม พวกเธอก็พึงเป็นที่ติเตียนด้วยเหตุนั้นว่า สาวกของพระศาสดาเป็นอยู่ด้วยความเป็นทายาทแห่งอามิส ไม่เป็นทายาทแห่งธรรม แม้เราก็พึงเป็นที่ติเตียนด้วยเหตุนั้นว่า สาวกของพระศาสดาเป็นอยู่ด้วยความเป็นทายาทแห่งอามิส ไม่เป็นทายาทแห่งธรรม แต่ถ้าพวกเธอเป็นทายาทแห่งธรรม ไม่เป็นทายาทแห่งอามิส พวกเธอก็พึงเป็นที่สรรเสริญด้วยเหตุนั้นว่า สาวกของพระศาสดาเป็นอยู่ด้วยความเป็นทายาทแห่งธรรม ไม่เป็นทายาทแห่งอามิส แม้เราก็พึงไม่เป็นที่ติเตียนด้วยเหตุนั้นว่า สาวกของพระศาสดาเป็นอยู่ด้วยความเป็นทายาทแห่งธรรม ไม่เป็นทายาทแห่งอามิส เพราะฉะนั้น ภิกษุทั้งหลาย พวกเธอจงเป็นทายาทแห่งธรรมของเราเถิด อย่าเป็นทายาทแห่งอามิสเลย เรามีความเอ็นดูในพวกเธอว่า ไฉนหนอสาวกของเราพึงเป็นทายาทแห่งธรรม ไม่เป็นทายาทแห่งอามิสเล่า.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:209">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กหํ <span class="pb hidden-meta" data-ed="M" data-n="2.0201">[M 2.0201]</span> พุทฺโธ กหํ ภควา กหํ เทวเทโว นราสโภ ปุริสสีโหติ ภควนฺตํ ปริเยสนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พระพุทธเจ้าอยู่ที่ไหน พระผู้มีพระภาคอยู่ที่ไหน เทพยิ่งกว่าเทพ นรผู้ประเสริฐ บุรุษดุจราชสีห์อยู่ที่ไหน ดังนี้แล้วก็แสวงหาพระผู้มีพระภาค.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:210">
+  <div class="pair-col col-pali">
+<p rend="bodytext">วุตฺตมฺปิเจตํ <span class="pb hidden-meta" data-ed="M" data-n="2.0202">[M 2.0202]</span> “เตน โข ปน สมเยน ภควา สกฺกโต โหติ ครุกโต มานิโต ปูชิโต อปจิโต ลาภี จีวร ปิณฺฑปาตเสนาสนคิลานปจฺจยเภสชฺชปริกฺขารานํ, ภิกฺขุสงฺโฆปิ โข สกฺกโต โหติ…เป… ปริกฺขาราน”นฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อนึ่ง ข้อนี้พระผู้มีพระภาคตรัสไว้แล้วว่า ‘ก็สมัยนั้น พระผู้มีพระภาคทรงเป็นที่สักการะ เคารพ นับถือ บูชา ยำเกรง ได้จีวร บิณฑบาต เสนาสนะ และคิลานปัจจัยเภสัชบริขาร แม้ภิกษุสงฆ์ก็เป็นที่สักการะ…เป…บริขาร’.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:211">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยาวตา โข จุนฺท เอตรหิ สงฺโฆ วา คโณ วา โลเก อุปฺปนฺโน, นาหํ จุนฺท อญฺญํ เอกสงฺฆมฺปิ สมนุปสฺสามิ, เอวํ ลาภคฺค ยสคฺคปตฺตํ, ยถริว จุนฺท ภิกฺขุสงฺโฆติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูกรจุนทะ สงฆ์หรือคณะใดๆ ที่เกิดขึ้นในโลกในบัดนี้ เราไม่เห็นสงฆ์อื่นแม้สักสงฆ์เดียวที่ถึงความเป็นเลิศแห่งลาภและความเป็นเลิศแห่งยศอย่างนี้ เหมือนภิกษุสงฆ์เลย ดูกรจุนทะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:212">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อมฺหากํ <span class="pb hidden-meta" data-ed="M" data-n="2.0203">[M 2.0203]</span> อาจริยสฺส เทถ, อุปชฺฌายสฺส เทถาติ อุจฺจาสทฺท มหาสทฺทํ กโรนฺติ. สา จ เนสํ ปวตฺติ ภควโตปิ ปากฏา อโหสิ. ตโต ภควา อนนุจฺฉวิกนฺติ ธมฺมสํเวคํ อุปฺปาเทตฺวา จินฺเตสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">จงถวายอาจารย์ของเรา จงถวายอุปัชฌาย์ของเรา ดังนี้แล้วก็ส่งเสียงดังอื้ออึง เรื่องราวของพวกเขานั้นก็เป็นที่ปรากฏแก่พระผู้มีพระภาค ลำดับนั้น พระผู้มีพระภาคทรงดำริว่า ‘ไม่สมควร’ ดังนี้แล้ว ทรงยังความสังเวชในธรรมให้เกิดขึ้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:213">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปจฺจยา อกปฺปิยาติ น สกฺกา สิกฺขาปทํ ปญฺญเปตุํ. ปจฺจยปฏิพทฺธา หิ กุลปุตฺตานํ สมณธมฺมวุตฺติ. หนฺทาหํ ธมฺมทายาทปฏิปทํ เทเสมิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">จะบัญญัติสิกขาบทว่า 'ปัจจัยทั้งหลายไม่ควร' ดังนี้ ย่อมไม่สามารถทำได้ เพราะความเป็นอยู่แห่งสมณธรรมของกุลบุตรทั้งหลายย่อมเนื่องด้วยปัจจัย เอาเถิด เราจักแสดงข้อปฏิบัติเพื่อความเป็นทายาทแห่งธรรม.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:214">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สา <span class="pb hidden-meta" data-ed="M" data-n="2.0204">[M 2.0204]</span> สิกฺขากามานํ กุลปุตฺตานํ สิกฺขาปทปญฺญตฺติ วิย ภวิสฺสติ นครทฺวาเร ฐปิตสพฺพกายิกอาทาโส วิย จ, ยถา หิ นคร ทฺวาเร ฐปิเต สพฺพกายิเก อาทาเส จตฺตาโร วณฺณา อตฺตโน ฉายํ ทิสฺวา วชฺชํ ปหาย นิทฺโทสา โหนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปฏิปทานั้นจักเป็นเหมือนการบัญญัติสิกขาบทแก่กุลบุตรผู้ใคร่ในการศึกษา และเหมือนกระจกเงาที่ตั้งไว้ที่ประตูเมืองซึ่งส่องได้ทั่วทั้งตัว. เหมือนอย่างที่วรรณะทั้งสี่เห็นเงาของตนในกระจกเงาที่ตั้งไว้ที่ประตูเมืองซึ่งส่องได้ทั่วทั้งตัวแล้ว ละโทษเสีย ย่อมเป็นผู้ไม่มีโทษ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:215">
+  <div class="pair-col col-pali">
+<p rend="bodytext">โส <span class="pb hidden-meta" data-ed="M" data-n="2.0207">[M 2.0207]</span> หิ พฺราหฺมณ ภควา อนุปฺปนฺนสฺส มคฺคสฺส อุปฺปาเทตา, อสญฺชาตสฺส มคฺคสฺส สญฺชเนตา, อนกฺขาตสฺส มคฺคสฺส อกฺขาตา, มคฺคญฺญู มคฺควิทู มคฺคโกวิโทติจ. โส หาวุโส ภควา ชานํ ชานาติ, ปสฺสํ ปสฺสติ จกฺขุภูโต ญาณภูโต ธมฺมภูโต พฺรหฺมภูโต วตฺตา ปวตฺตา อตฺถสฺส นินฺเนตา อมตสฺส ทาตา ธมฺมสฺสามี ตถาคโตติจ, ….</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูกรพราหมณ์ พระผู้มีพระภาคพระองค์นั้น ทรงเป็นผู้ยังมรรคที่ยังไม่เกิดให้เกิดขึ้น ทรงเป็นผู้ยังมรรคที่ยังไม่ปรากฏให้ปรากฏ ทรงเป็นผู้บอกมรรคที่ยังไม่มีใครบอก ทรงเป็นผู้รู้มรรค ทรงเป็นผู้เข้าใจมรรค ทรงเป็นผู้ฉลาดในมรรค. ดูกรอาวุโส พระผู้มีพระภาคพระองค์นั้น ทรงรู้สิ่งที่ควรรู้ ทรงเห็นสิ่งที่ควรเห็น ทรงเป็นผู้เป็นจักษุ ทรงเป็นผู้เป็นญาณ ทรงเป็นผู้เป็นธรรม ทรงเป็นผู้เป็นพรหม ทรงเป็นผู้กล่าว ทรงเป็นผู้ประกาศ ทรงเป็นผู้นำมาซึ่งประโยชน์ ทรงเป็นผู้ประทานอมตะ ทรงเป็นเจ้าของธรรม ทรงเป็นพระตถาคต.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:216">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปณีเตน <span class="pb hidden-meta" data-ed="M" data-n="2.0222">[M 2.0222]</span> ขาทนีเยน โภชนีเยน สหตฺถา สนฺตปฺเปสิ สมฺปวาเรสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ทรงยังให้อิ่มหนำสำราญด้วยพระหัตถ์ของพระองค์เอง ด้วยของขบเคี้ยวและของฉันอันประณีต.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:217">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อเร <span class="pb hidden-meta" data-ed="M" data-n="2.0234">[M 2.0234]</span> ตฺวํ สุคตาติริตฺตมฺปิ ปิณฺฑปาตํ ปฏิกฺขิปิตฺวา อีทิสํ อิจฺฉํ อุปฺปาเทสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">แน่ะท่าน ท่านปฏิเสธบิณฑบาตที่เหลือจากพระสุคตแล้ว ยังปรารถนาเช่นนี้อีกหรือ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:218">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ทุพฺภโร <span class="pb hidden-meta" data-ed="M" data-n="2.0236">[M 2.0236]</span> ภิกฺขุ น สกฺกา โปสิตุํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุเลี้ยงยาก ไม่สามารถเลี้ยงดูได้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:219">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อมฺหากํ <span class="pb hidden-meta" data-ed="M" data-n="2.0237">[M 2.0237]</span> ภทนฺโต สุภโร โถเกนปิ ตุสฺสติ, มยเมว นํ โปสิสฺสามาติ ปฏิญฺญํ กตฺวา โปเสนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ท่านผู้เจริญของเราเลี้ยงง่าย ย่อมยินดีด้วยของเพียงเล็กน้อย พวกเราจักเลี้ยงดูท่านเอง ดังนี้แล้วก็รับปากเลี้ยงดู.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:220">
+  <div class="pair-col col-pali">
+<p rend="bodytext">“อเร <span class="pb hidden-meta" data-ed="M" data-n="2.0238">[M 2.0238]</span> ตฺวํ นาม ตทา สุคตาติริตฺตมฺปิ ปิณฺฑปาตํ ปฏิกฺขิปิตฺวา ตถา ชิฆจฺฉาทุพฺพลฺยปเรโตปิ สมณธมฺมํ กตฺวา อชฺช โกสชฺชมนุยุญฺชสิ” –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">แน่ะท่าน ท่านปฏิเสธบิณฑบาตที่เหลือจากพระสุคตในกาลนั้นแล้ว แม้ถูกความหิวและความอ่อนเพลียครอบงำอย่างนั้น ก็ยังบำเพ็ญสมณธรรมอยู่ แต่บัดนี้ท่านกลับประกอบความเกียจคร้านเสียแล้วหรือ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:221">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยา <span class="pb hidden-meta" data-ed="M" data-n="2.0239">[M 2.0239]</span> จ โข อานนฺทกถา อภิสลฺเลขิตา เจโตวินีวรณสปฺปายา เอกนฺตนิพฺพิทาย วิราคาย นิโรธาย อุปสมาย อภิญฺญาย สมฺโพธาย นิพฺพานาย สํวตฺตติ. เสยฺยถิทํ อปฺปิจฺฉกถาติ …,.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อนึ่ง อานันทกถาใดที่ขัดเกลากิเลส เป็นไปเพื่อกำจัดนิวรณ์ในใจ เป็นไปเพื่อความหน่ายโดยส่วนเดียว เพื่อความคลายกำหนัด เพื่อความดับ เพื่อความสงบ เพื่อความรู้ยิ่ง เพื่อความตรัสรู้ เพื่อพระนิพพาน. ได้แก่ อัปปิจฉกถา (เรื่องความมักน้อย) เป็นต้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:222">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิทมโวจ <span class="pb hidden-meta" data-ed="M" data-n="2.0243">[M 2.0243]</span> ภควา, อิทํ วตฺวาน สุคโต อุฏฺฐายาสนา วิหารํ ปาวิสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พระผู้มีพระภาคได้ตรัสพระพุทธพจน์นี้แล้ว พระสุคตทรงลุกจากอาสนะแล้วเสด็จเข้าสู่พระวิหาร.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:223">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิมํ <span class="pb hidden-meta" data-ed="M" data-n="2.0245">[M 2.0245]</span> มยา สํขิตฺเตน อุทฺเทสํ อุทฺทิฏฺฐํ วิตฺถาเรน อวิภตฺตํ, ธมฺมปฏิคฺคาหกา ภิกฺขู อุคฺคเหตฺวา อานนฺทํ วา กจฺจานํ วา อุปสงฺกมิตฺวา ปุจฺฉิสฺสนฺติ, เต มยฺหํ ญาเณน สํสนฺเทตฺวา กเถสฺสนฺติ, ตโต ธมฺมปฏิคฺคาหกา ปุน มํ ปุจฺฉิสฺสนฺติ, เตสํ อหํ สุกถิตํ ภิกฺขเว อานนฺเทน, สุกถิตํ กจฺจาเนน, มํ เจปิ ตุมฺเห เอกมตฺถํ ปุจฺเฉยฺยาถ, อหมฺปิ นํ เอวเมว พฺยากเรยฺยนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เราได้แสดงอุเทศนี้โดยย่อ ยังมิได้จำแนกโดยพิสดาร. ภิกษุผู้รับธรรมทั้งหลายจักเรียนเอาแล้วเข้าไปหาพระอานนท์หรือพระกัจจานะแล้วสอบถาม. ท่านเหล่านั้นจักเทียบเคียงกับญาณของเราแล้วบอก. จากนั้น ภิกษุผู้รับธรรมทั้งหลายจักสอบถามเราอีก. เราจักกล่าวแก่ภิกษุเหล่านั้นว่า ‘ภิกษุทั้งหลาย พระอานนท์กล่าวดีแล้ว พระกัจจานะกล่าวดีแล้ว แม้พวกเธอจะสอบถามเราในเรื่องเดียวกัน เราก็จักพยากรณ์อย่างนั้นเหมือนกัน’.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:224">
+  <div class="pair-col col-pali">
+<p rend="subhead">จูฬโคสิงฺคสุตฺต</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">จูฬโคสิงคสูตร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:225">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เอวํ <span class="pb hidden-meta" data-ed="M" data-n="2.0249">[M 2.0249]</span> เม สุตํ เอกํ สมยํ ภควา นาติเก วิหรติ คิญฺชกาวสเถ, เตน โข ปน สมเยน อายสฺมา จ อนุรุทฺโธ อายสฺมา จ นนฺทิโย อายสฺมา จ กิมิโล โคสิงฺคสาลวนทาเย วิหรนฺติ. อถโข ภควา สายนฺหสมยํ ปฏิสลฺลานา วุฏฺฐิโต เยน โคสิงฺคสาลวนทาโย, เตนุปสงฺกมิ. อทฺทสา โข ทายปาโล ภควนฺตํ ทูรโตว อาคจฺฉนฺตํ. ทิสฺวาน ภควนฺตํ เอตทโวจ “มา มหาสมณ เอตํ ทายํ ปาวิสิ, สนฺเตตฺถ ตโย กุลปุตฺตา อตฺตกามรูปา วิหรนฺติ, มา เตสํ อผาสุกมกาสี”ติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าพเจ้าได้สดับมาอย่างนี้ สมัยหนึ่ง พระผู้มีพระภาคประทับอยู่ที่คฤหาสน์อิฐ ในนาติกคาม. ก็สมัยนั้น ท่านพระอนุรุทธะ ท่านพระนันทิยะ และท่านพระกิมิละ อยู่ในป่าสาละชื่อโคสิงคะ. ครั้งนั้น พระผู้มีพระภาคเสด็จออกจากที่ประทับในเวลาเย็น เสด็จเข้าไปยังป่าสาละชื่อโคสิงคะ. นายป่าเห็นพระผู้มีพระภาคเสด็จมาแต่ไกล. ครั้นเห็นแล้วจึงกราบทูลพระผู้มีพระภาคว่า ‘ท่านมหาสมณะ โปรดอย่าเข้าไปในป่านี้เลย มีกุลบุตรสามท่านอยู่ ณ ที่นี้ ผู้ปรารถนาความสงบ โปรดอย่าทำให้ท่านเหล่านั้นไม่สบายเลย’.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:226">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อหํ <span class="pb hidden-meta" data-ed="M" data-n="2.0253">[M 2.0253]</span> อิเม กุลปุตฺเต ปคฺคณฺหิตฺวา อุกฺกํสิตฺวา ปฏิสนฺถารํ กตฺวา ธมฺมํ เนสํ เทเสสฺสามีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เราจักยกย่อง เชิดชู ทำปฏิสันถารกับกุลบุตรเหล่านี้ แล้วจักแสดงธรรมแก่ท่านเหล่านั้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:227">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อสฺโสสิ <span class="pb hidden-meta" data-ed="M" data-n="2.0258">[M 2.0258]</span> โข อายสฺมา อนุรุทฺโธ ทายปาลสฺส ภควตา สทฺธิํ มนฺตยมานสฺส. สุตฺวาน ทายปาลํ เอตทโวจ, มา อาวุโส ทายปาล ภควนฺตํ วาเรสิ, สตฺถา โน ภควา อนุปฺปตฺโตติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ท่านพระอนุรุทธะได้ยินนายป่าสนทนากับพระผู้มีพระภาค. ครั้นได้ยินแล้วจึงกล่าวกับนายป่าว่า ‘นายป่าผู้มีอายุ โปรดอย่าห้ามพระผู้มีพระภาคเลย พระศาสดาของเราเสด็จมาถึงแล้ว’.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:228">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มยํ <span class="pb hidden-meta" data-ed="M" data-n="2.0259">[M 2.0259]</span> ตโย ชนา อิธ วิหราม, อญฺเญ ปพฺพชิตา นาม นตฺถิ, อยญฺจ ทายปาโล ปพฺพชิเตน วิย สทฺธิํ กเถติ, โก นุ โข ภวิสฺสตีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พวกเราสามคนอยู่ที่นี่ ไม่มีบรรพชิตอื่นเลย. นายป่านี้สนทนาอยู่กับผู้ที่เหมือนเป็นบรรพชิต. ใครหนอจักเป็นผู้มา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:229">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อยํ <span class="pb hidden-meta" data-ed="M" data-n="2.0260">[M 2.0260]</span> ทายปาโล ผณกตํ อาสิวิสํ คีวาย คเหตุํ หตฺถํ ปสาเรนฺโตวิย โลเก อคฺคปุคฺคเลน สทฺธิํ กเถนฺโตว น ชานาติ, อญฺญตรภิกฺขุนา วิย สทฺธิํ กเถตีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">นายป่านี้ไม่รู้ว่ากำลังสนทนาอยู่กับบุคคลผู้สูงสุดในโลก เหมือนกำลังยื่นมือไปจับงูพิษที่แผ่พังพานที่คอ. เขากำลังสนทนาอยู่เหมือนสนทนากับภิกษุรูปใดรูปหนึ่ง.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:230">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มยํ <span class="pb hidden-meta" data-ed="M" data-n="2.0261">[M 2.0261]</span> ตโย ชนา สมคฺควายํ วสาม. สจาหํ เอกโกว ปจฺจุคฺคมนํ กริสฺสามิ. สมคฺควาโส นาม น ภวิสฺสตีติ ปิยมิตฺเต คเหตฺวาว ปจฺจุคฺคมนํ กริสฺสามิ. ยถา จ ภควา มยฺหํ ปิโย, เอวํ สหายานมฺปิ เม ปิโยติ, เตหิ สทฺธิํ ปจฺจุคฺคมนํ กาตุกาโม สยํ อกตฺวาว อุปสงฺกมิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พวกเราสามคนอยู่ร่วมกันด้วยความสามัคคี. ถ้าเราจะออกไปต้อนรับแต่ผู้เดียว ความอยู่ร่วมกันด้วยความสามัคคีก็จักไม่มี. เราจักออกไปต้อนรับพร้อมกับเพื่อนที่รัก. พระผู้มีพระภาคเป็นที่รักของเราฉันใด ก็เป็นที่รักของสหายของเราฉันนั้น. ท่านพระอนุรุทธะผู้ใคร่จะออกไปต้อนรับพร้อมกับท่านเหล่านั้น จึงไม่ไปต้อนรับเพียงลำพัง แต่ได้เข้าไปหา (สหายเหล่านั้น).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:231">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ตสฺส <span class="pb hidden-meta" data-ed="M" data-n="2.0271">[M 2.0271]</span> มยฺหํ ภนฺเต เอวํ โหติ, ยํ นูนาหํ สกํ จิตฺตํ นิกฺขิปิตฺวา อิเมสํเยว อายสฺมนฺตานํ จิตฺตสฺส วเสน วตฺเตยฺยนฺติ. โส โข อหํ ภนฺเต สกํ จิตฺตํ นิกฺขิปิตฺวา อิเมสํเยว อายสฺมนฺตานํ จิตฺตสฺส วเสน วตฺตามิ, นานาหิ โข โน ภนฺเต กายา เอกญฺจ ปน มญฺเญ จิตฺตนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่พระองค์ผู้เจริญ ข้าพระองค์มีความคิดอย่างนี้ว่า ‘ไฉนหนอ เราพึงละจิตของตนแล้วประพฤติตามจิตของท่านผู้มีอายุเหล่านี้เท่านั้น’ ข้าแต่พระองค์ผู้เจริญ ข้าพระองค์ละจิตของตนแล้วประพฤติตามจิตของท่านผู้มีอายุเหล่านี้เท่านั้น. ข้าแต่พระองค์ผู้เจริญ กายของพวกข้าพระองค์ต่างกัน แต่จิตของพวกข้าพระองค์เป็นอันเดียวกัน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:232">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สาธุ <span class="pb hidden-meta" data-ed="M" data-n="2.0274">[M 2.0274]</span> สาธุ อนุรุทฺธา, กจฺจิ ปน โว อนุรุทฺธา อปฺปมตฺตา อาตาปิโน ปหิตตฺตา วิหรถาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดีละ ดีละ อนุรุทธะ. ดูกรอนุรุทธะทั้งหลาย พวกเธออยู่ด้วยความไม่ประมาท มีความเพียรเผากิเลส มีตนส่งไปแล้วหรือ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:233">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ตคฺฆ มยํ ภนฺเต อปฺปมตฺตา อาตาปิโน ปหิตตฺตา วิหรามาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่พระองค์ผู้เจริญ พวกข้าพระองค์อยู่ด้วยความไม่ประมาท มีความเพียรเผากิเลส มีตนส่งไปแล้ว พระเจ้าข้า.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:234">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยถา <span class="pb hidden-meta" data-ed="M" data-n="2.0275">[M 2.0275]</span> กถํ ปน ตุมฺเห อนุรุทฺธา อปฺปมตฺตา อาตาปิโน ปหิตตฺตา วิหรถาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูกรอนุรุทธะ ก็พวกเธออยู่ด้วยความไม่ประมาท มีความเพียรเผากิเลส มีตนส่งไปแล้วอย่างไร.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:235">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อตฺถิ <span class="pb hidden-meta" data-ed="M" data-n="2.0284">[M 2.0284]</span> ปน โว อนุรุทฺธา เอวํ อปฺปมตฺตานํ อาตาปีนํ ปหิตตฺตานํ วิหรนฺตานํ อุตฺตริมนุสฺสธมฺมา อลมริยญาณทสฺสนวิเสโส อธิคโต ผาสุวิหาโรติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูกรอนุรุทธะทั้งหลาย ท่านทั้งหลายผู้ไม่ประมาท มีความเพียร มีตนส่งไปแล้ว อยู่อย่างนี้ ได้บรรลุธรรมอันยิ่งของมนุษย์ คือความรู้ความเห็นอันวิเศษอันเป็นอริยะอย่างแท้จริง อันเป็นเครื่องอยู่ผาสุกแล้วหรือ?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:236">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กิํ <span class="pb hidden-meta" data-ed="M" data-n="2.0285">[M 2.0285]</span> หิ โน สิยา ภนฺเต. อิธ มยํ ภนฺเต ยาวเทว อากงฺขาม, วิวิจฺเจว กาเมหิ วิวิจฺจ อกุสเลหิ ธมฺเมหิ สวิตกฺกํ สวิจารํ วิเวกชํ ปีติสุขํ ปฐมํ ฌานํ อุปสมฺปชฺช วิหราม, อยํ โข โน ภนฺเต อมฺหากํ อปฺปมตฺตานํ อาตาปีนํ ปหิตตฺตานํ วิหรนฺตานํ อุตฺตริมนุสฺสธมฺมา อลมริยญาณทสฺสนวิเสโส อธิคโต ผาสุวิหาโรติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่พระองค์ผู้เจริญ พวกข้าพระองค์จะไม่มีได้อย่างไร ข้าแต่พระองค์ผู้เจริญ ในธรรมวินัยนี้ เมื่อใดพวกข้าพระองค์หวังอยู่ ก็ย่อมเข้าถึงปฐมฌาน อันเกิดจากวิเวก มีวิตก มีวิจาร มีปีติและสุข อันเกิดจากวิเวก สงัดจากกาม สงัดจากอกุศลธรรมทั้งหลาย แล้วแลอยู่ ข้าแต่พระองค์ผู้เจริญ นี้แลเป็นธรรมอันยิ่งของมนุษย์ คือความรู้ความเห็นอันวิเศษอันเป็นอริยะอย่างแท้จริง อันเป็นเครื่องอยู่ผาสุก ที่พวกข้าพระองค์ผู้ไม่ประมาท มีความเพียร มีตนส่งไปแล้ว อยู่อย่างนี้ ได้บรรลุแล้ว.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:237">
+  <div class="pair-col col-pali">
+<p rend="subhead">สคาถาวคฺคสํยุตฺต อฏฺฐกถา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อรรถกถาสคาถวรรคสังยุตต์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:238">
+  <div class="pair-col col-pali">
+<p rend="subhead">ยกฺขสํยุตฺต</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ยักขสังยุตต์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:239">
+  <div class="pair-col col-pali">
+<p rend="subhead">อาฬวกสุตฺต</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อาฬวกสูตร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:240">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เอวํ <span class="pb hidden-meta" data-ed="M" data-n="3.0001">[M 3.0001]</span> เม สุตํ เอกํ สมยํ ภควา อาฬวิยํ วิหรติ อาฬวกสฺส ยกฺขสฺส ภวเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าพเจ้าได้สดับมาอย่างนี้ สมัยหนึ่ง พระผู้มีพระภาคประทับอยู่ที่อาฬวี ในวิมานของอาฬวกยักษ์.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:241">
+  <div class="pair-col col-pali">
+<p rend="bodytext">นาสกฺขิ <span class="pb hidden-meta" data-ed="M" data-n="3.0003">[M 3.0003]</span> มิคํ คเหตุนฺติ อปวาทโมจนตฺถํ กาเชนาทาย อาคจฺฉนฺโต นครสฺสาวิทูเร พหลปตฺตปลาสํ มหานิคฺโรธํ ทิสฺวา ปริสฺสมวิโนทนตฺถํ ตสฺส มูลมุปคโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(นายพราน) ไม่สามารถจับเนื้อได้ เพื่อปลดเปลื้องคำครหา จึงถือเอา (เนื้อที่ตายแล้ว) ด้วยคานมา เมื่อมาถึงที่ใกล้เมือง เห็นต้นไทรใหญ่มีใบและกิ่งก้านหนาทึบ เพื่อบรรเทาความเหน็ดเหนื่อย จึงเข้าไปยังโคนต้นนั้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:242">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เย <span class="pb hidden-meta" data-ed="M" data-n="3.0005">[M 3.0005]</span> เย วชฺชา โหนฺติ, เต เต สนฺธาย “โย ชีวิตตฺถิโก, โส นิกฺขมตู”ติ ภณติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ชนเหล่าใดเป็นผู้ควรฆ่า (ยักษ์) มุ่งหมายถึงชนเหล่านั้น จึงกล่าวว่า "ผู้ใดปรารถนาชีวิต ผู้นั้นจงออกไป"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:243">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ราชา <span class="pb hidden-meta" data-ed="M" data-n="3.0006">[M 3.0006]</span> โจเร คเหตฺวา ยกฺขสฺส เทตีติ มนุสฺสา โจรกมฺม โต ปฏิวิรตา. ตโต อปเรน สมเยน นวโจรานํ อภาเวน ปุราณโจรานญฺจ ปริกฺขเยน พนฺธนาคารานิ สุญฺญานิ อเหสุํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(เมื่อ) พระราชาจับโจรแล้วมอบให้ยักษ์ มนุษย์ทั้งหลายจึงงดเว้นจากการกระทำโจรกรรม หลังจากนั้นต่อมา เพราะไม่มีโจรใหม่ และเพราะโจรเก่าหมดไป เรือนจำทั้งหลายจึงว่างเปล่า.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:244">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ราชา <span class="pb hidden-meta" data-ed="M" data-n="3.0007">[M 3.0007]</span> อมฺหากํ ปิตรํ อมฺหากํ ปิตามหํ เปเสตีติ มนุสฺสา โขภํ กริสฺสนฺติ, มา โว เอตํ รุจฺจีติ วาเรสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(ยักษ์คิดว่า) "พระราชาส่งบิดาของเรา ส่งปู่ของเราไป" มนุษย์ทั้งหลายจะก่อความวุ่นวาย (จึงห้ามไว้ว่า) "อย่าให้สิ่งนี้เป็นที่พอใจแก่พวกท่านเลย"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:245">
+  <div class="pair-col col-pali">
+<p rend="bodytext">นตฺถิ <span class="pb hidden-meta" data-ed="M" data-n="3.0008">[M 3.0008]</span> เทว นคเร ทารโก ฐเปตฺวา อนฺเตปุเร ตว ปุตฺตํ อาฬวกกุมารนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่เทพเจ้า ไม่มีเด็กชายในเมือง นอกจากพระโอรสของพระองค์คือเจ้าชายอาฬวกะในพระราชวัง.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:246">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อถ <span class="pb hidden-meta" data-ed="M" data-n="3.0015">[M 3.0015]</span> โข อาฬวโก ยกฺโข เยน ภควา เตนุปสงฺกมิ, อุปสงฺกมิตฺวา ภควนฺตํ เอตทโวจ นิกฺขม สมณาติ. สาธาวุโสติ ภควา นิกฺขมิ. ปวิส สมณาติ. สาธาวุโสติ ภควา ปาวิสิ. ทุติยมฺปิ โข โอฬวโก ยกฺโข ภควนฺตํ เอตทโวจ นิกฺขม สมณาติ. สาธาวุโสติ ภควา นิกฺขมิ. ปวิส สมณาติ. สาธาวุโสติ ภควา ปาวิสิ. ตติยมฺปิ โข อาฬวโก ยกฺโข ภควนฺตํ เอตทโวจ นิกฺขม สมณาติ. สาธาวุโสติ ภควา นิกฺขมิ. ปวิส สมณาติ. สาธาวุโสติ ภควา ปาวิสิ. จตุตฺถมฺปิ โข อาฬวโก ยกฺโข ภควนฺตํ เอตทโวจ นิกฺขม สมณาติ. น ขฺวาหํ ตํ อาวุโส นิกฺขมิสฺสามิ. ยํ เต กรณียํ, ตํ กโรหีติ. ปญฺหํ ตํ สมณ ปุจฺฉิสฺสามิ, สเจ เม น พฺยากริสฺสสิ, จิตฺตํ วา เต ขิปิสฺสามิ, หทยํ วา เต ผาเลสฺสามิ, ปาเทสุ วา คเหตฺวา ปารคงฺคาย ขิปิสฺสามีติ. น ขฺวาหํ ตํ อาวุโส ปสฺสามิ สเทวเก โลเก สมารเก สพฺรหฺมเก สสฺสมณพฺราหฺมณิยา ปชาย สเทวมนุสฺสาย, โย เม จิตฺตํ วา ขิเปยฺย หทยํ วา ผาเลยฺย ปาเทสุ วา คเหตฺวา ปารคงฺคาย ขิเปยฺย. อปิจ ตฺวํ อาวุโส ปุจฺฉ ยทา กงฺขสีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ครั้งนั้นแล อาฬวกยักษ์เข้าไปเฝ้าพระผู้มีพระภาคถึงที่ประทับ ครั้นแล้วได้กราบทูลพระผู้มีพระภาคว่า "สมณะ จงออกไป!" พระผู้มีพระภาคตรัสว่า "ดีละ ท่านผู้มีอายุ" แล้วเสด็จออกไป. "สมณะ จงเข้ามา!" พระผู้มีพระภาคตรัสว่า "ดีละ ท่านผู้มีอายุ" แล้วเสด็จเข้าไป. แม้ครั้งที่สอง อาฬวกยักษ์ได้กราบทูลพระผู้มีพระภาคว่า "สมณะ จงออกไป!" พระผู้มีพระภาคตรัสว่า "ดีละ ท่านผู้มีอายุ" แล้วเสด็จออกไป. "สมณะ จงเข้ามา!" พระผู้มีพระภาคตรัสว่า "ดีละ ท่านผู้มีอายุ" แล้วเสด็จเข้าไป. แม้ครั้งที่สาม อาฬวกยักษ์ได้กราบทูลพระผู้มีพระภาคว่า "สมณะ จงออกไป!" พระผู้มีพระภาคตรัสว่า "ดีละ ท่านผู้มีอายุ" แล้วเสด็จออกไป. "สมณะ จงเข้ามา!" พระผู้มีพระภาคตรัสว่า "ดีละ ท่านผู้มีอายุ" แล้วเสด็จเข้าไป. แม้ครั้งที่สี่ อาฬวกยักษ์ได้กราบทูลพระผู้มีพระภาคว่า "สมณะ จงออกไป!" พระผู้มีพระภาคตรัสว่า "ท่านผู้มีอายุ เราจักไม่ออกไปเพื่อท่าน. ท่านจะทำอะไรก็จงทำเถิด." (อาฬวกยักษ์กล่าวว่า) "สมณะ เราจักถามปัญหาท่าน ถ้าท่านไม่พยากรณ์แก่เรา เราจักทำจิตของท่านให้ฟุ้งซ่าน หรือจักทำหัวใจของท่านให้แตก หรือจักจับเท้าของท่านเหวี่ยงไปฝั่งโน้นของแม่น้ำคงคา." (พระผู้มีพระภาคตรัสว่า) "ท่านผู้มีอายุ เราไม่เห็นใครในโลกพร้อมทั้งเทวโลก มารโลก พรหมโลก ในหมู่สัตว์พร้อมทั้งสมณพราหมณ์ เทวดาและมนุษย์ ที่จะพึงทำจิตของเราให้ฟุ้งซ่าน หรือทำหัวใจของเราให้แตก หรือจับเท้าของเราเหวี่ยงไปฝั่งโน้นของแม่น้ำคงคาได้. แต่ท่านผู้มีอายุ ท่านจงถามปัญหาตามที่ท่านสงสัยเถิด."</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:247">
+  <div class="pair-col col-pali">
+<p rend="bodytext">โก <span class="pb hidden-meta" data-ed="M" data-n="3.0019">[M 3.0019]</span> โส ภควานาม, โย มม ภวนํ ปวิฏฺโฐติ อาห.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">"ใครหนอชื่อว่าพระผู้มีพระภาค ผู้เข้ามาในวิมานของเรา" (ยักษ์) กล่าว.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:248">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น ตฺวํ อาวุโส ชานาสิ ภควนฺตํ อมฺหากํ สตฺถารํ, โย ตุสิตภวเน ฐิโต ปญฺจมหาวิโลกิตํ วิโลเกตฺวาติอาทินา นเยน ยาว ทมฺมจกฺกปวตฺตนา กเถนฺตา ปฏิสนฺธิอาทีสุ ทฺวตฺติํสปุพฺพนิมิตฺตานิ วตฺวา อิมานิปิ ตฺวํ อาวุโส อจฺฉริยานิ นาทฺทสาติ โจเทสุํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">"ท่านผู้มีอายุ ท่านไม่รู้จักพระผู้มีพระภาคผู้เป็นศาสดาของเราหรือ ผู้ประทับอยู่ในภพดุสิต ทรงตรวจดูมหาวิโลกนะ ๕ ประการเป็นต้น จนถึงการประกาศพระธรรมจักร" (เทวดา) กล่าวถึงบุพนิมิต ๓๒ ประการในการปฏิสนธิเป็นต้น (แล้ว) ตำหนิว่า "ท่านผู้มีอายุ ท่านไม่เห็นอัศจรรย์เหล่านี้หรือ?"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:249">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปสฺสถ <span class="pb hidden-meta" data-ed="M" data-n="3.0021">[M 3.0021]</span> ทานิ ตุมฺหากํ วา สตฺถา มหานุภาโว, อหํ วาติ ทกฺขิณปาเทน สฏฺฐิโยชนมตฺตํ เกลาสปพฺพตกูฏํ อกฺกมิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">"บัดนี้ พวกท่านจงดูว่าศาสดาของพวกท่านมีอานุภาพมาก หรือเรามีอานุภาพมาก" (กล่าวแล้ว) ได้เหยียบยอดเขาไกรลาสซึ่งสูงประมาณ ๖๐ โยชน์ด้วยเท้าขวา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:250">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยํ <span class="pb hidden-meta" data-ed="M" data-n="3.0027">[M 3.0027]</span> นูนาหํ เกนจิ อเชยฺยํ ทุสฺสาวุธํ มุญฺเจยฺยนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">"ไฉนหนอเรา พึงปล่อยทุสสาวุธที่ไม่มีใครเอาชนะได้"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:251">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อิทํ <span class="pb hidden-meta" data-ed="M" data-n="3.0030">[M 3.0030]</span> การณํ เมตฺตาวิหารยุตฺโต สมโณ, หนฺท นํ โรเสตฺวา เมตฺตาย วิโยเชมีติ อิมินา สมฺพนฺเธเนตํ วุตฺตํ, อถ โข อาฬวโก ยกฺโข เยน ภควา…เป… นิกฺขม สมณาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(ยักษ์คิดว่า) "สมณะนี้ประกอบด้วยเมตตาธรรม เอาเถิด เราจะทำให้ท่านโกรธ แล้วพรากท่านจากเมตตา" ด้วยเหตุนี้จึงกล่าวคำนั้น (คือ) ครั้งนั้นแล อาฬวกยักษ์เข้าไปเฝ้าพระผู้มีพระภาค... (ละไว้) ... "สมณะ จงออกไป!"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:252">
+  <div class="pair-col col-pali">
+<p rend="bodytext">“สุพฺพโจ <span class="pb hidden-meta" data-ed="M" data-n="3.0031">[M 3.0031]</span> วตายํ สมโณ เอกวจเนเนว นิกฺขนฺโต, เอวํ นาม นิกฺขเมตุํ สุขํ สมณํ อการเณเนวาหํ สกลรตฺติํ ยุทฺเธน อพฺภุยฺยาสินฺติ มุทุจิตฺโต หุตฺวา ปุน จินฺเตสิ –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(ยักษ์คิดว่า) "สมณะนี้ว่าง่ายหนอ ออกไปเพียงคำเดียวเท่านั้น เราจะเข้ารุกรานสมณะผู้ออกไปง่ายอย่างนี้ด้วยการรบตลอดทั้งคืนโดยไม่มีเหตุผลได้อย่างไร" (ยักษ์) มีจิตอ่อนลงแล้วคิดอีกว่า –</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:253">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สุพฺพโจ <span class="pb hidden-meta" data-ed="M" data-n="3.0033">[M 3.0033]</span> อยํ สมโณ นิกฺขมาติ วุตฺโต นิกฺขมติ. ปวิสาติ วุตฺโต ปวิสติ. ยํนูนาหํ อิมํ สมณํ เอวเมว สกลรตฺติํ กิลเมตฺวา ปาเท คเหตฺวา ปารคงฺคาย ขิเปยฺยนฺติ ปาปกํ จิตฺตํ อุปฺปาเทตฺวา จตุตฺถวารํ อาห นิกฺขม สมณาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">"สมณะนี้ว่าง่าย เมื่อถูกบอกว่า 'จงออกไป' ก็ออกไป เมื่อถูกบอกว่า 'จงเข้ามา' ก็เข้ามา ไฉนหนอเราจะทำให้สมณะนี้ลำบากตลอดทั้งคืนอย่างนี้แหละ แล้วจับเท้าเหวี่ยงไปฝั่งโน้นของแม่น้ำคงคา" (ยักษ์) จึงเกิดจิตชั่วขึ้น แล้วกล่าวเป็นครั้งที่สี่ว่า "สมณะ จงออกไป!"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:254">
+  <div class="pair-col col-pali">
+<p rend="gatha1">กิํ <span class="pb hidden-meta" data-ed="M" data-n="3.0037">[M 3.0037]</span> สูธ วิตฺตํ ปุริสสฺส เสฏฺฐํ,</p>
+<p rend="gatha2">กิํสุ สุจิณฺณํ สุขมาวหาติ;</p>
+<p rend="gatha3">กิํสุ หเว สาทุตรํ รสานํ,</p>
+<p rend="gathalast">กถํ ชีวิํ ชีวิตมาหุ เสฏฺฐนฺติ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในโลกนี้ ทรัพย์อะไรของบุรุษประเสริฐที่สุด อะไรที่ประพฤติดีแล้วนำสุขมาให้ อะไรหนอมีรสอร่อยกว่ารสทั้งหลาย นักปราชญ์ทั้งหลายกล่าวว่า การเป็นอยู่ของใครประเสริฐที่สุด?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:255">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สทฺธีธ <span class="pb hidden-meta" data-ed="M" data-n="3.0039">[M 3.0039]</span> วิตฺตํ ปุริสสฺส เสฏฺฐํ,</p>
+<p rend="gatha2">ธมฺโม สุจิณฺโณ สุขมาวหาติ;</p>
+<p rend="gatha3">สจฺจํ หเว สาทุตรํ รสานํ,</p>
+<p rend="gathalast">ปญฺญาชีวิํ ชีวิตมาหุ เสฏฺฐนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในโลกนี้ ศรัทธาเป็นทรัพย์อันประเสริฐของบุรุษ ธรรมที่ประพฤติดีแล้วนำสุขมาให้ สัจจะหนอมีรสอร่อยกว่ารสทั้งหลาย นักปราชญ์ทั้งหลายกล่าวว่า การเป็นอยู่ด้วยปัญญาประเสริฐที่สุด.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:256">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สทฺโธ <span class="pb hidden-meta" data-ed="M" data-n="3.0041">[M 3.0041]</span> สีเลน สมฺปนฺโน,</p>
+<p rend="gatha2">ยโส โภคสมปฺปิโต;</p>
+<p rend="gatha3">ยํ ยํ ปเทสํ ภชติ,</p>
+<p rend="gathalast">ตตฺถ ตตฺเถว ปูชิโตติ วจนโต –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เพราะคำกล่าวว่า "ผู้มีศรัทธา สมบูรณ์ด้วยศีล มีเกียรติยศ มีโภคะสมบูรณ์ ไปสู่ถิ่นใดๆ ย่อมได้รับการบูชาในถิ่นนั้นๆ" –</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:257">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สจฺเจน <span class="pb hidden-meta" data-ed="M" data-n="3.0043">[M 3.0043]</span> วาเจนุทกมฺปิ ธาวติ,</p>
+<p rend="gatha2">วิสมฺปิ สจฺเจน หนนฺติ ปณฺฑิตา;</p>
+<p rend="gatha3">สจฺเจน เทโว ถนยํ ปวสฺสติ,</p>
+<p rend="gathalast">สจฺเจ ฐิตา นิพฺพุติํ ปตฺถยนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ด้วยสัจวาจา แม้น้ำก็ไหลไป บัณฑิตทั้งหลายย่อมกำจัดยาพิษได้ด้วยสัจจะ เทวดาย่อมบันดาลฝนให้ตกด้วยสัจจะ ผู้ตั้งอยู่ในสัจจะย่อมปรารถนาความดับทุกข์.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:258">
+  <div class="pair-col col-pali">
+<p rend="gatha1">เยเกจิเม อตฺถิ รสา ปถพฺยา,</p>
+<p rend="gatha2">สจฺจํ เตสํ สาทุตรํ รสานํ;</p>
+<p rend="gatha3">สจฺเจ ฐิตา สมณพฺราหฺมณา จ,</p>
+<p rend="gathalast">ตรนฺติ ชาติมรณสฺส ปารนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">รสทั้งหลายมีอยู่ในแผ่นดินนี้มีประมาณเท่าใด สัจจะมีรสอร่อยกว่ารสเหล่านั้น สมณพราหมณ์ทั้งหลายผู้ตั้งอยู่ในสัจจะ ย่อมข้ามพ้นฝั่งแห่งชาติและมรณะได้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:259">
+  <div class="pair-col col-pali">
+<p rend="gatha1">กถํสุ <span class="pb hidden-meta" data-ed="M" data-n="3.0046">[M 3.0046]</span> ตรติ โอฆํ, กถํสุ ตรติ อณฺณวํ;</p>
+<p rend="gathalast">กถํสุ ทุกฺขมจฺเจติ, กถํสุ ปริสุชฺฌติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">บุคคลย่อมข้ามโอฆะได้อย่างไร ย่อมข้ามมหาสมุทรได้อย่างไร ย่อมล่วงทุกข์ได้อย่างไร ย่อมบริสุทธิ์ได้อย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:260">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สทฺธาย <span class="pb hidden-meta" data-ed="M" data-n="3.0047">[M 3.0047]</span> ตรติ โอฆํ, อปฺปมาเทน อณฺณวํ;</p>
+<p rend="gathalast">วีริเยน ทุกฺขมจฺเจติ, ปญฺญาย ปริสุชฺฌติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ย่อมข้ามโอฆะได้ด้วยศรัทธา ย่อมข้ามมหาสมุทรได้ด้วยความไม่ประมาท ย่อมล่วงทุกข์ได้ด้วยความเพียร ย่อมบริสุทธิ์ได้ด้วยปัญญา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:261">
+  <div class="pair-col col-pali">
+<p rend="gatha1">กถํสุ <span class="pb hidden-meta" data-ed="M" data-n="3.0050">[M 3.0050]</span> ลภเต ปญฺญํ, กถํสุ วินฺทเต ธนํ;</p>
+<p rend="gatha2">กถํสุ กิตฺติํ ปปฺโปติ, กถํ มิตฺตานิ คนฺถติ;</p>
+<p rend="gathalast">อสฺมา โลกา ปรํ โลกํ, กถํ เปจฺจ น โสจตีติ–</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">บุคคลย่อมได้ปัญญาได้อย่างไร ย่อมได้ทรัพย์ได้อย่างไร ย่อมได้เกียรติยศได้อย่างไร ย่อมผูกมิตรได้อย่างไร เมื่อละโลกนี้ไปสู่โลกหน้า ย่อมไม่เศร้าโศกได้อย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:262">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สทฺทหาโน <span class="pb hidden-meta" data-ed="M" data-n="3.0051">[M 3.0051]</span> อรหตํ, ธมฺมํ นิพฺพานปตฺติยา;</p>
+<p rend="gathalast">สุสฺสูสํ ลภเต ปญฺญํ, อปฺปมตฺโต วิจกฺขโณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้เชื่อต่อพระอรหันต์ทั้งหลาย ในธรรมเพื่อบรรลุนิพพาน เป็นผู้ไม่ประมาท มีปัญญาเฉลียวฉลาด ตั้งใจฟัง ย่อมได้ปัญญา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:263">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ปติรูปการี <span class="pb hidden-meta" data-ed="M" data-n="3.0054">[M 3.0054]</span> ธุรวา, อุฏฺฐาตา วินฺทเต ธนํ;</p>
+<p rend="gathalast">สจฺเจน กิตฺติํ ปปฺโปติ, ททํ มิตฺตานิ คนฺถติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้ทำสิ่งที่เหมาะสม มีความรับผิดชอบ ขยันหมั่นเพียร ย่อมได้ทรัพย์ ย่อมได้เกียรติยศด้วยสัจจะ ผู้ให้ ย่อมผูกมิตรได้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:264">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อสฺมา โลโก ปรํ โลกํ, เอวํ เปจฺจ น โสจติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เมื่อละโลกนี้ไปสู่โลกหน้า ย่อมไม่เศร้าโศกด้วยประการฉะนี้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:265">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ยสฺเสเต <span class="pb hidden-meta" data-ed="M" data-n="3.0056">[M 3.0056]</span> จตุโร ธมฺมา,</p>
+<p rend="gatha2">สทฺธสฺส ฆรเมสิโน;</p>
+<p rend="gatha3">สจฺจํ ทมฺโม ธิติ จาโค,</p>
+<p rend="gathalast">ส เว เปจฺจ น โสจติ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธรรม ๔ ประการเหล่านี้ คือ สัจจะ ทมะ ธิติ จาคะ มีอยู่ในคฤหัสถ์ผู้มีศรัทธาผู้นั้น ย่อมไม่เศร้าโศกในปรโลก.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:266">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อิงฺฆ <span class="pb hidden-meta" data-ed="M" data-n="3.0058">[M 3.0058]</span> อญฺเญปิ ปุจฺฉสฺสุ,</p>
+<p rend="gatha2">ปุถู สมณพฺราหฺมเณ;</p>
+<p rend="gatha3">ยทิ สจฺจา ธมฺมา จาคา,</p>
+<p rend="gathalast">ขนฺตยา ภิยฺโยธ วิชฺฌติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เชิญเถิด ท่านจงถามสมณพราหมณ์เหล่าอื่นเป็นอันมากดูเถิดว่า มีสิ่งอื่นที่ยิ่งไปกว่าสัจจะ ทมะ จาคะ และขันติในโลกนี้หรือไม่.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:267">
+  <div class="pair-col col-pali">
+<p rend="gatha1">กถํ <span class="pb hidden-meta" data-ed="M" data-n="3.0060">[M 3.0060]</span> นุ ทานิ ปุจฺเฉยฺยํ, ปุถู สมณพฺราหฺมเณ;</p>
+<p rend="gathalast">โยหํ อชฺช ปชานามิ, โย อตฺโถ สมฺปรายิโก.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">บัดนี้ ข้าพเจ้าจะถามสมณพราหมณ์เหล่าอื่นเป็นอันมากได้อย่างไรเล่า เพราะข้าพเจ้ารู้แจ้งแล้วซึ่งประโยชน์ในปรโลกในวันนี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:268">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อตฺถาย <span class="pb hidden-meta" data-ed="M" data-n="3.0062">[M 3.0062]</span> วต เม พุทฺโธ, วาสายาฬวิมาคมา;</p>
+<p rend="gathalast">โยหํ อชฺช ปชานามิ, ยตฺถ ทินฺนํ มหปฺผลํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พระพุทธเจ้าเสด็จมายังอาฬวีวิมานเพื่อประโยชน์แก่ข้าพเจ้าหนอ เพราะข้าพเจ้ารู้แจ้งแล้วในวันนี้ว่า ทานที่ให้ในที่ใดมีผลมาก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:269">
+  <div class="pair-col col-pali">
+<p rend="gatha1">โส <span class="pb hidden-meta" data-ed="M" data-n="3.0063">[M 3.0063]</span> อหํ วิจริสฺสามิ, คามา คามํ ปุรา ปุรํ;</p>
+<p rend="gathalast">นมสฺสมาโน สมฺพุทฺธํ, ธมฺมสฺส จ สุธมฺมตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้านั้นจักเที่ยวไปจากบ้านสู่บ้าน จากเมืองสู่เมือง นอบน้อมพระสัมพุทธเจ้าและพระธรรมที่มีความดีงาม</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:270">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อิมํ <span class="pb hidden-meta" data-ed="M" data-n="3.0065">[M 3.0065]</span> กุมารํ สตปุญฺญลกฺขณํ,</p>
+<p rend="gatha2">สพฺพงฺคุเปตํ ปริปุณฺณพฺยญฺชนํ;</p>
+<p rend="gatha3">อุทคฺคจิตฺโต สุมโน ททามิ เต,</p>
+<p rend="gathalast">ปฏิคฺคห โลกหิตาย จกฺขุมาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้ามีจิตเบิกบาน มีใจยินดี ขอมอบกุมารนี้ผู้มีลักษณะแห่งบุญร้อยประการ ผู้มีอวัยวะครบถ้วน ผู้มีพยัญชนะบริบูรณ์แก่ท่าน ข้าแต่พระผู้มีจักษุ ขอท่านจงรับเพื่อประโยชน์แก่โลกเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:271">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ทีฆายุโก <span class="pb hidden-meta" data-ed="M" data-n="3.0066">[M 3.0066]</span> โหตุ อยํ กุมาโร,</p>
+<p rend="gatha2">ตุวญฺจ ยกฺข สุขิโต ภวาหิ;</p>
+<p rend="gatha3">อพฺยาธิตา โลกหิตาย ติฏฺฐถ;</p>
+<p rend="gathalast">อยํ กุมาโร สรณมุเปติ พุทฺธํ…เป… ธมฺมํ…เป… สงฺฆํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ขอให้กุมารนี้มีอายุยืนยาวเถิด และท่านยักษ์จงเป็นผู้มีความสุขเถิด ขอท่านทั้งหลายจงดำรงอยู่เพื่อประโยชน์แก่โลกโดยปราศจากโรคเถิด กุมารนี้ถึงพระพุทธเจ้าเป็นสรณะ...ถึงพระธรรมเป็นสรณะ...ถึงพระสงฆ์เป็นสรณะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:272">
+  <div class="pair-col col-pali">
+<p rend="subhead">มหาวคฺคสํยุตฺต อฏฺฐกถา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อรรถกถา มหาวรรคสังยุตต์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:273">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เอกํ <span class="pb hidden-meta" data-ed="M" data-n="3.0071">[M 3.0071]</span> สมยํ ภควา สาวตฺถิยํ วิหรติ เชตวเน อนาถปิณฺฑิกสฺส อาราเม. เตน โข ปน สมเยน อายสฺมา สาริปุตฺโต มคเธสุ วิหรติ นาลกคามเก อาพาธิโก ทุกฺขิโต พาฬฺหคิลาโน. จุนฺโท จ สมณุทฺเทโส อายสฺมโต สาริปุตฺตสฺส อุปฏฺฐาโก โหติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">สมัยหนึ่ง พระผู้มีพระภาคประทับอยู่ที่พระเชตวัน อารามของอนาถบิณฑิกเศรษฐี ใกล้กรุงสาวัตถี. ก็สมัยนั้นแล ท่านพระสารีบุตรอาพาธ มีทุกข์ เป็นไข้หนัก อยู่ที่บ้านนาฬกะ ในแคว้นมคธ. และสามเณรจุนทะเป็นอุปัฏฐากของท่านพระสารีบุตร.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:274">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อถ โข อายสฺมา สาริปุตฺโต เตเนว อาพาเธน ปรินิพฺพายิ. อถ โข จุนฺโท สมณุทฺเทโส อายสฺมโต สาริปุตฺตสฺส ปตฺตจีวรมาทาย เยน สาวตฺถิ เชตวนํ อนาถปิณฺฑิกสฺส อาราโม, เยนา ยสฺมา อานนฺโท เตนุปสงฺกมิ, อุปสงฺกมิตฺวา อายสฺมนฺตํ อานนฺทํ อภิวาเทตฺวา เอกมนฺตํ นิสีทิ, เอกมนฺตํ นิสินฺโน โข จุนฺโท สมณุทฺเทโส อายสฺมนฺตํ อานนฺทํ เอตทโวจ “อายสฺมา ภนฺเต สาริปุตฺโต ปรินิพฺพุโต, อิทมสฺส ปตฺตจีวร”นฺติ. อตฺถิ โข อิทํ อาวุโส จุนฺท กถา ปาภตํ ภควนฺตํ ทสฺสนาย, อายามาวุโส จุนฺท, เยน ภควา เตนุปสงฺกมิสฺสาม, อุปสงฺกมิตฺวา ภควโต เอตมตฺถํ อาโรเจสฺสามาติ. “เอวํ ภนฺเต”ติ โข จุนฺโท สมณุทฺเทโส อายสฺมโต อานนฺทสฺส ปจฺจสฺโสสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ครั้งนั้นแล ท่านพระสารีบุตรปรินิพพานด้วยอาพาธนั้นเอง. ครั้งนั้นแล สามเณรจุนทะถือบาตรและจีวรของท่านพระสารีบุตรเข้าไปหาท่านพระอานนท์ ณ พระเชตวัน อารามของอนาถบิณฑิกเศรษฐี ใกล้กรุงสาวัตถี ครั้นเข้าไปหาแล้ว ไหว้ท่านพระอานนท์แล้วนั่ง ณ ที่ควรส่วนข้างหนึ่ง. สามเณรจุนทะผู้นั่ง ณ ที่ควรส่วนข้างหนึ่งแล้ว ได้กล่าวกับท่านพระอานนท์ว่า “ท่านขอรับ ท่านพระสารีบุตรปรินิพพานแล้ว นี่คือบาตรและจีวรของท่าน.” ท่านพระอานนท์กล่าวว่า “ดูก่อนจุนทะ เรื่องนี้เป็นเสบียงสำหรับไปเฝ้าพระผู้มีพระภาค มาเถิดจุนทะ เราจักเข้าไปเฝ้าพระผู้มีพระภาค แล้วกราบทูลเรื่องนี้แด่พระผู้มีพระภาค.” สามเณรจุนทะรับคำท่านพระอานนท์ว่า “อย่างนั้นขอรับ.”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:275">
+  <div class="pair-col col-pali">
+<p rend="bodytext">พุทฺธา <span class="pb hidden-meta" data-ed="M" data-n="3.0075">[M 3.0075]</span> นุ โข ปฐมํ ปรินิพฺพายนฺติ, อุทาหุ อคฺคสาวกาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พระพุทธเจ้าปรินิพพานก่อน หรือว่าพระอัครสาวกปรินิพพานก่อนกันหนอ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:276">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อนุชานาตุ <span class="pb hidden-meta" data-ed="M" data-n="3.0078">[M 3.0078]</span> เม ภนฺเต ภควา, อนุชานาตุ สุคโต. ปรินิพฺพาน กาโล เม, โอสฺสฏฺโฐ เม อายุสงฺขาโรติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่พระผู้มีพระภาค ขอพระผู้มีพระภาคทรงอนุญาตแก่ข้าพระองค์เถิด ขอพระสุคตทรงอนุญาตเถิด ถึงเวลาปรินิพพานของข้าพระองค์แล้ว สังขารคืออายุของข้าพระองค์ถูกปลงแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:277">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กตฺถ <span class="pb hidden-meta" data-ed="M" data-n="3.0079">[M 3.0079]</span> ปรินิพฺพายิสฺสสิ สาริปุตฺตาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">สารีบุตร เธอจักปรินิพพานที่ไหน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:278">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อตฺถิ ภนฺเต มคเธสุ นาลกคาเม ชาโตวรโก, ตตฺถาหํ ปรินิพฺพายิสฺสามีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่พระผู้มีพระภาค มีเรือนเกิดของข้าพระองค์อยู่ที่บ้านนาฬกะ ในแคว้นมคธ ข้าพระองค์จักปรินิพพานที่นั่น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:279">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยสฺส ทานิ ตฺวํ สาริปุตฺต กาลํ มญฺญสิ, อิทานิ ปน เต เชฏฺฐกนิฏฺฐ ภาติกานํ ตาทิสสฺส ภิกฺขุโน ทสฺสนํ ทุลฺลภํ ภวิสฺสติ, เทเสหิ เนสํ ธมฺมนฺติ อาห.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">สารีบุตร บัดนี้เธอจงสำคัญกาลอันควรเถิด แต่การได้เห็นภิกษุเช่นเธอผู้เป็นพี่น้องร่วมอุทรจักเป็นของหายากแก่ชนเหล่านั้น เธอจงแสดงธรรมแก่ชนเหล่านั้นเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:280">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อถโข <span class="pb hidden-meta" data-ed="M" data-n="3.0103">[M 3.0103]</span> อายสฺมา จ อานนฺโท จุนฺโท จ สมณุทฺเทโส เยน ภควา เตนุปสงฺกมิํสุ, อุปสงฺกมิตฺวา ภควนฺตํ อภิวาเทตฺวา เอกมนฺตํ นิสีทิํสุ, เอกมนฺตํ นิสินฺโน โข อายสฺมา อานนฺโท ภควนฺตํ เอตทโวจ “อยํ ภนฺเต จุนฺโท สมณุทฺเทโส ‘เอวมาห อายสฺมา ภนฺเต สาริปุตฺโต <span class="pb hidden-meta" data-ed="M" data-n="3.0104">[M 3.0104]</span> ปรินิพฺพุโต, อิทมสฺส ปตฺตจีวร’นฺติ. อปิจ เม ภนฺเต ‘มธุรก ชาโต วิย กาโย, ทิสาปิ เม น ปกฺขายนฺติ, ธมฺมาปิ มํ นปฺปฏิภนฺติ อายสฺมา สาริปุตฺโต ปรินิพฺพุโต’ติ” สุตฺวา–</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ครั้งนั้นแล ท่านพระอานนท์และสามเณรจุนทะเข้าไปเฝ้าพระผู้มีพระภาค ครั้นเข้าไปเฝ้าแล้ว ถวายบังคมพระผู้มีพระภาคแล้วนั่ง ณ ที่ควรส่วนข้างหนึ่ง. ท่านพระอานนท์ผู้นั่ง ณ ที่ควรส่วนข้างหนึ่งแล้ว ได้กราบทูลพระผู้มีพระภาคว่า “ข้าแต่พระผู้มีพระภาค สามเณรจุนทะนี้กล่าวว่า ‘ท่านขอรับ ท่านพระสารีบุตรปรินิพพานแล้ว นี่คือบาตรและจีวรของท่าน.’ อนึ่ง ข้าแต่พระผู้มีพระภาค เมื่อข้าพระองค์ได้ยินว่า ‘ท่านพระสารีบุตรปรินิพพานแล้ว’ กายของข้าพระองค์ก็เหมือนถูกยาพิษ ทิศทั้งหลายก็ไม่ปรากฏแก่ข้าพระองค์ ธรรมทั้งหลายก็ไม่แจ่มแจ้งแก่ข้าพระองค์”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:281">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อปฺปเกนปิ <span class="pb hidden-meta" data-ed="M" data-n="3.0105">[M 3.0105]</span> เมธาวี, ปาภเตน วิจกฺขโณ;</p>
+<p rend="gathalast">สมุฏฺฐาเปติ อตฺตานํ, อณุํ อคฺคิํว สนฺธมนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้มีปัญญา ผู้ฉลาด ย่อมยังตนให้ตั้งขึ้นได้ด้วยเสบียงเพียงเล็กน้อย เหมือนคนก่อไฟน้อยให้ลุกโพลงขึ้นฉะนั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:282">
+  <div class="pair-col col-pali">
+<p rend="gatha1">โย <span class="pb hidden-meta" data-ed="M" data-n="3.0110">[M 3.0110]</span> ปพฺพชี ชาติสตานิ ปญฺจ,</p>
+<p rend="gatha2">ปหาย กามานิ มโนรมานิ;</p>
+<p rend="gatha3">ตํวีตราคํ สุสมาหิตินฺทริยํ;</p>
+<p rend="gathalast">ปรินิพฺพุตํ วนฺทถ สาริปุตฺตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ท่านพระสารีบุตรผู้บวชมาห้าร้อยชาติ ผู้ละกามอันน่ารื่นรมย์ใจได้แล้ว ผู้ปราศจากราคะ ผู้มีอินทรีย์ตั้งมั่นดีแล้ว ผู้ปรินิพพานแล้ว ท่านทั้งหลายจงไหว้ท่านพระสารีบุตรนั้นเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:283">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ขนฺติพโล ปถวิสโม น กุปฺปติ,</p>
+<p rend="gatha2">นจาปิ จิตฺตสฺส วเสน วตฺตติ;</p>
+<p rend="gatha3">อนุกมฺปโก การุณิโก จ นิพฺพุโต,</p>
+<p rend="gathalast">ปรินิพฺพุตํ วนฺทถ สาริปุตฺตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ท่านพระสารีบุตรผู้มีกำลังคือขันติเสมอด้วยแผ่นดิน ไม่โกรธ ไม่เป็นไปในอำนาจของจิต เป็นผู้อนุเคราะห์ มีความกรุณา สงบแล้ว ผู้ปรินิพพานแล้ว ท่านทั้งหลายจงไหว้ท่านพระสารีบุตรนั้นเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:284">
+  <div class="pair-col col-pali">
+<p rend="gatha1">จณฺฑาลปุตฺโต <span class="pb hidden-meta" data-ed="M" data-n="3.0111">[M 3.0111]</span> ยถา นครํ ปวิฏฺโฐ,</p>
+<p rend="gatha2">นีจมโน จรติ กโฬปิหตฺโถ;</p>
+<p rend="gatha3">ตถา อยํ วิหรติ สาริปุตฺโต,</p>
+<p rend="gathalast">ปรินิพฺพุตํ วนฺทถ สาริปุตฺตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ท่านพระสารีบุตรนี้ย่อมอยู่ เหมือนบุตรของคนจัณฑาลผู้ถือกระเช้า มีใจนอบน้อม เที่ยวเข้าไปในเมืองฉะนั้น ผู้ปรินิพพานแล้ว ท่านทั้งหลายจงไหว้ท่านพระสารีบุตรนั้นเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:285">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อุสโภ ยถา ฉินฺนวิสาณโก,</p>
+<p rend="gatha2">อเหฏฺฐยนฺโต จรติ ปุรนฺตเร วเน;</p>
+<p rend="gatha3">ตถา อยํ วิหรติ สาริปุตฺโต;</p>
+<p rend="gathalast">ปรินิพฺพุตํ วนฺทถ สาริปุตฺตนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ท่านพระสารีบุตรนี้ย่อมอยู่ เหมือนโคอุสภะที่ถูกตัดเขาแล้ว ไม่เบียดเบียน เที่ยวไปในป่าท่ามกลางเมืองฉะนั้น ผู้ปรินิพพานแล้ว ท่านทั้งหลายจงไหว้ท่านพระสารีบุตรนั้นเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:286">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อปิจ <span class="pb hidden-meta" data-ed="M" data-n="3.0112">[M 3.0112]</span> เม ภนฺเต มธุรกชาโต วิย กาโย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อนึ่ง ข้าแต่พระผู้มีพระภาค กายของข้าพระองค์ก็เหมือนถูกยาพิษ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:287">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กิํ <span class="pb hidden-meta" data-ed="M" data-n="3.0113">[M 3.0113]</span> นุโข เต อานนฺท สาริปุตฺโต สีลกฺขนฺธํ วา อาทาย ปรินิพฺพุโต, สมาธิกฺขนฺธํ วา อาทาย ปรินิพฺพุโต, ปญฺญากฺขนฺธํ วา อาทาย ปรินิพฺพุโต, วิมุตฺติกฺขนฺธํ วา อาทาย ปรินิพฺพุโต, วิมุตฺติ ญาณทสฺสนกฺขนฺธํ วา อาทาย ปรินิพฺพุโตติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อานนท์ สารีบุตรปรินิพพานไปพร้อมกับกองศีล หรือปรินิพพานไปพร้อมกับกองสมาธิ หรือปรินิพพานไปพร้อมกับกองปัญญา หรือปรินิพพานไปพร้อมกับกองวิมุตติ หรือปรินิพพานไปพร้อมกับกองวิมุตติญาณทัสสนะหรืออย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:288">
+  <div class="pair-col col-pali">
+<p rend="bodytext">นนุ <span class="pb hidden-meta" data-ed="M" data-n="3.0116">[M 3.0116]</span> ตํ อานนฺท มยา ปฏิกจฺเจว อกฺขาตํ สพฺเพหิ ปิเยหิ มนา เปหิ นานาภาโว วินาภาโว อญฺญถาภาโว, ตํ กุเตตฺถ อานนฺท ลพฺภา “ยํ ตํ ชาตํ ภูตํ สงฺขตํ ปโลกธมฺมํ, ตํ วต มาปลุชฺชี”ติ เนตํ ฐานํ วิชฺชติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อานนท์ เรามิได้บอกไว้ก่อนแล้วหรือว่า ความเป็นต่างๆ ความพลัดพราก ความเป็นอย่างอื่น ย่อมมีแก่สัตว์ทั้งหลายผู้เป็นที่รักที่ชอบใจทั้งปวง. อานนท์ จะพึงได้ในที่นี้แต่ที่ไหนเล่าว่า ‘สิ่งใดเกิดแล้ว มีแล้ว ปรุงแต่งแล้ว มีความเสื่อมไปเป็นธรรมดา ขอสิ่งนั้นอย่าเสื่อมไปเลย’ ข้อนั้นมิใช่ฐานะที่จะมีได้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:289">
+  <div class="pair-col col-pali">
+<p rend="subhead">ทสกนิทฺเทส</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ทสกนิเทศ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:290">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ตตฺถ <span class="pb hidden-meta" data-ed="M" data-n="3.0124">[M 3.0124]</span> กตมํ ตถาคตสฺส ฐานญฺจ ฐานโต อฏฺฐานญฺจ อฏฺฐานโต ยถาภูตํ ญาณํ. อิธ ตถาคโต “อฏฺฐานเมตํ อนวกาโส ยํ ทิฏฺฐิสมฺปนฺโน ปุคฺคโล กญฺจิ สงฺขารํ นิจฺจโต อุปคจฺเฉยฺย เนตํ ฐานํ วิชฺชตี”ติ ปชานาติ, “ฐานญฺจ โข เอตํ วิชฺชติ ยํ ปุถุชฺชโน กญฺจิ สงฺขารํ นิจฺจโต อุปคจฺเฉยฺย ฐานเมตํ วิชฺชตี”ติ –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ในบรรดาญาณเหล่านั้น ญาณที่พระตถาคตรู้ตามความเป็นจริงว่า ‘ฐานะเป็นฐานะ อฐานะเป็นอฐานะ’ เป็นไฉน? ในเรื่องนี้ พระตถาคตรู้ชัดว่า ‘ข้อที่บุคคลผู้ถึงพร้อมด้วยทิฏฐิจะพึงยึดถือสังขารใดสังขารหนึ่งโดยความเป็นของเที่ยงนั้น ไม่ใช่ฐานะ ไม่ใช่โอกาสที่จะมีได้’ และรู้ชัดว่า ‘ข้อที่ปุถุชนจะพึงยึดถือสังขารใดสังขารหนึ่งโดยความเป็นของเที่ยงนั้น เป็นฐานะที่จะมีได้’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:291">
+  <div class="pair-col col-pali">
+<p rend="gatha1">กมฺมโต <span class="pb hidden-meta" data-ed="M" data-n="3.0135">[M 3.0135]</span> ทฺวารโต เจว;</p>
+<p rend="gatha2">กปฺปฏฺฐิติยโต ตถา;</p>
+<p rend="gatha3">ปากสาธารณาทีหิ;</p>
+<p rend="gathalast">วิญฺญาตพฺโพ วินิจฺฉโย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พึงวินิจฉัยโดยกรรม โดยทวาร โดยความตั้งอยู่แห่งกัป และโดยความเสมอกันแห่งวิบากเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:292">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มยา <span class="pb hidden-meta" data-ed="M" data-n="3.0154">[M 3.0154]</span> ภนฺเต อุปฺปนฺโน โจโร น สกฺกา ปฏิพาหิตุํ, สงฺโฆ ปรสมุทฺทํ คจฺฉตุ, อหํ สมุทฺทารกฺขํ กริสฺสามีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่พระผู้มีพระภาค โจรที่เกิดขึ้นแล้ว ข้าพระองค์ไม่สามารถห้ามได้ ขอพระสงฆ์จงข้ามไปสู่ฝั่งโน้นเถิด ข้าพระองค์จักรักษาทะเลไว้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:293">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อาวุโส มหาโสณ อภิรุห มหาอุลุมฺปนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนท่านมหาสโณ ท่านจงขึ้นแพใหญ่เถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:294">
+  <div class="pair-col col-pali">
+<p rend="bodytext">นาหํ <span class="pb hidden-meta" data-ed="M" data-n="3.0155">[M 3.0155]</span> ภนฺเต ตุมฺเหสุ อคจฺฉนฺเตสุ คมิสฺสามีติ ยาวตติยํ กเถตฺวาปิ เถรํ อาโรเปตุํ อสกฺโกนฺตา นิวตฺติํสุ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พวกเขากล่าวว่า 'ข้าแต่ท่านผู้เจริญ เมื่อท่านทั้งหลายไม่ไป ข้าพเจ้าก็จักไม่ไป' แม้กล่าวอย่างนี้ถึงสามครั้งแล้ว ก็ไม่สามารถให้พระเถระขึ้น (เรือ) ไปได้ จึงพากันกลับไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:295">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เอวรูปสฺส <span class="pb hidden-meta" data-ed="M" data-n="3.0156">[M 3.0156]</span> นาม ลาภคฺคยสคฺคปฺปตฺตสฺส สรีรธาตุนิจยฏฺฐานํ อนาถํ ชาตนฺติ จินฺตยมาโน นิสีทิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เขาคิดว่า 'สถานที่ประดิษฐานพระบรมสารีริกธาตุของบุคคลผู้ถึงความเป็นเลิศด้วยลาภและยศเห็นปานนี้ กลายเป็นที่ที่ไม่มีผู้ดูแลเสียแล้ว' ดังนี้แล้วจึงนั่งลง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:296">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ภนฺเต <span class="pb hidden-meta" data-ed="M" data-n="3.0158">[M 3.0158]</span> เอตํ ปณฺณขาทกมนุสฺสานํ วสนฏฺฐานํ, ธูโม ปญฺญายติ, อหํ ปุรโต คมิสฺสามีติ เถรํ วนฺทิตฺวา อตฺตโน ภวนํ อคมาสิ. เถโร สพฺพมฺปิ ภยกาลํ ปณฺณขาทกมนุสฺเส นิสฺสาย วสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เขากล่าวว่า 'ท่านผู้เจริญ ที่นี่เป็นที่อยู่ของพวกคนกินใบไม้ มีควันปรากฏอยู่ ข้าพเจ้าจะไปข้างหน้า' ดังนี้แล้วไหว้พระเถระแล้วได้ไปยังที่อยู่ของตน พระเถระอาศัยพวกคนกินใบไม้อยู่ตลอดเวลาที่มีภัยทั้งสิ้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:297">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อาวุโส มหาโสณ ภิกฺขาหาโร ปญฺญายตีติ วตฺวา ปตฺตจีวรํ อาโรเปตฺวา จีวรํ ปารุปิตฺวา ปตฺตํ นีหริตฺวา อฏฺฐาสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">กล่าวว่า 'ท่านมหาสรณะ ภิกษาหารปรากฏแล้ว' ดังนี้แล้ว ยกบาตรและจีวรขึ้น ห่มจีวร นำบาตรออกมาแล้วได้ยืนอยู่</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:298">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มหาโสณตฺเถโร <span class="pb hidden-meta" data-ed="M" data-n="3.0161">[M 3.0161]</span> ปญฺจภิกฺขุสตปริวาโร มณฺฑลารามวิหารํ ปตฺโต, เอเกโก นวหตฺถสาฏเกน สทฺธิํ เอเกกกหาปณคฺฆนกํ ปิณฺฑปาตํ เทตูติ มนุสฺเส อโวจุํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พระมหาสรณเถระพร้อมด้วยบริวารคือภิกษุ ๕๐๐ รูป ถึงมัณฑลารามวิหารแล้ว พวกมนุษย์ได้กล่าวว่า 'ขอแต่ละท่านจงให้บิณฑบาตมีค่าหนึ่งกหาปณะพร้อมด้วยผ้าสาฎกยาวเก้าศอกผืนหนึ่ง'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:299">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อนายตเน <span class="pb hidden-meta" data-ed="M" data-n="3.0165">[M 3.0165]</span> นฏฺฐานํ อตฺตภาวานํ ปมาณํ นตฺถิ, พุทฺธานํ อุปฏฺฐานํ กริสฺสามีติ เจติยงฺคณํ คนฺตวา อปฺปหริตํ กโรติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ประมาณแห่งอัตภาพทั้งหลายที่พินาศไปในที่อันไม่ใช่บ่อเกิดแห่งกุศลย่อมไม่มี เราจักทำการบำรุงพระพุทธเจ้าทั้งหลาย ดังนี้แล้ว ไปยังลานเจดีย์ ทำความสะอาด (ถอนหญ้า)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:300">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มยํ <span class="pb hidden-meta" data-ed="M" data-n="3.0168">[M 3.0168]</span> ตาว มหลฺลกา, อิทํ นาม ภวิสฺสตีติ น สกฺกา ชานิตุํ, ตุวํ อตฺตานํ รกฺเขยฺยาสีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ส่วนพวกเราแก่แล้ว ไม่สามารถจะรู้ได้ว่าสิ่งนี้จักเป็นอย่างไร เจ้าจงรักษาตนเองเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:301">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กหํ <span class="pb hidden-meta" data-ed="M" data-n="3.0169">[M 3.0169]</span> วตฺตพฺพกนิคฺโรธตฺเถโร, กหํ วตฺตพฺพกนิคฺโรธตฺเถโรติ ปุจฺฉิตฺวา ตสฺส สนฺติกํ อคมํสุ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถามว่า 'พระวัตตัพพกนิโครธเถระอยู่ที่ไหน พระวัตตัพพกนิโครธเถระอยู่ที่ไหน' ดังนี้แล้ว ได้ไปยังสำนักของท่าน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:302">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กิํ <span class="pb hidden-meta" data-ed="M" data-n="3.0171">[M 3.0171]</span> เถโร ปิยายตีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พระเถระรักอะไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:303">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กีทิโส เถโรติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พระเถระเป็นอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:304">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ธมฺมสกฏสฺส <span class="pb hidden-meta" data-ed="M" data-n="3.0172">[M 3.0172]</span> อกฺโข ภิชฺชติ อกฺโข ภิชฺชตีติ ปริเทวมาโน วิจริ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เที่ยวคร่ำครวญอยู่ว่า 'เพลาแห่งรถคือธรรมแตกแล้ว เพลาแตกแล้ว'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:305">
+  <div class="pair-col col-pali">
+<p rend="subhead">๘. สมฺมปฺปธานวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">๘. สัมมัปปธานวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:306">
+  <div class="pair-col col-pali">
+<p rend="subhead">๑. สุตฺตนฺตภาชนียวณฺณนา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">๑. สุตตันตภาชนียวัณณนา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:307">
+  <div class="pair-col col-pali">
+<p rend="bodytext">จตฺตาโรเม <span class="pb hidden-meta" data-ed="M" data-n="3.0179">[M 3.0179]</span> อาวุโส สมฺมปฺปธานา. กตเม จตฺตาโร. อิธาวุโส ภิกฺขุ อนุปฺปนฺนา เม ปาปกา อกุสลา ธมฺมา อุปฺปชฺชมานา อนตฺถาย สํวตฺเตยฺยุนฺติ อาตปฺปํ กโรติ, อุปฺปนฺนา เม ปาปกา อกุสลา ธมฺมา อปฺปหียมานา อนตฺถาย สํวตฺเตยฺยุนฺติ อาตปฺปํ กโรติ, อนุปฺปนฺนา เม กุสลา ธมฺมา อนุปฺปชฺชมานา อนตฺถาย สํวตฺเตยฺยุนฺติ อาตปฺปํ กโรติ, อนุปฺปนฺนา เม กุสลา ธมฺมา อนุปฺปชฺชมานา อนตฺถาย สํวตฺเตยฺยุนฺติ อาตปฺปํ กโรติ, อุปฺปนฺนา เม กุสลา ธมฺมา นิรุชฺฌมานา อนตฺถาย สํวตฺเตยฺยุนฺติ อาตปฺปํ กโรตีติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนท่านผู้มีอายุ สัมมัปปธาน ๔ เหล่านี้ ๔ อย่างเป็นไฉน? ดูก่อนท่านผู้มีอายุ ภิกษุในธรรมวินัยนี้ ย่อมทำความเพียรว่า 'อกุศลธรรมอันลามกที่ยังไม่เกิดแก่เรา เมื่อเกิดขึ้น ย่อมเป็นไปเพื่อความฉิบหาย' ย่อมทำความเพียรว่า 'อกุศลธรรมอันลามกที่เกิดขึ้นแล้วแก่เรา เมื่อไม่ละเสีย ย่อมเป็นไปเพื่อความฉิบหาย' ย่อมทำความเพียรว่า 'กุศลธรรมที่ยังไม่เกิดแก่เรา เมื่อไม่เกิดขึ้น ย่อมเป็นไปเพื่อความฉิบหาย' ย่อมทำความเพียรว่า 'กุศลธรรมที่ยังไม่เกิดแก่เรา เมื่อไม่เกิดขึ้น ย่อมเป็นไปเพื่อความฉิบหาย' ย่อมทำความเพียรว่า 'กุศลธรรมที่เกิดขึ้นแล้วแก่เรา เมื่อดับไป ย่อมเป็นไปเพื่อความฉิบหาย' ดังนี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:308">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อุปชฺฌาโย <span class="pb hidden-meta" data-ed="M" data-n="3.0181">[M 3.0181]</span> เม อติวิย ปสนฺนจิตฺโต วนฺทติ, กิํ นุ โข ปุปฺผานิ ลภิตฺวา ปูชํ กเรยฺยาสีติ จินฺเตสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คิดว่า 'พระอุปัชฌาย์ของเรามีจิตเลื่อมใสยิ่งนักไหว้อยู่ เราควรจะได้ดอกไม้มาทำการบูชาหรือหนอ'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:309">
+  <div class="pair-col col-pali">
+<p rend="bodytext">“กทา <span class="pb hidden-meta" data-ed="M" data-n="3.0182">[M 3.0182]</span> อาคโตสีติ ปุจฺฉิ”</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถามว่า 'ท่านมาเมื่อไร?'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:310">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ตฺวํ <span class="pb hidden-meta" data-ed="M" data-n="3.0188">[M 3.0188]</span> อมฺเห อุจฺจากุลาติ สลฺลกฺเขสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ท่านกำหนดว่าพวกเราเป็นตระกูลสูง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:311">
+  <div class="pair-col col-pali">
+<p rend="subhead">๑๖. ญาณวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">๑๖. ญาณวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:312">
+  <div class="pair-col col-pali">
+<p rend="subhead">๑๐. ทสกนิทฺเทสวณฺณนา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">๑๐. ทสกนิทเทสวัณณนา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:313">
+  <div class="pair-col col-pali">
+<p rend="subhead">เอกิสฺสา โลกธาตุยา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ในโลกธาตุเดียว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:314">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อฏฺฐานเมตํ <span class="pb hidden-meta" data-ed="M" data-n="3.0191">[M 3.0191]</span> อนวกาโส ยํ เอกิสฺสา โลกธาตุยา ทฺเว อรหนฺโต สมฺมาสมฺพุทฺธา อปุพฺพํ อจริมํ อุปฺปชฺเชยฺยุํ, เนตํ ฐานํ วิชฺชตีติ ปชานาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ย่อมรู้ชัดว่า 'ข้อที่พระอรหันตสัมมาสัมพุทธเจ้า ๒ พระองค์ จะพึงอุบัติขึ้นในโลกธาตุเดียวกัน ไม่ก่อนไม่หลังกันนั้น มิใช่ฐานะ มิใช่โอกาส ฐานะเช่นนั้นไม่มีอยู่'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:315">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อชฺช <span class="pb hidden-meta" data-ed="M" data-n="3.0197">[M 3.0197]</span> สตฺถา ปรินิพฺพายติ, อชฺช สาสนํ โอสกฺกติ, ปจฺฉิมทสฺสนํ ทานิ อิทํ อมฺหากนฺติ ทสพลสฺส ปรินิพฺพุตทิวสโต มหนฺตตรํ การุญฺญํ กริสฺสนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">จักพากันทำความสลดใจให้ยิ่งใหญ่กว่าในวันปรินิพพานของพระทศพลว่า 'วันนี้พระศาสดาจะปรินิพพาน วันนี้พระศาสนาจะเสื่อมถอยลง การเห็นครั้งนี้เป็นครั้งสุดท้ายของเราทั้งหลาย'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:316">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เอกปุคฺคโล <span class="pb hidden-meta" data-ed="M" data-n="3.0199">[M 3.0199]</span> ภิกฺขเว โลเก อุปฺปชฺชมาโน อุปฺปชฺชติ อจฺฉริยมนุสฺโส, กตโม เอกปุคฺคโล ตถาคโต ภิกฺขเว อรหํ สมฺมาสมฺพุทฺโธติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูก่อนภิกษุทั้งหลาย บุคคลผู้เอกเมื่อเกิดขึ้นในโลก ย่อมเกิดขึ้นเป็นมนุษย์ที่น่าอัศจรรย์ บุคคลผู้เอกนั้นคือใคร? ดูก่อนภิกษุทั้งหลาย คือพระตถาคตอรหันตสัมมาสัมพุทธเจ้า</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:317">
+  <div class="pair-col col-pali">
+<p rend="subhead">ฌานวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ฌานวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:318">
+  <div class="pair-col col-pali">
+<p rend="subhead">สุตฺตนฺตภาชนีย</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">สุตตันตภาชนีย์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:319">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อภิกฺกนฺเต <span class="pb hidden-meta" data-ed="M" data-n="3.0201">[M 3.0201]</span> ปฏิกฺกนฺเต สมฺปชานการี โหติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ย่อมเป็นผู้ทำความรู้สึกตัวในการก้าวไปข้างหน้าและการถอยกลับ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:320">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สโต <span class="pb hidden-meta" data-ed="M" data-n="3.0202">[M 3.0202]</span> สมฺปชาโน อภิกฺกมติ,</p>
+<p rend="gathalast">สโต สมฺปชาโน ปฏิกฺกมตีติ วุตฺตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ที่ตรัสว่า 'มีสติสัมปชัญญะก้าวไป มีสติสัมปชัญญะถอยกลับ'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:321">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กินฺนู เม เอตฺถ คเตน อตฺโถ อตฺถิ นตฺถีติ อตฺถานตฺถํ ปริคฺคเหตฺวา อตฺถปริคฺคณฺหนํ สาตฺถกสมฺปชญฺญํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การกำหนดประโยชน์โดยการกำหนดประโยชน์และไม่ใช่ประโยชน์ว่า 'การไปในที่นี้ของเรามีประโยชน์หรือไม่มีประโยชน์หนอ' ชื่อว่าสาตถกสัมปชัญญะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:322">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อามิสโตปิ <span class="pb hidden-meta" data-ed="M" data-n="3.0203">[M 3.0203]</span> วฑฺฒิ อตฺโถเยว, ตํ นิสฺสาย พฺรหฺมจริยา นุคฺคหาย ปฏิปนฺนตฺตาติ วทนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">แม้ความเจริญด้วยอามิสก็เป็นประโยชน์เหมือนกัน เพราะท่านกล่าวว่า 'อาศัยอามิสนั้นแล้วปฏิบัติเพื่ออนุเคราะห์พรหมจรรย์'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:323">
+  <div class="pair-col col-pali">
+<p rend="bodytext">มยา <span class="pb hidden-meta" data-ed="M" data-n="3.0205">[M 3.0205]</span> ปพฺพชิตทิวสโต ปฏฺฐาย ภิกฺขุนา สทฺธิํ ทฺเวกถา นาม นกถิตปุพฺพา, อญฺญสฺมิํ ทิวเส อุปริวิเสสํ นิพฺพตฺเตสฺสามีติ จินฺเตตฺวา “กิํ ภนฺเต”ติ ปฏิวจนํ อทาสิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คิดว่า 'ตั้งแต่เราบวชมา เราไม่เคยพูดคำสองคำกับภิกษุเลย เราจักยังคุณวิเศษเบื้องสูงให้บังเกิดในวันอื่น' ดังนี้แล้ว จึงให้คำตอบว่า 'อะไรหรือ ท่านผู้เจริญ'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:324">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ภนฺเต <span class="pb hidden-meta" data-ed="M" data-n="3.0209">[M 3.0209]</span> เอเต มนุสฺสา ตุมฺหากํ กิํโหนฺติ, มาติปกฺขโต สมฺพนฺธา ปิติปกฺขโตติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ท่านขอรับ มนุษย์เหล่านี้เป็นอะไรกับท่าน เป็นญาติทางมารดาหรือทางบิดา?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:325">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อาวุโสยํ <span class="pb hidden-meta" data-ed="M" data-n="3.0210">[M 3.0210]</span> มาตาปิตูหิปิ ทุกฺกรํ, ตํ เอเต มนุสฺสา อมฺหากํ กโรนฺติ, ปตฺตจีวรมฺปิ โน เอเตสํ สนฺตกเมว, เอเตสํ อานุภาเวน เนว ภเย ภยํ น ฉาตเก ฉาตกํ ชานาม, เอทิสานาม อมฺหากํ อุปการิโน นตฺถีติ เตสํ คุเณ กเถนฺโต คจฺฉติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อาวุโส สิ่งที่แม้บิดามารดาก็ทำได้ยาก ชนเหล่านี้ย่อมทำให้แก่เรา แม้บาตรจีวรของเราก็เป็นของชนเหล่านี้ ด้วยอานุภาพของชนเหล่านี้ เราย่อมไม่รู้จักภัยในภัย ไม่รู้จักความหิวในความหิว ผู้มีอุปการะแก่เราเช่นนี้ไม่มีเลย ดังนี้ กล่าวคุณของชนเหล่านั้นไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:326">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กมฺมฏฺฐานํ <span class="pb hidden-meta" data-ed="M" data-n="3.0212">[M 3.0212]</span> นาม อตฺถีติปิ สญฺญํ อกตฺวา คามํ ปิณฺฑาย ปวิสิตฺวา อนนุโลมิเกน คิหิสํสคฺเคน สํสฏฺโฐ จริตฺวา จ ภุญฺชิตฺวา จ ตุจฺโฉ นิกฺขมติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ไม่ทำความสำคัญว่ามีกรรมฐานเลย เข้าไปสู่บ้านเพื่อบิณฑบาต คลุกคลีด้วยการคลุกคลีกับคฤหัสถ์อันไม่สมควร เที่ยวไปและฉันแล้ว ย่อมออกไปเปล่า</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:327">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อาวุโส <span class="pb hidden-meta" data-ed="M" data-n="3.0213">[M 3.0213]</span> ตุมฺเห น อิณฏฺฏา น ภยฏฺฏา น อาชีวิกา ปกตา ปพฺพชิตา, ทุกฺขา มุจฺจิตุกามา ปเนตฺถ ปพฺพชิตา. ตสฺมา คมเน อุปฺปนฺนกิเลสํ คมเนเยว นิคณฺหถ. ฐาเน, นิสชฺชาย, สยเน อุปฺปนฺนกิเลสํ สยเนเยว นิคฺคณฺหถาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อาวุโส พวกท่านบวชแล้วมิใช่เพราะเป็นหนี้ มิใช่เพราะกลัว มิใช่เพราะทำอาชีพ แต่บวชแล้วในที่นี้เพราะปรารถนาจะพ้นจากทุกข์ เพราะฉะนั้น จงข่มกิเลสที่เกิดขึ้นในการเดินเสียในการเดินนั่นเอง จงข่มกิเลสที่เกิดขึ้นในการยืน การนั่ง การนอน เสียในการนอนนั่นเอง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:328">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อยํ <span class="pb hidden-meta" data-ed="M" data-n="3.0214">[M 3.0214]</span> ภิกฺขุ ตุยฺหํ อุปฺปนฺนํ วิตกฺกํ ชานาติ, อนนุจฺฉวิกํ เต เอตนฺติ อตฺตานํ ปฏิโจเทตฺวา วิปสฺสนํ วฑฺเฒตฺวา อริยภูมิํ โอกฺกมติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภิกษุนี้ย่อมรู้ซึ่งวิตกที่เกิดขึ้นแก่ท่าน ติเตียนตนเองว่า สิ่งนี้ไม่สมควรแก่ท่าน เจริญวิปัสสนาแล้ว ย่อมก้าวลงสู่ภูมิแห่งพระอริยะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:329">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อยํ <span class="pb hidden-meta" data-ed="M" data-n="3.0215">[M 3.0215]</span> เถโร ปุนปฺปุนํ นิวตฺติตฺวา คจฺฉติ, กิํ นุโข มคฺคมูฬฺโห อุทาหุ กิญฺจิ ปมุฏฺโฐติ สมุลฺลปนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พระเถระนี้กลับไปกลับมาอยู่ ท่านหลงทางหรือว่าลืมอะไรไปบางอย่างหนอ พวกเขากล่าวกัน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:330">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กินฺนู <span class="pb hidden-meta" data-ed="M" data-n="3.0218">[M 3.0218]</span> โข เอเต อมฺเหเหว สทฺธิํ น สลฺลปนฺติ อุทาหุ อญฺญ มญฺญมฺปิ, ยทิ อญฺญมญฺญมฺปิ น สลฺลปนฺติ, อทฺธา วิวาทชาตา ภวิสฺสนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ไฉนหนอชนเหล่านี้จึงไม่พูดกับเรา หรือว่าไม่พูดกันเองด้วย ถ้าไม่พูดกันเองด้วย แน่นอนว่าพวกเขาย่อมเกิดวิวาทกันแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:331">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อญฺญํ <span class="pb hidden-meta" data-ed="M" data-n="3.0224">[M 3.0224]</span> อุปฺปชฺชเต จิตฺตํ, อญฺญํ จิตฺตํ นิรุชฺฌติ;</p>
+<p rend="gathalast">อวีจิ มนุสมฺพนฺโธ, นที โสโตว วตฺตติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">จิตดวงหนึ่งเกิดขึ้น จิตอีกดวงหนึ่งดับไป การสืบต่อกันไม่มีช่องว่าง ย่อมเป็นไปเหมือนกระแสน้ำในแม่น้ำ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:332">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อาโลกิเต วิโลกิเต สมฺปชานการี โหติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ในการแลดู การเหลียวดู ย่อมเป็นผู้ทำความรู้สึกตัว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:333">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สเจ <span class="pb hidden-meta" data-ed="M" data-n="3.0225">[M 3.0225]</span> ภิกฺขเว นนฺทสฺส ปุรตฺถิมา ทิสา อาโลเกตพฺพา โหติ, สพฺพํ เจตสา สมนฺนาหริตฺวา นนฺโท ปุรตฺถิมํ ทิสํ อาโลเกติ ‘เอวํ เม ปุรตฺถิมํ ทิสํ อาโลกยโต นาภิชฺฌา โทมนสฺสา ปาปกา อกุสลา ธมฺมา อนฺวาสฺสวิสฺสนฺตี’ติ. อิติห สาตฺถก สมฺปชาโน โหติ. สเจ ภิกฺขเว นนฺทสฺส ปจฺฉิมา ทิสา, อุตฺตรา ทิสา, ทกฺขิณา ทิสา, อุทฺธํ, อโธ, อนุทิสา อนุวิโลเกตพฺพา โหติ, สพฺพํ เจตสา สมนฺนาหริตฺวา นนฺโท อนุทิสํ อนุวิโลเกติ ‘เอวํ เม อนุทิสํ อนุวิโลกยโต…เป… สมฺปชาโน โหตีติ….</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดูกรภิกษุทั้งหลาย ถ้านันทพึงแลดูทิศตะวันออก นันทพึงน้อมใจไปทั้งหมดแล้วแลดูทิศตะวันออก ว่า ‘เมื่อเราแลดูทิศตะวันออกอย่างนี้ อภิชฌาและโทมนัสอันเป็นอกุศลธรรมอันลามกจักไม่ไหลตามมา’ ด้วยประการฉะนี้ นันทพึงเป็นผู้มีสัมปชัญญะประกอบด้วยประโยชน์ ดูกรภิกษุทั้งหลาย ถ้านันทพึงแลดูทิศตะวันตก ทิศเหนือ ทิศใต้ ทิศเบื้องบน ทิศเบื้องล่าง ทิศเฉียง นันทพึงน้อมใจไปทั้งหมดแล้วแลดูทิศเฉียง ว่า ‘เมื่อเราแลดูทิศเฉียงอย่างนี้... (ละไว้)... พึงเป็นผู้มีสัมปชัญญะ’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:334">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ภวงฺคา <span class="pb hidden-meta" data-ed="M" data-n="3.0227">[M 3.0227]</span> วชฺชนญฺเจว, ทสฺสนํ สมฺปฏิจฺฉนํ;</p>
+<p rend="gathalast">สนฺตีรณํ โวฏฺฐพฺพนํ, ชวนํ ภวติ สตฺตมํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ภวังค์และอาวัชชนะ การเห็น การรับ การไต่สวน การตัดสิน ชวนะเป็นที่เจ็ด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:335">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สมิญฺชิเต <span class="pb hidden-meta" data-ed="M" data-n="3.0231">[M 3.0231]</span> ปสาริเต สมฺปชานการี โหติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ในการคู้เข้า การเหยียดออก ย่อมเป็นผู้ทำความรู้สึกตัว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:336">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สมิญฺชิเต ปหาริเตติ ปพฺพานํ สมิญฺชน ปสารเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำว่า 'ในการคู้เข้าและการเหยียดออก' ได้แก่ ในการคู้เข้าและการเหยียดออกซึ่งข้อต่อทั้งหลาย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:337">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กสฺมา <span class="pb hidden-meta" data-ed="M" data-n="3.0233">[M 3.0233]</span> ภนฺเต สหสา หตฺถํ สมิญฺชิตฺวา ปุน ยถาฐาเน ฐเปตฺวา สณิกํ สมิญฺชิตฺถาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ข้าแต่ท่านผู้เจริญ เพราะเหตุไร ท่านจึงคู้มือโดยเร็ว แล้ววางไว้ในที่เดิมแล้วคู้เข้าช้าๆ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:338">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยโต ปฏฺฐาย มยา อาวุโส กมฺมฏฺฐานํ มนสิกาตุํ อารทฺโธ, น เม กมฺมฏฺฐานํ มุญฺชิตฺวา หตฺโถ สมิญฺชิตปุพฺโพ, อิทานิ ปน เม ตุมฺเหหิ สทฺธิํ กถยมาเนน กมฺมฏฺฐานํ มุญฺจิตฺวา สมิญฺชิโต, ตสฺมา ปุน ยถา ฐาเน ฐเปตฺวา สมิญฺเชสินฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อาวุโส ตั้งแต่เราเริ่มมนสิการกรรมฐานมา มือของเราไม่เคยคู้เข้าโดยปราศจากกรรมฐานมาก่อน แต่บัดนี้ เมื่อเราพูดกับพวกท่าน มือของเราคู้เข้าโดยปราศจากกรรมฐาน เพราะฉะนั้น เราจึงวางไว้ในที่เดิมแล้วคู้เข้าใหม่</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:339">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สาธุ <span class="pb hidden-meta" data-ed="M" data-n="3.0234">[M 3.0234]</span> ภนฺเต ภิกฺขุนา นาม เอวรูเปน ภวิตพฺพนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ดีแล้ว ท่านผู้เจริญ ภิกษุพึงเป็นเช่นนี้แล</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:340">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สงฺฆาฏิปตฺตจีวรธารเณ สมฺปชานการี โหติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ในการทรงผ้าสังฆาฏิ บาตร และจีวร ย่อมเป็นผู้ทำความรู้สึกตัว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:341">
+  <div class="pair-col col-pali">
+<p rend="subhead">ปุคฺคลปญฺญตฺติอฏฺฐกถา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อรรถกถาปุคคลบัญญัติ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:342">
+  <div class="pair-col col-pali">
+<p rend="subhead">เอกกนิทฺเทส</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">เอกกนิเทศ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:343">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กตโม <span class="pb hidden-meta" data-ed="M" data-n="3.0243">[M 3.0243]</span> จ ปุคฺคโล สมยวิมุตฺโต, อิเธกจฺโจ ปุคฺคโล กาเลน กาลํ สมเยน สมยํ อฏฺฐ วิโมกฺเข กาเยน ผุสิตฺวา วิหรติ, ปญฺญาย จสฺส ทิสฺวา เอกจฺเจ อาสวา ปริกฺขีณา โหนฺติ. อยํ วุจฺจติ ปุคฺคโล สมยวิมุตฺโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">บุคคลผู้สมยวิมุตติเป็นไฉน บุคคลบางคนในโลกนี้ ย่อมเข้าถึงวิโมกข์ ๘ ด้วยกายเป็นครั้งคราว เป็นสมัยๆ และอาสวะบางอย่างของเขาสิ้นไปแล้วเพราะเห็นด้วยปัญญา บุคคลนี้เรียกว่า สมยวิมุตติ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:344">
+  <div class="pair-col col-pali">
+<p rend="subhead">อสมยวิมุตฺต</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อสมยวิมุตติ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:345">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กตโม <span class="pb hidden-meta" data-ed="M" data-n="3.0247">[M 3.0247]</span> จ ปุคฺคโล อสมยวิมุตฺโต, อิเธกจฺโจ ปุคฺคโล นเหว โข กาเลน กาลํ สมเยน สมยํ อฏฺฐวิโมกฺเข กาเยน ผุสิตฺวา วิหรติ, ปญฺญาย จสฺส ทิสฺวา อาสวา ปริกฺขีณา โหนฺติ. อยํ วุจฺจติ ปุคฺคโล อสมยวิมุตฺโต. สพฺเพปิ อริย ปุคฺคลา อริเย วิโมกฺเข อสมยวิมุตฺตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">บุคคลผู้อสมยวิมุตติเป็นไฉน บุคคลบางคนในโลกนี้ ย่อมไม่เข้าถึงวิโมกข์ ๘ ด้วยกายเป็นครั้งคราว เป็นสมัยๆ แต่อาสวะของเขาสิ้นไปแล้วเพราะเห็นด้วยปัญญา บุคคลนี้เรียกว่า อสมยวิมุตติ พระอริยบุคคลทั้งปวงเป็นอสมยวิมุตติในอริยวิโมกข์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:346">
+  <div class="pair-col col-pali">
+<p rend="subhead">กุปฺปากุปฺปนิทฺเทส</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">กุปปธรรมและอกุปปธรรมนิเทศ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:347">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กตโม <span class="pb hidden-meta" data-ed="M" data-n="3.0250">[M 3.0250]</span> จ ปุคฺคโล กุปฺปธมฺโม, อิเธกจฺโจ ปุคฺคโล ลาภี โหติ รูปสหคตานํ วา อรูปสหคตานํ วา สมาปตฺตีนํ, โส จ โข น นิกามลาภี โหติ น อกิจฺฉลาภี น อกสิร ลาภี, น ยตฺถิจฺฉกํ ยทิจฺฉกํ ยาวติจฺฉกํ สมาปชฺชติปิ วุฏฺฐาติปิ, ฐานํ โข ปเนตํ วิชฺฌติ, ยํ ตสฺส ปุคฺคลสฺส ปมาทมาคมฺม ตา สมาปตฺติโย กุปฺเปยฺยุํ. อยํ วุจฺจติ ปุคฺคโล กุปฺปธมฺโม.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">บุคคลผู้มีธรรมอันกำเริบเป็นไฉน บุคคลบางคนในโลกนี้ เป็นผู้ได้ซึ่งรูปสมาบัติ หรืออรูปสมาบัติ แต่เขาไม่ได้โดยชอบใจ ไม่ได้โดยไม่ยาก ไม่ได้โดยไม่ลำบาก ไม่เข้าและออกจากสมาบัติได้ตามปรารถนา ตามที่ต้องการ ตามที่พอใจ อนึ่ง ฐานะนี้มีอยู่ คือสมาบัติเหล่านั้นพึงกำเริบแก่บุคคลนั้นเพราะอาศัยความประมาท บุคคลนี้เรียกว่า ผู้มีธรรมอันกำเริบ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:348">
+  <div class="pair-col col-pali">
+<p rend="subhead">สตฺตกฺขตฺตุปรม โสตาปนฺน</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">พระโสดาบันผู้มีอันท่องเที่ยวไปอีก ๗ ครั้งเป็นอย่างยิ่ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:349">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กตโม <span class="pb hidden-meta" data-ed="M" data-n="3.0252">[M 3.0252]</span> จ ปุคฺคโล สตฺตกฺขตฺตุปรโม, อิเธกจฺโจ ปุคฺคโล ติณฺณํ สํโยชนานํ ปริกฺขยา โสตาปนฺโน โหติ อวินิปาต ธมฺโม นิยโต สมฺโพธิปรายโณ, โส สตฺตกฺขตฺตุํ เทเว จ มานุเส จ สนฺธาวิตฺวา สํสริตฺวา ทุกฺขสฺสนฺตํ กโรติ, อยํ วุจฺจติ ปุคฺคโล สตฺตกฺขตฺตุปรโม.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">บุคคลผู้มีอันท่องเที่ยวไปอีก ๗ ครั้งเป็นอย่างยิ่งเป็นไฉน บุคคลบางคนในโลกนี้ เพราะสังโยชน์ ๓ สิ้นไป เป็นพระโสดาบัน มีอันไม่ตกต่ำเป็นธรรมดา เที่ยงแท้ มีอันจะตรัสรู้เป็นเบื้องหน้า เขาท่องเที่ยวไปในเทวดาและมนุษย์ ๗ ครั้งเป็นอย่างยิ่ง แล้วย่อมทำที่สุดแห่งทุกข์ บุคคลนี้เรียกว่า ผู้มีอันท่องเที่ยวไปอีก ๗ ครั้งเป็นอย่างยิ่ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:350">
+  <div class="pair-col col-pali">
+<p rend="subhead">โสตาปนฺน อธิปฺปายฺย</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อธิบายพระโสดาบัน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:351">
+  <div class="pair-col col-pali">
+<p rend="bodytext">โสโต <span class="pb hidden-meta" data-ed="M" data-n="3.0253">[M 3.0253]</span> โสโตติ หิทํ สาริปุตฺต วุจฺจติ, กตโม นุโข สาริปุตฺต โสโตติ. อยเมว หิ ภนฺเต อริโย อฏฺฐงฺคิโก มคฺโค โสโต. เสยฺยถิทํ, สมฺมาทิฏฺฐิ…เป… สมฺมาสมาธีติ. โสตาปนฺโน โสตาปนฺโนติ หิทํ สาริปุตฺต วุจฺจติ, กตโม นุโข สาริปุตฺต โสตาปนฺโนติ. โย หิ ภนฺเต อิมินา อริเยน อฏฺฐงฺคิเกน มคฺเคน สมนฺนาคโต, อยํ วุจฺจติ โสตาปนฺโน, สฺวายํ อายสฺมา เอวํนาโม เอวํโคตฺโต อิติ วาติ, อิติวา….</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">สารีบุตร คำว่า 'กระแส กระแส' นี้ที่กล่าวกัน สารีบุตร กระแสคืออะไร? ท่านผู้เจริญ อริยอัฏฐังคิกมรรคนี้เองคือกระแส ได้แก่ สัมมาทิฏฐิ ... สัมมาสมาธิ. สารีบุตร คำว่า 'พระโสดาบัน พระโสดาบัน' นี้ที่กล่าวกัน สารีบุตร พระโสดาบันคือใคร? ท่านผู้เจริญ ผู้ใดประกอบด้วยอริยอัฏฐังคิกมรรคนี้ ผู้นี้เรียกว่า พระโสดาบัน ท่านผู้นี้มีชื่ออย่างนี้ มีโคตรอย่างนี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:352">
+  <div class="pair-col col-pali">
+<p rend="subhead">โกลํ โกล โสตาปนฺน</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">พระโสดาบันผู้โกลังโกละ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:353">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กตโม <span class="pb hidden-meta" data-ed="M" data-n="3.0255">[M 3.0255]</span> จ ปุคฺคโล โกลํ โกโล. อิเธกจฺโจ ปุคฺคโล ติณฺณํ สํโยชนานํ ปริกฺขยา โสตาปนฺโน โหติ อวินิปาตธมฺโม นิยโต สมฺโพธิปรายโณ, โส ทฺเว วา ตีณิ วา กุลานิ สนฺธาวิตฺวา สํสริตฺวา ทุกฺขสฺสนฺตํ กโรติ, อยํ วุจฺจติ โกลํ โกโล.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">บุคคลผู้เป็นโกลังโกละเป็นไฉน บุคคลบางคนในโลกนี้ เพราะสังโยชน์ ๓ สิ้นไป เป็นพระโสดาบัน มีอันไม่ตกต่ำเป็นธรรมดา เป็นผู้เที่ยงแท้ที่จะตรัสรู้ในเบื้องหน้า เขาท่องเที่ยวไปสู่ตระกูล ๒ หรือ ๓ ตระกูลแล้ว ย่อมทำที่สุดแห่งทุกข์ บุคคลนี้เรียกว่า ผู้เป็นโกลังโกละ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:354">
+  <div class="pair-col col-pali">
+<p rend="subhead">เอกพีชี โสตาปนฺน</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">พระโสดาบันผู้เป็นเอกพีชี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:355">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กตโม <span class="pb hidden-meta" data-ed="M" data-n="3.0256">[M 3.0256]</span> จ ปุคฺคโล เอกพีชี, อิเธกจฺโจ ปุคฺคโล ติณฺณํ สํโยชนานํ ปริกฺขยา โสตาปนฺโน โหติ อวินิปาตธมฺโม นิยโต สมฺโพธิปรายโณ, โส เอกํเยว มานุสกํ ภวํ นิพฺพตฺเตตฺวา ทุกฺขสฺสนฺตํ กโรติ, อยํ วุจฺจติ ปุคฺคโล เอกพีชี.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">บุคคลผู้เป็นเอกพีชีเป็นไฉน บุคคลบางคนในโลกนี้ เพราะสังโยชน์ ๓ สิ้นไป เป็นพระโสดาบัน มีอันไม่ตกต่ำเป็นธรรมดา เป็นผู้เที่ยงแท้ที่จะตรัสรู้ในเบื้องหน้า เขาเกิดในภพมนุษย์นี้อีกเพียงครั้งเดียวเท่านั้น ย่อมทำที่สุดแห่งทุกข์ บุคคลนี้เรียกว่า ผู้เป็นเอกพีชี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:356">
+  <div class="pair-col col-pali">
+<p rend="subhead">สกทาคามินิทฺเทส</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">การแสดงเรื่องพระสกทาคามี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0907n_nrf:357">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กตโม <span class="pb hidden-meta" data-ed="M" data-n="3.0260">[M 3.0260]</span> จ ปุคฺคโล สกทาคามี, อิเธ กจฺโจ ปุคฺคโล ติณฺณํ สํโยชนานํ ปริกฺขยา ราคโทสโมหานํ ตนุตฺตา สกทาคามี โหติ สกิเทว อิมํ โลกํ อาคนฺตวา ทุกฺขสฺสนฺตํ กโรติ. อยํ วุจฺจติ ปุคฺคโล สกทาคามี.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">บุคคลผู้เป็นพระสกทาคามีเป็นไฉน บุคคลบางคนในโลกนี้ เพราะสังโยชน์ ๓ สิ้นไป และเพราะราคะ โทสะ โมหะ เบาบางลง เป็นพระสกทาคามี มาสู่โลกนี้อีกเพียงครั้งเดียวเท่านั้น ย่อมทำที่สุดแห่งทุกข์ บุคคลนี้เรียกว่า บุคคลผู้เป็นพระสกทาคามี</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

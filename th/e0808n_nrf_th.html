@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>วุตฺโตทยํ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Sarabun"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">บาลี | แปล</button><button type="button" data-mode="view-stack">บาลี — แปล</button><button type="button" data-mode="view-pali-only">เฉพาะบาลี</button><button type="button" data-mode="view-trans-only">เฉพาะแปล</button><button type="button" id="toggle-meta-btn">เชิงอรรถ</button></div>
+<div class="pair-row" data-id="e0808n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre">นโม ตสฺส ภควโต อรหโต สมฺมาสมฺพุทฺธสฺส</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ขอนอบน้อมแด่พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้าพระองค์นั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="book">วุตฺโตทยํ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="book">วุตโตทัย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="chapter">๑. สญฺญาปริภาสานิทฺเทส-ปฐมปริจฺเฉท</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">๑. ปริจเฉทที่ ๑ ว่าด้วยการกำหนดชื่อและคำนิยาม</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="title">รตนตฺตยปฺปณาม</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">การนอบน้อมพระรัตนตรัย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> นม’ตฺถุ ชน สนฺตาน, ตม สนฺตาน เภทิโน;</p>
+<p rend="gathalast">ธมฺมุ’ชฺชลนฺต รุจิโน, มุนินฺโท’ทาต โรจิโน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ขอนอบน้อมแด่พระจอมมุนี ผู้ทำลายความมืดในสันดานของหมู่ชน ผู้มีรัศมีแห่งธรรมอันรุ่งเรือง ผู้มีรัศมีอันบริสุทธิ์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="title">นิมิตฺต</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">นิมิต (เครื่องหมาย)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปิงฺคลา’จริยาทีหิ, ฉนฺทํ ย มุทิตํ ปุรา;</p>
+<p rend="gathalast">สุทฺธมาคธิกานํ ตํ, น สาเธติ ยถิจฺฉิตํ <span class="note hidden-meta">ย’ทิจฺฉิตํ ยติ’จฺฉิตํ (ก.)</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ฉันท์ที่อาจารย์ปิงคละเป็นต้นแต่งไว้ก่อนนั้น ไม่สำเร็จตามที่ผู้ต้องการฉันท์ภาษามาคธีบริสุทธิ์ปรารถนา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="title">คนฺถปริมาณ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">ประมาณแห่งคัมภีร์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ตโต มาคธภาสาย, มตฺตา,วณฺณ,วิเภทนํ;</p>
+<p rend="gathalast">ลกฺขย ลกฺขณ สํยุตฺตํ, ปสนฺน’ตฺถ,ปท,กฺกมํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เพราะเหตุนั้น การจำแนกมาตราและอักษรด้วยภาษามาคธี ซึ่งประกอบด้วยลักษยะและลักษณะ มีเนื้อความ บท และลำดับบทอันแจ่มแจ้ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="title">อภิธานาทิ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">อภิธานเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อิทํ <span rend="bold">วุตฺโตทยํ</span> นาม, โลกิย’จฺฉนฺทนิสฺสิตํ;</p>
+<p rend="gathalast">อารภิสฺส’มหํ ทานิ, เตสํ สุขวิพุทฺธิยา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">บัดนี้ ข้าพเจ้าจักเริ่มแต่งคัมภีร์วุตโตทัยนี้ ซึ่งอาศัยฉันท์ทางโลก เพื่อความเข้าใจง่ายของท่านเหล่านั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="title">คณสงฺเกตสญฺญา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">การกำหนดชื่อสังเกตคณะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สพฺพคฺลา มฺนา,’ทิคลหู, <span rend="bold">ภฺยา’</span>,มชฺฌ’นฺต ครู <span rend="bold">ชสา;</span></p>
+<p rend="gathalast">มชฺฌ’นฺตลา <span rend="bold">ร,เต’</span>เต’ฏฺฐ, คณา โค ครุ,โล ลหุ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คณะมะมีครุทั้งหมด คณะนะมีลหุทั้งหมด คณะภะมีครุอยู่ต้น คณะยะมีลหุอยู่ต้น คณะชะมีครุอยู่กลาง คณะสะมีครุอยู่ท้าย คณะระมีลหุอยู่กลาง คณะตะมีลหุอยู่ท้าย เหล่านี้คือคณะ ๘ คณะ ครุ และ ลหุ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="title">คณนิยม</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">การกำหนดคณะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ภ,ช,สา <span class="pb hidden-meta" data-ed="M" data-n="0.0192">[M 0.0192]</span> สพฺพค,ลหู, ปญฺจิ’เม สณฺฐิตา คณา;</p>
+<p rend="gathalast"><span rend="bold">อริยาทิมฺหิ</span> วิญฺเญยฺยา, คโณ อิธ จตุ’กฺกโล.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คณะ ๕ เหล่านี้ คือ ภะ ชะ สะ นะ และมะ พึงทราบว่าตั้งอยู่ในฉันท์อริยาเป็นต้น ในที่นี้ คณะมี ๔ มาตรา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="title">ครุ,ลหุสรูป</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">ลักษณะของครุและลหุ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สํโยคา’ทิ จ, ทีโฆ จ, นิคฺคหีตปโร จ, โย;</p>
+<p rend="gathalast"><span rend="bold">ครุ,</span> วงฺโก, ปาทนฺโต,วา, รสฺโส’ญฺโญ มตฺติโก <span rend="bold">ลุ’</span>ชุ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อักษรที่อยู่หน้าพยัญชนะสังโยค สระเสียงยาว และอักษรที่มีนฤคหิตตามหลัง เป็นครุ (มีเครื่องหมายโค้ง) หรืออักษรท้ายบาท อักษรอื่นที่เป็นสระเสียงสั้น เป็นลหุ (มีเครื่องหมายตรง)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปเร ปาทาทิสํโยเค, โย ปุพฺโพ ครุก’กฺขโร;</p>
+<p rend="gathalast"><span rend="bold">ลหุ</span> ส กฺวจิ วิญฺเญยฺโย, ตทุทาหรณํ ยถา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อักษรครุที่อยู่หน้าสังโยคซึ่งอยู่ต้นบาทถัดไป พึงทราบว่าเป็นลหุในบางแห่ง ตัวอย่างเช่น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ทสฺสนรสา’นุภาวเน, นิพทฺธเคธา ชินสฺส’ยํ ชนตา;</p>
+<p rend="gathalast">วิมฺหยชนนี สญฺญ<span rend="bold">ต, กฺริ</span>ยา นุ กํ นา’นุรญฺชยติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หมู่ชนของพระชินเจ้าผู้มีความผูกพันมั่นคงในการเสวยรสแห่งการเห็นนี้ ยังความอัศจรรย์ให้เกิดขึ้น การกระทำที่สำรวมแล้ว ย่อมไม่ยังใครให้ยินดีหรือ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วิญฺเญยฺยา โลกโต สญฺญา, <span rend="bold">สมุทฺโท,สุ,รสา</span>ทินํ;</p>
+<p rend="gathalast"><span rend="bold">ปาโท</span>เญยฺโย จตุตฺถํ’โส, ปทจฺเฉโท <span rend="bold">ยตี</span> ภเว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พึงทราบชื่อจากโลก เช่น สมุทท สุ รส เป็นต้น พึงทราบว่าบาทเป็นส่วนที่ ๔ การตัดบทพึงเป็นยติ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> <span rend="bold">สม,มฑฺฒสมํ,</span> วุตฺตํ, <span rend="bold">วิสมํ</span> จา’ปรํ ติธา;</p>
+<p rend="gathalast">สมา ลกฺขณโต ปาทา, จตฺตาโร ยสฺส ตํ <span rend="bold">สมํ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ฉันท์มี ๓ อย่าง คือ สมะ อัฑฒสมะ และวิสมะ ฉันท์ใดมีบาททั้ง ๔ มีลักษณะเสมอกัน ฉันท์นั้นชื่อว่าสมะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ยสฺส’นฺติเมน ทุติโย, ตติเยนา’ทิโม สโม;</p>
+<p rend="gathalast">ต’<span rend="bold">ทฑฺฒสม, มญฺญํ</span> ตุ, ภินฺน ลกฺขณ ปาทิกํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ฉันท์ใด บาทที่ ๒ เสมอกับบาทที่ ๔ บาทที่ ๑ เสมอกับบาทที่ ๓ ฉันท์นั้นชื่อว่าอัฑฒสมะ ส่วนฉันท์อื่นมีบาทมีลักษณะต่างกัน (ชื่อว่าวิสมะ)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปาท’เมกกฺขรา’รพฺภ, ยาว ฉพฺพีสต’กฺขรา;</p>
+<p rend="gathalast">ภเว ปาเทหิ ตํ ฉนฺทํ, นานานาโม’ทิตํ ตโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ฉันท์นั้นมีบาทเริ่มตั้งแต่ ๑ อักษร จนถึง ๒๖ อักษร มีชื่อต่างๆ กันที่กล่าวไว้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> <span rend="bold">ทณฺฑกา</span> จณฺฑวุฏฺฐยา’ทิ, ปาเทหิ ฉหิ, ตีหิ ตุ;</p>
+<p rend="gathalast"><span rend="bold">‘คาถา’</span>ติ จ ปรตฺเถ’วํ, ฉนฺโท สญฺญา ปกาสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ฉันท์ทัณฑกะ เช่น จัณฑวุฏฐิ เป็นต้น มีคณะ ๖ หรือ ๓ ในบาท และในที่อื่น ฉันท์ชื่อว่าคาถา ชื่อฉันท์ได้ประกาศไว้แล้วอย่างนี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อนนฺตโร’ทิตํ จ’ญฺญ, เมตํ สามญฺญ นามโต;</p>
+<p rend="gathalast"><span rend="bold">‘คาถา’</span>อิจฺเจว นิทฺทิฏฺฐํ, มุนินฺทวจเน ปน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">และฉันท์อื่นที่กล่าวไว้ก่อนนี้ โดยชื่อสามัญ ได้ถูกกำหนดว่าเป็นคาถาเท่านั้น แต่ในพระพุทธพจน์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วิเสสนามโต กิญฺจิ, คเหตฺวา สพฺพโถ’จิตํ;</p>
+<p rend="gathalast">ทสฺสยิสฺสาม’หํ เต’ตฺถ, นามานา’วิ ภวิสฺสเร.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าจักแสดงชื่อพิเศษบางอย่างในที่นี้ โดยถือเอาสิ่งที่เหมาะสมทั้งหมด ชื่อทั้งหลายจักปรากฏ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ วุตฺโตทเย ฉนฺทสิ สญฺญาปริภาสา นิทฺเทโส นาม</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">การกำหนดชื่อและคำนิยามในฉันท์วุตโตทัย ชื่อว่า</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="centre">ปฐโม ปริจฺเฉโท.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ปริจเฉทที่ ๑</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="chapter">๒. มตฺตาวุตฺตินิทฺเทส-ทุติยปริจฺเฉท</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">๒. ปริจเฉทที่ ๒ ว่าด้วยการกำหนดมาตราฉันท์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="title">คณนิยม</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">การกำหนดคณะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ฉฏฺโฐ’ขิลลหุ,โช <span class="pb hidden-meta" data-ed="M" data-n="0.0193">[M 0.0193]</span> วา,</p>
+<p rend="gatha2">คยุตา’ญฺเญ,ฉ’คฺคณา,น โช วิสเม,;</p>
+<p rend="gathalast">อริยาย’นฺตฑฺเฒ โล, ฉฏฺโฐ,’นฺเต โค,คณา ฉ’ญฺเญ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คณะที่ 6 เป็นลหุล้วน หรือเป็น ช คณะ, คณะที่เหลือเป็นคณะที่มี 4 มาตรา, ไม่เป็น ช คณะในบาทคี่; ในกึ่งหลังของอริยาฉันท์ คณะที่ 6 เป็นลหุเพียงตัวเดียว, ในที่สุดเป็นครุ, คณะที่เหลือเป็นคณะที่มี 4 มาตรา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="title">ยตินิยม</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">กฎแห่งยติ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปฐมฑฺเฒ ฉฏฺโฐ เจ,</p>
+<p rend="gatha2">สพฺพลเห,’ตฺถา’ทิลหุนิ ภวติยติ;</p>
+<p rend="gathalast">ตปฺปรโก,นฺเตปิ, สเจ, จริเมปิ, ภวติ จตุตฺโถ’นฺเต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในกึ่งแรก หากคณะที่ 6 เป็นลหุล้วน ยติย่อมมีที่ลหุตัวแรก; หากคณะที่ 6 นั้นมีอักษรอื่นตามหลัง (เป็น ช คณะ) ยติย่อมมีแม้ในที่สุดของคณะนั้น; หากเป็นกึ่งหลัง ยติย่อมมีที่มาตราที่ 4 ในตอนท้าย.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๙</span>. <span rend="bold">อริยาสามญฺญํ</span> เจ, ปุพฺโพ’ทิต ลกฺขณํ ภเว ยสฺสา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๙. หากฉันท์ใดมีลักษณะตามที่กล่าวมาแล้วข้างต้น ฉันท์นั้นชื่อว่า อริยาสามัญ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๒๐</span>. อาทิม’มถ ปาทยุคํ, ยสฺสา ตฺยํ’เสหิ สา <span rend="bold">ปถฺยา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๒๐. หากฉันท์ใดมีบาทคู่แรก (กึ่งแรก) ประกอบด้วยลักษณะเหล่านั้น ฉันท์นั้นชื่อว่า ปัฐยา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ยตฺถ คณตฺตย มุลฺลงฺฆิ,</p>
+<p rend="gathalast">โย’ภยตฺถา’ทิโม ภเว <span rend="bold">วิปุลา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในที่ใด คณะที่ 2 ไม่จบคำในคณะที่ 3 (ข้ามคณะ) ในกึ่งทั้งสอง ฉันท์นั้นชื่อว่า วิปุลา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๒๒</span>. ครุมชฺฌโค ชกาโร, จตุตฺถโก ทุติยโก <span rend="bold">จปลา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๒๒. หากคณะที่ 2 และคณะที่ 4 เป็น ช คณะ (ซึ่งมีครุอยู่กลาง) ฉันท์นั้นชื่อว่า จปลา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> จปลา’คตา’ขิลํ เจ, ทลา’ทิมํ ลกฺขณํ ภชติ ยสฺสา;</p>
+<p rend="gathalast">ปถฺยาลกฺขณ’มญฺญํ, <span rend="bold">มุขจปลา</span> นาม สา ภวติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หากฉันท์ใดมีลักษณะของจปลาในกึ่งแรกทั้งหมด และมีลักษณะของปัฐยาในกึ่งหลัง ฉันท์นั้นชื่อว่า มุขจปลา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปถฺยาย ลกฺขณํ เจ, ปฐมฑฺเฒ ลกฺขณํ ตุ จปลาย;</p>
+<p rend="gathalast">ทุติเย ทเล’ถ ยสฺสา, ปกิตฺติตา สา <span rend="bold">ชฆนจปลา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หากฉันท์ใดมีลักษณะของปัฐยาในกึ่งแรก และมีลักษณะของจปลาในกึ่งหลัง ฉันท์นั้นชื่อว่า ชฆนจปลา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="centre">อริยาชาติโย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">อริยาชาติ (ประเภทแห่งอริยาฉันท์).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สพฺพํปฐมทเล ยทิ, ลกฺขณ’มริยาย วุตฺต’มุภเยสุ;</p>
+<p rend="gatha2">ยสฺสา ทเลสุ ยุตฺตํ,</p>
+<p rend="gathalast">วุตฺตา สา <span rend="bold">คีติ</span> วุตฺต ยติ ลลิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หากลักษณะที่กล่าวไว้ในกึ่งแรกของอริยาฉันท์ มีอยู่ในกึ่งทั้งสองของฉันท์ใด ฉันท์นั้นท่านเรียกว่า คีติ ซึ่งมีการหยุดจังหวะ (ยติ) ที่งดงาม.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อริยายํ ทุติย’ฑฺเฒ, คทิตา’ขิลลกฺขณํ ยํ ตํ;</p>
+<p rend="gatha2">ภวติ ทเลสุ’ภเยสุปิ,</p>
+<p rend="gathalast">ยทิ ยสฺสา สา’ย <span rend="bold">มุปคีติ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หากลักษณะทั้งหมดที่กล่าวไว้ในกึ่งหลังของอริยาฉันท์ มีอยู่ในกึ่งทั้งสองของฉันท์ใด ฉันท์นั้นชื่อว่า อุปคีติ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อริยาย’ฑฺฒทฺวิตยํ, ปุพฺโพทิต ลกฺขโณ’เปตํ;</p>
+<p rend="gatha2">วิปริยเยนา’ภิหิตํ,</p>
+<p rend="gathalast">ยสฺสา สมฺภวติ เจ’ห โส’<span rend="bold">คฺคีติ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หากกึ่งทั้งสองของอริยาฉันท์ซึ่งประกอบด้วยลักษณะที่กล่าวมาแล้ว สลับที่กัน ฉันท์นั้นชื่อว่า อัคคีติ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อริยาปุพฺพ’ฑฺฒํ <span class="pb hidden-meta" data-ed="M" data-n="0.0194">[M 0.0194]</span> ยทิ, ครุเน’เกนา’ธิเกน นิธเน ยุตฺตํ;</p>
+<p rend="gathalast">ยทิ ปุพฺพ’ฑฺฒสมานํ, ทล มิตรํ โจ’ทิตา’ย’<span rend="bold">มริยาคีติ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หากกึ่งแรกของอริยาฉันท์ประกอบด้วยครุเพิ่มขึ้นอีกหนึ่งตัวในตอนท้าย และกึ่งที่เหลือก็เหมือนกับกึ่งแรกนั้น ฉันท์นั้นชื่อว่า อริยาคีติ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="centre">คีติชาติโย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">คีติชาติ (ประเภทแห่งคีติฉันท์).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วิสเม ฉ สิยุํ กลา มุเข,</p>
+<p rend="gatha2">สเม ตฺว’ฏฺฐ, ร,ล,คา, ตโต’ปริ;</p>
+<p rend="gathalast"><span rend="bold">เวตาลียํ</span> ต มุจฺจเต, ลหุ ฉกฺกํ น นิรนฺตรํ สเม.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในบาทคี่มี 6 มาตราในตอนต้น ในบาทคู่มี 8 มาตรา ต่อจากนั้นเป็น ร คณะ, ลหุ และครุ ฉันท์นั้นเรียกว่า เวตาลี ในบาทคู่ไม่ควรมีลหุ 6 ตัวติดต่อกัน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> เวตาลีโยปมํ มุเข ตํ,</p>
+<p rend="gathalast"><span rend="bold">โอปจฺฉนฺทสกํ</span> ร,ยา ย’ทนฺเต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ฉันท์ที่มีตอนต้นเหมือนเวตาลี แต่มี ร คณะ และ ย คณะ ในตอนท้าย ชื่อว่า โอปัจฉันทสกะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๓๑</span>. <span rend="bold">อาปาตลิกา</span> กถิตา’ยํ, ภคคา’นฺเต ยทิ ปุพฺพมิว’ญฺญํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๓๑. หากมี ภ คณะ, ครุ และครุ ในตอนท้าย ส่วนที่เหลือเหมือนที่กล่าวมาแล้ว ฉันท์นี้เรียกว่า อาปาตลิกา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ยทา’ทิโต <span rend="bold">ทกฺขิณนฺติกา,</span></p>
+<p rend="gathalast">ฐิเต’ตฺถ ปาเทสฺวา’ขิเลสุ โช.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เมื่อมี ช คณะ ตั้งอยู่ในตอนต้นของทุกบาท ฉันท์นั้นชื่อว่า ทักขิณันติกา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> <span rend="bold">‘อุทิจฺจวุตฺตี’</span>ติ วุจฺจเต,</p>
+<p rend="gathalast">โช จา’โท วิสเมสุ สณฺฐิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หากมี ช คณะ ตั้งอยู่ในตอนต้นของบาทคี่ ฉันท์นั้นเรียกว่า อุทีจจวุตติ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๓๔</span>. ปุพฺพตฺถ, สเมสุ เจ ค, ชา, <span rend="bold">‘ปจฺจวุตฺติ’</span> รุทิตา’ติ สณฺฐิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๓๔. ในฉันท์ที่กล่าวมาแล้ว หากในบาทคู่มี ครุ และ ช คณะ ตั้งอยู่ ฉันท์นั้นเรียกว่า ปัจจวุตติ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สมาสมา’ตฺรา’ทินํ สมา,</p>
+<p rend="gathalast">สํยุตา ภวติ ตํ <span rend="bold">ปวตฺตกํ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หากบาทที่มีมาตราเท่ากันและไม่เท่ากัน (อุทีจจวุตติและปัจจวุตติ) ผสมกัน ฉันท์นั้นชื่อว่า ปวัตตกะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๓๖</span>. อสฺส สา สม กตา’ <span rend="bold">ปรนฺติกา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๓๖. หากปวัตตกะนั้นทำให้มีมาตราเท่ากันในทุกบาท ฉันท์นั้นชื่อว่า อปรันติกา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๓๗</span>. ตท’ญฺญชา <span rend="bold">จารุหาสินี.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๓๗. หากเกิดจากคณะอื่นนอกจากนั้น ฉันท์นั้นชื่อว่า จารุหาสินี.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="centre">เวตาลียชาติโย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">เวตาลียชาติ (ประเภทแห่งเวตาลีฉันท์).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๓๘</span>. ทฺวิก วิหต วสุ ลหุ <span rend="bold">อจลธิติ</span> ริ’ห.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๓๘. ลหุ 16 ตัว (8 คูณ 2) ในที่นี้เรียกว่า อจลธิติ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๓๙</span>. <span rend="bold">มตฺตาสมกํ</span> นวโม ลฺค’นฺเต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๓๙. มาตราสมกะ มีลหุและครุในตอนท้ายของพยางค์ที่ 9.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๔๐</span>. โช นฺลา’ ถวา’ณฺณวา <span rend="bold">วิสิโลโก.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๔๐. หากมี ช คณะ, น คณะ และลหุ หรือมี ภ คณะ 2 คณะ และครุ (อรรณวะ) ฉันท์นั้นชื่อว่า วิสิโลกะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๔๑</span>. ตทฺวยโต <span rend="bold">วานวาสิกา’</span>ขฺยา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๔๑. จากทั้งสองอย่างนั้นรวมกัน เรียกว่า วานวาสิกา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๔๒</span>. ปญฺจ,ฏฺฐ,นวสุ ยทิ โล <span rend="bold">จิตฺรา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๔๒. หากมีลหุในตำแหน่งที่ 5, 8 และ 9 ฉันท์นั้นชื่อว่า จิตรา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๔๓</span>. ค,ลฺยา’ฏฺฐหิ เจ’สา วุ’<span rend="bold">ปจิตฺรา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๔๓. หากนางกัลยานั้นประดับด้วย ๘ (มาตรา) ชื่อว่าวูปจิตรา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ย’มตีต ลกฺขณ วิเสส ยุตํ, (จิตฺรา)</p>
+<p rend="gatha2">มตฺตา สมา’ทิ ปาทา’ภิหิตํ; (วิสิโลก)</p>
+<p rend="gatha3">อนิยต วุตฺต ปริมาณ สหิตํ, (วานวาสิกา)</p>
+<p rend="gathalast">ปถิตํ ชเนสุ <span rend="bold">ปาทากุลกํ.</span> (วิสิโลก)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คาถาใดประกอบด้วยลักษณะพิเศษที่กล่าวมาแล้ว (จิตรา) มีบาทที่กล่าวแล้วด้วยมาตราสมะเป็นต้น (วิสิโลกะ) ประกอบด้วยปริมาณที่มิได้ระบุไว้แน่นอน (วานวาสิกา) คาถานั้นอันชาวโลกทราบกันว่า ปาทากุลกะ (วิสิโลกะ).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="centre">มตฺตาสมก ชาติโย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">มาตราสมกชาติทั้งหลาย.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วินา <span class="pb hidden-meta" data-ed="M" data-n="0.0195">[M 0.0195]</span> วณฺเณหิ มตฺตา คา, วินา วณฺณา ครูหิ ตุ;</p>
+<p rend="gathalast">วินา ลหูหิ ครโว, ทเล ปถฺยาทิโน มตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">มาตราพฤติไม่มีกำหนดพยางค์, ส่วนวรรณพฤติไม่มีกำหนดครุ, ครุทั้งหลายไม่มีกำหนดลหุ, ท่านถือเอาในบาทแห่งปัทยาฉันท์เป็นต้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ วุตฺโตทเย ฉนฺทสิ มตฺตาวุตฺตินิทฺเทโส นาม</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ในคัมภีร์วุตโตทัยฉันท์ นี้คือการแสดงมาตราพฤติ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="centre">ทุติโย ปริจฺเฉโท.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ปริจเฉทที่ ๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="chapter">๓. สมวุตฺตินิทฺเทส-ตติยปริจฺเฉท</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">๓. ปริจเฉทที่ ๓ แสดงสมวฤตติ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๔๖</span>. ตฺยา’ เจ <span rend="bold">ตนุมชฺฌา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๔๖. หากมี ต คณะ และ ย คณะ ชื่อว่าตนุมัชฌา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="centre">คายตฺตี.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">คายัตตรี (ฉันท์ ๖ พยางค์).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๔๗</span>. <span rend="bold">กุมาร ลลิตา</span> ชฺสคา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๔๗. หากมี ช คณะ ส คณะ และครุ ๒ ชื่อว่ากุมารลลิตา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="centre">อุณฺหิกา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">อุษณิกา (ฉันท์ ๗ พยางค์).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๔๘</span>. <span rend="bold">จิตฺรปทา</span> ยทิ ภา คา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๔๘. หากมี ภ คณะ ๒ และครุ ๒ ชื่อว่าจิตราปทา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๔๙</span>. โม โม โค โค <span rend="bold">วิชฺชุมฺมาลา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๔๙. หากมี ม คณะ ๒ และครุ ๒ ชื่อว่าวิชชุมาลา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๕๐</span>. ภา ต, ล, คา <span rend="bold">มาณวกํ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๕๐. หากมี ภ คณะ ต คณะ ลหุ และครุ ชื่อว่ามาณวกะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๕๑</span>. คฺลา <span rend="bold">สมานิกา</span> ร,ชา จ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๕๑. หากมี ร คณะ ช คณะ ครุ และลหุ ชื่อว่าสมานิกา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๕๒</span>. <span rend="bold">ปมาณิกา</span> ช, รา ล, คา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๕๒. หากมี ช คณะ ร คณะ ลหุ และครุ ชื่อว่าปมาณิกา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="centre">อนุฏฺฐุภา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">อนุฏฐุภา (ฉันท์ ๘ พยางค์).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๕๓</span>. รา น,สา ยทิ <span rend="bold">หลมุขี.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๕๓. หากมี ร คณะ น คณะ และ ส คณะ ชื่อว่าหลมุขี.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๕๔</span>. <span rend="bold">ภุชค สุสุ สฏา</span> นา โม.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๕๔. หากมี น คณะ ๒ และ ม คณะ ชื่อว่าภุชคสุสุสฏา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="centre">พฺรหตี.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">พฤหตี (ฉันท์ ๙ พยางค์).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๕๕</span>. มฺสาชฺคา <span rend="bold">สุทฺธวิราชิตํ</span> มตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๕๕. หากมี ม คณะ ส คณะ ช คณะ และครุ ท่านเรียกว่าสุทธวิราชิตะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๕๖</span>. มฺนา โย โค ยทิ <span rend="bold">ปณโว</span> ขฺยาโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๕๖. หากมี ม คณะ น คณะ ย คณะ และครุ ชื่อว่าปณวะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๕๗</span>. มฺภา ส,คยุตฺตา <span rend="bold">รุมฺมวตี</span> สา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๕๗. หากประกอบด้วย ม คณะ ภ คณะ ส คณะ และครุ ชื่อว่ารุมมวตี.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๕๘</span>. เญยฺยา <span rend="bold">มตฺตา</span> ม, ภ, ส, คยุตฺตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๕๘. พึงทราบว่า หากประกอบด้วย ม คณะ ภ คณะ ส คณะ และครุ ชื่อว่ามัตตา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๕๙</span>. <span rend="bold">จมฺปกมาลา</span> เจ ภ, ม, สา โค <span class="note hidden-meta">อิทํ นามนฺตรญาปนตฺถเมว ปุน วุตฺตํ (ฏี.)</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๕๙. หากมี ภ คณะ ม คณะ ส คณะ และครุ ชื่อว่าจัมปกมาลา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๖๐</span>. น, ร, ช, เคหิ สา <span rend="bold">มโนรมา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๖๐. หากมี น คณะ ร คณะ ช คณะ และครุ ชื่อว่ามโนรมา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๖๑</span>. <span rend="bold">อุพฺภาสกํ</span> ตํ เจ โต ม, รา ลฺจ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๖๑. หากมี ต คณะ ๒ ม คณะ ร คณะ ลหุ และครุ ชื่อว่าอุพภาสระ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๖๒</span>. โต ชา ครุนา’ย’<span rend="bold">มุปฏฺฐิตา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๖๒. หากมี ต คณะ ๒ ช คณะ และครุ ชื่อว่าอุปัฏฐิตา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="centre">ปนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ปันติ (ฉันท์ ๑๐ พยางค์).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๖๓</span>. <span rend="bold">อินฺทา</span>ทิกา <span class="pb hidden-meta" data-ed="M" data-n="0.0196">[M 0.0196]</span> ตา <span rend="bold">วชิรา</span> ช, คา โค.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๖๓. หากมี ต คณะ ๒ ช คณะ และครุ ๒ ชื่อว่าอินทรวิเชียร.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:123">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๖๔</span>. <span rend="bold">อุปาทิ</span>กา สา’ว ช,ตา ช,คา โค.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๖๔. อุปาทิกาฉันท์นั้นแล มีคณะ ชะ ตะ ชะ คะ คะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:124">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:125">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อนนฺตโร’ทีริต ลกฺขณา เจ, (อุเปนฺทวชิร)</p>
+<p rend="gatha2">ปาทา วิมิสฺสา <span rend="bold">อุปชาติโย</span> ตา; (อินฺทวชิร)</p>
+<p rend="gatha3">เอวํ กิล’ญฺญาสุปิ มิสฺสิตาสุ, (อินฺทวชิร)</p>
+<p rend="gathalast">วทนฺติ ชาติสฺวิท’ เมว นามํ. (อุเปนฺทวชิร)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หากบาททั้งหลายมีลักษณะตามที่กล่าวมาแล้วในลำดับ (คืออินทรวิเชียรและอุเปนทรวิเชียร) ผสมกัน ท่านเรียกว่าอุปชาติ แม้ในฉันท์อื่น ๆ ที่ผสมกันอย่างนี้ ท่านก็เรียกชื่อว่าอุปชาติเช่นเดียวกัน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:126">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๖๖</span>. น, ช, ช, ล, คา คทิตา <span rend="bold">สุมุขี.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๖๖. สุมุขีฉันท์ ท่านกล่าวว่ามีคณะ นะ ชะ ชะ ละ คะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:127">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๖๗</span>. <span rend="bold">โทธก</span> มิจฺฉติ เจ ภ,ภ,ภา คา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๖๗. ถ้าต้องการโทธกะฉันท์ ก็มีคณะ ภะ ภะ ภะ คะ คะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:128">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๖๘</span>. เวท,สฺเสหิ,ธฺตา ตฺคคา,<span rend="bold">สาลินี</span> สา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๖๘. สาลิณีฉันท์นั้น มีคณะ ตะ ตะ คะ คะ โดยมีเวทะ (๔) และอัสสะ (๗) เป็นที่หยุด.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:129">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๖๙</span>. <span rend="bold">วาโตมฺมี</span> สา, ยติ สา มฺภา ต, คา โค.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๖๙. วาโตมมีฉันท์นั้น มีคณะ มะ ภะ ตะ คะ คะ โดยมีการหยุดที่พยางค์ที่ ๔ และ ๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:130">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๗๐</span>. ภา ต, น, คา โค’สุ, รส <span rend="bold">สิรี</span> สา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๗๐. สุรสิรีฉันท์นั้น มีคณะ ภะ ตะ นะ คะ คะ โดยมีอสุ (๕) และรส (๖) เป็นที่หยุด.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:131">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๗๑</span>. โร น, รา อิห <span rend="bold">รโถทฺธตา</span> ล, คา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๗๑. รถอดธตาฉันท์นี้ มีคณะ ระ นะ ระ ละ คะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:132">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๗๒</span>. <span rend="bold">สฺวาคเต’</span>ติ ร, น, ภา ครุกา ทฺเว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๗๒. สวาคตาฉันท์นี้ มีคณะ ระ นะ ภะ คะ คะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:133">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๗๓</span>. น,น,ร,ลหุ,ครูหิ <span rend="bold">ภทฺทิกา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๗๓. ภัททิกาฉันท์ มีคณะ นะ นะ ระ ละ คะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:134">
+  <div class="pair-col col-pali">
+<p rend="centre">ติฏฺฐุภา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ติฏฐุภาฉันท์.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:135">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๗๔</span>. วทนฺติ <span rend="bold">วํสฏฺฐมิ’</span>ทํ ช, ตา ช, รา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๗๔. บัณฑิตทั้งหลายกล่าวว่า วังสัฏฐะฉันท์นี้ มีคณะ ชะ ตะ ชะ ระ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:136">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๗๕</span>. สา <span rend="bold">อินฺทวํสา</span> ขลุ ยตฺถ ตา ช,รา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๗๕. อินทรวงศ์ฉันท์นั้นแล คือฉันท์ที่มีคณะ ตะ ตะ ชะ ระ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:137">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๗๖</span>. อิธ <span rend="bold">โตฏก</span> มมฺพุธิ,เสหิ มิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๗๖. ในปกรณ์นี้ โตฏกะฉันท์ ท่านกำหนดด้วยสะคณะ ๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:138">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๗๗</span>. <span rend="bold">ทุตวิลมฺพิต</span> มาห น, ภา ภ,รา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๗๗. บัณฑิตทั้งหลายกล่าวว่า ทุตวิลัมพิตะฉันท์ มีคณะ นะ ภะ ภะ ระ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:139">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๗๘</span>. วสุ ยุค วิรตี นา,มฺยา’ <span rend="bold">ปุโฏ’</span>ยํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๗๘. ปุฏะฉันท์นี้ มีคณะ นะ มะ ยะ โดยมีการหยุดที่พยางค์ที่ ๘ และ ๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:140">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๗๙</span>. น, ย, สหิตา นฺยา’ <span rend="bold">กุสุมวิจิตฺตา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๗๙. กุสุมวิจิตตาฉันท์ มีคณะ นะ ยะ นะ ยะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:141">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๘๐</span>. <span rend="bold">ภุชงฺค’ปฺปยาตํ</span> ภเว เวท, เยหิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๘๐. ภุชงคัปปยาตะฉันท์ พึงมีด้วยยะคณะ ๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:142">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๘๑</span>. น, ภ, ช, เรหิ ภวติ’<span rend="bold">ปฺปิยํวทา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๘๑. ปิยัมวทาฉันท์ มีคณะ นะ ภะ ชะ ระ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:143">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๘๒</span>. วุตฺตา สุธีหิ <span rend="bold">ลลิตา</span> ต, ภา ช, รา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๘๒. บัณฑิตทั้งหลายกล่าวว่า ลลิตาฉันท์ มีคณะ ตะ ภะ ชะ ระ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:144">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๘๓</span>. <span rend="bold">ปมิตกฺขรา</span> ส, ช, ส,เสหุ’ทิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๘๓. ปมิตักขราฉันท์ ท่านกล่าวว่ามีคณะ สะ ชะ สะ สะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:145">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๘๔</span>. น,น,ภ,ร,สหิตา’ภิหิตุ’<span rend="bold">ชฺชลา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๘๔. อุชชลาฉันท์ มีคณะ นะ นะ ภะ ระ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:146">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๘๕</span>. ปญฺจ’สฺส’จฺฉินฺนา, <span rend="bold">เวสฺสเทวี</span> ม,มา ยา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๘๕. เวสสเทวีฉันท์ มีคณะ มะ มะ ยะ ยะ โดยมีการหยุดที่พยางค์ที่ ๕ และ ๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:147">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๘๖</span>. ภวติ <span class="pb hidden-meta" data-ed="M" data-n="0.0197">[M 0.0197]</span> หิ <span rend="bold">ตามรสํ</span> น, ช, ชา โย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๘๖. ตามรสะฉันท์ มีคณะ นะ ชะ ชะ ยะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:148">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๘๗</span>. <span rend="bold">‘กมลา’</span>ติ เญยฺยา ส,ย,เสหิ โย เจ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๘๗. กมลาฉันท์ พึงทราบว่ามีคณะ สะ ยะ สะ ยะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:149">
+  <div class="pair-col col-pali">
+<p rend="centre">ชคตี.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ชคตีฉันท์.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:150">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๘๘</span>. มฺนา ชฺรา โค, ติทสยติ’<span rend="bold">ปฺปหสฺสิณี</span> สา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๘๘. ปหาสินีฉันท์นั้น มีคณะ มะ นะ ชะ ระ คะ โดยมีการหยุดที่พยางค์ที่ ๓ และ ๑๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:151">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๘๙</span>. จตุ,คฺคเห,หิ’ห <span rend="bold">รุจิรา,</span> ช,ภา สฺช,คา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๘๙. รุจิราฉันท์นี้ มีคณะ ชะ ภะ สะ ชะ คะ โดยมีการหยุดที่พยางค์ที่ ๔ และ ๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:152">
+  <div class="pair-col col-pali">
+<p rend="centre">อติชคตี.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">อติชคตีฉันท์.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:153">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๙๐</span>. น,น,ร,ส,ลหุ,คา,สเรหิ’<span rend="bold">ปราชิตา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๙๐. อปราชิตาฉันท์ มีคณะ นะ นะ ระ สะ ละ คะ โดยมีการหยุดที่พยางค์ที่ ๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:154">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๙๑</span>. น,น,ภ,น,ล,คิ’ติ,<span rend="bold">ปฺปหรณกลิกา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๙๑. ปปหรณกลิกา มีคณะเป็น น น ภ น ล ค</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:155">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๙๒</span>. วุตฺตา <span rend="bold">วสนฺตติลกา</span> ต,ภ,ชา ช,คา โค.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๙๒. วสันตติลกา กล่าวไว้ว่ามีคณะเป็น ต ภ ช ช ค ค</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:156">
+  <div class="pair-col col-pali">
+<p rend="centre">สกฺกรี.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">สักกะรี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:157">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๙๓</span>. ทฺวิหต หย ลหุ ร’ถ คิ’ติ <span rend="bold">สสิกลา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๙๓. ศศิกะลา มี ลหุ ร คณะ และครุ มี ๑๔ พยางค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:158">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๙๔</span>. วสุ,หย,ยติ ริ’ห,<span rend="bold">มณิคุณนิกโร.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๙๔. มณิคุณนิกร มี ร คณะ และหยุดที่ ๘ และ ๗</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:159">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๙๕</span>. น,น,ม,ย,ย,ยุตา’ยํ,<span rend="bold">มาลินี</span> โภคิ’สีหิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๙๕. มาลินี ประกอบด้วย น น ม ย ย และหยุดที่ ๘ และ ๗</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:160">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๙๖</span>. ภวติ น,ชา,ภ,ชา รสหิตา <span rend="bold">ปภทฺทกํ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๙๖. ปภัททกะ มีคณะเป็น น ช ภ ช และหยุดที่ ๖</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:161">
+  <div class="pair-col col-pali">
+<p rend="centre">อติสกฺกรี.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">อติสักกะรี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:162">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๙๗</span>. น,ช,ภ,ช,รา สทา ภวติ <span rend="bold">วาณินี</span> ค, ยุตฺตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๙๗. วาณินี ย่อมเป็นเสมอด้วย น ช ภ ช ร ค</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:163">
+  <div class="pair-col col-pali">
+<p rend="centre">อฏฺฐิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">อัฏฐิ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:164">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๙๘</span>. ย, มา โน โส ภลฺคา, รส, หรวิรามา <span rend="bold">สิขรณี.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๙๘. สิขรณี มี ย ม น ส ภ ล ค และหยุดที่ ๖ และ ๑๑</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:165">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๙๙</span>. รส, ยุคิ, สิโต, โน โส มฺรา สฺลา, คฺย’ทา <span rend="bold">หริณี</span> ตทา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๙๙. หริณี มี น ส ม ร ส ล ค และหยุดที่ ๖, ๔, ๗</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:166">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๐๐</span>. <span rend="bold">มนฺทกฺกนฺตา,</span> ม,ภ,น,ต,ต,คา, โค ยุคุ,ตฺว,สฺสเกหิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๐๐. มันทักกันตา มี ม ภ น ต ต ค ค และหยุดที่ ๔, ๖, ๗</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:167">
+  <div class="pair-col col-pali">
+<p rend="centre">อจฺจฏฺฐิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">อัจจัฏฐิ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:168">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๐๑</span>. โม โต โน โย ยา, <span rend="bold">กุสุมิตลตา, เวลฺลิตา’</span> กฺขุ,ตฺวิ,สีหิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๐๑. กุสุมิตลตาเวลลิตา มี ม ต น ย ย ย และหยุดที่ ๕, ๖, ๗</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:169">
+  <div class="pair-col col-pali">
+<p rend="centre">ธุติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ธุติ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:170">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๐๒</span>. รสุ,ตฺว,สฺเสหิ ยฺมา, น,ส,ร,ร,ครู, <span rend="bold">เมฆวิปฺผุชฺชิตา</span> สา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๐๒. เมฆวิปผุชชิตา นั้น มี ย ม น ส ร ร ค และหยุดที่ ๖, ๖, ๗</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:171">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๐๓</span>. อกฺกสฺเสหิ ยติ มฺส,ชาส,ต,ต,คา, <span rend="bold">สทฺทูลวิกฺกีฬิตํ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๐๓. สัททูลวิกกีฬิตะ มี ม ส ช ส ต ต ค และหยุดที่ ๑๒ และ ๗</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:172">
+  <div class="pair-col col-pali">
+<p rend="centre">อติธุติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">อติธุติ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:173">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๐๔</span>. <span rend="bold">วุตฺต</span> <span class="pb hidden-meta" data-ed="M" data-n="0.0198">[M 0.0198]</span> มีทิสํ ตุ นามโต ร,ชา ร,ชา ร,ชา ครู,ลหู จ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๐๔. กล่าวแล้วว่ามีชื่ออย่างนี้ คือมี ร ช ร ช ร ช ค ล ด้วย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:174">
+  <div class="pair-col col-pali">
+<p rend="centre">กติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">คติ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:175">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๐๕</span>. มฺรา ภฺนา โย โย’ตฺร เยน,ตฺติ,มุนิ, ยติยุตา, <span rend="bold">สนฺธรา</span> กิตฺติตา’ยํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๐๕. สันธรานี้ กล่าวแล้วว่ามี ม ร ภ น ย ย ย และหยุดที่ ๗, ๗, ๗</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:176">
+  <div class="pair-col col-pali">
+<p rend="centre">ปกติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ปรกติ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:177">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๐๖</span>. โอ น,ร,นา ร,นา จ ถ ครู ทส,กฺก,วิรมญฺหิ <span rend="bold">ภทฺทก’</span>มิทํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๐๖. ภัททกะนี้ มี น ร น ร น ถ ค และหยุดที่ ๑๐, ๑๒</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:178">
+  <div class="pair-col col-pali">
+<p rend="centre">อากติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">อาคติ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:179">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ วุตฺโตทเย ฉนฺทสิ สมวุตฺตินิทฺเทโส นาม</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ในคัมภีร์วุตโตทัยว่าด้วยฉันท์ ชื่อว่า สมวุตตินิเทศ ด้วยประการฉะนี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:180">
+  <div class="pair-col col-pali">
+<p rend="centre">ตติโย ปริจฺเฉโท.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ปริจเฉทที่ ๓</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:181">
+  <div class="pair-col col-pali">
+<p rend="chapter">๔. อฑฺฒสมวุตฺตินิทฺเทส-จตุตฺถปริจฺเฉท</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">๔. อัฑฒสมวุตตินิเทศ ปริจเฉทที่ ๔</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:182">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:183">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วิสเม ยทิ สา ส,ล,คา สเม,</p>
+<p rend="gathalast">ภ,ตฺตยโต ครุกา วุ’<span rend="bold">ปจิตฺตํ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ถ้าในบทคี่มี ส ส ล ค ในบทคู่มี ภ ๓ และครุ ชื่อว่าอุปจิตตะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:184">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:185">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ภ,ตฺตยโต ยทิ คา <span rend="bold">ทุตมชฺฌา;</span></p>
+<p rend="gathalast">ยทิ ปุนเร’ว ภวนฺติ น, ชา <span rend="bold">ชฺยา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ถ้ามี ภ ๓ และครุ ชื่อว่าทุตมัชฌา; ถ้ามี น ช ช ย อีก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:186">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:187">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ยทิ ส,ตฺติตยํ ครุยุตฺตํ,</p>
+<p rend="gathalast"><span rend="bold">เวควตี</span> ยทิ ภ,ตฺติตยา คา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ถ้ามี สคณ ๓ ตัว และครุ (ในบาทคี่) และถ้ามี ภคณ ๓ ตัว และครุ (ในบาทคู่) ชื่อว่า เวคควัตตี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:188">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:189">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> โต โช วิสเม รโต ครู เจ;</p>
+<p rend="gathalast">สฺมา ชฺคา <span rend="bold">ภทฺทวิราช</span> เมตฺถ โค เจ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ถ้าในบาทคี่มี ตคณ ชคณ รคณ และครุ และในบาทคู่มี สคณ มคณ ชคณ และครุ ๒ ตัว ชื่อว่า ภัทรวิราช</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:190">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:191">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วิสเม ส, ชา ส,ครุ,ยุตฺตา;</p>
+<p rend="gathalast"><span rend="bold">เกตุมตี</span> สเม ภ,ร,น,คา โค.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในบาทคี่มี สคณ ชคณ สคณ และครุ ในบาทคู่มี ภคณ รคณ นคณ และครุ ๒ ตัว ชื่อว่า เกตุมาตี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:192">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:193">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> <span rend="bold">อาขฺยานกี</span> ตา วิสเม ช, คา โค; (อินฺทวชิร)</p>
+<p rend="gathalast">ช,ตา ช,คา โค ตุ สเม’ถ ปาเท. (อุเปนฺทวชิร)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ชื่อว่า อักขยานกี ถ้าในบาทคี่มี ตคณ ตคณ ชคณ และครุ ๒ ตัว (เหมือนอินทรวิเชียร) และในบาทคู่มี ชคณ ตคณ ชคณ และครุ ๒ ตัว (เหมือนอุเปนทรวิเชียร)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:194">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:195">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ช,ตา ช,คา โค วิสเม สเม ตุ; (อุเปนฺทวชิร)</p>
+<p rend="gathalast">ตา โช ค,คา เจ <span rend="bold">วิปรีตปุพฺพา.</span> (อินฺทวชิร)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ถ้าในบาทคี่มี ชคณ ตคณ ชคณ และครุ ๒ ตัว (เหมือนอุเปนทรวิเชียร) และในบาทคู่มี ตคณ ตคณ ชคณ และครุ ๒ ตัว (เหมือนอินทรวิเชียร) ชื่อว่า วิปรีตปุพพา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:196">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:197">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ส,ส,โต ส,ล,คา วิสเม สเม;</p>
+<p rend="gathalast">น,ภ,ภ,รา ภวเต <span rend="bold">หริณปฺลุตา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในบาทคี่มี สคณ สคณ ตคณ สคณ ลหุ และครุ ในบาทคู่มี นคณ ภคณ ภคณ รคณ ชื่อว่า หริณปลุตา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:198">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:199">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ยทิ น,น,ร,ล,คา น,ชา ช,รา,</p>
+<p rend="gathalast">ยทิ จ ตทา’<span rend="bold">ปรวตฺต</span> มิจฺฉติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ถ้าในบาทคี่มี นคณ นคณ รคณ ลหุ และครุ และในบาทคู่มี นคณ ชคณ ชคณ รคณ ชื่อว่า อปรวัตตะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:200">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:201">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วิสม <span class="pb hidden-meta" data-ed="M" data-n="0.0199">[M 0.0199]</span> มุปคตา น,นา ร,ยา เจ;</p>
+<p rend="gathalast">น,ช,ช,ร,คา สมเก จ <span rend="bold">ปุปฺผิตคฺคา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ถ้าในบาทคี่มี นคณ นคณ รคณ ยคณ และในบาทคู่มี นคณ ชคณ ชคณ รคณ และครุ ชื่อว่า บุปผิตัคคา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:202">
+  <div class="pair-col col-pali">
+<p rend="centre">ทฺวยํ มิทํ <span rend="bold">เวตาลีย’</span>ปฺปเภโท.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ทั้งสองนี้ (อปรวัตตะและบุปผิตัคคา) เป็นประเภทของเวตาลียฉันท์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:203">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:204">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สา <span rend="bold">ยวา</span>ทิกา <span rend="bold">มตี</span> ร,ชา ร,ชา ตฺว,</p>
+<p rend="gathalast">สเม สเม ช,รา ช,รา ครู ภเวยฺยุํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ฉันท์นั้นชื่อว่า ยวาทิกามตี ในบาทคี่มี รคณ ชคณ รคณ ชคณ ในบาทคู่มี ชคณ รคณ ชคณ รคณ และครุ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:205">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ วุตฺโตทเย ฉนฺทสิ อฑฺฒสมวุตฺตินิทฺเทโส นาม</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">จบการแสดงอัฑฒสมวุตติ ในคัมภีร์วุตโตทัย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:206">
+  <div class="pair-col col-pali">
+<p rend="centre">จตุตฺโถ ปริจฺเฉโท.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ปริจเฉทที่ ๔</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:207">
+  <div class="pair-col col-pali">
+<p rend="chapter">๕. วิสมวุตฺตินิทฺเทส-ปญฺจมปริจฺเฉท</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">๕. ปริจเฉทที่ ๕ วิสมวุตตินิทเทส</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:208">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๑๘</span>. น’ฏฺฐกฺขเรสุ ปาเทสุ, สฺนา’ทิมฺหา โย’ณฺณวา <span rend="bold">วตฺตํ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๑๘. ในบรรดาบาทที่มี ๘ อักษร ถ้าพยางค์ที่ ๔ (อรรณพ) เป็น ยคณ และไม่เป็น สคณ หรือ นคณ ในตอนต้น ชื่อว่า วัตตะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:209">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๑๙</span>. สเมสุ สินฺธุโต เชน, <span rend="bold">ปถฺยาวตฺตํ</span> ปกิตฺติตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๑๙. ในบาทคู่ ถ้ามี ชคณ ในตำแหน่งที่ ๔ (สินธุ) ชื่อว่า ปัถยาวัตตะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:210">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๒๐</span>. โอเชสุ เชน สินฺธุโต, ต’เมว <span rend="bold">วีปรีตา’ทิ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๒๐. ในบาทคี่ ถ้ามี ชคณ ในตำแหน่งที่ ๔ (สินธุ) ฉันท์นั้นชื่อว่า วิปรีตา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:211">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๒๑</span>. น,กาโร เจ ชลธิโต, <span rend="bold">จปลาวตฺต’</span>มิจฺเจ’ตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๒๑. ถ้ามี นคณ ในตำแหน่งที่ ๔ (ชลธิ) ฉันท์นี้ชื่อว่า จปลาวัตตะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:212">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๒๒</span>. สเม โล สตฺตโม ยสฺสา, <span rend="bold">วิปุลา</span> ปิงฺคลสฺส สา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๒๒. ในบาทคู่ ฉันท์ใดมีลหุเป็นพยางค์ที่ ๗ ฉันท์นั้นชื่อว่า วิปุลา ตามมติของท่านปิงคละ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:213">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๒๓</span>. <span rend="bold">เสตว</span>สฺสา’ขิเลสุปิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๒๓. ตามมติของท่านเสตวะ (วิปุลา) มีได้ในบาททั้งปวง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:214">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๒๔</span>. เภน’ณฺณวา <span rend="bold">ภ’พฺพิปุลา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๒๔. ถ้ามี ภคณ ในตำแหน่งที่ ๔ (อรรณพ) ชื่อว่า ภวิปุลา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:215">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๒๕</span>. เอว’<span rend="bold">มญฺญา โร</span> จตุตฺถา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๒๕. ในทำนองเดียวกัน ถ้ามี รคณ ในตำแหน่งที่ ๔ ชื่อว่า รวิปุลา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:216">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๒๖</span>. โน’ณฺณวา เจ <span rend="bold">นวิปุลา.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๒๖. ถ้ามี นคณ ในตำแหน่งที่ ๔ (อรรณพ) ชื่อว่า นวิปุลา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:217">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๒๗</span>. โต’ณฺณวา ตถา’<span rend="bold">ญฺญา</span> สิยา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๒๗. ถ้ามี ตคณ ในตำแหน่งที่ ๔ (อรรณพ) ก็เป็นวิปุลาอีกชนิดหนึ่ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:218">
+  <div class="pair-col col-pali">
+<p rend="centre">วตฺต’ปฺปเภโท.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">จบประเภทของวัตตฉันท์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:219">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:220">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> นทิสฺสเต’ตฺถ ยํ ฉนฺทํ, ปโยเค ทิสฺสเต ยทิ;</p>
+<p rend="gathalast">วิสม’กฺขรปาทํ ตํ, <span rend="bold">คาถา</span> สามญฺญนามโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ฉันท์ใดไม่ปรากฏในคัมภีร์นี้ แต่ปรากฏในการใช้สอย และมีพยางค์ในแต่ละบาทไม่เท่ากัน ฉันท์นั้นชื่อว่า คาถาสามัญญะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:221">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ วุตฺโตทเย ฉนฺทสิ วิสมวุตฺติ นิทฺเทโส นาม</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">จบการแสดงวิสมวุตติ ในคัมภีร์วุตโตทัย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:222">
+  <div class="pair-col col-pali">
+<p rend="centre">ปญฺจโม ปริจฺเฉโท.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ปริจเฉทที่ ๕</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:223">
+  <div class="pair-col col-pali">
+<p rend="chapter">๖. ฉปฺปจฺจยวิภาค-ฉฏฺฐปริจฺเฉท</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">๖. ปริจเฉทที่ ๖ ฉัปปัจจยวิภาค</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:224">
+  <div class="pair-col col-pali">
+<p rend="title">ปตฺถารนย</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">วิธีปัตถาระ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:225">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:226">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปตฺถาเร <span class="pb hidden-meta" data-ed="M" data-n="0.0200">[M 0.0200]</span> สพฺพเค ปาเท, ปุพฺพคา’โธ ลฺป’เร สมา;</p>
+<p rend="gathalast">ปุพฺเพ ครุ เต จ มิเม, กตฺตพฺพา ยาว สพฺพลา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในการทำปัตถาระ (เมื่อตั้งบาทที่มีครุล้วนแล้ว) พึงวางลหุไว้ใต้ครูตัวแรก พยางค์ที่เหลือเบื้องหลังให้คงเดิม ส่วนพยางค์เบื้องหน้าให้เปลี่ยนเป็นครูทั้งหมด พึงทำเช่นนี้เรื่อยไปจนกว่าจะเป็นลหุล้วน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:227">
+  <div class="pair-col col-pali">
+<p rend="title">นฏฺฐนย</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">วิธีหาฉันท์ที่หายไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:228">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:229">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> นฏฺฐสฺส โย ภเวยฺย’งฺโก, ตสฺมิํ โล’ทฺธิกเต สเม;</p>
+<p rend="gathalast">วิสเม ตฺเว’กสหิเต, ภเวยฺย’ทฺธิกเต ครุ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เลขที่พึงมีในฉันท์ที่หายไปนั้น เมื่อเลขนั้นเป็นเลขคู่ หารสองแล้วให้เป็นลหุ แต่เมื่อเป็นเลขคี่ ให้บวกหนึ่งแล้วหารสองให้เป็นครุ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:230">
+  <div class="pair-col col-pali">
+<p rend="title">อุทฺทิฏฺฐนย</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">วิธีหาลำดับของฉันท์ที่กำหนด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:231">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:232">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> เอกา’ทินุกฺกเมน’งฺเก, ปุพฺพาโธ ทฺวิคุเณ ลิเข;</p>
+<p rend="gathalast">มิสฺสเกหิ ลหุฏฺเฐหิ, เส’เกหุ’ทฺทิฏฺฐกํ ภเว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ให้เขียนเลขเรียงลำดับจากหนึ่งเป็นต้นไป โดยทวีคูณขึ้นตามลำดับไว้ข้างใต้ตัวก่อนๆ, ผลรวมของเลขที่ตรงกับตำแหน่งลหุบวกด้วยหนึ่ง พึงเป็นลำดับของฉันท์ที่กำหนด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:233">
+  <div class="pair-col col-pali">
+<p rend="title">สพฺพคลกฺริยนย</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">วิธีทำครุและลหุทั้งหมด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:234">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:235">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วุตฺต’กฺขร สมา สงฺขยา, ลิกฺขย เสโก’ปรู’ปริ;</p>
+<p rend="gathalast">เอเกกหีน เมกาทิ, นุ’ฏฺฐาเน สพฺพคาทิกํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ให้เขียนจำนวนเลขเท่ากับจำนวนอักษรในฉันท์ไว้เบื้องบนซ้อนกันขึ้นไปโดยบวกเพิ่มอีกหนึ่ง, ให้ลดลงทีละหนึ่งจากหนึ่งเป็นต้นไป เพื่อหาจำนวนฉันท์ที่มีครุล้วนเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:236">
+  <div class="pair-col col-pali">
+<p rend="title">วุตฺตสงฺขยานย</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">วิธีคำนวณจำนวนฉันท์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:237">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:238">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ครุกฺริยา’งฺก สนฺโทเห, ภเว สงฺขยา วิมิสฺสิเต;</p>
+<p rend="gathalast">อุทฺทิฏฺฐ’งฺก สมาหาโร, เส’โก เว’มํ สมา’นเย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในฉันท์ที่มีครุและลหุผสมกันนั้น จำนวนรวมของเลขที่ได้จากการทำครุพึงเป็นสังขยา, หรือผลรวมของเลขที่กำหนดบวกด้วยหนึ่ง พึงนำมาซึ่งสังขยานี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:239">
+  <div class="pair-col col-pali">
+<p rend="title">วุตฺตอทฺธานย</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">วิธีหาเนื้อที่ของฉันท์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:240">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:241">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สงฺขเยว ทฺวิคุเณ’กูนา, วิตฺถารา’ยามสมฺภวา;</p>
+<p rend="gathalast">วุตฺตสฺส’ทฺธ’นฺตรานญฺจ, ครุลานญฺจ องฺคุลํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สังขยานั้นเองทวีคูณแล้วลดลงหนึ่ง พึงเป็นความกว้างและความยาวที่เกิดขึ้น ของฉันท์และช่องว่างระหว่างฉันท์ และของครุและลหุทั้งหลาย โดยกำหนดเป็นหนึ่งนิ้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:242">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ วุตฺโตทเย ฉนฺทสิ ฉปฺปจฺจยวิภาโค นาม</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ชื่อว่า ฉัพปัจจัยวิภาค ในวุตโตทัยฉันท์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:243">
+  <div class="pair-col col-pali">
+<p rend="centre">ฉฏฺโฐ ปริจฺเฉโท.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ปริจเฉทที่ ๖</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:244">
+  <div class="pair-col col-pali">
+<p rend="title">นิคมน</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">บทนิคมน์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:245">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:246">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> เสล’นฺตรา’ยตน <span class="pb hidden-meta" data-ed="M" data-n="0.0201">[M 0.0201]</span> วาสิก <span rend="bold">สีล’</span>ตฺเถร,</p>
+<p rend="gatha2">ปาโท ครุ คฺคุณครุ ชฺชยตํ มเม’โส;</p>
+<p rend="gatha3">ยสฺส ปฺปภาว’มวลมฺพ มเย’ทิโสปิ,</p>
+<p rend="gathalast">สมฺปาทิโต’ภิมต สิทฺธิกโร ปรตฺโถ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ขอรอยเท้าของพระสีลเถระผู้พำนักอยู่ในเสลันตรายตนะ ผู้หนักด้วยคุณธรรม จงรุ่งเรืองแก่ข้าพเจ้า, ข้าพเจ้าอาศัยอานุภาพของท่าน จึงได้ทำประโยชน์เพื่อผู้อื่นอันให้สำเร็จสิ่งที่ปรารถนาเช่นนี้ให้สำเร็จแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:247">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:248">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปรตฺถ สมฺปาทนโต, ปุญฺเญนา’ธิคเตน’หํ;</p>
+<p rend="gathalast">ปรตฺถ สมฺปาทนโก, ภเวยฺยํ ชาติ ชาติยํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ด้วยบุญที่ข้าพเจ้าได้จากการทำประโยชน์เพื่อผู้อื่นนั้น ขอข้าพเจ้าพึงเป็นผู้ทำประโยชน์เพื่อผู้อื่นในทุกๆ ชาติไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:249">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:250">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อวโลกิต มตฺเตน, ยถา ฉปฺปจฺจยา มยา;</p>
+<p rend="gathalast">สาธิตา สาธยนฺเต’ว, มิจฺฉิตตฺถมฺปิ ปาณิโนติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ปัจจัย ๖ ประการที่ข้าพเจ้าได้ทำให้สำเร็จแล้วเพียงด้วยการพิจารณาฉันใด ขอปัจจัยเหล่านั้นจงยังประโยชน์ที่สัตว์ทั้งหลายปรารถนาให้สำเร็จฉันนั้นเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:251">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ สงฺฆรกฺขิตมหาสามิตฺเถเรน วิรจิตํ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">วุตโตทัยปกรณ์ที่พระสังฆรักขิตมหาสามิเถระรจนาแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:252">
+  <div class="pair-col col-pali">
+<p rend="centre">วุตฺโตทยปฺปกรณํ ปรินิฏฺฐิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">วุตโตทัยปกรณ์จบสมบูรณ์แล้ว</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2942 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1214n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Sarabun"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">บาลี | แปล</button><button type="button" data-mode="view-stack">บาลี — แปล</button><button type="button" data-mode="view-pali-only">เฉพาะบาลี</button><button type="button" data-mode="view-trans-only">เฉพาะแปล</button><button type="button" id="toggle-meta-btn">เชิงอรรถ</button></div>
+<div class="pair-row" data-id="e1214n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="chapter">กจฺจายน <span class="pb hidden-meta" data-ed="O" data-n="0.0001">[O 0.0001]</span> ธาตุ มญฺชูสา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">คัมภีร์ธาตุมัญชุสาของพระกัจจายนะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="centre"> นโม ตสฺส ภควโต อรหโต สมฺมาสมฺพุทฺธสฺส</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ขอนอบน้อมแด่พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้าพระองค์นั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="gatha1">นิรุตฺติ นิกรา’ปาร-ปารวาร’นฺตคํ มุนิํ,</p>
+<p rend="gathalast">วนฺทิตฺวา ธาตุมญฺชูสํ-พฺรูมิ ปาวจนญฺชสํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าไหว้พระมุนีผู้ถึงฝั่งแห่งมหาสมุทรคือหมู่แห่งนิรุกติทั้งปวงแล้ว จักกล่าวคัมภีร์ธาตุมัญชุสาโดยชอบตามพระพุทธพจน์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1">โสคตาคม มา’คมฺม-ตํ ตํวฺยากรณานิ จ,</p>
+<p rend="gathalast">ปาเฐ จา’ปฐิตาเป’ตฺถ ธาตฺวตฺถา จ ปวุจฺจเร.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อาศัยพระพุทธพจน์และไวยากรณ์เหล่านั้นๆ แม้ธาตุที่ไม่ได้อ่านในปาฐะนี้ และอรรถแห่งธาตุทั้งหลายก็จักถูกกล่าวไว้ในที่นี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ฉนฺท’หานิตฺถโม’การํ-ธาตฺวนฺตานํ <span class="pb hidden-meta" data-ed="O" data-n="0.0002">[O 0.0002]</span> สิยากฺว จิ, ยูนํ ทีโฆ จ ธาตุมฺหา-ปุพฺพม’ตฺถปทํ อปิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เพื่อไม่ให้เสียฉันท์ พยัญชนะ โอ พึงมีในที่สุดแห่งธาตุบางแห่ง และพยัญชนะ ยู พึงเป็นทีฆะ แม้บทที่แสดงอรรถก็พึงมีก่อนธาตุ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ภู สตฺตายํ ปจ ปาเก คมุสปฺป คติมฺหิ (จ);</p>
+<p rend="gathalast">สิโลก (ธาตุ) สงฺฆาเต สกิ สงฺกาย (วตฺตเต;).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ภู ในอรรถว่า มี, เป็น; ธาตุ ปจ ในอรรถว่า หุง, ต้ม; ธาตุ คมุ, สปฺป ในอรรถว่า ไป; ธาตุ สิโลก ในอรรถว่า รวมกัน; ธาตุ สกิ ในอรรถว่า สงสัย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (อโถ) กุก-วกา’ทาเน เก สทฺเท อกิ ลกฺขเณ;</p>
+<p rend="gathalast">กุ สทฺเท กุจฺฉิเต ฏงฺก ธารเณ มกิ มณฺฑเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อนึ่ง ธาตุ กุก, วก ในอรรถว่า รับเอา; ธาตุ เก ในอรรถว่า เสียง; ธาตุ อกิ ในอรรถว่า เครื่องหมาย; ธาตุ กุ ในอรรถว่า เสียง, น่ารังเกียจ; ธาตุ ฏงฺก ในอรรถว่า ทรงไว้; ธาตุ มกิ ในอรรถว่า ประดับ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วกิ โกฏิลฺลยาตฺราสุ สกฺก-ฏีกทฺวยํ คเต;</p>
+<p rend="gathalast">กกิ โลลตฺตเน ยาเต ตกี (อิธ) คตาทิสุ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ วกิ ในอรรถว่า คด, ไป; ธาตุ สกฺก, ฏีก ในอรรถว่า ไป; ธาตุ กกิ ในอรรถว่า โลเล, ไป; ธาตุ ตกิ ในอรรถว่า ไปเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๔</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0003">[O 0.0003]</span> วว, โลกนวิตฺติสุ จกฺขวุติมฺหิ (ตุ) รุกฺข (จ) เข ถิรหิํสขเณ นิย, โม’ปนยิฏฺฐิ วตาทิส มุณฺฑิสุ ทิกฺข (’ถ) กกฺข-กขา หสเน ตุร, หิํสนวุทฺธิคตีสุ (หิ) ทกฺข’ทนมฺหิ (ตุ) ชกฺข (จ) ภกฺข (มตา) อน, ชาลทุเขสุ (ตุ) ทิกฺข (จ) ทุกฺข (จ) อิกฺข ทิส’งฺก น โก’ข สุเส.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๔. ธาตุ วว ในอรรถว่า เห็น, ได้; ธาตุ จกฺข ในอรรถว่า เห็น; ธาตุ รุกฺข, เข ในอรรถว่า มั่นคง, เบียดเบียน, ขุด; ธาตุ นิย, มุ ในอรรถว่า นำไป, ปรารถนา, ประพฤติ, โกน; ธาตุ ทิกฺข, กกฺข, กข ในอรรถว่า หัวเราะ; ธาตุ ตรุ ในอรรถว่า เบียดเบียน, เจริญ, ไป; ธาตุ ทกฺข ในอรรถว่า กิน; ธาตุ ชกฺข, ภกฺข ในอรรถว่า กิน; ธาตุ อน, ชาล ในอรรถว่า เป็นทุกข์; ธาตุ ทิกฺข, ทุกฺข, อิกฺข ในอรรถว่า เห็น, กำหนด, แห้ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๕</span>. [อ] นิกฺข จุมฺพเน’(ปิ) สิกฺข วิชฺชุ’ปาทุ’ ปาสานมฺหิ รกฺข คุตฺติวารเณ (ปิ) อุญฺฉเน (สิยา’ปิ) ภิกฺข ยาวลทฺธย’ลทฺธิสู (ปิ) วกฺข โรสสํหเตสุ โมกฺข มุตฺติยํ จเช (ปิ) จิกฺข วาจโพธเนสุ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๕. ธาตุ นิกฺข ในอรรถว่า จูบ; ธาตุ สิกฺข ในอรรถว่า เรียน, เกิดขึ้น, ได้; ธาตุ รกฺข ในอรรถว่า รักษา, ห้าม, เก็บ; ธาตุ ภิกฺข ในอรรถว่า ขอ, ได้, ไม่ได้; ธาตุ วกฺข ในอรรถว่า โกรธ, รวมกัน; ธาตุ โมกฺข ในอรรถว่า พ้น, ละ; ธาตุ จิกฺข ในอรรถว่า พูด, รู้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="bodytext">[พ] <span class="pb hidden-meta" data-ed="O" data-n="0.0004">[O 0.0004]</span> นข มข รข นงฺขามงฺขรกฺขี’ขีลงฺขา ลข วข อิข อิงฺขา อุงฺข วงฺขู’ข คตฺยํ วขิ มขิ กขิ กงฺเข ขี ขเย อุกฺข เสเก ขุ ขุตธนิสุ (วุตฺโต) เข(’ถ) ขาเท สุเป (จ.)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ธาตุ นข, มข, รข, นงฺข, มงฺข, รกฺข, อิกฺข, ลงฺข, ลข, วข, อิกฺข, อิงฺข, องฺข, วงฺข, อุกฺข ในอรรถว่า ไป; ธาตุ วขิ, มขิ, กขิ, กงฺข ในอรรถว่า ไป; ธาตุ ขี ในอรรถว่า สิ้นไป; ธาตุ อุกฺข ในอรรถว่า รด; ธาตุ ขุ ในอรรถว่า เสียง; ธาตุ เข ในอรรถว่า กิน, นอน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อคฺโค (ตุ) คติโกฏิลฺเล ลค สงฺเค มเค’สเน;</p>
+<p rend="gathalast">อคี อิคี ริคี ลิคี วคี คตฺย’ตฺถธาตโว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ อคฺค ในอรรถว่า ไป, คด; ธาตุ ลค ในอรรถว่า ติด; ธาตุ มค ในอรรถว่า แสวงหา; ธาตุ อคี, อิคี, ริคี, ลิคี, วคี เป็นธาตุในอรรถว่า ไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สิลาฆ กตฺถเน ชคฺฆ หสเน อคฺฆ อคฺฆเน;</p>
+<p rend="gathalast">สิฆี อาฆายเน (โหติ) ลฆิ โสสคตีสุ (จ;).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ สิลาฆ ในอรรถว่า สรรเสริญ; ธาตุ ชคฺฆ ในอรรถว่า หัวเราะ; ธาตุ อคฺฆ ในอรรถว่า มีค่า; ธาตุ สิฆี ในอรรถว่า ดม; ธาตุ ลฆิ ในอรรถว่า แห้ง, ไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วจ พฺยตฺตวเจ ยาจ ยาจเน รุจ ทิตฺติยํ;</p>
+<p rend="gathalast">สุจ โสเก กุจ สทฺเท (อโถ) วิจ วิเวจเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ วจ ในอรรถว่า พูดชัด; ธาตุ ยาจ ในอรรถว่า ขอ; ธาตุ รุจ ในอรรถว่า รุ่งเรือง; ธาตุ สุจ ในอรรถว่า เศร้าโศก; ธาตุ กุจ ในอรรถว่า เสียง; อนึ่ง ธาตุ วิจ ในอรรถว่า แยกแยะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0005">[O 0.0005]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อญฺจ ปูชาคเต วญฺจ คมเน กิญฺจา’วมทฺทเน;</p>
+<p rend="gathalast">ลุญฺจา’ปนยเน นจฺจ นจฺจเน มจ โรจเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ อญฺจ ในอรรถว่า บูชา, ไป; ธาตุ วญฺจ ในอรรถว่า ไป; ธาตุ กิญฺจ ในอรรถว่า บดขยี้; ธาตุ ลุญฺจ ในอรรถว่า นำไป; ธาตุ นจฺจ ในอรรถว่า ฟ้อนรำ; ธาตุ มจ ในอรรถว่า ชอบใจ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อจฺจา’จฺจเน จุ วจเน สโจ (ตุ) สมวายเน;</p>
+<p rend="gathalast">ปจ ยาเต กจิ-วจฺจ ทิตฺติยํ มจิ ธารเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ อจฺจ ในอรรถว่า บูชา; ธาตุ จุ ในอรรถว่า พูด; ธาตุ สจ ในอรรถว่า รวมกัน; ธาตุ ปจ ในอรรถว่า ไป; ธาตุ กจิ, วจฺจ ในอรรถว่า รุ่งเรือง; ธาตุ มจิ ในอรรถว่า ทรงไว้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปุจฺฉ สมฺปุจฺฉเน มุจฺฉ โมหสฺมิํ ลญฺฉ ลกฺขเณ;</p>
+<p rend="gathalast">อญฺฉา’ยาเม (ภเว) ปุญฺฉ ปุญฺฉเน อุญฺฉ อุญฺฉเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ปุจฺฉ ในอรรถว่า ถาม; ธาตุ มุจฺฉ ในอรรถว่า หลง; ธาตุ ลญฺฉ ในอรรถว่า เครื่องหมาย; ธาตุ อญฺฉ ในอรรถว่า ยืด; ธาตุ ปุญฺฉ ในอรรถว่า เช็ด; ธาตุ อุญฺฉ ในอรรถว่า เก็บ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ตจฺโฉ ตนุกิรเย ปิญฺฉ ปิญฺฉเน ราช ทิตฺติยํ;</p>
+<p rend="gathalast">วชา’ชคมเน รญฺช ราเค ภญฺชา’วมทฺทเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ตจฺฉ ในอรรถว่า ทำให้ผอม, ตัด; ธาตุ ปิญฺฉ ในอรรถว่า บด; ธาตุ ราช ในอรรถว่า รุ่งเรือง; ธาตุ วช, อช ในอรรถว่า ไป; ธาตุ รญฺช ในอรรถว่า ย้อม, รัก; ธาตุ ภญฺช ในอรรถว่า บดขยี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อญฺชุ พฺยตฺติคตีกนฺติ มกฺขเณสฺเว’ช กมฺปเน;</p>
+<p rend="gathalast">ภช สํเสวเน สญฺช สงฺเค (ตุ) อิญฺช กมฺปเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ อญฺชุ ในอรรถว่า ชัดเจน, ไป, งาม, ทา; ธาตุ เอช ในอรรถว่า ไหว; ธาตุ ภช ในอรรถว่า คบหา; ธาตุ สญฺช ในอรรถว่า ติด; ธาตุ อิญฺช ในอรรถว่า ไหว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0006">[O 0.0006]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ยช เทวจฺจเน ทานสงฺคตีกรเณสุ (จ);</p>
+<p rend="gathalast">ติชกฺขมนิสาเนสุ ทาเน(’ปิ) จช หานิยํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ยช ในอรรถว่า บูชาเทพ, ให้, รวมกัน; ธาตุ ติช ในอรรถว่า อดทน, ลับ, ให้; ธาตุ จช ในอรรถว่า ละ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สชา’ลิงฺคน วิสฺสชฺช นิมฺมาเณ มุชฺช มุชฺชเน;</p>
+<p rend="gathalast">มชฺช สํสุทฺธิยํ ลชฺช ลชฺชเน ตชฺช ตชฺชเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ สช ในอรรถว่า กอด; ธาตุ วิสฺสชฺช ในอรรถว่า สร้าง; ธาตุ มุชฺช ในอรรถว่า ล้าง; ธาตุ มชฺช ในอรรถว่า ชำระ; ธาตุ ลชฺช ในอรรถว่า อาย; ธาตุ ตชฺช ในอรรถว่า ขู่</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อชฺช-สชฺชา’ชฺชเน สชฺช นิมฺมาเณ คชฺช สทฺทเน;</p>
+<p rend="gathalast">คุช-กุช ทฺวยํ สทฺเท อขฺยตฺเต ขชฺช ภกฺขเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ อชฺช, สชฺช ในอรรถว่า หามา; ธาตุ สชฺช ในอรรถว่า สร้าง; ธาตุ คชฺช ในอรรถว่า เสียง; ธาตุ คุช, กุช ในอรรถว่า เสียงไม่ชัด; ธาตุ ขชฺช ในอรรถว่า กิน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ภชฺช ปาเก วิชิ ภยจลเน วีช วีชเน;</p>
+<p rend="gathalast">ขชี คมนเวกลฺเล ชี ชเย ชุ ชเว (สิยา;).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ภชฺช ในอรรถว่า ทอด, ปิ้ง; ธาตุ วิชิ ในอรรถว่า กลัว, ไหว; ธาตุ วีช ในอรรถว่า พัด; ธาตุ ขชี ในอรรถว่า ไปไม่ได้; ธาตุ ชี ในอรรถว่า ชนะ; ธาตุ ชุ ในอรรถว่า เร็ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> เฌ จินฺตายุชฺฌ อุสฺสคฺเค คมเน อฏ-ปฏ ทฺวยํ;</p>
+<p rend="gathalast">นฏ นจฺเจ รฏ ปริภาสเน วฏ เวฐเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ เฌ ในอรรถว่า คิด; ธาตุ อุชฺฌ ในอรรถว่า สละ; ธาตุ อฏ, ปฏ ในอรรถว่า ไป; ธาตุ นฏ ในอรรถว่า ฟ้อนรำ; ธาตุ รฏ ในอรรถว่า ด่า; ธาตุ วฏ ในอรรถว่า ห่อหุ้ม</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๙</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0007">[O 0.0007]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วฏฺฏ อาวตฺตเน วณฺฏ วณฺฏตฺเถ กฏ มทฺทเน;</p>
+<p rend="gathalast">ผุโฏ วิสรณาทีสุ กฏ สํวรเณ คเต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ วฏฺฏ ในอรรถว่า หมุนเวียน; ธาตุ วณฺฏ ในอรรถว่า ก้าน; ธาตุ กฏ ในอรรถว่า บดขยี้; ธาตุ ผุฏ ในอรรถว่า แผ่ไปเป็นต้น; ธาตุ กฏ ในอรรถว่า ปิดกั้น, ไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ฆุฏ โฆเส ปติฆาเต วิฏ’กฺโกเส (จ) เปสเน;</p>
+<p rend="gathalast">ภฏ ภตฺยํ กุฏ-โกฏฺฏจฺเฉทเน ลุฏ โลฏเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ฆุฏ ในอรรถว่า เสียง, กระทบ; ธาตุ วิฏ ในอรรถว่า ด่า, ส่งไป; ธาตุ ภฏ ในอรรถว่า เลี้ยงดู; ธาตุ กุฏ, โกฏฺฏ ในอรรถว่า ตัด; ธาตุ ลุฏ ในอรรถว่า กลิ้ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ชฏ-ฌฏ-ปิฏ สงฺฆาเต จิฏุ’ตฺตาเส ฆฏี’หเน;</p>
+<p rend="gathalast">ฆฏิ สงฺฆฏฺฏเน ตฏฺฏ จฺเฉทเน มุฏ มทฺทเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ชฏ, ฌฏ, ปิฏ ในอรรถว่า รวมกัน; ธาตุ จิฏุ ในอรรถว่า ทำให้กลัว; ธาตุ ฆฏิ ในอรรถว่า พยายาม; ธาตุ ฆฏิ ในอรรถว่า กระทบ; ธาตุ ตฏฺฏ ในอรรถว่า ตัด; ธาตุ มุฏ ในอรรถว่า บดขยี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปฐ พฺยตฺตวเจ เหฐ พาธายํ เวฐ เวฐเน;</p>
+<p rend="gathalast">สุฐี-กุฐี ทฺวยํ โสเส ปีฐ หิํสนธารเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ปฐ ในอรรถว่า พูดชัด; ธาตุ เหฐ ในอรรถว่า เบียดเบียน; ธาตุ เวฐ ในอรรถว่า ห่อหุ้ม; ธาตุ สุฐี, กุฐี ในอรรถว่า แห้ง; ธาตุ ปีฐ ในอรรถว่า เบียดเบียน, ทรงไว้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กฐ โสสนปาเกสุ วฐ ถุลตฺตเน (ภเว);</p>
+<p rend="gathalast">กฐิ โสเส รุฐ-ลุโฐ’ปฆาเต สฐ เกตเว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ กฐ ในอรรถว่า แห้ง, สุก; ธาตุ วฐ ในอรรถว่า อ้วน; ธาตุ กฐิ ในอรรถว่า แห้ง; ธาตุ รุฐ, ลุฐ ในอรรถว่า เบียดเบียน; ธาตุ สฐ ในอรรถว่า หลอกลวง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๔</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0008">[O 0.0008]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (สิยา หฐ พลกฺกาเร กฑิเภเท กฑิจฺฉิเท;</p>
+<p rend="gathalast">มณฺฑ วิภูสเน จณฺฑ จณฺฑิกฺเก ภฑิ ภงฺฑเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ หฐ ในอรรถว่า บังคับ; ธาตุ กฑิ ในอรรถว่า แตก, ตัด; ธาตุ มณฺฑ ในอรรถว่า ประดับ; ธาตุ จณฺฑ ในอรรถว่า ดุร้าย; ธาตุ ภฑิ ในอรรถว่า ทะเลาะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปฑิ อุปฺปณฺฑเน ลิงฺคเวกลฺเล มุฑิ ขณฺฑเน,</p>
+<p rend="gathalast">คฑิ วตฺเต’กเทสมฺหิ คฑิ สนฺนิวเย(’ปิจ;);</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ปฏิ ในการเยาะเย้ย ในความบกพร่องของเพศ, มุฏิ ในการตัด, คฏิ ในส่วนหนึ่งของทาง และในการรวมกัน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> รฑิ-เอรฑิ หิํสายํ ปิฑิ สงฺฆาตอาทิสุ,</p>
+<p rend="gathalast">กุฑิ ทาเห ปฑิ คเต หิฑิ อาหิณฺฑเน (สิยา;);</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">รฏิ-เอรฏิ ในการเบียดเบียน, ปิฏิ ในการรวมกันเป็นต้น, กุฏิ ในการเผา, ปฏิ ในการไป, หิฏิ ในการเที่ยวไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กรณฺฑ ภาชน’ตฺถมฺหิ (อโถ) ลฑิ ชิคุจฺฉเน,</p>
+<p rend="gathalast">(วตฺตเต) เมฑิโกฏิลฺเล สฑิ คุมฺพตฺถมีรเณ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กรณฺฑ ในความหมายว่าภาชนะ, ลฏิ ในการรังเกียจ, เมฏิ ในความคดงอ, สฏิ ในการกล่าวถึงพุ่มไม้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (อโถ’ปิ) อฑิ อณฺฑตฺเถ (ทิสฺสเต) ตุฑิ โตฑเน,</p>
+<p rend="gathalast">วฑฺฒ สํวฑฺฒเน กฑฺฒ กฑฺฒเณ ภณ ภาสเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อฏิ ในความหมายว่าไข่, ตุฏิ ในการทิ่มแทง, วฑฺฒ ในการเจริญ, กฑฺฒ ในการลาก, ภณ ในการกล่าว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๙</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0009">[O 0.0009]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> โสณ วณฺเณ คุณ’ภฺยาเส อิณ-เผณ ทฺวยํ คเต,</p>
+<p rend="gathalast">ปณ โวหารโถเมสุ (วตฺตเต) กณ มิลเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">โสณ ในสี, คุณ ในการฝึกฝน, อิณ-เฟณ ทั้งสองในการไป, ปณ ในการค้าขายและการสรรเสริญ, กณ ในการรวมกัน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อณ-รณ-กณ-มุณ-กฺวณ-กุณ สทฺเท,</p>
+<p rend="gatha2">ยต ปติยตเน ชุต ทิตฺติมฺหิ;</p>
+<p rend="gatha3">อต-ปต คมเน จิต สญฺญาเณ,</p>
+<p rend="gathalast">กิต วาสา’โท วตุ วตฺตุมฺหิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อณ-รณ-กณ-มุณ-กฺวณ-กุณ ในเสียง, ยต ในการพยายาม, ชุต ในความสว่าง, อต-ปต ในการไป, จิต ในการรู้, กิต ในการอยู่เป็นต้น, วตุ ในการกล่าว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (ภเว) กตฺถ สิลาฆายํ มถ-มตฺถ วิโลฬเน,</p>
+<p rend="gathalast">นาถ ยาจนสนฺตาป อิสฺเสรา’สิํสเนสุ (จ;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กตฺถ ในการสรรเสริญ, มถ-มตฺถ ในการกวน, นาถ ในการขอ ความเดือดร้อน ความเป็นใหญ่ และความปรารถนา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปุถ (เจ) ปุถุ วิตฺถาเร พฺยถ ภีติจเลสุ (จ),</p>
+<p rend="gathalast">โคตฺถุ วํเส ปถ-ปนฺถ คเต นนฺท สมิทฺธิยํ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ปุถ ในการขยายออกไป, พฺยถ ในความกลัวและความหวั่นไหว, โคตฺถุ ในตระกูล, ปถ-ปนฺถ ในการไป, นนฺท ในความเจริญรุ่งเรือง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วนฺทา’ภิวาทโถเมสุ คท พฺยตฺตวเจ’(ปิจ),</p>
+<p rend="gathalast">(อโถ) นินฺท ครหายํ ขทิ ปกฺขนฺทนาทิสุ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">วนฺท ในการไหว้ การทักทาย และการสรรเสริญ, คท ในการกล่าวชัดเจน, นินฺท ในการตำหนิ, ขทิ ในการกระโดดเข้าเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๔</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0010">[O 0.0010]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> เอที (ตุ) กิญฺจิจเลน จทิ กนฺติหิฬาทเน,</p>
+<p rend="gathalast">กิลิที ปริเทวาโท อุทิสฺสวกิเลทเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เอทิ ในการเคลื่อนไหวเล็กน้อย, จทิ ในความงามและความยินดี, กิลิทิ ในการคร่ำครวญเป็นต้น, อุติ ในการไหลออกและการทำให้เปื้อน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อิที (ตุ) ปรมิสฺสริเย อทิอนฺทุ (จ) พนฺธเน,</p>
+<p rend="gathalast">ภคนฺท เสวเน (โหติ) ภทฺท กลฺยาณกมฺมนิ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อิทิ ในความเป็นใหญ่ยิ่ง, อาทิ-อนฺทุ ในการผูกมัด, ภคนฺท ในการเสพ, ภทฺท ในการกระทำกรรมดี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สิท สิงฺคารปาเกสุ สทฺทุหริตโสสเน,</p>
+<p rend="gathalast">มทิ พลฺเย มุท-มทา สนฺโตเส มทฺท มทฺทเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สิท ในการตกแต่งและการปรุง, สทฺทุ ในการทำให้แห้ง, มทิ ในความเป็นเด็ก, มุท-มทา ในความยินดีและความมัวเมา, มทฺท ในการบดขยี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สนฺทุ ปสฺสวนาทีสุ กนฺท’วฺหาเน (จ’) โรทเน,</p>
+<p rend="gathalast">วิท ลาเภ ทท ทาเน รุทิ อสฺสุวิโมจเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สนฺทุ ในการไหลเป็นต้น, กนฺท ในการเรียกและการร้องไห้, วิท ในการได้, ทท ในการให้, รุทิ ในการหลั่งน้ำตา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สโท วิสรณา’ทานคมเน (จา’)วสาทเน,</p>
+<p rend="gathalast">หิฬาท (ตุ) สุเข สูทกฺขรเณ รท วิเลขเณ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สท ในการแผ่ไป การรับ การไป และการทำให้สิ้นสุด, หิฬาท ในความสุข, สูท ในการทำให้ไหล, รท ในการขีดเขียน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สาท อสฺสาทนาทีสุ คท พฺยตฺตวเจ’(ปิจ),</p>
+<p rend="gathalast">นท อพฺยตฺตสทฺเท (ตุ) รทา’ทา-ขาท-ภกฺขเณ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สาท ในการลิ้มรสเป็นต้น, คท ในการกล่าวชัดเจน, นท ในเสียงที่ไม่ชัดเจน, รท-อท-ขาท ในการกิน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๐</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0011">[O 0.0011]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อทฺท ยาจนยาตฺราทิสฺว (โถ) มิท สิเนหเน,</p>
+<p rend="gathalast">(สิยา) ขุท ชิคจฺฉายํ ทฬิทฺท ทุคฺคจฺจํ (หิ ตุ;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อทฺท ในการขอ การเดินทางเป็นต้น, มิท ในความรัก, ขุท ในความหิว, ทฬิทฺท ในความยากจน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ทา ทเว ทุ คตีวุทฺธยํ ทา ทาเน วิท ชานเน,</p>
+<p rend="gathalast">ตทิ อาลสิเย พาธ พาธายํ คุธ กีฬเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ทา ในการเล่น, ทุ ในการไปและการเจริญ, ทา ในการให้, วิท ในการรู้, ตทิ ในความเกียจคร้าน, พาธ ในการขัดขวาง, คุธ ในการเล่น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (อโถ) คาธ ปติฏฺฐายํ วุฐุ-เอธ (จ) วุทฺธิยํ,</p>
+<p rend="gathalast">ธา (โหติ) ธารเณ (เจว) จินฺตายํ พุธ โพธเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คาธ ในการตั้งมั่น, วุฏฺฐุ-เอธ ในการเจริญ, ธา ในการทรงไว้ และในการคิด, พุธ ในการรู้แจ้ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สิธุ คติมฺหิ ยุธ สมฺปหาเร วิธ เวธเน,</p>
+<p rend="gathalast">ราธ หิํสายสํราเธ พธ-พนฺธ (จ) พนฺธเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สิธุ ในการไป, ยุธ ในการต่อสู้, วิธ ในการแทง, ราธ ในการเบียดเบียนและการทำให้สำเร็จ, พธ-พนฺธ ในการผูกมัด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สิธ-สาธ (จ) สิทฺธิมฺหิ เธ ปาเน อินฺธ ทิตฺติยํ,</p>
+<p rend="gatha2">มาน ปูชาย วน-สน สมฺภเว อน ปาณเน;</p>
+<p rend="gathalast">กน ทิตฺติคตีกนฺตยํ ขน-ขนฺว’วทารเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สิธ-สาธ ในความสำเร็จ, เธ ในการดื่ม, อินฺธ ในความสว่าง, มาน ในการบูชา, วน-สน ในการเกิด, อน ในการหายใจ, กน ในความสว่าง การไป และความงาม, ขน-ขนฺว ในการขุด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๕</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0012">[O 0.0012]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> คุป โคปนเก คุป สํวรเณ ตป สนฺตาเป ตป อิสฺสริเย,</p>
+<p rend="gathalast">จุป มนฺทคเต ตปุอุพฺเพเค รป-ลป วากฺเย สป อกฺโกเส;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คุป ในการคุ้มครอง, คุป ในการระงับ, ตป ในความร้อน, ตป ในความเป็นใหญ่, จุป ในการไปช้าๆ, ตปุ ในความเร่งรีบ, รป-ลป ในการพูด, สป ในการด่า</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ชป-ชปฺป วเจ’พฺยตฺเต ตปฺป สนฺตปฺปเน (สิยา),</p>
+<p rend="gathalast">กปิ กิญฺจิจเล กปฺป สามตฺเถ เวปุ กมฺปเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ชป-ชปฺป ในการกล่าวที่ไม่ชัดเจน, ตปฺป ในการทำให้ยินดี, กปิ ในการเคลื่อนไหวเล็กน้อย, กปฺป ในความสามารถ, เวปุ ในการสั่น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ตปฺป สนฺตคเตจฺเฉเท ตกฺเก หิํสาทิสุ’(จฺจเต),</p>
+<p rend="gathalast">วป พีชวินิกฺเขเป ธูป สนฺตปเน’(ปิ จ);</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ตปฺป ในการไปดีและการตัด, ตกฺก ในการเบียดเบียนเป็นต้น, วป ในการหว่านเมล็ด, ธูป ในการทำให้ร้อน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> จป สานฺตเว ปุ ปวเน ฌป ทาเห สุโป สเย,</p>
+<p rend="gathalast">ปุปฺผ วิกสเน (โหติ) รมฺพ’ลมฺพวสํสเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">จป ในการปลอบโยน, ปุ ในการทำให้บริสุทธิ์, ฌป ในการเผา, สุป ในการนอน, ปุปฺผ ในการบาน, รมฺพ-ลํพ ในการห้อยลง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> จุมฺพ วทนสํโยเค กมฺพ สํวรเณ (มโต),</p>
+<p rend="gathalast">อมฺพ สทฺเท (จ) อสฺสาเท ตายเน สพิ มณฺฑเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">จุมฺพ ในการจูบ, กมฺพ ในการระงับ, อมฺพ ในเสียงและรสชาติ, ตาย ในการรักษา, สพ ในการตกแต่ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๐</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0013">[O 0.0013]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> คพฺพ ทปฺเป’พฺพ-สพฺพา’(ปิ) คมเน ปุพฺพ ปูรเณ,</p>
+<p rend="gathalast">คุมฺพ’พฺพคุมฺพเน จพฺพ อทเน อุพฺพ ธารเณ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คพฺพ ในความเย่อหยิ่ง, อพฺพ-สพฺพา ในการไป, ปุพฺพ ในการเติมเต็ม, คุมฺพ ในการรวมกันเป็นพุ่ม, จพฺพ ในการกิน, อุพฺพ ในการทรงไว้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ลภ ลาเภ ชมฺภ คตฺตวินาเม สุภ โสภเน,</p>
+<p rend="gathalast">ภี ภเย รภ ราภสฺเส (จา)’รมฺเภ ขุภ สญฺจเล;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ลภ ในการได้, ชมฺภ ในการบิดตัว, สุภ ในความงาม, ภี ในความกลัว, รภ ในความรีบร้อนและการเริ่มต้น, ขุภ ในการเคลื่อนไหว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ถมฺภ-ขมฺภ ปติพนฺเธ คพฺภ ปาคพฺภิเย วเธ,</p>
+<p rend="gathalast">สุมฺภ สํสุมฺภเน สมฺภ วิสฺสาเส ยภ เมถุเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ถมฺภ-ขมฺภ ในการขัดขวาง, คพฺภ ในความคะนอง, วธ ในการฆ่า, สุมฺภ ในการทำร้าย, สมฺภ ในความเชื่อมั่น, ยภ ในการร่วมเพศ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ทุภ ชีคิํสเน ทพฺภ คนฺถเน อุทฺรภา’ทเน,</p>
+<p rend="gathalast">กมู (ตุ) ปทวิกฺเขเป ขมู (ตุ) สหเณ (สิยา;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ทุภ ในการประทุษร้าย, ทพฺภ ในการผูก, อุทฺรภ ในการกิน, กมู ในการก้าวเดิน, ขมู ในการอดทน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ภมุ อนวฏฺฐาเน (จ) วมุ อุคฺคิรณาทิสุ,</p>
+<p rend="gathalast">กิลมุ-กฺลมู เคลญฺเญ รมุ กีฬา’ย (มีริโต;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ภมุ ในความไม่มั่นคง, วมุ ในการสำรอกเป็นต้น, กิลมุ-กลมู ในความเหน็ดเหนื่อย, รมุ ในการเล่น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ทโม ทเม นม นเม (อโถ) สม ปริสฺสเม,</p>
+<p rend="gathalast">ยมุ อุปรเม นาเส อม ยาเต มุ พนฺธเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ทมะ ในการฝึกฝน, นมะ ในการนอบน้อม (อีกทั้ง) สมะ ในความเหน็ดเหนื่อย, ยมะ ในการหยุดยั้ง, ในการทำลาย, อมะ ในการไป, มุ ในการผูกมัด.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๖</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0014">[O 0.0014]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ธโม ปุโม (จ) ธมเน ตม สงฺกาวิภูสเน,</p>
+<p rend="gathalast">ธุม-ถีม (จ) สงฺฆาเต ตม สานฺตว’วสาทิเย;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธมะ, ปุมะ (และ) ในการเป่า, ตมะ ในความสงสัย, ในการประดับ (ความมืด), ธุมะ, ถีมะ ในการรวมกัน (ควันหนาแน่น), ตมะ ในการปลอบโยน, ในการทำให้สิ้นสุด.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อโย วโย ปย-มโย นโย รยคติมฺหิ (จ)</p>
+<p rend="gathalast">ทย ทานคตีรกฺขา หิํสาทิสุ ยุ มิสฺสเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อยะ, วยะ, ปยะ, มยะ, นยะ ในการไปอย่างรวดเร็ว (และ) ทยะ ในการให้, การไป, การรักษา, ในการเบียดเบียนเป็นต้น, ยุ ในการผสม.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="gatha1">จาย สมฺปูชเน ตาย สนฺตาเน ปาย วุทฺธิยํ,</p>
+<p rend="gathalast">(อโถ) อุสูย โทสา’วิกรเณ สาย สายเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">จายะ ในการบูชา, ตายะ ในการสืบต่อ, ปายะ ในความเจริญ (อีกทั้ง) อุสูยะ ในการแสดงโทษ (อิจฉา), สายะ ในการสิ้นสุด.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ตร ตรณสฺมิํ ถร สนฺถรเณ ภร ภรณสฺมิํ ผร สมฺผรเณ,</p>
+<p rend="gathalast">สร คติ จินฺตา หิํสา สทฺเท ผุร จลนาโท หร หรณสฺมิํ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ตระ ในการข้าม, ถระ ในการแผ่, ภระ ในการแบก, ผระ ในการแผ่ไปทั่ว, สระ ในการไป, ความคิด, การเบียดเบียน, เสียง, ผุระ ในการไหวเป็นต้น, หระ ในการนำไป.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:123">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ริ สนฺตติสฺมิํ ริ คเต รุ สทฺเท ขุรจฺฉิทสฺมิํ ธร ธารณมฺหิ,</p>
+<p rend="gathalast">ชร ชีรณตฺเถ มรปาณจาเค ขร เสกนาเส ฆร เสวนมฺหิ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ริ ในการสืบต่อ, ริ ในการไป, รุ ในเสียง, ขุระ ในการตัด, ธระ ในการทรงไว้, ชระ ในความแก่, มระ ในการละทิ้งชีวิต, ขระ ในการรด, การทำลาย, ฆระ ในการอยู่.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:124">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖๐</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0015">[O 0.0015]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:125">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> คโร นิคเรณ เสเก ทร ฑาเห วิทารเณ,</p>
+<p rend="gathalast">จร คติภกฺขเณสุ วร สํวรณาทิสุ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คระ ในการกลืน, ในการรด, ทระ ในการเผา, การฉีก, จระ ในการไป, การกิน, วระ ในการห้ามเป็นต้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:126">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:127">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> จรจฺเฉเท อรนาเส คเต (จ) ปูร ปูรเณ,</p>
+<p rend="gathalast">กุร กฺโกเส นร นเย ชาคร สุปินกฺขเย;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">จระ ในการตัด, อระ ในการทำลาย, การไป (และ) ปูระ ในการทำให้เต็ม, กุระ ในการด่า, นระ ในการนำไป, ชาคะระ ในการทำลายการหลับ (ตื่น).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:128">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:129">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปีลุ-ปลู-สล-หุลา คตฺย’ตฺถา จล กมฺปเน,</p>
+<p rend="gathalast">ขล สญฺจลเน ผุลฺล วิกาเส ชล ทิตฺติยํ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ปีลุ, ปลู, สละ, หุละ มีความหมายว่าไป, จละ ในการไหว, ขละ ในการเคลื่อนไหว, ผุลละ ในการบาน, ชละ ในความสว่าง.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:130">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:131">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ผล นิปฺผตฺติยํ (โหติ) ทล ทิตฺติวิทารเณ,</p>
+<p rend="gathalast">ทล ทุคฺคติยํ นีล วณฺเณ มีล นิมีลเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผละ ในความสำเร็จ (มีอยู่), ทละ ในความสว่าง, การฉีก, ทละ ในความตกต่ำ, นีละ ในสี (น้ำเงิน), มีละ ในการหลับตา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:132">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:133">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สิล สมาธิมฺหิ กีล พนฺเธ คล-คิลา’ทเน,</p>
+<p rend="gathalast">กูล อาวรเณ สูล รุชายํ พลปาณเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สิละ ในสมาธิ, กีละ ในการผูก, คละ, คิลา ในการกิน, กูละ ในการปิดบัง, สูละ ในความเจ็บปวด, พละ ในการมีชีวิต.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:134">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:135">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ตล-มูล ปติฏฺฐายํ วล-วลฺล นิวารเณ,</p>
+<p rend="gathalast">ปลฺล นินฺเน (จ) คมเน มล-มลฺล’วธารเณ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ตละ, มูละ ในการตั้งมั่น, วละ, วัลละ ในการห้าม, ปัลละ ในที่ต่ำ (และ) ในการไป, มละ, มัลละ ในการกำหนด.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:136">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖๖</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0016">[O 0.0016]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:137">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (วตฺตเต) ขิล กาฐินฺเน กลิเล อล-กล ทฺวยํ,</p>
+<p rend="gathalast">เวลฺล สญฺจลเน กลฺล สชฺชเน อลิพนฺธเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">(มีอยู่) ขิละ ในความแข็ง, กลิละ ในความยุ่งเหยิง, อละ, กละ สองคำ (มีความหมายว่าเพียงพอ), เวลละ ในการไหว, กัลละ ในการเตรียมพร้อม, อลิ ในการผูกมัด.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:138">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:139">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> จุลฺล หาวกิรเย ถูลา’กสฺสเน จูล มทฺทเน,</p>
+<p rend="gathalast">(วตฺตเต) ขล โสเจยฺโย ปล รกฺขคเตสุ(ปิ;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">จุลละ ในการเคลื่อนไหว, ถูละ ในการดึง, จูละ ในการบด (มีอยู่), ขละ ในความบริสุทธิ์, ปละ ในการรักษา, การไป (ด้วย).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:140">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:141">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> เกล-เขล-เจล-เปล-เวล-สญฺจลนาทิสุ,</p>
+<p rend="gathalast">อว รกฺขเณ ชีว ปาณธารเณ (ตุ) ปฺลโว คเต;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เกละ, เขละ, เจละ, เปละ, เวละ ในการเคลื่อนไหวเป็นต้น, อวะ ในการรักษา, ชีวะ ในการทรงชีวิต (ส่วน) ปลวะ ในการไป.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:142">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:143">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กณฺฑุวนมฺหิ กณฺฑุโว สรเณ เฉทเน ทเว,</p>
+<p rend="gathalast">ทโว (ตุ) ทวเน เทวุ เทวเน เสวุ เสวเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กัณฑุวะ ในการเกา, สระ ในการไป, การตัด, ทวะ ในการเผา, ทโว (ส่วน) ในการเผา, เทวุ ในการเล่น, เสวุ ในการรับใช้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:144">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:145">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ธาว คมนวุทฺธิมฺหิ (ปฐิโต) โธวุ โธวเน;</p>
+<p rend="gatha2">เว-วี ทฺเว ตนฺตุสนฺตาเน เว-วุ สํวรเณ (สิยา)</p>
+<p rend="gathalast">หฺเว อวฺหาเน เกว เสเก ธุว ยาตฺรา ถิเรสุ (จ;);</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาวะ ในการไป, ความเจริญ (กล่าวไว้), โธวุ ในการล้าง, เว, วี สองคำ ในการสืบต่อเส้นด้าย, เว, วุ ในการห้าม (พึงมี), หเว ในการเรียก, เกวะ ในการรด, ธุวะ ในการไป, ในความมั่นคง (ด้วย).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:146">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗๑</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0017">[O 0.0017]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:147">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อส คส อทเน ฆส อทนสฺมิํ-อิส ปริเยเส อิสุอิจฺฉายํ,</p>
+<p rend="gathalast">สสุ ปาณนคติหิํสา’ทฺย’ตฺเถ-มส อามสเน มุส สมฺโมเส;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อสะ, คสะ ในการกิน, ฆสะ ในการกิน, อิสะ ในการแสวงหา, อิสุ ในความปรารถนา, สสุ ในความหมายว่ามีชีวิต, ไป, เบียดเบียนเป็นต้น, มสะ ในการสัมผัส, มุสะ ในการลืม.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:148">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:149">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กุส อกฺโกเส ทุส อปฺปีเต-ตุส สนฺโตเส ปุส โปสมฺหิ,</p>
+<p rend="gathalast">รุส อาเลเป รุส หิํสายํ-มสุ มจฺเฉเร อุสุ ทาเห (’ปิ;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กุสะ ในการด่า, ทุสะ ในความไม่พอใจ, ตุสะ ในความยินดี, ปุสะ ในการบำรุง, รุสะ ในการทา, รุสะ ในการเบียดเบียน, มสุ ในความตระหนี่, อุสุ ในการเผา (ด้วย).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:150">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:151">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> หส หสนสฺมิํ ฆุส สทฺทสฺมิํ-ตส อุพฺเพเค ตฺรส อุพฺเพเค,</p>
+<p rend="gathalast">ลส กนฺตย’ตฺเถ รส อสฺสาเท-(ปุน)ภส ภสฺมิกรเณ(จา’ปิ;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หสะ ในการหัวเราะ, ฆุสะ ในเสียง, ตสะ ในความหวาดกลัว, ตระสะ ในความหวาดกลัว, ลสะ ในความหมายว่าส่องแสง, รสะ ในการลิ้มรส (อีกทั้ง) ภสะ ในการทำให้เป็นเถ้า (ด้วย).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:152">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:153">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> คเวส มคฺคเณ ปํส นาสเน ทิส เปกฺขเณ,</p>
+<p rend="gathalast">สาสา’นุสิฏฺฐิยํ หํส ปิติยํ ปาส พนฺธเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คเวสะ ในการแสวงหา, ปังสะ ในการทำลาย, ทิสะ ในการเห็น, สาสะ ในการสั่งสอน, หังสะ ในความยินดี, ปาสะ ในการผูก.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:154">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:155">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สํส ปสํสเน อิสฺส อิสฺสายํ กสฺส กสฺสเน,</p>
+<p rend="gathalast">ธํส ปธํสเน สิํส อิจฺฉายํ ฆํส ฆํสเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สังสะ ในการสรรเสริญ, อิสสะ ในความอิจฉา, กัสสะ ในการไถ, ธังสะ ในการทำลาย, สิงสะ ในความปรารถนา, ฆังสะ ในการขัด.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:156">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗๖</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0018">[O 0.0018]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:157">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สํส-ทํสา (ตุ) ฑสเน ภาส วาจาย ทิตฺติยํ,</p>
+<p rend="gathalast">(สิยา) ภุส อลงฺกาเร (อโถ) อาสู’ปเวสเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สังสะ, ทังสะ (ส่วน) ในการกัด, ภาสะ ในคำพูด, ในความสว่าง, (พึงมี) ภุสะ ในการประดับ (อีกทั้ง) อาสุ ในการนั่ง.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:158">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:159">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วส กนฺตินิวาเสสุ วสฺสเสจนสทฺทเน,</p>
+<p rend="gathalast">กิส สาเณ กส คเต กส หิํสาวิเลขเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">วสะ ในความปรารถนา, ในการอยู่, วัสสะ ในการรด, ในเสียง, กิสะ ในความผอม, กสะ ในการไป, กสะ ในการเบียดเบียน, การขีดเขียน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:160">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:161">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ทิสา’ติสชฺชนา’ทีสุ กาส ทิตฺติมฺหิ สชฺชเน,</p>
+<p rend="gathalast">(ทุเว ธาตุ) ขส-ฌส หิํสายํ มิส มิลเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ทิสา ในการชี้เป็นต้น, กาสะ ในความสว่าง, ในการเตรียมพร้อม, (ธาตุสองคำ) ขสะ, ชสะ ในการเบียดเบียน, มิสะ ในการผสม.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:162">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:163">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สุ หิํสากุลสนฺธานยาตฺรา’ทีสุ สุ ปสฺสเว,</p>
+<p rend="gathalast">สุ สทฺเท สุ ปสวเน สิ สเย (จ) สิ เสวเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สุ ในการเบียดเบียน, ความยุ่งเหยิง, การเชื่อมต่อ, การไปเป็นต้น, สุ ในการไหลออก, สุ ในเสียง, สุ ในการคลอด, สิ ในการนอน (และ) สิ ในการรับใช้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:164">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:165">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> มห ปูชายา’รหปูชายํ-คุห สํวรเณ ลิห อสฺสาเท,</p>
+<p rend="gathalast">รห จาคสฺมิํ มุห มุจฺฉายํ-มห สตฺตายํ พหุ สํขฺยาเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">มหะ ในการบูชา, ในการบูชาผู้ควรบูชา, คุหะ ในการปิดบัง, ลิหะ ในการลิ้มรส, รหะ ในการละทิ้ง, มุหะ ในความหลง, มหะ ในการมีอยู่, พหุ ในจำนวน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:166">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘๑</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0019">[O 0.0019]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:167">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สห ขเม ทห ภสฺมิกรเณ (จ) ปติฏฺฐายํ,</p>
+<p rend="gathalast">รุห สญฺชนเน อูห วิตกฺเก วห ปาปเณ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สหะ ในการอดทน, ทหะ ในการทำให้เป็นเถ้า (และ) ในการตั้งมั่น, รุหะ ในการเกิด, อูหะ ในการคิด, วหะ ในการบรรลุ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:168">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:169">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ทุห’ปฺปปูรเณ นาเส ทิโห อุปจเย (มโต),</p>
+<p rend="gathalast">นินฺทายํ ครโห อีห ฆฏฺฏเน มิห เสวเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ทุหะ ในการทำให้ไม่เต็ม, ในการทำลาย, ทิหะ ในการเพิ่มพูน (ถือว่า), ครหะ ในการติเตียน, อีหะ ในการกระทบ, มิหะ ในการรับใช้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:170">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:171">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> คาห วิโลฬเน พฺรูห-พห-พฺรห (จ) วุทฺธิยํ,</p>
+<p rend="gatha2">วฺเห สทฺทมฺหิ หสเน หา จาเค ลุฬ มนฺถเน</p>
+<p rend="gathalast">กีฬวิหารมฺหิ ลฬ วิลาเส’(เมสวุทฺธิกา;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คาหะ ในการกวน, พรูหะ, พหะ, พรหะ (และ) ในความเจริญ, เห ในเสียง, ในการหัวเราะ, หา ในการละทิ้ง, ลุฬะ ในการกวน, กีฬะ ในการเล่น, ลฬะ ในการเล่น (เหล่านี้มีความเจริญ).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:172">
+  <div class="pair-col col-pali">
+<p rend="chapter">ตุทาทโย อวุทฺธิกา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">ธาตุหมวดตุดะเป็นต้น ไม่มีการวุฒิ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:173">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:174">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ตุท พฺยถายํ (ตุ) นุท กฺเขปเณ ลิข เลขเณ,</p>
+<p rend="gathalast">กุจ สงฺโกจเน ริจ กฺขรเณ ขจ พนฺธเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ตุดะ ในความเบียดเบียน, ธาตุ นุดะ ในความซัดไป, ธาตุ ลิขะ ในความขีดเขียน, ธาตุ กุจะ ในความหดเข้า, ธาตุ ริจะ ในความไหลออก, ธาตุ ขจะ ในความผูกพัน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:175">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘๕</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0020">[O 0.0020]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:176">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อุจ สทฺเท สมวาเย วิชี ภยจเลสุ (จ),</p>
+<p rend="gathalast">(วตฺตเต) ภุช โกฏิลฺเล วลญฺโช (ตุ) วลญฺชเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ อุจะ ในความมีเสียงและความประชุมกัน, ธาตุ วิชี ในความกลัวและความหวั่นไหว, ธาตุ ภุชะ ในความคด, ธาตุ วลัญชะ ในความใช้สอย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:177">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:178">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ภช เสวาปุถกฺกาเร รุช โรเค อฏา’ฏเน,</p>
+<p rend="gathalast">กุฏจฺเฉเท (จ) โกฏิลฺเล อคา สชฺฌายนา’ทิสุ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ภชะ ในความรับใช้และความแยกกัน, ธาตุ รุชะ ในความเจ็บป่วย, ธาตุ อฏะ ในความเที่ยวไป, ธาตุ กุฏะ ในความตัดและความคด, ธาตุ อคะ ในความสาธยายเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:179">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:180">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปุโณ สุภ กิรเย วตฺต วตฺตเน จต ยาจเน,</p>
+<p rend="gathalast">ปุถ ปาเก ปูติภาเว กุถสํกฺเลสเน’(ปิ จ;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ปุณะ ในความทำความดี, ธาตุ วัตตะ ในความหมุนไป, ธาตุ จตะ ในความขอ, ธาตุ ปุถะ ในความสุกและความเน่า, ธาตุ กุถะ ในความเศร้าหมอง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:181">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:182">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (อุโภ ธาตุ) ปุถ-ปถ วิตฺถาเร วิท ชานเน,</p>
+<p rend="gathalast">หท อุจฺจาร อุสฺสคฺเค-จินฺตายํ มิท หิํสเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ปุถะ-ปถะ ทั้งสอง ในความแผ่ไป, ธาตุ วิทะ ในความรู้, ธาตุ หทะ ในความถ่ายอุจจาระและความคิด, ธาตุ มิทะ ในความเบียดเบียน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:183">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:184">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> นนฺธ วินนฺธเน ถีน-ปุน สงฺฆาตวาจิโน,</p>
+<p rend="gathalast">กป อจฺฉาทเน วปฺป วารเณ ขิป เปรเณ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ นันธะ ในความผูกพัน, ธาตุ ถีน-ปุณะ ในความรวมกัน, ธาตุ กปะ ในความปกปิด, ธาตุ วัปปะ ในความห้าม, ธาตุ ขิปะ ในความส่งไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:185">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:186">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สุโป สเย ฉุโป ผสฺเส (วตฺตเต) จป สานฺตวเน,</p>
+<p rend="gathalast">นภ (ธาตุ) วิหิํสายํ รุมฺภ อุปฺปีฬนาทิสุ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ สุปะ ในความนอน, ธาตุ ฉุปะ ในความถูกต้อง, ธาตุ จปะ ในความปลอบโยน, ธาตุ นภะ ในความเบียดเบียน, ธาตุ รุมภะ ในความบีบคั้นเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:187">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙๑</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0021">[O 0.0021]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:188">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สุมฺภ สํสุมฺภเน ชมฺภ ชมฺภเน ชุภ นิจฺฉุเภ,</p>
+<p rend="gathalast">ฐุภ นิฏฺฐุภเน จมุ อทเน ฉมุ หีฬเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ สุมภะ ในความประดับ, ธาตุ ชัมภะ ในความหาว, ธาตุ ชุภะ ในความขับออก, ธาตุ ฐุภะ ในความถ่ม, ธาตุ จมุ ในความกิน, ธาตุ ฉมุ ในความดูหมิ่น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:189">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:190">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ฌมุ ทาเห ฉมุ อทเน อิรีย วตฺตเน’(ปิ จ),</p>
+<p rend="gathalast">กิร (ธาตุ) วิกิรเณ คิโร นิคิรณา’ทิสุ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ฌมุ ในความไหม้, ธาตุ ฉมุ ในความกิน, ธาตุ อิรียะ ในความประพฤติ, ธาตุ กิระ ในความโปรยไป, ธาตุ คิระ ในความกลืนกินเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:191">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:192">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ผุร สญฺจลนาทีสุ กุร สทฺทา’ทเนสุ (จ),</p>
+<p rend="gathalast">ขุรจฺเฉเท วิลิขเณ ฆุร ภีเม คิลา’ทเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ผุระ ในความไหวเป็นต้น, ธาตุ กุระ ในความมีเสียงเป็นต้น, ธาตุ ขุระ ในความตัดและความขีดเขียน, ธาตุ ฆุระ ในความน่ากลัว, ธาตุ คิละ ในความกิน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:193">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:194">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ติล สฺเนเห จิล วาเส หิล หาเว สิลุ’ญฺฉเน,</p>
+<p rend="gathalast">พิล เภเท ถูล จเย กุสจฺเฉทน ปูรเณ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ติละ ในความรัก, ธาตุ จิละ ในความอยู่, ธาตุ หิละ ในความเยาะเย้ย, ธาตุ สิละ ในความเก็บรวบรวม, ธาตุ พิละ ในความแตก, ธาตุ ถูละ ในความรวมกัน, ธาตุ กุสะ ในความตัดและความเต็ม</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:195">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:196">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วิสปฺปเวเส ผรเณ ทิสา’ติสชฺชนา’ทิสุ</p>
+<p rend="gatha2">ผุล ผสฺเส มุส เถยฺเย ถุส อปฺปิกิรยาย (ตุ)</p>
+<p rend="gathalast">คุฬ โมกฺเข คุฬ ปริวตฺตนมฺหิ (ตุทาทโย;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ วิสะ ในความเข้าและในความแผ่ไป, ธาตุ ทิสะ ในความชี้บอกเป็นต้น, ธาตุ ผุล ในความถูกต้อง, ธาตุ มุสะ ในความลักขโมย, ธาตุ ถุสะ ในความทำน้อย, ธาตุ คุฬะ ในความปล่อย, ธาตุ คุฬะ ในความหมุนไป (ธาตุหมวดตุดะเป็นต้น)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:197">
+  <div class="pair-col col-pali">
+<p rend="bodytext">หู <span class="pb hidden-meta" data-ed="O" data-n="0.0022">[O 0.0022]</span> ภุวาทโย ลุตฺตวิกรณา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ธาตุหมวดหูและภูเป็นต้น มีการลบวิกรรณปัจจัย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:198">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:199">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> หู-ภู สตฺตาย (มุ’จฺจนฺติ) อิ อชฺฌาเน คติมฺหิ (จ,)</p>
+<p rend="gathalast">ขา-ขฺยา (ทฺวยํ) ปกถเน ชิ ชเย ญา’วโพธเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ หู-ภู ในความมีอยู่, ธาตุ อิ ในความศึกษาและความไป, ธาตุ ขา-ขยา ทั้งสอง ในความกล่าว, ธาตุ ชิ ในความชนะ, ธาตุ ญา ในความรู้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:200">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:201">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สี-ฬี เวหาสคมเน ฐา คตีวินิวุตฺติยํ,</p>
+<p rend="gathalast">นี ปาปเณ มุน ญาเณ หน หิํสาคตีสุ (’ปิ)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ สี-ฬี ในความไปในอากาศ, ธาตุ ฐา ในความหยุดจากการไป, ธาตุ นี ในความนำไป, ธาตุ มุนะ ในความรู้, ธาตุ หนะ ในความเบียดเบียนและความไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:202">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:203">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปารกฺขณมฺหิ ปา ปาเน พฺรู วาจายํ วิยตฺติยํ,</p>
+<p rend="gathalast">ภา ทิตฺติยํ มา ปมาเณ (อโถ) ยา ปาปุเณ (สิยา;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ปา ในความรักษา, ธาตุ ปา ในความดื่ม, ธาตุ พรู ในความกล่าวให้ชัดเจน, ธาตุ ภา ในความรุ่งเรือง, ธาตุ มา ในความประมาณ, ธาตุ ยา ในความถึง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:204">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:205">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (ทุเวปิ) รา-ลา อาทาเน วา คตีคนฺธเนสุ (ปิ,)</p>
+<p rend="gathalast">อส (ธาตุ) ภุวิ (ขฺยาโต) สิ สเย สา สมตฺถิเย;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ รา-ลา ทั้งสอง ในความรับ, ธาตุ วา ในความไปและความฟุ้ง, ธาตุ อสะ ในความมีอยู่, ธาตุ สิ ในความนอน, ธาตุ สา ในความสามารถ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:206">
+  <div class="pair-col col-pali">
+<p rend="chapter">ชุโหตฺยา’ทโย <span class="pb hidden-meta" data-ed="O" data-n="0.0023">[O 0.0023]</span> สทฺวิภาวลุตฺตวิกรณา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">ธาตุหมวดชุโหติเป็นต้น มีการลบวิกรรณปัจจัยพร้อมทั้งทำทวิภาวะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:207">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:208">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> หู ทาเน’(ปิ จ) อาทาเน หวฺยทาเน (จ วตฺตเต,)</p>
+<p rend="gathalast">หา จาเค กมุ ยาตฺรายํ ทา ทาเน ธา (จ) ธารเณ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ หู ในความให้และความรับ และในความให้เครื่องบูชา, ธาตุ หา ในความสละ, ธาตุ กมุ ในความไป, ธาตุ ทา ในความให้, ธาตุ ธา ในความทรงไว้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:209">
+  <div class="pair-col col-pali">
+<p rend="centre">อวิกรณภูวาทโย สมตฺตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ธาตุหมวดภูเป็นต้นที่ไม่มีวิกรรณปัจจัย จบแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:210">
+  <div class="pair-col col-pali">
+<p rend="chapter">รุธาทโย</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">ธาตุหมวดรุธะเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:211">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:212">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> รุธิ อาวรเณ มุจ โมจเน ริจ เรจเน,</p>
+<p rend="gathalast">สิจ เสเก ยุช โยเค ภุช ปาลนโภชเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ รุธิ ในความกั้น, ธาตุ มุจะ ในความปล่อย, ธาตุ ริจะ ในความไหลออก, ธาตุ สิจะ ในความรด, ธาตุ ยุชะ ในความประกอบ, ธาตุ ภุชะ ในความรักษาและในความกิน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:213">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:214">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กติจฺเฉเท ฉิทิ ทฺเวธากรเณ ภิท วิทารเณ</p>
+<p rend="gatha2">วิท ลาเภ ลุปจฺเฉเท วินาเส ลิปลิมฺปเน</p>
+<p rend="gathalast">ปิส สํจุณฺณเน หิสิ วิหิํสายํ (รุธาทโย;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ กติ ในความตัด, ธาตุ ฉิทิ ในความทำให้เป็นสอง, ธาตุ ภิทะ ในความทำลาย, ธาตุ วิทะ ในความได้, ธาตุ ลุปะ ในความตัดและความทำลาย, ธาตุ ลิปะ ในความฉาบทา, ธาตุ ปิสะ ในความบด, ธาตุ หิสิ ในความเบียดเบียน (ธาตุหมวดรุธะเป็นต้น)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:215">
+  <div class="pair-col col-pali">
+<p rend="chapter">ทิวาทโย <span class="pb hidden-meta" data-ed="O" data-n="0.0024">[O 0.0024]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">ธาตุหมวดทิวะเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:216">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:217">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ทิวุ กีลา วิชิคิํสา โวหารชฺชุติ โถมิเต,</p>
+<p rend="gathalast">สิวุ ตนฺตูนสนฺตาเน ขี ขเย ขา ปกาสเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ทิวุ ในความเล่น, ในความอยากชนะ, ในความประพฤติ, ในความรุ่งเรือง, ในความสรรเสริญ, ธาตุ สิวุ ในความเย็บด้าย, ธาตุ ขี ในความสิ้นไป, ธาตุ ขา ในความประกาศ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:218">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:219">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กา-คา สทฺเท (ปิ) ฆา คนฺโธ’ปาทาเน รุจ โรจเน,</p>
+<p rend="gathalast">กจ ทิตฺยํ มุจ โมเจ (อโถ) วิจ วิเวจเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ กา-คา ในความมีเสียง, ธาตุ ฆา ในความดมกลิ่น, ธาตุ รุจะ ในความชอบใจ, ธาตุ กจะ ในความรุ่งเรือง, ธาตุ มุจะ ในความปล่อย, ธาตุ วิจะ ในความพิจารณา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:220">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:221">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> รญฺช ราเค สญฺช สงฺเค ขลเน มชฺช สุทฺธิยํ,</p>
+<p rend="gathalast">ยุโช สมาธิมฺหิ ลุโช วินาเส ฌา วิจินฺตเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ รัญชะ ในความย้อม, ธาตุ สัญชะ ในความติดข้องและในความเคลื่อน, ธาตุ มัชชะ ในความสะอาด, ธาตุ ยุชะ ในความตั้งมั่น, ธาตุ ลุชะ ในความทำลาย, ธาตุ ฌา ในความพิจารณา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:222">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:223">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ตา ปาลเน ฉิทิ ทฺเวธากาเร มิท สิเนหเน,</p>
+<p rend="gathalast">มทุ’มฺมาเท ขิท ทีนภาเว ภิท วิทารเณ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ ตา ในความรักษา, ธาตุ ฉิทิ ในความทำให้เป็นสอง, ธาตุ มิทะ ในความรัก, ธาตุ มทุ ในความเมา, ธาตุ ขิทะ ในความเศร้าหมอง, ธาตุ ภิทะ ในความทำลาย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:224">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:225">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สิท ปาเก ปทคเต วิท สตฺตา วิจินฺตเน,</p>
+<p rend="gathalast">ที ขเย สุปเน ทา (จ) ทาเน ทาตฺว’วขณฺฑเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ธาตุ สิทะ ในความสุกและในความถึงซึ่งบท, ธาตุ วิทะ ในความมีอยู่และความพิจารณา, ธาตุ ที ในความสิ้นไปและในความฝัน, ธาตุ ทา ในความให้, ธาตุ ทา ในความตัด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:226">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐๘</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0025">[O 0.0025]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:227">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> พุธา’วคมนา’ทีสุ อตฺเถสุ ยุธ ยุชฺฌเน,</p>
+<p rend="gathalast">กุธ โกเป สุธ โสเจ ราธ หิํสาย สิทฺธิยํ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พุธะ ในความหมายว่ารู้แจ้งเป็นต้น ยุธะ ในความหมายว่ารบ กุธะ ในความหมายว่าโกรธ สุธะ ในความหมายว่าชำระ ราธะ ในความหมายว่าเบียดเบียนและสำเร็จ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:228">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:229">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อิธ สํสิทฺธิวุทฺธีสุ สิธ-สาธ (จ) สิทฺธิยํ,</p>
+<p rend="gathalast">วิธ เวเธ คิธ เคเธ รุธิ อาวรณา’ทิสุ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อิธะ ในความหมายว่าความสำเร็จและความเจริญ สิธะ-สาธะ (และ) ในความหมายว่าสำเร็จ วิธะ ในความหมายว่าแทง คิธะ ในความหมายว่าโลภ รุธิ ในความหมายว่าปิดกั้นเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:230">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:231">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> มน ญาเณ ชนุ’ปฺปาเท หน หิํสาคตีสุ (ปิ,)</p>
+<p rend="gathalast">สินา โสเจ กุป โกเป ตป สนฺตาป ปีณเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">มนะ ในความหมายว่ารู้ ชนุ ในความหมายว่าเกิด หนะ ในความหมายว่าเบียดเบียนและไป (ด้วย) สินา ในความหมายว่าชำระ กุปะ ในความหมายว่าโกรธ ตปะ ในความหมายว่าร้อนและทำให้พอใจ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:232">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:233">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ลุปจฺเฉเท รุป นาเส ปกาเส ทิป ทิตฺติยํ,</p>
+<p rend="gathalast">ทป หาเส ลภ ลาเภ ลุภ เคเธ ขุโภ จเล;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ลุปะ ในความหมายว่าตัด รุปะ ในความหมายว่าทำลาย ทิปะ ในความหมายว่าส่องแสง ทปะ ในความหมายว่าร่าเริง ลภะ ในความหมายว่าได้ ลุภะ ในความหมายว่าโลภ ขุภะ ในความหมายว่าหวั่นไหว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:234">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:235">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สมู’ปสม เขเทสุ หร-หิรี (จ) ลชฺชเน,</p>
+<p rend="gathalast">มิลา คตฺตวีนาเม (จ) คิลา หาสกฺขเย (ปิ จ;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สมะ ในความหมายว่าสงบและเหน็ดเหนื่อย หระ-หิรี (และ) ในความหมายว่าละอาย มิลา ในความหมายว่าน้อมไปแห่งสรีระ (และ) คิลา ในความหมายว่าความเสื่อมแห่งความยินดี (ด้วย)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:236">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๓</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0026">[O 0.0026]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:237">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ลี สิเลเส ทฺรวีกาเร วา คตี พนฺธเนสุ (จ,)</p>
+<p rend="gathalast">ลิสิ เลเส ตุส โตเส สิลิสา’ลิงฺคนาทิสุ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ลี ในความหมายว่าเกาะติดและทำให้เหลว วา ในความหมายว่าไปและผูกพัน (ด้วย) ลิสิ ในความหมายว่าเล็กน้อย ตุสะ ในความหมายว่ายินดี สิลิสา ในความหมายว่ากอดรัดเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:238">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:239">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กิลิส กลิโส’ปตาเป (อโถ) ตส ปิปาสเน,</p>
+<p rend="gathalast">รุส โรเส ทิส-ทุส อปฺปีติมฺหิ (ทุเว สิยุํ;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กิลิสะ ในความหมายว่ามลทินและความเดือดร้อน (อีกทั้ง) ตสะ ในความหมายว่ากระหาย รุสะ ในความหมายว่าโกรธ ทิสะ-ทุสะ ในความหมายว่าไม่ยินดี (มีสองอย่าง)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:240">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:241">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ยสุปฺปยตเน อสุ เขปเน (ปิ จ วตฺตเต,)</p>
+<p rend="gathalast">สุส โสเส ภส อโธปาเต นส อทสฺสเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ยสุ ในความหมายว่าพยายาม อสุ ในความหมายว่าทิ้ง (ก็มี) สุสะ ในความหมายว่าแห้ง ภสะ ในความหมายว่าตกต่ำ นสะ ในความหมายว่าไม่ปรากฏ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:242">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๑๖</span>. สา’สฺสาเท สา’วสาเน (จ) สา ตนูกรเณ (ปิ จ) หา จาเค มุห เวจิตฺเต นห สชฺชนพนฺธเน นห โสเจ ปิหิจฺฉายํ สินิห-สนิห ปีติยํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๑๖. สา ในความหมายว่าลิ้มรส สา ในความหมายว่าสิ้นสุด (และ) สา ในความหมายว่าทำให้บาง (ด้วย) หา ในความหมายว่าสละ มุหะ ในความหมายว่าหลง นหะ ในความหมายว่าผูกมิตร นหะ ในความหมายว่าชำระ ปิหิ ในความหมายว่าปรารถนา สินิหะ-สนิหะ ในความหมายว่ารักใคร่</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:243">
+  <div class="pair-col col-pali">
+<p rend="chapter">สฺวาทโย <span class="pb hidden-meta" data-ed="O" data-n="0.0027">[O 0.0027]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">หมวดสวาธิ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:244">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">๑๑๗</span>. สุ สวเณ สก สตฺติมฺหิ ขี ขยมฺหิ คิ สทฺทเน,</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">๑๑๗. สุ ในความหมายว่าฟัง สกะ ในความหมายว่าสามารถ ขี ในความหมายว่าสิ้นไป คิ ในความหมายว่าเปล่งเสียง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:245">
+  <div class="pair-col col-pali">
+<p rend="gathalast">อป-สมฺภู (จ) ปาปุณเน หิ คติมฺหิ วู สํวเร;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อปะ-สัมภู (และ) ในความหมายว่าถึง หิ ในความหมายว่าไป วู ในความหมายว่าสำรวม</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:246">
+  <div class="pair-col col-pali">
+<p rend="chapter">กิยาทโย</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">หมวดกิยาธิ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:247">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:248">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กี วินิมเย จิ จเย ชิ ชเย ญา’วโพธเน,</p>
+<p rend="gathalast">ถว’ภิตฺถเว กมฺปเน ธุ (อโถ) ปุ ปวเน (สิยา;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กี ในความหมายว่าแลกเปลี่ยน จิ ในความหมายว่าสะสม ชิ ในความหมายว่าชนะ ญา ในความหมายว่ารู้ ถวะ ในความหมายว่าสรรเสริญ ธุ ในความหมายว่าหวั่นไหว (อีกทั้ง) ปุ ในความหมายว่าทำให้บริสุทธิ์ (มี)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:249">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:250">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ปี ตปฺปเณ มา ปมาเณ ขิปกฺเขเป มิ หิํสเน,</p>
+<p rend="gatha2">มิ ปมาเณ มุ พนฺเธ (จ) ลุ ปจฺเฉเท สิ พนฺธเน</p>
+<p rend="gathalast">อส ภกฺขเณ (อโถ) คห อุปาทาเน (กิยาทโย;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ปี ในความหมายว่าอิ่ม มา ในความหมายว่าประมาณ ขิปะ ในความหมายว่าทิ้ง มิ ในความหมายว่าเบียดเบียน มิ ในความหมายว่าประมาณ มุ ในความหมายว่าผูก (และ) ลุ ในความหมายว่าตัด สิ ในความหมายว่าผูก อสะ ในความหมายว่ากิน (อีกทั้ง) คหะ ในความหมายว่ายึดถือ (หมวดกิยาธิ)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:251">
+  <div class="pair-col col-pali">
+<p rend="chapter">ตนาทโย <span class="pb hidden-meta" data-ed="O" data-n="0.0028">[O 0.0028]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">หมวดตนาธิ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:252">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:253">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ตนุ วิตฺถาเร สก สตฺติสฺมิํ-ทุ ปริตาเป สนุ ทานสฺมิํ,</p>
+<p rend="gatha2">วน ยาจายํ มนุ โพธสฺมิํ-หิ คเต อป ปาปุณนสฺมิํ (หิ,)</p>
+<p rend="gathalast">กร กรณสฺมิํ(ภวติ)สิ พนฺเธ-สุ อภิสฺสวเน(ตนุ อาทีนิ;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ตนุ ในความหมายว่าแผ่ขยาย สกะ ในความหมายว่าสามารถ ทุ ในความหมายว่าเดือดร้อน สนุ ในความหมายว่าให้ วนะ ในความหมายว่าขอ มนุ ในความหมายว่ารู้ หิ ในความหมายว่าไป อปะ ในความหมายว่าถึง (ไป) กะระ ในความหมายว่าทำ (มี) สิ ในความหมายว่าผูก สุ ในความหมายว่าหลั่งออก (เป็นต้นในหมวดตนุ)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:254">
+  <div class="pair-col col-pali">
+<p rend="centre">นิจฺจํ เณณยนฺตา จุราทโย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">หมวดจุราธิ มีปัจจัย เณ และ ณย ลงท้ายเสมอ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:255">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:256">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> จุร เถยฺเย โลก (ธาตุ) ทสฺสเน อกิ ลกฺขเณ,</p>
+<p rend="gathalast">สิยา ถก ปติฆาเต (ปุน) ตกฺก วิตกฺกเณ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">จุระ ในความหมายว่าขโมย โลกะ (ธาตุ) ในความหมายว่าเห็น อกิ ในความหมายว่าทำเครื่องหมาย ถกะ ในความหมายว่าขัดขวาง (มี) (อีก) ตักกะ ในความหมายว่าตรึกตรอง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:257">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:258">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ลกฺข ทสฺสนองฺเกสุ (วตฺตเต) มกฺข มกฺขเณ,</p>
+<p rend="gathalast">ภกฺขา’ทเน โมกฺข โมเจ สุข-ทุกฺข (จ) ตกิรเย;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ลักขะ ในความหมายว่าเห็นและทำเครื่องหมาย (มี) มักขะ ในความหมายว่าลูบไล้ ภักขะ ในความหมายว่ากิน โมกขะ ในความหมายว่าปล่อย สุขะ-ทุกขะ (และ) ในความหมายว่าทำอาการนั้นๆ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:259">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒๓</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0029">[O 0.0029]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:260">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ลิงฺค จิตฺตกิรยา’ทีสุ มค-มคฺค คเวสเน,</p>
+<p rend="gathalast">(ปุนา’ปิ) ปจ วิตฺถาเร กฺเลเส วญฺจ ปลมฺภเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ลิงคะ ในความหมายว่าเครื่องหมายและอาการทางจิตเป็นต้น มคะ-มัคคะ ในความหมายว่าแสวงหา (อีก) ปจะ ในความหมายว่าแผ่ขยาย วัญจะ ในความหมายว่าหลอกลวงและทำให้เศร้าหมอง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:261">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:262">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วจฺจ อชฺฌายเน อจฺจ ปูชายํ วจ ภาสเน,</p>
+<p rend="gathalast">รจ ปติยตเน สุจ เปสุญฺเญ รุจ โรจเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">วัจจะ ในความหมายว่าศึกษา อัจจะ ในความหมายว่าบูชา วจะ ในความหมายว่าพูด รจะ ในความหมายว่าจัดเตรียม สุจะ ในความหมายว่าส่อเสียด รุจะ ในความหมายว่าชอบใจ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:263">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:264">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> มุจปฺปโมจเน โลจ ทสฺสเน กจ ทิตฺติยํ,</p>
+<p rend="gathalast">สชฺชา’ชฺช อชฺชเน ตชฺช ตชฺชเน วชฺช วชฺชเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">มุจะ ในความหมายว่าปล่อย โลจะ ในความหมายว่าเห็น กจะ ในความหมายว่าส่องแสง สัชชะ-อัชชะ ในความหมายว่าหามาได้ ตัชชะ ในความหมายว่าขู่ วัชชะ ในความหมายว่าเว้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:265">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:266">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ยุช สํยมเน ปูช ปูชายํ ติช เตชเน,</p>
+<p rend="gathalast">ปช มคฺค สํวรเณ คเต ภช วิภาชเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ยุชะ ในความหมายว่าสำรวม ปูชะ ในความหมายว่าบูชา ติชะ ในความหมายว่าลับให้คม ปชะ ในความหมายว่าปิดกั้นทางและไป ภชะ ในความหมายว่าแบ่ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:267">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:268">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (อโถ) ภาช ปุถกฺกาเร สภาช ปีติทสฺสเน,</p>
+<p rend="gathalast">(อโถ ตุ) ฆฏ สงฺฆาเต ฆฏฺฏ สญฺจลนา’ทิสุ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">(อีกทั้ง) ภาชะ ในความหมายว่าแยก สภาชะ ในความหมายว่าแสดงความยินดี (อีกทั้ง) ฆฏะ ในความหมายว่ารวมกัน ฆัฏฏะ ในความหมายว่าเคลื่อนไหวเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:269">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒๘</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0030">[O 0.0030]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:270">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กุฏ-โกฏฺฏจฺเฉทเน (ทฺเว) กุฏ อาโกฏนา’ทิสุ,</p>
+<p rend="gathalast">นฏ นจฺเจ จฏ-ปุฏ เภเท วณฺฏ วิภาชเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กุฏะ-โกฏฏะ ในความหมายว่าตัด (มีสองอย่าง) กุฏะ ในความหมายว่าทุบเป็นต้น นฏะ ในความหมายว่าฟ้อนรำ จฏะ-ปุฏะ ในความหมายว่าแตก วณฏะ ในความหมายว่าแบ่ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:271">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:272">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ตุวฏฺฏ เอกสยเน ฆโฏ วิสรเณ (สิยา),</p>
+<p rend="gatha2">คุณฺฐ โอคุณฺฐเน เหฐ พาธายํ เวฐ เวฐเน</p>
+<p rend="gathalast">คุฑิ เวเฐ กฑิ-ขฑิ เภทเน มฑิ ภูสเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ตุวัฏฏะ ในความหมายว่านอนคนเดียว ฆโฏ ในความหมายว่าแผ่ไป (มี) คุณฐะ ในความหมายว่าคลุม เหฐะ ในความหมายว่าเบียดเบียน เวฐะ ในความหมายว่าห่อ คุฑิ ในความหมายว่าห่อ กฑิ-ขฑิ ในความหมายว่าแตก มฑิ ในความหมายว่าประดับ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:273">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:274">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปณฺฑ-ภณฺฑ ปริภาเส ทฑิ อาณาย (มีริโต),</p>
+<p rend="gathalast">ตฑิ สํตาฬเน ปิณฺฑ สงฺฆาเต ฉฑฺฑ ฉฑฺฑเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ปณฺฑะ-ภณฺฑะ ในความหมายว่าด่า ทฑิ ในความหมายว่าสั่ง (กล่าวแล้ว) ตฑิ ในความหมายว่าตี ปิณฺฑะ ในความหมายว่ารวมกัน ฉฑฺฑะ ในความหมายว่าทิ้ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:275">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:276">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วณฺณ สํวณฺณเน จุณฺณ จุณฺณเน อาณ เปสเน,</p>
+<p rend="gathalast">คณ สํกลเน กณฺณ สวเณ จินฺต จินฺตเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">วณฺณะ ในความหมายว่าพรรณนา จุณฺณะ ในความหมายว่าบด อาณะ ในความหมายว่าสั่ง คณะ ในความหมายว่านับ กณฺณะ ในความหมายว่าฟัง จินฺตะ ในความหมายว่าคิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:277">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:278">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สนฺต สงฺโกจเน มนฺต คุตฺต ภาสน ชานเน,</p>
+<p rend="gathalast">จิต สํเจตนา’ทิสุ กิตฺต สํสทฺทเน (ภเว;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สนฺตะ ในความหมายว่าหด มนฺตะ ในความหมายว่าพูดลับและรู้ จิตะ ในความหมายว่าคิดอ่านเป็นต้น กิตฺตะ ในความหมายว่ากล่าวสรรเสริญ (มี)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:279">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๓</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0031">[O 0.0031]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:280">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ยต นียฺยาตเน คนฺถ สนฺทพฺเภ อตฺถ ยาจเน,</p>
+<p rend="gathalast">กถ วากฺยปฺปพนฺเธ (จ) วิท ญาเณ นุเท จุท;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ยตะ ในการให้ (ส่งออก), คันถะ ในการร้อยกรอง, อัตถะ ในการขอ, กถะ ในการประพันธ์ประโยค, วิทะ ในความรู้, นุทะ, จุทะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:281">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:282">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ฉทา’ปวารเณ ฉทฺท วมเน ฉนฺท อิจฺฉยํ,</p>
+<p rend="gathalast">วที’ภิวาท โถเมสุ ภทิกลฺยาณกมฺมนิ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ฉทะ ในการปิดบัง, ฉัททะ ในการคายออก, ฉันทะ ในความปรารถนา, วะทิ ในการอภิวาทและการสรรเสริญ, ภะทิ ในการทำกรรมดี.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:283">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:284">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> หิฬาท (ตุ) สุเข คนฺธ สูจเน วิธ กมฺปเน,</p>
+<p rend="gathalast">รนฺธ ปาเก (อโถ) มาน ปูชายํ นุ ตฺถุติมฺหิ (ตุ;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หิฬาทะ ในความสุข, คันธะ ในการบอกแจ้ง, วิธะ ในการสั่นสะเทือน, รันธะ ในการหุงต้ม, มานะ ในการบูชา, นุ ในการสรรเสริญ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:285">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:286">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ถน เทวสทฺเท อูน ปริหาเน เถน โจริเย,</p>
+<p rend="gathalast">ธน สทฺเท ญป โตส นิสาน มารณา’ทิสุ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ถะนะ ในเสียงฟ้าร้อง, อูนะ ในความเสื่อมถอย, เถนะ ในการลักขโมย, ธะนะ ในเสียง, ญาปะ ในความยินดี การลับ และการฆ่า เป็นต้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:287">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:288">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ลป วากฺเย ฌป ทาเห รุป โรปณอาทิสุ,</p>
+<p rend="gathalast">ปี ตปฺปเน (สิยา) กปฺป วิตกฺเก ลภิ วญฺจเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ละปะ ในคำพูด, ฌะปะ ในการเผา, รุปะ ในการปลูก เป็นต้น, ปี ในการทำให้อิ่มเอิบ, กัปปะ ในการตรึกตรอง, ละภิ ในการหลอกลวง.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:289">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๘</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0032">[O 0.0032]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:290">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (อโถ) วหิ ครหายํ สมุ สานฺตวน ทสฺสเน,</p>
+<p rend="gathalast">กมุ อิจฺฉาย กนฺติมฺหิ (สิยา) โถม สิลาฆเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">วะหิ ในการตำหนิ, สะมุ ในการปลอบโยนและการแสดง, กะมุ ในความปรารถนาและความงาม, โถมะ ในการสรรเสริญ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:291">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:292">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ติมุ เตมน สงฺกาสุ อม โรคคตา’ทิสุ,</p>
+<p rend="gathalast">สํคาม ยุทฺเธ (วตฺเตยฺย) อีร วาจา ปกมฺปเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ติมุ ในการทำให้เปียกและความสงสัย, อะมะ ในความเจ็บป่วยและการไป เป็นต้น, สังคามะ ในการรบ, อีระ ในคำพูดและการสั่นสะเทือน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:293">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:294">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วร อาวรณิ’จฺฉาสุ ยาจายํ ธร ธารเณ,</p>
+<p rend="gathalast">ตีร กมฺม สมตฺติมฺหิ ปาร สามตฺถิยา’ทิสุ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">วะระ ในการปิดบัง ความปรารถนา และการขอ, ธะระ ในการทรงไว้, ตีระ ในความสำเร็จแห่งการงาน, ปาระ ในความสามารถ เป็นต้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:295">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:296">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ตุลุ’มฺมาเน ขล โสเว สญฺจเย ปาลรกฺขเณ,</p>
+<p rend="gathalast">กล สงฺกลนา’ทีสุ (ภเว) มีล นิมีลเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ตุละ ในการชั่ง, ขะละ ในการสะสม, ปาละ ในการรักษา, กะละ ในการนับ (รวบรวม) เป็นต้น, มีละ ในการหลับตา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:297">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:298">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สีลู’ปธารเณ มูล โรหเณ ลล อิจฺฉเน,</p>
+<p rend="gathalast">ทุล อุกฺเขปเณ ปูล มหตฺตน สมุสฺสเย;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สีละ ในการทรงไว้, มูละ ในการงอกขึ้น, ละละ ในความปรารถนา, ทุละ ในการยกขึ้น, ปูละ ในความยิ่งใหญ่และการสะสม.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:299">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔๓</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0033">[O 0.0033]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:300">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ฆุส สทฺเท ปิส เปเส ภุสา’ลงฺกรเณ (สิยา,)</p>
+<p rend="gathalast">รุส ปารุสิเย ขุํส อกฺโกเส ปุส โปสเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ฆุสะ ในเสียง, ปิสะ ในการบด, ภุสะ ในการประดับ, รุสะ ในความหยาบคาย, ขุṃสะ ในการด่า, ปุสะ ในการเลี้ยงดู.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:301">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:302">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ทิส อุจฺจารณา’ทีสุ วส อจฺฉาทเน (สิยา,)</p>
+<p rend="gathalast">รส’สฺสาเท รเว สฺเนเห (อโถ) สิส วิเสสเน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ทิสะ ในการเปล่งเสียง เป็นต้น, วะสะ ในการปกคลุม, ระสะ ในการลิ้มรส ในเสียง และในความรัก, สิสะ ในความพิเศษ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:303">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:304">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สิ พนฺเธ มิสฺส สมฺมิสฺเส กุห วิมฺภาปเน สิยา,</p>
+<p rend="gathalast">รห จาเค คเต (จา’ปิ) มห ปูชาย (มีริโต;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สิ ในการผูก, มิสสะ ในการระคนกัน, กุหะ ในการทำให้ประหลาดใจ, ระหะ ในการละทิ้งและการไป, มะหะ ในการบูชา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:305">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:306">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปิหิ’จฺฉายํ สิยา วีฬ ลชฺชายํ เอฬ ผาฬเน</p>
+<p rend="gatha2">หีฬ คารหิเย ปีฬ พาธายํ ตฬ ตาฬเน</p>
+<p rend="gathalast">ลฬ (ธาตู)’ปเสวา’ยํ (วตฺตตี’เมจุราทโย;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ปิหิ ในความปรารถนา, วีฬะ ในความละอาย, เอฬะ ในการผ่า, หีฬะ ในการตำหนิ, ปีฬะ ในการเบียดเบียน, ตะฬะ ในการตี, ละฬะ (ธาตุ) ในการเสพ (รับใช้) (ธาตุเหล่านี้อยู่ในหมวดจุราทิ).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:307">
+  <div class="pair-col col-pali">
+<p rend="centre">สมตฺตา สตฺตคณา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">จบหมวดทั้ง ๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:308">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔๗</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0034">[O 0.0034]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:309">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ภุวาที จ รุธาที จ-ทิวาทิ สฺวา’ทโย คณา,</p>
+<p rend="gathalast">กิยาที จ ตนาที จ-จุราทีตี’ธ สตฺตธา;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หมวดภูวาธิ หมวดรุธาธิ หมวดทิวาธิ หมวดสวาธิ หมวดกิยาธิ หมวดตนาธิ และหมวดจุราธิ ในคัมภีร์นี้มี ๗ หมวด.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:310">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:311">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กิรยาวาจิตฺตมกฺขาตุ-เม’เกกตฺโถ พหู’ทิโต,</p>
+<p rend="gathalast">ปโยคโต’นุคนฺตพฺพา-อเนกตฺถา หิ ธาตโว;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เพื่อแสดงความเป็นวาจกของกิริยา ความหมายหนึ่งๆ ได้กล่าวไว้มากแล้ว เพราะธาตุทั้งหลายมีหลายความหมาย พึงทราบตามการประกอบใช้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:312">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:313">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> หิตาย มนฺทพุทฺธีนํ-วฺยตฺตํ วณฺณกฺกมา ลหุํ,</p>
+<p rend="gathalast">รจิตา ธาตุมญฺชุสา-สีลวํเสน ธีมตา;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คัมภีร์ธาตุมัญชุสานี้ พระสีลวังสะผู้มีปัญญาได้รจนาขึ้นอย่างชัดเจนตามลำดับอักษรโดยย่อ เพื่อประโยชน์แก่ผู้มีปัญญาน้อย.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:314">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๕๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๕๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:315">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สทฺธมฺมปงฺเกรุหราชหํโส,</p>
+<p rend="gatha2">อาสิฏฺฐธมฺมฏฺฐิติ สีลวํโส;</p>
+<p rend="gatha3">ยกฺขทฺทิเลนาขฺย นิวาสวาสี,</p>
+<p rend="gathalast">ยติสฺสโร โสยมิทํ อกาสิ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พระสีลวังสะผู้เป็นพญาหงส์ในดอกบัวคือพระสัทธรรม ผู้ดำรงมั่นในพระธรรมที่ปรารถนา ผู้พำนักอยู่ในที่พำนักชื่อยักขทิลเลนะ พระยติสระนั้นได้รจนาคัมภีร์นี้แล้ว.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:316">
+  <div class="pair-col col-pali">
+<p rend="centre">กจฺจายน ธาตุมญฺชูสา สมตฺตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">คัจจายนธาตุมัญชุสา จบสมบูรณ์.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:317">
+  <div class="pair-col col-pali">
+<p rend="subhead">สาจริยานุสิฏฺฐา <span class="pb hidden-meta" data-ed="O" data-n="0.0035">[O 0.0035]</span> ปริสิฏฺฐปริภาสา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ปริสิฏฐปริภาษา (คำอธิบายเพิ่มเติม) ที่อาจารย์ได้สั่งสอนไว้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:318">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:319">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> เอกา เนกสฺส รานนฺตู-’ภเยสํ อนฺติมา สรา,</p>
+<p rend="gathalast">องฺคานุพนฺธา ธาตูนํ-วุจฺจนฺเต’ปิ ยถากฺกมํ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สระที่สุดของธาตุทั้งที่มีสระเดียวและหลายสระ และอักษรเครื่องหมาย (อนุพันธ์) ของธาตุทั้งหลาย ก็ถูกกล่าวไว้ตามลำดับ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:320">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:321">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ธาตุโน วฺยาญฺชนา ปุพฺเพ-นิคฺคหีตํ สม’นฺติมา,</p>
+<p rend="gathalast">อิวณฺเณนา’รุธาทีน-มนุพนฺเธน จิณฺหิตํ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">นิคคหิตที่อยู่หน้าพยัญชนะที่สุดของธาตุ ถูกทำเครื่องหมายไว้ด้วยอักษร "อิ" ที่เป็นอนุพันธ์ของธาตุหมวดรุธาธิเป็นต้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:322">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:323">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> เสสา’นุพนฺธา สพฺเพสํ-โหนฺตี’ธุ’จฺจารณปฺผลา,</p>
+<p rend="gathalast">อุจฺจาวจปฺผลา ภาส-นฺตรมฺปตฺวา ภ วนฺติ’ปิ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ส่วนอนุพันธ์ที่เหลือของธาตุทั้งหมดในคัมภีร์นี้ มีประโยชน์ในการออกเสียง และอาจมีผลต่างๆ กันเมื่อไปสู่ภาษาอื่น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:324">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0036">[O 0.0036]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:325">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> นามธาตุก ภาโว’ปิ-กิรยาย อธิการโต,</p>
+<p rend="gathalast">วิรุทฺธนฺตราภาวา-กฺวจิเทว ปยุชฺชเต;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">แม้ความเป็นนามธาตุ เพราะมีความเกี่ยวข้องกับกิริยา และเพราะไม่มีความขัดแย้งอื่น จึงมีการใช้ในบางแห่งเท่านั้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:326">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:327">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ทฺวนฺทยุตฺติวสา กฺวาปิ-อาเทโส โยวิภตฺติยา,</p>
+<p rend="gathalast">คุณาทิภาว สทฺโท’ปิ-ตกิรยตฺเถ วิธียเต;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในบางแห่งด้วยอำนาจของการประกอบคู่ มีการแปลงวิภัตติ "โย" แม้คำที่แสดงสภาวะมีคุณเป็นต้น ก็ถูกบัญญัติไว้ในความหมายของกิริยานั้น.</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e0606n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Sarabun"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">บาลี | แปล</button><button type="button" data-mode="view-stack">บาลี — แปล</button><button type="button" data-mode="view-pali-only">เฉพาะบาลี</button><button type="button" data-mode="view-trans-only">เฉพาะแปล</button><button type="button" id="toggle-meta-btn">เชิงอรรถ</button></div>
+<div class="pair-row" data-id="e0606n_nrf:0">
+  <div class="pair-col col-pali">
+<p rend="chapter">กมลาญฺชลิ</p>
+  </div>
+  <div class="pair-col col-trans"></div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre"> นโม ตสฺส ภควโต อรหโต สมฺมาสมฺพุทฺธสฺส</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ขอนอบน้อมแด่พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้าพระองค์นั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="chapter">กมลาญฺชลิ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">กมลาญชลี (การประนมมือดุจดอกบัว)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กมลาสน กมลาปติ ปมถาธิป วชิรา,</p>
+<p rend="gatha2">ยุธทานว มนุโชรค ภุชคาสน ปตินํ;</p>
+<p rend="gatha3">มกุฏาหิต มนิทีธิติ ภมราวลิ ภชิตํ,</p>
+<p rend="gathalast">ปณมา’มหํ อนฆํ มุนิ จรณามล กมลํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระบาทปทุมอันบริสุทธิ์ของพระมุนีผู้หาโทษมิได้ ซึ่งพระพรหม (ผู้มีดอกบัวเป็นที่นั่ง) พระนารายณ์ (ผู้เป็นเจ้าแห่งดอกบัว) พระศิวะ (ผู้เป็นใหญ่ในหมู่ภูต) ท้าวสักกะ (ผู้มีวัชระเป็นอาวุธ) เหล่าอสูร มนุษย์ นาค และพญานาค ผู้ซึ่งหมู่ภมรคือรัศมีแห่งมณีที่ประดับมงกุฎได้เข้าไปอาศัย ได้น้อมไหว้แล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กมลาลย สทิ’สงฺกิต กลมงฺคล รุจิรํ,</p>
+<p rend="gatha2">ชุติรญฺชิตํ อภินิชฺชิต สุภกญฺจน นลินํ;</p>
+<p rend="gatha3">ชนิตา จิร สมเย นิช ปิตุ ภูปติ นมิตํ,</p>
+<p rend="gathalast">ปณมา’มหํ อนฆํ มุนิ จรณามล กมลํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระบาทปทุมอันบริสุทธิ์ของพระมุนีผู้หาโทษมิได้ ซึ่งงดงามดุจดอกบัวที่เกิดในสระบัวอันเป็นมงคล รุ่งเรืองด้วยรัศมีที่ชนะดอกบัวทองอันงดงาม และอันพระราชาผู้เป็นพระบิดาได้น้อมไหว้แล้วในกาลนาน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สรณาคต รชนีปติ ทินเสขร นมิตํ,</p>
+<p rend="gatha2">ภชิตาขิล ชนปาวนํ อภิกงฺขิต สุขทํ;</p>
+<p rend="gatha3">วสุธาตล สยมุคฺคต สรสีรุห มหิตํ,</p>
+<p rend="gathalast">ปณมา’มหํ อนฆํ มุนิ จรณามล กมลํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระบาทปทุมอันบริสุทธิ์ของพระมุนีผู้หาโทษมิได้ ซึ่งอันพระจันทร์และพระอาทิตย์ผู้มาถึงที่พึ่งได้น้อมไหว้แล้ว เป็นที่พึ่งของชนทั้งปวงผู้บริสุทธิ์ และให้ความสุขที่ปรารถนา อันดอกบัวที่ผุดขึ้นเองจากพื้นโลกได้บูชาแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ทิรทาสน ตรุปนฺติก ฆฏิตาสนํ อภยํ,</p>
+<p rend="gatha2">วิชยาสน สมธิฏฺฐิต จตุรงฺคิก วิริยํ;</p>
+<p rend="gatha3">ธรมานก สุริเยหนิ วิชิตนฺตก ธชินิํ,</p>
+<p rend="gathalast">ปณมา’มหํ อภิปาติต นมุจิทฺธช วิภวํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระองค์ผู้ทรงทำลายธงชัยและอำนาจของมารนามว่านิมุจิ ผู้ประทับนั่งอย่างไม่หวั่นไหว ณ โคนต้นไม้ที่ช้างหมอบอยู่ ผู้ตั้งมั่นในชัยบัลลังก์ด้วยความเพียร ๔ ประการ ผู้ทรงชัยชนะกองทัพมารในขณะที่พระอาทิตย์ยังปรากฏอยู่</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สทโยทิต ปิยภารติ วิชิตนฺตก สมรํ,</p>
+<p rend="gatha2">ทสปารมิ พลกมฺปิต สธราธร ธรนิํ;</p>
+<p rend="gatha3">คิริเมขล วรวารน สิรสานต จรณํ,</p>
+<p rend="gathalast">ปณมา’มหํ อภินนฺทิต สนรามร ภุวนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระองค์ผู้ทรงยังโลกพร้อมทั้งมนุษย์และเทวดาให้ยินดี ผู้ทรงชนะสงครามด้วยพระวาจาอันไพเราะที่เปล่งออกมาด้วยความเมตตา ผู้ทรงยังแผ่นดินและภูเขาให้หวั่นไหวด้วยกำลังแห่งทศบารมี ผู้ซึ่งเท้าของพระองค์อันช้างตัวประเสริฐชื่อคิริเมขล์ได้น้อมเศียรลงกราบ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> นิขิลาสว วิคเม’นติวิมลีกต หทยํ,</p>
+<p rend="gatha2">ตทนนฺตร วิทิตาขิล มติโคจร วิสยํ;</p>
+<p rend="gatha3">วิสยีกต ภุวนตฺตยํ อติโลกิย จริตํ,</p>
+<p rend="gathalast">ปณมา’มหํ อปราชิตํ อรหํ มุนิํ อสมํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระอรหันตมุนีผู้ไม่มีใครชนะได้ ผู้ไม่มีใครเสมอเหมือน ผู้มีพระหทัยบริสุทธิ์ยิ่งนักเพราะอาสวะทั้งปวงสิ้นไป ผู้ทรงรู้แจ้งอารมณ์ทั้งปวงอันเป็นวิสัยแห่งปัญญาโดยลำดับ ผู้ทรงมีพระจริยาอันเป็นโลกุตระ ทรงครอบงำโลกทั้งสาม</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> มุทุภารติ มธุปาสิต นลิโนปม วทนํ,</p>
+<p rend="gatha2">รุจิรายต นลินีทล นิภ โลจน ยุคลํ;</p>
+<p rend="gatha3">อุทโยทิต รวิมณฺฑล ชลิตามล นิฏิลํ,</p>
+<p rend="gathalast">ปณมา’มห อกุโตภยํ อนฆํ มุนิ ปมุขํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระมุนีผู้ประเสริฐ ผู้หาโทษมิได้ ผู้ไม่มีภัยแต่ที่ไหนๆ ผู้มีพระโอษฐ์ดุจดอกบัวที่หมู่ภมรคือพระวาจาอันอ่อนหวานได้ดื่มด่ำ ผู้มีพระเนตรทั้งคู่ดุจกลีบดอกบัวที่งดงามและกว้างขวาง ผู้มีพระนลาฏบริสุทธิ์รุ่งเรืองดุจดวงอาทิตย์ที่ขึ้นใหม่</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อสิตมฺพุท รุจิกุญฺจิต มุทุ กุนฺตล ลลิตํ,</p>
+<p rend="gatha2">ภุวโนทร วิตตามิต ชุติสญฺจย ชลิตํ;</p>
+<p rend="gatha3">มทโมทิต ทิรโทปม คติวิพฺภม รุจิรํ,</p>
+<p rend="gathalast">ปณมา’มหํ อมตนฺทท มุนิปุงฺควํ อสมํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระมุนีผู้ประเสริฐ ผู้ประทานอมตธรรม ผู้ไม่มีใครเสมอเหมือน ผู้มีพระเกศาอันอ่อนนุ่มงดงามดุจเมฆดำที่ม้วนตัว ผู้มีพระรัศมีอันแผ่ไปทั่วโลกธาตุ รุ่งเรืองหาประมาณมิได้ ผู้มีพระลีลาอันงดงามดุจช้างที่กำลังเมามัน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กรุณารส ปริภาวิต สวณามต วจนํ,</p>
+<p rend="gatha2">วิรุทาวลิ สตโฆสิต ยสปูริต ภุวนํ;</p>
+<p rend="gatha3">สุมโนหร วรลกฺขณ สิริสญฺจย สทนํ,</p>
+<p rend="gathalast">ปณมา’มหํ อุทิตามล สสิมณฺฑล วทนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระองค์ผู้มีพระพักตร์ดุจพระจันทร์อันบริสุทธิ์ที่ขึ้นใหม่ ผู้มีพระวาจาอันเป็นอมตะที่ควรฟัง อันอบรมด้วยรสแห่งพระกรุณา ผู้มีพระยศอันเต็มเปี่ยมทั่วโลกธาตุ อันหมู่คำสรรเสริญร้อยอย่างประกาศแล้ว ผู้เป็นที่รวมแห่งสิริอันเป็นลักษณะอันประเสริฐที่น่ารื่นรมย์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วินยารห ชนมานส กุมุทากร สสินํ,</p>
+<p rend="gatha2">ตสินาปค ปริโสสน สตทีธิติ ตุลิตํ;</p>
+<p rend="gatha3">ตมนาสว มุนิเสวิตํ อปโลกิต สุขทํ,</p>
+<p rend="gathalast">ปณมา’มหํ อนิเกตนํ อขิลาคติ วิคตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระองค์ผู้ไม่มีเรือนอยู่ ผู้ปราศจากอคติทั้งปวง ผู้เป็นดุจพระจันทร์ในสระบัวคือจิตใจของชนผู้ควรแนะนำ ผู้เปรียบด้วยรัศมีร้อยอย่างที่ยังแม่น้ำคือตัณหาให้เหือดแห้ง ผู้เป็นที่พึ่งของพระมุนีผู้ปราศจากอาสวะ และประทานความสุขด้วยการทอดพระเนตร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สหิตาขิล ภยเภรวํ อภยาคต สรนํ,</p>
+<p rend="gatha2">อชรามร สุขทายกํ อนิรากต กรุณํ;</p>
+<p rend="gatha3">ตมุปาสก ชนเสวิต สุปติฏฺฐิต จรณํ,</p>
+<p rend="gathalast">ปณมา’มหํ อหิตาปหํ อนฆุตฺตม จรณํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระบาทอันประเสริฐสูงสุด ผู้หาโทษมิได้ ผู้ทรงนำความไม่เป็นประโยชน์ออกไป ผู้ทรงขจัดภัยและภยันตรายทั้งปวง เป็นที่พึ่งของผู้มาถึงซึ่งความไม่มีภัย ผู้ประทานความสุขที่ไม่แก่ไม่ตาย ผู้ไม่ทรงละทิ้งพระกรุณา ผู้มีพระบาทอันอุบาสกชนทั้งหลายพากันบำรุงแล้ว ตั้งมั่นดีแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กรุณามต รสปุริต วีมลาขิล หทยํ,</p>
+<p rend="gatha2">วิหิตามิต ชนตาหิตํ อนุกมฺปิต ภุวนํ;</p>
+<p rend="gatha3">ภุวเน สุตํ อวนีปติ สต เสวิต จรณํ,</p>
+<p rend="gathalast">ปณมา’มหํ อนฆํ มุนิํ อฆนาสน จตุรํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระมุนีผู้หาโทษมิได้ ผู้ฉลาดในการทำลายบาป ผู้มีพระหทัยบริสุทธิ์เต็มเปี่ยมด้วยรสแห่งพระกรุณาอันเป็นอมตะ ผู้ทรงบำเพ็ญประโยชน์แก่ชนหาประมาณมิได้ ผู้ทรงอนุเคราะห์โลก ผู้มีพระบาทอันพระราชาเป็นร้อยพระองค์ในโลกได้บำรุงแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อรตีรติ ปริปีลิต ยติมานส ทมนํ,</p>
+<p rend="gatha2">นิชสาสน วินิวาริต ปุถุติตฺถิย สมณํ;</p>
+<p rend="gatha3">ปรวาทิก ชนตากต ปริภาสิต ขมนํ,</p>
+<p rend="gathalast">ปณมา’มหํ อติเทวต วร โคตม สมณํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระสมณโคดมผู้ประเสริฐ ผู้ยิ่งกว่าเทวดาทั้งหลาย ผู้ทรงข่มจิตของนักบวชที่ถูกความไม่ยินดีและความยินดีบีบคั้น ผู้ทรงห้ามสมณะเดียรถีย์ทั้งหลายด้วยพระศาสนาของพระองค์ ผู้ทรงอดทนต่อคำติเตียนที่ชนผู้เป็นปรปักษ์กล่าวแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สรณาคต ภยนาสน วชิราลย ปณิภํ,</p>
+<p rend="gatha2">ภวสาคร ปติตามิต ชนตารน นิรตํ;</p>
+<p rend="gatha3">สิรสาวหํ อมลญฺชลิ ปุฏปงฺกช มกุลํ,</p>
+<p rend="gathalast">ปณมา’มหํ อขิลลาย วิคตํ มุนิํ อตุลํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าขอนอบน้อมพระมุนีผู้ไม่มีใครเปรียบ ผู้ปราศจากกิเลสเครื่องข้องทั้งปวง ผู้ทรงทำลายภัยของผู้มาถึงที่พึ่ง ดุจวัชระที่ทำลายภูเขา ผู้ทรงยินดีในการช่วยชนหาประมาณมิได้ที่ตกอยู่ในห้วงมหรรณพแห่งภพ ผู้ทรงรับดอกบัวตูมคืออัญชลีอันบริสุทธิ์ไว้บนพระเศียร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วิมลีกต ชนมานส วิคตาสว ภควํ,</p>
+<p rend="gatha2">ภวปารค วิภวามต สุขทายก สตตํ;</p>
+<p rend="gatha3">ปรมาทร ครุคารว วินตํ ชิน ปยตํ,</p>
+<p rend="gathalast">ปทปงฺกช รชสา มม สมลงฺกุรุ สิรสํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาคผู้ปราศจากอาสวะ ผู้ทรงยังจิตใจของชนให้บริสุทธิ์ ผู้ทรงถึงฝั่งแห่งภพ ผู้ประทานความสุขคืออมตธรรมอันรุ่งเรืองอยู่เป็นนิตย์ ข้าแต่พระชินเจ้าผู้ทรงเพียร ผู้เป็นที่นอบน้อมด้วยความเคารพอย่างยิ่ง ขอพระองค์จงทรงประดับเศียรของข้าพระองค์ด้วยธุลีพระบาทปทุมเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปวนาหต ทุมปลฺลวํ อิว นารต จปลํ,</p>
+<p rend="gatha2">ภวลาลส มลินีกตํ อชิตินฺทริย นิวหํ;</p>
+<p rend="gatha3">จิร สญฺจิต ทุริตาหตํ อนิวาริต ติมิสํ,</p>
+<p rend="gathalast">วิมลีกุรุ กรุณาภร สุตรํ มม หทยํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ใจของข้าพระองค์นี้ไม่มั่นคง ดุจยอดไม้ที่ถูกลมพัด ถูกความทะยานอยากในภพทำให้เศร้าหมอง หมู่แห่งอินทรีย์ยังไม่ถูกชนะ ถูกบาปที่สั่งสมมานานกระทบแล้ว ถูกความมืดที่ไม่มีใครห้ามได้ ขอพระองค์ผู้ทรงเปี่ยมด้วยพระกรุณา จงทรงยังหทัยของข้าพระองค์ให้บริสุทธิ์ยิ่งเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อทเย ทยํ อนเย นยํ อปิ โย คุณํ อคุเณ,</p>
+<p rend="gatha2">อหิเต หิตํ อกโร กฺวจิท อปิ เกนจิ นกตํ;</p>
+<p rend="gatha3">สทเย ชิน สุนเย คุณสทเน ตยิ นิตรํ,</p>
+<p rend="gathalast">สุหิเต หิตจริเต’นฆ รมเต มม หทยํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระชินเจ้าผู้ทรงเมตตา ผู้ทรงมีอุบายดี ผู้เป็นที่รวมแห่งคุณทั้งหลาย ผู้ทรงกระทำความเมตตาในผู้ไม่มีเมตตา ทรงกระทำอุบายในผู้ไม่มีอุบาย ทรงกระทำคุณในผู้ไม่มีคุณ ทรงกระทำประโยชน์ในผู้ไม่เป็นประโยชน์ ซึ่งใครๆ ก็ไม่เคยทำได้ ใจของข้าพระองค์ย่อมยินดีในพระองค์ผู้ทรงหาโทษมิได้ ผู้ทรงประพฤติประโยชน์เกื้อกูลอย่างยิ่ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ภวสงฺกฏ ปติเตนปิ ภวตา จิร จริตํ,</p>
+<p rend="gatha2">วิสเม สม จรณํ ขลุ ทสปารมิ ภรณํ;</p>
+<p rend="gatha3">สรโต’หนิ สรโต นิสิ สุปิเนนปิ สตตํ,</p>
+<p rend="gathalast">รมเต ชิน สุมเต ตฺวยิ สทยํ มม หทยํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระชินเจ้าผู้ทรงมีพระปัญญาดี ผู้ทรงเมตตา แม้เมื่อตกอยู่ในห้วงแห่งภพอันคับแคบ พระองค์ก็ทรงประพฤติมานานแล้ว ซึ่งจริยาอันเสมอในที่อันไม่เสมอ อันเป็นการบำเพ็ญทศบารมี เมื่อระลึกถึงอยู่ทั้งกลางวัน กลางคืน และแม้ในความฝันอยู่เป็นนิตย์ ใจของข้าพระองค์ย่อมยินดีในพระองค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อติทุทฺททํ อทที ภวํ อติทุกฺกรํ อกรี;</p>
+<p rend="gatha2">อติทุกฺขมํ อขมี วต กรุณานิธิ’รสโม,</p>
+<p rend="gatha3">อิติ เต คุณํ อนฆํ มุนิ สรโต มม หทยํ,</p>
+<p rend="gathalast">รมเต’หนิ รมเต นิสิ รมเต ตฺวยิ สตตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พระองค์ทรงให้สิ่งที่ให้ได้ยากยิ่ง ทรงกระทำสิ่งที่ทำได้ยากยิ่ง ทรงอดทนสิ่งที่อดทนได้ยากยิ่งหนอ ข้าแต่พระมุนีผู้เป็นดุจขุมทรัพย์แห่งพระกรุณา ผู้ไม่มีใครเสมอเหมือน เมื่อระลึกถึงพระคุณของพระองค์ผู้หาโทษมิได้เช่นนี้ ใจของข้าพระองค์ย่อมยินดีในพระองค์อยู่เป็นนิตย์ ทั้งกลางวันและกลางคืน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อติทุจฺจรํ อจรี ภวํ อติทุทฺทมํ อทมี,</p>
+<p rend="gatha2">อติทุทฺทยํ อทยี วต สทยาปร หทโย;</p>
+<p rend="gatha3">อิติ เต คุณํ อนฆํ มุนิ สรโต มม หทยํ,</p>
+<p rend="gathalast">รมเต’หนิ รมเต นิสิ รมเต ตฺวยิ สตตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พระองค์ทรงประพฤติสิ่งที่ประพฤติได้ยากยิ่ง ทรงฝึกสิ่งที่ฝึกได้ยากยิ่ง ทรงเมตตาสิ่งที่เมตตาได้ยากยิ่งหนอ ข้าแต่พระมุนีผู้มีพระหทัยเปี่ยมด้วยพระกรุณา เมื่อระลึกถึงพระคุณของพระองค์ผู้หาโทษมิได้เช่นนี้ ใจของข้าพระองค์ย่อมยินดีในพระองค์อยู่เป็นนิตย์ ทั้งกลางวันและกลางคืน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อติทุคฺคมํ อคมี ภวํ อติทุชฺชยํ อชยี,</p>
+<p rend="gatha2">อติทุสฺสหํ อสหี วต สมุเปกฺขิต มนโส;</p>
+<p rend="gatha3">อิติ เต คุณํ อนฆํ มุนิ สรโต มม หทยํ,</p>
+<p rend="gathalast">รมเต’หนิ รมเต นิสิ รมเต ตฺวยิ สตตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พระองค์ทรงถึงสิ่งที่ถึงได้ยากยิ่ง ทรงชนะสิ่งที่ชนะได้ยากยิ่ง ทรงอดทนสิ่งที่อดทนได้ยากยิ่งหนอ ข้าแต่พระมุนีผู้มีพระทัยเป็นอุเบกขา เมื่อระลึกถึงพระคุณของพระองค์ผู้หาโทษมิได้เช่นนี้ ใจของข้าพระองค์ย่อมยินดีในพระองค์อยู่เป็นนิตย์ ทั้งกลางวันและกลางคืน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อติทารุน ปลยานล สทิสานล ชลิเต,</p>
+<p rend="gatha2">นิรเย วินิปติโต จิรํ อฆตาปิต มนโส;</p>
+<p rend="gatha3">น สริํ สกิท อปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม นรสารถิ ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในนรกที่ลุกโพลงด้วยไฟอันร้ายกาจดุจไฟประลัยกัลป์ ข้าพระองค์ตกไปนานแล้ว มีใจถูกบาปแผดเผา ไม่เคยระลึกถึงเลยแม้สักครั้งที่จะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้เป็นสารถีของนรชน ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ติริยคฺคต-คติยํ จิรํ อนวฏฺฐิต จริโต,</p>
+<p rend="gatha2">อตินิฏฺฐุร วธตชฺชิต ภยกมฺปิต หทโย;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม ปุริสุตฺตม ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในกำเนิดเดรัจฉาน ท่องเที่ยวไปนาน มีความประพฤติไม่ตั้งมั่น มีหัวใจสั่นสะท้านด้วยความกลัว ถูกคุกคามด้วยการฆ่าอันโหดร้ายยิ่ง ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้เป็นบุรุษสูงสุด ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปริเทวน นิรโต จิรํ อถ เปตฺติย วิสเย,</p>
+<p rend="gatha2">สุชิฆจฺฉิต สุปิปาสิต ปริโสสิต ชฐเร;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม ทิปทุตฺตม ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในเปตวิสัย ยินดีในการคร่ำครวญอยู่นาน มีท้องแห้งผากเพราะหิวจัดและกระหายจัด ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้เป็นบุรุษสูงสุดในหมู่สัตว์สองเท้า ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วิวโส ภุสํ อฆทูสิต มนสาสุร วิสเย,</p>
+<p rend="gatha2">ชนิโต ฆนติมิเร จิรํ อติทุกฺขิต หทโย;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม วสิสตฺตม ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในอสุรวิสัย ผู้ไม่มีอำนาจ มีใจอันบาปประทุษร้ายยิ่ง เกิดในความมืดทึบอยู่นาน มีหัวใจเป็นทุกข์ยิ่งนัก ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้ประเสริฐสุดในหมู่ผู้มีวสี ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> มนสา จิร วิหิตํ สรํ อติกิพฺพิส จริตํ,</p>
+<p rend="gatha2">สมเถนถ สุวิราชิย ตํ อสญฺญิตํ อุปโค;</p>
+<p rend="gatha3">น สริํ สกิท อปิ เต ปิต ภชิตุํ ปท นลินํ,</p>
+<p rend="gathalast">ขม โคตม วสิปุงฺคว ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เมื่อระลึกถึงความประพฤติอันเป็นบาปยิ่งที่ทำด้วยใจมานาน เข้าถึงอสัญญาภพนั้นอันรุ่งเรืองด้วยสมถะ ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้ประเสริฐสุดในหมู่ผู้มีวสี ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วิชิคุจฺฉิย ทุริตํ นิช วปุสา กตํ อมิตํ,</p>
+<p rend="gatha2">ตนุ วชฺชิตํ อุปโค ภวํ อิห ภาวิต สมโถ;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม ยติกุญฺชร ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เมื่อรังเกียจบาปอันหาประมาณมิได้ที่ทำด้วยกายของตน เข้าถึงภพที่ปราศจากกาย เป็นผู้เจริญสมถะในโลกนี้ ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้ประเสริฐในหมู่นักบวช ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> รตนตฺตย รหิเต ภุส พหุลีกต ทุริเต,</p>
+<p rend="gatha2">ชนิโต ปรวิสเย พุธชน นินฺทิย จริเต;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม กรุณานิธิ ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในที่ที่ปราศจากพระรัตนตรัย ผู้ทำบาปให้มากยิ่ง เกิดในวิสัยอื่น มีความประพฤติอันวิญญูชนพึงติเตียน ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้เป็นขุมทรัพย์แห่งพระกรุณา ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ชนิโต ยทิ มนุเชสุปิ วิกลินฺทริย นิวโห,</p>
+<p rend="gatha2">ตนุนา กรจรณาทิหิ วิกเต’นิห ทุขิโต;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม มติสาคร ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">แม้หากเกิดในหมู่มนุษย์ เป็นผู้มีหมู่แห่งอินทรีย์วิการ มีร่างกายมีมือและเท้าเป็นต้นพิการ เป็นผู้ทุกข์ยากในโลกนี้ ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้เป็นมหาสมุทรแห่งปัญญา ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วิธินาหิต มติภาวน รหิโต ตมปิหิโต,</p>
+<p rend="gatha2">วิสเทสุปิ กุสลาทิสุ ตถทสฺสน วิมุโข;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม นรเกสริ ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้ปราศจากการเจริญปัญญาตามวิธีที่ควร ถูกความมืดปิดบัง เบือนหน้าหนีจากการเห็นตามความเป็นจริงในกุศลธรรมเป็นต้นที่ผ่องใส ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้เป็นนรสีห์ ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สุจิเรนปิ ภุวิ ทุลฺลภํ อสมํ ขณํ อลภํ,</p>
+<p rend="gatha2">สนรามร ชนตาหิต สุขทํ มุนิ ชนนํ;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม วทตํวร ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เมื่อไม่ได้ขณะอันไม่มีสิ่งใดเสมอซึ่งหาได้ยากยิ่งในโลกแม้นานเพียงใด คือการบังเกิดของพระมุนีผู้ประทานประโยชน์และความสุขแก่หมู่ชนพร้อมทั้งมนุษย์และเทวดา ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้ประเสริฐสุดในหมู่ผู้พูด ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> นิสิตายุธ วธสชฺชิต ขฬนิทฺทย หทโย,</p>
+<p rend="gatha2">ปรหิํสน รุจิ ภิํสน ยมโสทร สทิโส;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม มุนิสตฺตม ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้เตรียมอาวุธคมเพื่อการฆ่า มีหัวใจหยาบช้าและไร้ความปรานี ยินดีในการเบียดเบียนผู้อื่น ผู้น่ากลัวดุจเป็นพี่น้องร่วมท้องกับพระยม ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้เป็นพระมุนีผู้ประเสริฐสุด ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปรสนฺตก หรเณ กตมติ พญฺจน พหุโล,</p>
+<p rend="gatha2">ฆรสนฺธิก ปริปนฺถิก สหสากติ นิรโต;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม มุนิปุงฺคว ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้มีใจตั้งไว้ในการลักทรัพย์ของผู้อื่น มากไปด้วยการหลอกลวง เป็นโจรเจาะช่องและโจรดักปล้น ยินดีในการทำกรรมอันหยาบช้า ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้เป็นพระมุนีผู้ประเสริฐ ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> นวโยพฺพน มทคพฺพิต ปริมุจฺฉิต หทโย,</p>
+<p rend="gatha2">สุจิสชฺชน วิชิคุจฺฉิย ปรทาริก นิรโต;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม กรุณาภร ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้หยิ่งผยองด้วยความเมาในวัยหนุ่ม มีหัวใจลุ่มหลงยิ่ง รังเกียจสัตบุรุษผู้สะอาด ยินดีในการคบหาภรรยาผู้อื่น ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้มีพระกรุณาเป็นอาภรณ์ ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> มทิราสวรต นาครชน สนฺตต ภชิโต,</p>
+<p rend="gatha2">ครุคารว หิริทูริต ติริยคฺคต จริโต;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม วิหตาสว ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้ยินดีในน้ำเมาคือสุรา คลุกคลีกับเหล่านักเลงในเมืองอยู่เสมอ ปราศจากความเคารพในผู้ควรเคารพและหิริ มีความประพฤติไปในทางขวาง ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้กำจัดอาสวะได้แล้ว ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สปิตามห ปปิตามห นิจิตํ ธนํ อมิตํ,</p>
+<p rend="gatha2">ปิตุสญฺจิตมปิ นาสิย กิตโว หตวิภโว;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม วิชิตนฺตก ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพระองค์ผู้เป็นนักเลงการพนัน มีสมบัติพินาศแล้ว ทำลายทรัพย์อันหาประมาณมิได้ที่ปู่และทวดสะสมไว้ แม้ทรัพย์ที่บิดาสะสมไว้ก็ทำให้พินาศไป ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้ชนะพญามัจจุราช ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วิตถาลิก วจโน ปรปิยสุญฺญต กรโณ,</p>
+<p rend="gatha2">ผรุสํ ภณํ อตินิปฺผล พหุภาสน นิปุโณ;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม ภุวเนสุต ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้มีวาจาเท็จและไม่จริง ทำให้ผู้อื่นเหินห่างจากคนที่รัก กล่าวคำหยาบ ฉลาดในการพูดมากที่ไร้ประโยชน์ยิ่ง ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้เป็นโอรสแห่งโลก ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปรสมฺปทํ อภิฌายน นิรนฺตร ทุขิโต,</p>
+<p rend="gatha2">นภิรชฺฌน ปรโม กฺวจิ ผลทสฺสน รหิโต;</p>
+<p rend="gatha3">น สริํ สกิทปิ เต ปิต ภชิตุํ ปทนลินํ,</p>
+<p rend="gathalast">ขม โคตม คุณสาคร ตมิทํ มม ขลิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้เพ่งเล็งสมบัติของผู้อื่น เป็นทุกข์อยู่ต่อเนื่อง ไม่ยินดีอย่างยิ่ง ปราศจากการเห็นผลในที่ไหนๆ ไม่เคยระลึกถึงแม้เพียงครั้งเดียวเพื่อจะบูชาพระบาทปทุมของพระองค์ ข้าแต่พระโคดมผู้เป็นมหาสมุทรแห่งพระคุณ ขอพระองค์ทรงอดโทษความผิดของข้าพระองค์นี้ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ภวโต ภวํ อปราปรํ อยตาจิรํ อิติ เม,</p>
+<p rend="gatha2">วปุสา อถ วจสาปิ จ มนสา กตํ อมิตํ;</p>
+<p rend="gatha3">ขม โคตม ทุริตาปห ทุริตํ พหุวิหิตํ,</p>
+<p rend="gathalast">ทท เม สิวปทํ อจฺจุตํ อมตํ ภววิคตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">บาปอันหาประมาณมิได้ที่ข้าพระองค์ทำแล้วด้วยกาย วาจา และใจ จากภพสู่ภพต่อๆ กันไปตลอดกาลยาวนานนี้ ข้าแต่พระโคดมผู้กำจัดบาป ขอพระองค์ทรงอดโทษบาปที่ข้าพระองค์ทำไว้มากนั้น และขอได้โปรดประทานทางอันเกษม อันไม่เคลื่อน ไม่ตาย ปราศจากภพแก่ข้าพระองค์ด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ติมิราวุต กุณปากุล วิชิคุจฺฉิย ปวเน,</p>
+<p rend="gatha2">ชนิกาสุจิ ชฐเร พหุ กิมิสนฺตติ สทเน;</p>
+<p rend="gatha3">อสยิํ ภวคหเณ จรํ อหํ อปฺปฏิสรเณ,</p>
+<p rend="gathalast">สรนํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพระองค์ผู้ไม่มีที่พึ่ง ท่องไปในป่าแห่งภพ ได้นอนแล้วในป่าอันน่ารังเกียจที่เกลื่อนกล่นด้วยซากศพและถูกความมืดปกคลุม ในท้องอันไม่สะอาดของมารดาอันเป็นที่อยู่ของหมู่หนอนมากมาย ข้าแต่พระผู้มีพระภาค ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรคือภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> พหิ นิกฺขมํ อสกิํ ภคติริยํ ปถ ปติโต,</p>
+<p rend="gatha2">อคทงฺกร กต สลฺลก สตขณฺฑิต กรโณ;</p>
+<p rend="gatha3">อมริํ ภวคหเณ จรํ อหํ อปฺปฏิสรเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพระองค์ผู้ไม่มีที่พึ่ง ท่องไปในป่าแห่งภพ ได้ตายแล้วในขณะออกมาข้างนอกหลายครั้ง ตกไปในทางที่คดเคี้ยว มีร่างกายถูกหมอผ่าตัดด้วยศัสตรานับร้อยครั้ง ข้าแต่พระผู้มีพระภาค ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรคือภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปติโต พหิ รติปิลฺลก ตนุรามย มถิโต,</p>
+<p rend="gatha2">วทิตุํ กิมุ วิทิตุมฺปิ จ น สหํ มติรหิโต;</p>
+<p rend="gatha3">อมริํ ภวคหเณ จรํ อหํ อปฺปฏิสรเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพระองค์ผู้ไม่มีที่พึ่ง ท่องไปในป่าแห่งภพ ได้ตายแล้วในขณะตกออกมาข้างนอกมีความยินดีเพียงเล็กน้อย ถูกโรคทางกายเบียดเบียน ไม่สามารถแม้จะพูดหรือแม้จะรู้ เป็นผู้ปราศจากปัญญา ข้าแต่พระผู้มีพระภาค ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรคือภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ชนิโต ยทิ สุขิโต ชนทยิโต ปิยชนโก,</p>
+<p rend="gatha2">ปุถุโก พหุวิธ-กีลนนิรโต คทคหิโต;</p>
+<p rend="gatha3">อมริํ ภวคหเณ จรํ อหํ อปฺปฏิสรเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพระองค์ผู้ไม่มีที่พึ่ง ท่องไปในป่าแห่งภพ ได้ตายแล้ว แม้หากเกิดมาเป็นผู้มีความสุข เป็นที่รักของหมู่ชน มีบิดาเป็นที่รัก เป็นเด็กยินดีในการเล่นหลายอย่าง แต่ถูกโรคครอบงำ ข้าแต่พระผู้มีพระภาค ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรคือภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ตรุโนปิ หิ ฆรพนฺธน คถิโตมิต วิภโว,</p>
+<p rend="gatha2">สหสา คทคหิโต ปิยภริยาสุต วิยุโต;</p>
+<p rend="gatha3">อมริํ ภวคหเณ จรํ อหํ อปฺปฏิสรเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพระองค์ผู้ไม่มีที่พึ่ง ท่องไปในป่าแห่งภพ ได้ตายแล้ว แม้ยังหนุ่ม ผูกพันด้วยเครื่องผูกคือเรือน มีสมบัติหาประมาณมิได้ ถูกโรคครอบงำโดยพลัน พลัดพรากจากภรรยาและบุตรที่รัก ข้าแต่พระผู้มีพระภาค ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรคือภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อชรํ ตนุํ อภิมญฺญิย นวโยพฺพน วสิโก,</p>
+<p rend="gatha2">ชรสา ปริมถิโต ปรํ อนนุฏฺฐิต กุสโล;</p>
+<p rend="gatha3">อมริํ ภวคหเณ จรํ อหํ อปฺปฏิสรเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค ข้าพระองค์ผู้ไม่มีที่พึ่ง ท่องเที่ยวไปและตายลงในป่าแห่งภพ สำคัญว่าร่างกายจะไม่แก่ ตกอยู่ใต้อำนาจของวัยหนุ่ม ถูกความแก่เบียดเบียน ไม่ได้กระทำกุศลกรรมอย่างยิ่ง ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรแห่งภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> นิรุโช ธุวํ อรุชํ ตนุํ อภิมญฺญิย สมโท,</p>
+<p rend="gatha2">กุสลาสย วิมุโข ภุสํ อวโส คทนิหโต;</p>
+<p rend="gatha3">อมริํ ภวคหเณ จรํ อหํ อปฺปฏิสรเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค ข้าพระองค์ผู้ไม่มีที่พึ่ง ท่องเที่ยวไปและตายลงในป่าแห่งภพ สำคัญว่าร่างกายจะไม่มีโรคและไม่เจ็บป่วยอย่างแน่นอน มีความมัวเมา หันหลังให้กับการสั่งสมกุศล ถูกโรคภัยไข้เจ็บทำลายอย่างรุนแรงโดยไม่อาจขัดขืนได้ ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรแห่งภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปวิจินฺติย สกชีวิตํ อมรํ ธุวํ อนิฆํ,</p>
+<p rend="gatha2">อิติ ชีวิตมทคพฺพิต มติรุชฺฌิต กุสโล;</p>
+<p rend="gatha3">อมริํ ภวคหเณ จรํ อหํ อปฺปฏิสรเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค ข้าพระองค์ผู้ไม่มีที่พึ่ง ท่องเที่ยวไปและตายลงในป่าแห่งภพ พิจารณาว่าชีวิตของตนจะไม่ตาย ยั่งยืน และไม่มีภัย หยิ่งผยองด้วยความมัวเมาในชีวิต ละทิ้งกุศลกรรมด้วยปัญญา ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรแห่งภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปรหิํสน ธนโมสน ปรทาริก นิรโต,</p>
+<p rend="gatha2">ธรนีปติ คหิโต พหุ วธพนฺธน นิหโต;</p>
+<p rend="gatha3">อมริํ ภวคหเณ จรํ อหํ อปฺปฏิสรเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค ข้าพระองค์ผู้ไม่มีที่พึ่ง ท่องเที่ยวไปและตายลงในป่าแห่งภพ ยินดีในการเบียดเบียนผู้อื่น การลักทรัพย์ และการประพฤติผิดในภรรยาผู้อื่น ถูกพระราชาจับกุม ถูกลงโทษด้วยการฆ่าและการจองจำมากมาย ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรแห่งภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> นรโกทก ปติโต คิริตรุมตฺถก คลิโต,</p>
+<p rend="gatha2">มิควาฬก คหิโต วิสธร ชาติหิ ฑสิโต;</p>
+<p rend="gatha3">อมริํ ภวคหเณ จรํ อหํ อปฺปฏิสรเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค ข้าพระองค์ผู้ไม่มีที่พึ่ง ท่องเที่ยวไปและตายลงในป่าแห่งภพ ตกไปในน้ำนรก ตกจากยอดเขาและต้นไม้ ถูกสัตว์ร้ายจับกิน ถูกสัตว์มีพิษกัด ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรแห่งภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อภิจารก วิธิโกปิต นิสิจารก คหิโต,</p>
+<p rend="gatha2">สวิโสทน สหสาทน ปภุตีหิ จ ขลิโต;</p>
+<p rend="gatha3">อมริํ ภวคหเณ จรํ อหํ อปฺปฏิสรเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค ข้าพระองค์ผู้ไม่มีที่พึ่ง ท่องเที่ยวไปและตายลงในป่าแห่งภพ ถูกพิธีกรรมไสยศาสตร์ทำให้ขุ่นเคือง ถูกอมนุษย์ที่เที่ยวไปในเวลากลางคืนจับกุม พลาดพลั้งด้วยการบริโภคอาหารที่มียาพิษและการกินอย่างผลีผลามเป็นต้น ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรแห่งภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สยเมวจ สชโนปริ กุปิโต มติวิยุโต,</p>
+<p rend="gatha2">สวิสาทน คลกนฺตน ปภุตามิต ขลิโต;</p>
+<p rend="gatha3">อมริํ ภวคหเณ จรํ อหํ อปฺปฏิสรเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค ข้าพระองค์ผู้ไม่มีที่พึ่ง ท่องเที่ยวไปและตายลงในป่าแห่งภพ โกรธเคืองแม้แต่ญาติของตนเอง ปราศจากสติปัญญา พลาดพลั้งด้วยการบริโภคยาพิษและการเชือดคอเป็นต้นอันประมาณมิได้ ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรแห่งภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปิตุปูชน นิรตาสย สุขิโต ปิตุทยิโต,</p>
+<p rend="gatha2">มรเณนจ ปิตุโน ภุสํ อนุโสจน นิรโต;</p>
+<p rend="gatha3">ปรุทิํ จิรํ อติทุสฺสห กสิเร ภวคหเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค ข้าพระองค์ผู้มีใจยินดีในการบูชาบิดา มีความสุข เป็นที่รักของบิดา แต่ต้องเศร้าโศกอย่างยิ่งเพราะการตายของบิดา ได้ร้องไห้อย่างยาวนานในป่าแห่งภพที่ทนได้ยากและลำบากยิ่ง ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรแห่งภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สมุปฏฺฐิย ชนิกํ นิชํ อภิวาทน ปรโม,</p>
+<p rend="gatha2">มรเณนจ ชนิกายนุสริตา คุณมหิมํ;</p>
+<p rend="gatha3">ปรุทิํ จิรํ อติทุสฺสห กสิเร ภวคหเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค ข้าพระองค์ผู้ปรนนิบัติมารดาของตน มีความเคารพอย่างยิ่ง ระลึกถึงคุณความดีอันยิ่งใหญ่ของมารดาที่ตายไป ได้ร้องไห้อย่างยาวนานในป่าแห่งภพที่ทนได้ยากและลำบากยิ่ง ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรแห่งภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> คุรุเทวต ปติมานน ปรโม ปิยสุวโจ,</p>
+<p rend="gatha2">สมุปาสิตจรโณ คุรุมรเณนติทุขิโต;</p>
+<p rend="gatha3">ปรุทิํ จิรํ อติทุสฺสห กสิเร ภวคหเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค ข้าพระองค์ผู้มีความเคารพอย่างยิ่งต่อครูบาอาจารย์ผู้เป็นดุจเทพ มีวาจาอ่อนหวานน่ารัก ปรนนิบัติพระบาท เป็นทุกข์อย่างยิ่งเพราะการตายของครูบาอาจารย์ ได้ร้องไห้อย่างยาวนานในป่าแห่งภพที่ทนได้ยากและลำบากยิ่ง ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรแห่งภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ฆรเมธิตํ อุปโคมิตวิภโว รติพหุโล,</p>
+<p rend="gatha2">มรเณ ปิยภริยาสุตทุหิตู’นติกรุณํ;</p>
+<p rend="gatha3">ปรุทิํ จิรํ อติทุสฺสห กสิเร ภวคหเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค ข้าพระองค์ผู้มีทรัพย์สมบัติที่ได้มาจากการครองเรือน มีความยินดีมาก เมื่อภรรยา บุตร และธิดาที่รักตายไปอย่างน่าสงสารยิ่ง ได้ร้องไห้อย่างยาวนานในป่าแห่งภพที่ทนได้ยากและลำบากยิ่ง ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรแห่งภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปิยปุพฺพช สหชานุช ภคิณิทฺวย มรเณ,</p>
+<p rend="gatha2">นิช พนฺธว-สข-สิสฺสก มรเณ ปฺยติกรุณํ;</p>
+<p rend="gatha3">ปรุทิํ จิรํ อติทุสฺสห กสิเร ภวคหเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค เมื่อพี่ชายที่รัก พี่น้องชายที่เกิดร่วมกัน และพี่น้องหญิงสองคนตายไป และเมื่อญาติมิตร สหาย และศิษย์ของตนตายไปอย่างน่าสงสารยิ่ง ข้าพระองค์ได้ร้องไห้อย่างยาวนานในป่าแห่งภพที่ทนได้ยากและลำบากยิ่ง ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรแห่งภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ชคตีปติ คหณา ริปุชนตกฺกร หรณา,</p>
+<p rend="gatha2">สริโตทก วหณา ปุถุชลิตานล ทหณา;</p>
+<p rend="gatha3">ปรุทิํ หตวิภโว จิรมิห ทุคฺคติคหเณ,</p>
+<p rend="gathalast">สรณํ ภว ภควํ มม ภวนีรธิ ตรเณ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค เพราะการถูกพระราชาจับกุม การถูกศัตรูและโจรปล้นชิง การถูกกระแสน้ำพัดพาไป และการถูกไฟที่ลุกโชนเผาผลาญ ข้าพระองค์ผู้มีทรัพย์สมบัติถูกทำลาย ได้ร้องไห้มานานในป่าแห่งทุคติที่ยากลำบากนี้ ขอพระองค์จงเป็นที่พึ่งแก่ข้าพระองค์ในการข้ามมหาสมุทรแห่งภพด้วยเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อติทุคฺคม วิสมากุล ภวสงฺกฏ ปติเต,</p>
+<p rend="gatha2">พฺยสนํ จิรมิติ ทุสฺสหํ อนุภูยปิ วิมิตํ;</p>
+<p rend="gatha3">น ชเห สุขลววญฺจิตหทโย ภวตสินํ,</p>
+<p rend="gathalast">ตมปากุรุ กรุณานิธิ ตสินํ มม กสิณํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค ข้าพระองค์ผู้ตกอยู่ในความคับขันแห่งภพที่ยากจะผ่านพ้นและเต็มไปด้วยความไม่ราบรื่น ได้ประสบกับความวิบัติที่ทนได้ยากยิ่งและประมาณมิได้มานาน แต่ใจของข้าพระองค์ที่ถูกหลอกลวงด้วยความสุขเพียงเล็กน้อย ก็ยังไม่ละทิ้งตัณหาในภพ ขอพระองค์ผู้เป็นขุมทรัพย์แห่งพระกรุณา จงขจัดตัณหาทั้งหมดของข้าพระองค์นั้นเสียเถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ชนนาวธิ มรณํ วิย มรณาวธิ ชนนํ,</p>
+<p rend="gatha2">อุภเยนปิ ภยเมวหิ ภวโต มม นิยตํ;</p>
+<p rend="gatha3">สิวเมวจ ชนนาวธิ มรณาวธิ รหิตํ,</p>
+<p rend="gathalast">ทท เม สิวํ อมตนฺทท ตํ อนาสว ภควํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค ความตายมีที่สุดคือการเกิด และการเกิดมีที่สุดคือความตาย ทั้งสองอย่างนี้ล้วนเป็นภัยแก่ข้าพระองค์อย่างแน่นอนในภพนี้ ขอพระองค์ผู้ประทานอมตะ ผู้ปราศจากอาสวะ จงประทานความเกษมอันปราศจากที่สุดแห่งการเกิดและที่สุดแห่งความตายนั้นแก่ข้าพระองค์เถิด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> จิรทิกฺขิตมปิ เม มนํ อนิวาริต ตสินํ,</p>
+<p rend="gatha2">ภวโต ภว รติปีลิตํ อหโห กลิฆฏิตํ!</p>
+<p rend="gatha3">ตมโต ปิต ภยโต มมมว เม ภว สรณํ,</p>
+<p rend="gathalast">ภควํ ปฏิสรณํ มม ภวนีรธิ ตรณํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าแต่พระผู้มีพระภาค แม้ใจของข้าพระองค์ที่ได้รับการฝึกฝนมานาน ก็ยังไม่สามารถยับยั้งตัณหาได้ ถูกความยินดีในภพเบียดเบียน โอ้หนอ! มันถูกบาปกรรมผูกมัดไว้ ข้าแต่พระบิดา ขอพระองค์จงคุ้มครองข้าพระองค์จากภัยนั้นและเป็นที่พึ่งแก่ข้าพระองค์เถิด พระผู้มีพระภาคเจ้าทรงเป็นที่พึ่งของข้าพระองค์ในการข้ามมหาสมุทรแห่งภพ</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

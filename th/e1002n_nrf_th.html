@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1002n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Sarabun"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">บาลี | แปล</button><button type="button" data-mode="view-stack">บาลี — แปล</button><button type="button" data-mode="view-pali-only">เฉพาะบาลี</button><button type="button" data-mode="view-trans-only">เฉพาะแปล</button><button type="button" id="toggle-meta-btn">เชิงอรรถ</button></div>
+<div class="pair-row" data-id="e1002n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre"> นโม ตสฺส ภควโต อรหโต สมฺมาสมฺพุทฺธสฺส</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ขอนอบน้อมแด่พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้าพระองค์นั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="chapter">นีติมญฺชรี</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">นีติมัญชรี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กุลกฺขเย <span class="pb hidden-meta" data-ed="M" data-n="0.0001">[M 0.0001]</span> วินสฺสนฺติ,</p>
+<p rend="gatha2">กุลธมฺมา สนนฺตนา;</p>
+<p rend="gatha3">ธมฺเม นฏฺเฐ กุลํ สพฺพํ,</p>
+<p rend="gathalast">อธมฺโม อภิภู ขลํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เมื่อตระกูลสิ้นไป ธรรมของตระกูลอันเก่าแก่ย่อมพินาศ เมื่อธรรมพินาศไป อธรรมย่อมครอบงำตระกูลทั้งหมดและคนชั่ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อธมฺมาภิภวา ทนฺตา,</p>
+<p rend="gatha2">ปทุสฺสนฺติ กุลิตฺถิโย;</p>
+<p rend="gatha3">ถีสุ ทุฏฺฐา สฺว ธมฺเมน,</p>
+<p rend="gathalast">ชายเต วณฺณสงฺกโร.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เพราะอธรรมครอบงำ สตรีในตระกูลย่อมประพฤติชั่ว เมื่อสตรีประพฤติชั่ว ย่อมเกิดความปะปนแห่งวรรณะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ปิยํ <span class="pb hidden-meta" data-ed="M" data-n="0.0011">[M 0.0011]</span> ภาเส คุณคฺคาโห,</p>
+<p rend="gatha2">สูโร สิยา วิกนฺตโน;</p>
+<p rend="gatha3">ทาตา จนฺทสมา นารี,</p>
+<p rend="gathalast">ทิฏฺฐํ ทิฏฺฐํ นหาสเย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พึงพูดคำที่น่ารัก พึงเป็นผู้ถือเอาคุณความดี พึงเป็นผู้กล้าหาญที่ไม่โอ้อวด สตรีผู้ให้ย่อมเป็นเหมือนพระจันทร์ ไม่พึงหัวเราะในสิ่งที่เห็นแล้วเห็นเล่า</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กุโตตฺถิ <span class="pb hidden-meta" data-ed="M" data-n="0.0016">[M 0.0016]</span> กุมิตฺเต สจฺจํ,</p>
+<p rend="gatha2">กุทาเร รติวฑฺฒนํ;</p>
+<p rend="gatha3">กุเทสมฺหิ มโน รมฺมํ,</p>
+<p rend="gathalast">กุราเช โภคสมฺปทํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ความจริงใจในมิตรชั่วจะมีมาแต่ที่ไหน ความยินดีที่เพิ่มพูนในภรรยาชั่วจะมีมาแต่ที่ไหน ความรื่นรมย์แห่งใจในประเทศชั่วจะมีมาแต่ที่ไหน ความสมบูรณ์ด้วยโภคะในพระราชาชั่วจะมีมาแต่ที่ไหน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สงฺเกเตว <span class="pb hidden-meta" data-ed="M" data-n="0.0017">[M 0.0017]</span> อมิตฺตสฺมิํ,</p>
+<p rend="gatha2">มิตฺตสฺมิํ ปิ นวิสฺสเส;</p>
+<p rend="gatha3">อภยา ภย มุปฺปนฺนํ,</p>
+<p rend="gathalast">อปิ มูลานิ กนฺตติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พึงระแวงในศัตรู ไม่พึงเชื่อใจแม้ในมิตร ภัยที่เกิดขึ้นจากผู้ไม่มีภัย ย่อมตัดแม้ซึ่งราก (ถอนรากถอนโคน)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อทิฏฺโฐว <span class="pb hidden-meta" data-ed="M" data-n="0.0018">[M 0.0018]</span> ปโร เสยฺโย,</p>
+<p rend="gathalast">ทุมฺมิตฺโต โน วิสฺสาสิโก.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คนอื่นที่ยังไม่เคยเห็นย่อมดีกว่า มิตรชั่วไม่ควรเชื่อใจ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อคฺคิโหมผลํ <span class="pb hidden-meta" data-ed="M" data-n="0.0023">[M 0.0023]</span> เวโท,</p>
+<p rend="gatha2">สตฺถํสีลผลํ มตํ;</p>
+<p rend="gatha3">รติปุตฺตผลํ นารี,</p>
+<p rend="gathalast">ทานภุตฺติผลํ ธนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เวทมนตร์มีผลคือการบูชาไฟ ศาสตรามีผลคือศีล (การประพฤติดี) สตรีมีผลคือความยินดีและบุตร ทรัพย์มีผลคือการให้และการบริโภค</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อสจฺจํ <span class="pb hidden-meta" data-ed="M" data-n="0.0024">[M 0.0024]</span> สาหสํ มายา,</p>
+<p rend="gatha2">มูฬฺหตฺต ม ติโลภตา;</p>
+<p rend="gatha3">อโสจํ นิทฺทยตฺตญฺจ,</p>
+<p rend="gathalast">ถีนํ โทสา สภาวชา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ความไม่จริง ความหุนหันพลันแล่น มารยา ความโง่เขลา ความโลภจัด ความไม่บริสุทธิ์ และความไร้เมตตา เป็นโทษของสตรีที่เกิดตามธรรมชาติ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ชายาย <span class="pb hidden-meta" data-ed="M" data-n="0.0026">[M 0.0026]</span> ภตฺตุโน ภาโร,</p>
+<p rend="gatha2">สิสฺเสน คุรุโน กโต;</p>
+<p rend="gatha3">อมจฺจเกหิ ราชสฺส,</p>
+<p rend="gathalast">ปิตรานํ นิเชนจ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ภาระของสามีถูกกระทำโดยภรรยา ภาระของครูถูกกระทำโดยศิษย์ ภาระของพระราชาถูกกระทำโดยอำมาตย์ ภาระของบิดามารดาถูกกระทำโดยบุตรของตน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อุยฺยเมน <span class="pb hidden-meta" data-ed="M" data-n="0.0027">[M 0.0027]</span> หิ สิชฺฌนฺติ,</p>
+<p rend="gatha2">กมฺมานิ น มโนรถา;</p>
+<p rend="gatha3">น หิ สุตฺตสฺส สีหสฺส,</p>
+<p rend="gathalast">ปวีสนฺติ มุเข มิคา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">การงานทั้งหลายย่อมสำเร็จด้วยความพยายาม ไม่ใช่ด้วยความปรารถนา เพราะว่าเนื้อทั้งหลายย่อมไม่เข้าไปในปากของราชสีห์ที่กำลังหลับอยู่</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อติสีตํ <span class="pb hidden-meta" data-ed="M" data-n="0.0031">[M 0.0031]</span> อติอุณฺหํ,</p>
+<p rend="gatha2">อติสายมิทํ อหุ;</p>
+<p rend="gatha3">อิติ วิสฏฺฐกมฺมนฺเต,</p>
+<p rend="gathalast">ขณา อจฺเจนฺติ มาณเว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">“หนาวเกินไป ร้อนเกินไป เย็นเกินไป” ดังนี้ โอกาสทั้งหลายย่อมล่วงเลยมาณพผู้ละทิ้งการงานไป</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อาทานสฺส ปทานสฺส,</p>
+<p rend="gatha2">กตฺตพฺพสฺส จ กมฺมุโน;</p>
+<p rend="gatha3">ขิปฺปํ อกยฺยมานสฺส,</p>
+<p rend="gathalast">กาเล ปิวติ สมฺปทํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">การรับ การให้ และการงานที่ควรทำ หากไม่รีบกระทำโดยเร็ว กาลเวลาย่อมดื่มกินความสำเร็จนั้นเสีย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="gatha1">นาทพฺเพ <span class="pb hidden-meta" data-ed="M" data-n="0.0032">[M 0.0032]</span> นิหิตา กาจิ,</p>
+<p rend="gatha2">กฺริยา ผลวตี ภเว;</p>
+<p rend="gatha3">นพฺยาปารสเตนาปิ,</p>
+<p rend="gathalast">สุโกว ปาฐเต พโก.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">การกระทำใดๆ ที่ตั้งอยู่ในผู้ไม่สมควร ย่อมไม่มีผล แม้ด้วยความพยายามร้อยครั้ง นกกระเรียนก็ไม่สามารถพูดได้เหมือนนกแก้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1">โย <span class="pb hidden-meta" data-ed="M" data-n="0.0034">[M 0.0034]</span> ทนฺธกาเล ตรติ,</p>
+<p rend="gatha2">ตรณีเย จ ทนฺธเย;</p>
+<p rend="gatha3">สุกฺขปณฺณํ ว อกฺกมฺม,</p>
+<p rend="gathalast">อตฺถํ ภญฺชติ อตฺตโน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้ใดรีบเร่งในเวลาที่ควรช้า และชักช้าในเวลาที่ควรรีบเร่ง ผู้นั้นย่อมทำลายประโยชน์ของตน เหมือนเหยียบใบไม้แห้ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ยํ <span class="pb hidden-meta" data-ed="M" data-n="0.0035">[M 0.0035]</span> ททาติ ยํ ภุญฺชติ,</p>
+<p rend="gatha2">ตเทว ธนิโน ธนํ;</p>
+<p rend="gatha3">อญฺเญ มตสฺส กีฬนฺติ,</p>
+<p rend="gathalast">ทาเรหิปิ ธเนหิปิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ทรัพย์ที่เศรษฐีให้และบริโภคไปแล้ว นั่นแหละคือทรัพย์ของเขา ส่วนทรัพย์และภรรยาของเขาที่ตายไปแล้ว คนอื่นย่อมเล่นสนุกด้วย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ทาโนปโภคหีเนน<span class="pb hidden-meta" data-ed="M" data-n="0.0039">[M 0.0039]</span>,</p>
+<p rend="gatha2">ธเนน ธนิโน สุขํ;</p>
+<p rend="gatha3">โก วิเสโส ทลิทฺทสฺส,</p>
+<p rend="gathalast">อธิกํ ธนรกฺขณํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เศรษฐีผู้ไม่มีความสุขด้วยทรัพย์ที่ปราศจากการให้และการบริโภค จะต่างอะไรกับคนจน นอกจากต้องรักษาทรัพย์เพิ่มขึ้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="gatha1">นิชโสขฺยํ <span class="pb hidden-meta" data-ed="M" data-n="0.0040">[M 0.0040]</span> นิรุนฺธนฺโต,</p>
+<p rend="gatha2">นีจโภโค มิตมฺปโจ;</p>
+<p rend="gatha3">ธนํ สญฺจยเต โย โส,</p>
+<p rend="gathalast">ปรภารวโห ปสุ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้ใดขัดขวางความสุขของตนเอง มีการบริโภคต่ำ กินน้อย สะสมทรัพย์ ผู้นั้นเป็นสัตว์ที่แบกภาระของผู้อื่น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ยํ <span class="pb hidden-meta" data-ed="M" data-n="0.0041">[M 0.0041]</span> อุสฺสุกา สงฺขโรนฺติ,</p>
+<p rend="gatha2">อลกฺขิกา พหุํ ธนํ;</p>
+<p rend="gatha3">สิปฺปวนฺโต อสิปฺปาวา,</p>
+<p rend="gathalast">ลกฺขิ วา ตานิ ภุญฺชติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ทรัพย์จำนวนมากที่คนขยันแต่ไร้โชคสะสมไว้ คนมีฝีมือหรือไม่มีฝีมือ หรือคนมีโชค ย่อมบริโภคทรัพย์เหล่านั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สมฺปตฺยํ <span class="pb hidden-meta" data-ed="M" data-n="0.0048">[M 0.0048]</span> มหตํ จิตฺตํ,</p>
+<p rend="gatha2">ภเว อุปฺปเล โกมลํ;</p>
+<p rend="gatha3">วิปตฺยํจ มหาเสล,</p>
+<p rend="gathalast">สิลาสงฺฆาตกกฺกสํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในยามรุ่งเรือง จิตของมหาบุรุษย่อมอ่อนโยนเหมือนดอกบัว แต่ในยามวิบัติ ย่อมแข็งกระด้างเหมือนก้อนหินใหญ่ที่รวมกัน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อสมฺภพฺยคุณํ <span class="pb hidden-meta" data-ed="M" data-n="0.0053">[M 0.0053]</span> ถุตฺวา,</p>
+<p rend="gatha2">เขโท มุธาว ชายเต;</p>
+<p rend="gatha3">อวฺหายํ จนฺท มุ ลฺโลกฺย,</p>
+<p rend="gathalast">นจนฺโทต มุ ปาคมี.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">การสรรเสริญคุณที่ไม่มีอยู่จริง ย่อมเกิดความเหนื่อยเปล่า เมื่อเรียกพระจันทร์และมองดู พระจันทร์ก็ไม่มาหา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สจฺจํ <span class="pb hidden-meta" data-ed="M" data-n="0.0059">[M 0.0059]</span> มุขมฺหิ ธาเรยฺย,</p>
+<p rend="gatha2">กณฺเณ สุตํ ภุเช ชยํ;</p>
+<p rend="gatha3">หทยมฺหิ ขมํ วีรํ,</p>
+<p rend="gathalast">โลกาทาสํจ โลจเน.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พึงทรงไว้ซึ่งสัจจะที่ปาก พึงทรงไว้ซึ่งการฟังที่หู ชัยชนะที่แขน พึงทรงไว้ซึ่งความอดทนที่ใจ ความกล้าหาญ และกระจกส่องโลกที่ดวงตา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สทฺทมตฺตํ <span class="pb hidden-meta" data-ed="M" data-n="0.0063">[M 0.0063]</span> นผนฺเทยฺย,</p>
+<p rend="gatha2">อญฺญตฺวา สทฺทการณํ;</p>
+<p rend="gatha3">สทฺทเหตุํ ปริญฺญาย,</p>
+<p rend="gathalast">ปโมโท วา ภโย ตถา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ไม่พึงตื่นตกใจเพียงแค่เสียง โดยไม่รู้สาเหตุของเสียง เมื่อรู้สาเหตุของเสียงแล้ว จึงจะยินดีหรือกลัวก็ได้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สพฺพสุต <span class="pb hidden-meta" data-ed="M" data-n="0.0064">[M 0.0064]</span> ม ธีเยยฺย,</p>
+<p rend="gathalast">หีนมุกฺกฏฺฐมชฺฌิมํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พึงศึกษาความรู้ที่ได้สดับมาทั้งหมด ทั้งอย่างต่ำ อย่างสูง และอย่างปานกลาง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ทุนฺนาริยา <span class="pb hidden-meta" data-ed="M" data-n="0.0068">[M 0.0068]</span> กุลํ สุทฺธํ,</p>
+<p rend="gatha2">ปุตฺโต นสฺสติ ลาลนา;</p>
+<p rend="gatha3">สมิทฺธิ อนยา พนฺธุ,</p>
+<p rend="gathalast">ปวาสา มทนา หิรี.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ตระกูลที่บริสุทธิ์ย่อมพินาศเพราะสตรีชั่ว บุตรย่อมพินาศเพราะการตามใจ ความรุ่งเรืองย่อมพินาศเพราะความประพฤติชั่ว ญาติย่อมพินาศเพราะการอยู่ต่างถิ่น และความละอายย่อมพินาศเพราะความมัวเมา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ลาลเย <span class="pb hidden-meta" data-ed="M" data-n="0.0075">[M 0.0075]</span> ปญฺจวสฺสานิ,</p>
+<p rend="gatha2">ทสวสฺสานิ ตาลเย;</p>
+<p rend="gatha3">ปตฺเตตุ โสฬเสวสฺเส,</p>
+<p rend="gathalast">ปุตฺตํ มิตฺตํว อาจเร.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พึงตามใจ (บุตร) ห้าปี พึงเฆี่ยนตีสิบปี เมื่อถึงสิบหกปี พึงปฏิบัติต่อบุตรเหมือนมิตร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ลาลเน พหโว โทสา,</p>
+<p rend="gathalast">ลาลเน พหโว คุณา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในการตามใจมีโทษมาก ในการเฆี่ยนตีมีคุณมาก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ปาปา <span class="pb hidden-meta" data-ed="M" data-n="0.0077">[M 0.0077]</span> นิวารยติ โยชยเต หิตาย,</p>
+<p rend="gatha2">คุยฺหานิ คูหติ คุณํ ปกฏีกโรติ;</p>
+<p rend="gatha3">อาปตฺติกญฺจ นชหาติ ททาติ กาเล,</p>
+<p rend="gathalast">สมฺมิตฺต ลกฺขณมิทํ ปวทนฺติ สนฺโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">(มิตรดี) ย่อมห้ามจากบาป ชักนำไปสู่ประโยชน์ ปิดบังความลับ เปิดเผยคุณความดี ไม่ทอดทิ้งในยามมีภัย ให้ความช่วยเหลือในเวลาอันควร สัตบุรุษทั้งหลายกล่าวว่า นี่คือลักษณะของมิตรที่ดี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ทุชฺชโน <span class="pb hidden-meta" data-ed="M" data-n="0.0080">[M 0.0080]</span> ชียเต ยุตฺยา,</p>
+<p rend="gatha2">นิคฺคเหน นธีมตา;</p>
+<p rend="gatha3">นิปาตฺยเต มหารุกฺโข,</p>
+<p rend="gathalast">ตสฺสมีป ขติกฺขยา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คนชั่วย่อมพ่ายแพ้ด้วยอุบาย ไม่ใช่ด้วยการข่มขู่ของคนมีปัญญา ต้นไม้ใหญ่ย่อมถูกโค่นลงด้วยการทำลายที่โคนต้นใกล้ๆ นั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1">วเน <span class="pb hidden-meta" data-ed="M" data-n="0.0083">[M 0.0083]</span> มิคาจ ลุทฺธานํ,</p>
+<p rend="gatha2">ทุชฺชนานญฺจ สชฺชนา;</p>
+<p rend="gatha3">อการณเวรี โหนฺติ,</p>
+<p rend="gathalast">ติณภกฺขา สุเปสลา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สัตว์ป่าในป่าย่อมเป็นศัตรูของเหล่านายพราน และสัตบุรุษย่อมเป็นศัตรูของเหล่าอสัตบุรุษ ทั้งที่เป็นผู้มีเวรกันโดยไม่มีเหตุผล เป็นผู้กินหญ้าและมีปกติอ่อนโยน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ปาทลคฺคํ <span class="pb hidden-meta" data-ed="M" data-n="0.0086">[M 0.0086]</span> กรฏฺเฐน,</p>
+<p rend="gathalast">กณฺฑเกเนว กณฺฑกํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พึงถอนหนามที่ติดเท้าด้วยมือ และพึงถอนหนามด้วยหนามนั่นเอง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1">พาลํ <span class="pb hidden-meta" data-ed="M" data-n="0.0087">[M 0.0087]</span> นปสฺเส นสุเณ,</p>
+<p rend="gatha2">นจพาเลน สํวเส;</p>
+<p rend="gatha3">พาเลนาลฺลาปสลฺลาปํ,</p>
+<p rend="gathalast">นกเร นจโรจเย.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ไม่พึงเห็นคนพาล ไม่พึงฟังคนพาล ไม่พึงอยู่ร่วมกับคนพาล ไม่พึงทำสนทนาปราศรัยกับคนพาล และไม่พึงพอใจในการสนทนานั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อุป กตฺตุํ ยถา ขุทฺโท,</p>
+<p rend="gatha2">สมตฺโถ นตถามหา;</p>
+<p rend="gatha3">กูโป หิ หนฺติ ปิปาสํ,</p>
+<p rend="gathalast">นตุ ปาโย มหมฺพุธิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สิ่งที่เล็กย่อมสามารถทำอุปการะได้ แต่สิ่งที่ใหญ่หาเป็นเช่นนั้นไม่ เพราะว่าบ่อน้ำย่อมกำจัดความกระหายได้ แต่มหาสมุทรใหญ่หาทำได้ไม่</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อาทานสฺส <span class="pb hidden-meta" data-ed="M" data-n="0.0095">[M 0.0095]</span> ปทานสฺส,</p>
+<p rend="gatha2">กตฺตพฺพสฺสจ กมฺมุโน;</p>
+<p rend="gatha3">ขิปฺปํ อกรมานสฺส,</p>
+<p rend="gathalast">กาโล ภกฺขติ ตํ รสํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กาลย่อมกลืนกินรสแห่งการรับ การให้ และการงานที่ควรทำนั้นเสีย ของผู้ที่มิได้รีบกระทำให้เสร็จโดยเร็ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="gatha1">นกฺขตฺตํ <span class="pb hidden-meta" data-ed="M" data-n="0.0103">[M 0.0103]</span> ปฏิมาเนนฺตํ,</p>
+<p rend="gatha2">อตฺโถ พาลํ อุปชฺฌคา;</p>
+<p rend="gatha3">อตฺโถ อตฺถสฺส นกฺขตฺตํ,</p>
+<p rend="gathalast">กิํ กริสฺสนฺติ ตารกา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ประโยชน์ย่อมล่วงเลยคนพาลผู้มัวรอฤกษ์ยามอยู่ ประโยชน์เป็นฤกษ์ของประโยชน์เอง ดวงดาวทั้งหลายจะทำอะไรได้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อชรามโรว <span class="pb hidden-meta" data-ed="M" data-n="0.0105">[M 0.0105]</span> ปญฺโญ,</p>
+<p rend="gatha2">วิชฺชมตฺถญฺจ จินฺตเย;</p>
+<p rend="gatha3">คหิโตวิย เกเสสุ,</p>
+<p rend="gathalast">มจฺจุนา ธมฺมมาจเร.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้มีปัญญาพึงคิดถึงวิชาและทรัพย์เหมือนตนเองไม่แก่ไม่ตาย และพึงประพฤติธรรมเหมือนถูกมัจจุราชฉุดกระชากที่ผม</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วชฺชา คุรูจ มนฺตีจ,</p>
+<p rend="gatha2">ตโย รฏฺฐาภิสงฺขตา;</p>
+<p rend="gatha3">ชีวีต ทกฺข โกสานํ,</p>
+<p rend="gathalast">วฑฺฒนา นาสนาจ เต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">แพทย์ ครู และที่ปรึกษา ทั้งสามนี้เป็นผู้ที่รัฐแต่งตั้งไว้ พวกเขาย่อมเป็นผู้เจริญหรือผู้ทำลายซึ่งชีวิต ความฉลาด และคลังทรัพย์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ถิเรน <span class="pb hidden-meta" data-ed="M" data-n="0.0117">[M 0.0117]</span> กมฺมํ วฑฺฒติ,</p>
+<p rend="gatha2">อถิเรน ตุเรน โน;</p>
+<p rend="gatha3">ผลนฺติ สมเย รุกฺขา,</p>
+<p rend="gathalast">สิตฺตาปิ พหุวารินา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">การงานย่อมเจริญด้วยความมั่นคง ไม่เจริญด้วยความไม่มั่นคงและความรีบร้อน ต้นไม้ทั้งหลายย่อมเผล็ดผลตามกาลเวลา แม้จะรดน้ำด้วยน้ำจำนวนมากก็ตาม</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="gatha1">วายาเมเถว <span class="pb hidden-meta" data-ed="M" data-n="0.0120">[M 0.0120]</span> ปุริโส,</p>
+<p rend="gathalast">นนิพฺพินฺเทยฺย ปณฺฑิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">บุรุษพึงพยายามร่ำไป บัณฑิตไม่พึงท้อถอย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ปยตโน <span class="pb hidden-meta" data-ed="M" data-n="0.0122">[M 0.0122]</span> ตาทิโส เนว,</p>
+<p rend="gatha2">กยฺโย เยน ผลํ นหิ;</p>
+<p rend="gatha3">เสลคฺเค กูปขณนา,</p>
+<p rend="gathalast">กถํ โตยสมาคโม.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ไม่พึงทำความพยายามที่ไม่มีผล เช่นการขุดบ่อน้ำบนยอดเขา น้ำจะมารวมกันได้อย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ญาณงฺกุเสน <span class="pb hidden-meta" data-ed="M" data-n="0.0123">[M 0.0123]</span> สมฺมคฺคํ,</p>
+<p rend="gathalast">นิยฺยตฺยุสฺสาหกุญฺชโร.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พญาช้างคือความเพียร ย่อมนำไปสู่ทางที่ชอบ ด้วยขอคือปัญญา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อสเมกฺขิตกมฺมนฺตํ,</p>
+<p rend="gatha2">ตุริตาภิ นิปาตินํ;</p>
+<p rend="gatha3">ตานิกมฺมานิ ตปฺเปนฺติ,</p>
+<p rend="gathalast">อุณฺหํ ว ชฺโฌหิตํ มุเข.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">การงานที่มิได้พิจารณาและรีบร้อนกระทำ ย่อมเผาผลาญบุคคลนั้น เหมือนของร้อนที่ใส่เข้าไปในปาก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ฉทฺโทสา <span class="pb hidden-meta" data-ed="M" data-n="0.0126">[M 0.0126]</span> ปุริเสเนห,</p>
+<p rend="gatha2">หาตพฺพา ภูติมิจฺฉนฺตา;</p>
+<p rend="gatha3">นิทฺทา มชฺชํ ภยํ โกโธ,</p>
+<p rend="gathalast">อาลสฺยํ ทีฆสุตฺตตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">โทษ ๖ ประการที่บุรุษผู้ปรารถนาความเจริญในโลกนี้พึงละเสีย คือ ความหลับ ความมึนเมา ความกลัว ความโกรธ ความเกียจคร้าน และการผัดวันประกันพรุ่ง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="gatha1">น <span class="pb hidden-meta" data-ed="M" data-n="0.0130">[M 0.0130]</span> ทิวา สุปฺปสีเลน,</p>
+<p rend="gatha2">รตฺติมุฏฺฐานเทสฺสินา;</p>
+<p rend="gatha3">นิจฺจโสณฺเฑน มตฺเตน,</p>
+<p rend="gathalast">สกฺกา อาวสิตุํ ฆรํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">บุคคลผู้ชอบนอนกลางวัน เกลียดการตื่นในเวลากลางคืน เป็นนักเลงสุราและมึนเมาเป็นนิตย์ ไม่สามารถจะครองเรือนได้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อเภตพฺพมฺหิ <span class="pb hidden-meta" data-ed="M" data-n="0.0137">[M 0.0137]</span> ภายนฺติ,</p>
+<p rend="gatha2">ภายิตพฺเพ นภายเร;</p>
+<p rend="gatha3">ภยาภย วิมุฬฺหา เต,</p>
+<p rend="gathalast">ชิมฺหานุคา อุชุญฺชหา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พวกเขาย่อมกลัวในสิ่งที่ไม่ควรกลัว และไม่กลัวในสิ่งที่ควรกลัว เป็นผู้หลงผิดในสิ่งที่ควรกลัวและไม่ควรกลัว ย่อมละทิ้งทางตรงและไปตามทางคด</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ยสฺส <span class="pb hidden-meta" data-ed="M" data-n="0.0139">[M 0.0139]</span> มนุสฺสภูตสฺส,</p>
+<p rend="gatha2">นตฺถิ โภคาจ สิปฺปกํ;</p>
+<p rend="gatha3">กิํ ผลํ ตสฺส มานุสฺสํ,</p>
+<p rend="gathalast">ทฺวิปาทฏฺโฐ หิ โส มิโค.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">มนุษย์ผู้ใดไม่มีทั้งโภคทรัพย์และศิลปวิทยา ความเป็นมนุษย์ของเขาจะมีประโยชน์อะไร เพราะเขาก็คือสัตว์ผู้ตั้งอยู่บนสองเท้านั่นเอง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๗</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> นาโนปาโยว <span class="pb hidden-meta" data-ed="M" data-n="0.0142">[M 0.0142]</span> กตฺตพฺโพ,</p>
+<p rend="gatha2">สเจ ภเวยฺย อตฺตโน;</p>
+<p rend="gatha3">อตฺถสิทฺธิ ยถากามํ,</p>
+<p rend="gathalast">อุปาโย หิ หิตญฺชโส.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พึงกระทำอุบายต่างๆ หากตนปรารถนาความสำเร็จประโยชน์ตามความต้องการ เพราะอุบายเป็นทางแห่งประโยชน์สุข</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ลญฺชทานพาลิเสน<span class="pb hidden-meta" data-ed="M" data-n="0.0150">[M 0.0150]</span>,</p>
+<p rend="gatha2">กูฏฑฺฑการธีวรา;</p>
+<p rend="gatha3">วินิจฺฉยมหามจฺฉํ,</p>
+<p rend="gathalast">โอฏฺเฏนฺติ โลภสาคเร.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เหล่านักกฎหมายผู้คดโกงเปรียบเหมือนชาวประมง ย่อมตกปลาใหญ่คือการวินิจฉัยคดีในมหาสมุทรคือความโลภ ด้วยเบ็ดคือการให้สินบน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ยสฺเสเต จตุโร ธมฺมา,</p>
+<p rend="gatha2">วานรินฺท ยถาตว;</p>
+<p rend="gatha3">สจฺจํ ธมฺโม ธีติ จาโค,</p>
+<p rend="gathalast">ทิฏฺฐํ โส อติวตฺตติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ดูกรพญาวานร ผู้ใดมีธรรม ๔ ประการนี้เหมือนท่าน คือ สัจจะ ธรรมะ ธิติ และจาคะ ผู้นั้นย่อมล่วงพ้นศัตรูที่พบเห็นได้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> วิทฺวาจ <span class="pb hidden-meta" data-ed="M" data-n="0.0162">[M 0.0162]</span> รตนํ นารี,</p>
+<p rend="gatha2">วีณา สาตฺถํ คิรํมหี;</p>
+<p rend="gatha3">คุณวิเสส มาคมฺม,</p>
+<p rend="gathalast">คุณานิ อคุณานิจ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">บัณฑิต สตรีรัตนะ พิณ วาจาที่มีประโยชน์ และแผ่นดิน สิ่งเหล่านี้อาศัยคุณวิเศษ ย่อมมีทั้งคุณและโทษ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ธนวา <span class="pb hidden-meta" data-ed="M" data-n="0.0164">[M 0.0164]</span> พลวา โลเก,</p>
+<p rend="gathalast">ธนา ภวติ ปณฺฑิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้มีทรัพย์เป็นผู้มีกำลังในโลก และบัณฑิตย่อมเป็นผู้มีทรัพย์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สุมเน <span class="pb hidden-meta" data-ed="M" data-n="0.0165">[M 0.0165]</span> นิสฺสิโต กีโฏ,</p>
+<p rend="gatha2">นิคฺคุโณ หีนโก สยํ;</p>
+<p rend="gatha3">ตํ ปุปฺเผหิ มณฺเฑนฺตานํ,</p>
+<p rend="gathalast">รญฺญํ สิโรปิ โรหติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">แมลงที่อาศัยดอกมะลิ แม้ตนเองจะต่ำต้อยไม่มีคุณสมบัติ แต่เมื่อเขาเอาดอกไม้นั้นไปประดับ ย่อมขึ้นสู่พระเศียรของพระราชาได้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อลกฺขิเกหิ <span class="pb hidden-meta" data-ed="M" data-n="0.0168">[M 0.0168]</span> สญฺจีตา,</p>
+<p rend="gatha2">ธนโภคาจ จินฺติตา;</p>
+<p rend="gatha3">ลกฺขิกสฺส ภวนฺเตเต,</p>
+<p rend="gathalast">ลกฺขิวา สุฏฺฐุภุญฺชติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ทรัพย์และโภคสมบัติที่คนไร้โชคสะสมและนึกหวังไว้ ย่อมตกเป็นของคนมีโชค และคนมีโชคนั้นย่อมได้บริโภคเป็นอย่างดี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ขตฺติโย <span class="pb hidden-meta" data-ed="M" data-n="0.0171">[M 0.0171]</span> เสฏฺโฐ ชเน ตสฺมิํ,</p>
+<p rend="gatha2">โย โคตฺตปฏิสาริโน;</p>
+<p rend="gatha3">วิชฺชาจรณสมฺปนฺโน,</p>
+<p rend="gathalast">โส เสฏฺโฐ เทวมานุเส.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กษัตริย์เป็นผู้ประเสริฐที่สุดในหมู่ชนผู้รังเกียจด้วยโคตร แต่ผู้ที่ถึงพร้อมด้วยวิชชาและจรณะ เป็นผู้ประเสริฐที่สุดในหมู่เทวดาและมนุษย์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1">วิสาปิ <span class="pb hidden-meta" data-ed="M" data-n="0.0182">[M 0.0182]</span> อมตํ คณฺเห,</p>
+<p rend="gatha2">คูถโต มณิมุตฺตมํ;</p>
+<p rend="gatha3">กณฺฏกปาทปา ปุปฺผํ,</p>
+<p rend="gathalast">ถิรตํ ทุกฺกุลา วรํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พึงรับอมฤตแม้จากยาพิษ พึงรับมณีอันล้ำค่าแม้จากกองอุจจาระ พึงรับดอกไม้แม้จากต้นไม้มีหนาม และพึงรับสตรีผู้ประเสริฐแม้จากตระกูลต่ำ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ธนิสฺสราทิคุโณมฺมิ <span class="pb hidden-meta" data-ed="M" data-n="0.0189">[M 0.0189]</span>-</p>
+<p rend="gathalast">เวเคน วาหิตา ปชา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หมู่ประชาถูกพัดพาไปด้วยความเร็วแห่งเกลียวคลื่นคือคุณสมบัติ มีความร่ำรวยและอำนาจเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๙</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ยสฺส ตฺถิ สตตํ เมตฺตา,</p>
+<p rend="gatha2">สพฺพโลกสุวลฺลภา;</p>
+<p rend="gatha3">กูปายเต สมุทฺโทปิ,</p>
+<p rend="gathalast">อคฺคิ ตสฺส ชลายเต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้ใดมีความเมตตาอยู่เป็นนิตย์อันเป็นที่รักของโลกทั้งปวง แม้มหาสมุทรก็กลายเป็นเพียงบ่อน้ำ และไฟก็กลายเป็นน้ำสำหรับผู้นั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สกฺขรายติ เมรูปิ,</p>
+<p rend="gatha2">วิสภกฺโข สุธายเต;</p>
+<p rend="gatha3">สสายเต มิคราช,</p>
+<p rend="gatha2">พฺยาโล มาลาคุณายเต;</p>
+<p rend="gatha3">โทลายเต ฉมาจาโล,</p>
+<p rend="gathalast">นานาวุธา ติณายเร.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">แม้ภูเขาสิเนรุก็กลายเป็นเพียงก้อนกรวด การกินยาพิษก็กลายเป็นเหมือนดื่มน้ำอมฤต พญาราชสีห์ก็กลายเป็นเพียงกระต่าย งูร้ายก็กลายเป็นพวงมาลัย แผ่นดินไหวก็กลายเป็นเพียงเปลไกว และอาวุธนานาชนิดก็กลายเป็นเพียงเศษหญ้า</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สเมว <span class="pb hidden-meta" data-ed="M" data-n="0.0202">[M 0.0202]</span> สติ อุสฺสาเห,</p>
+<p rend="gatha2">สุขวาโห หิตงฺกโร;</p>
+<p rend="gatha3">อูเน-ธิเก ตถา โนหิ,</p>
+<p rend="gathalast">มชฺฌโค สาธุ สพฺพทา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เมื่อมีความเพียรที่พอดี ย่อมนำมาซึ่งความสุขและเป็นประโยชน์ แต่เมื่อน้อยไปหรือมากไปหาเป็นเช่นนั้นไม่ ความพอดีจึงเป็นสิ่งดีเสมอ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สาธุ <span class="pb hidden-meta" data-ed="M" data-n="0.0208">[M 0.0208]</span> โข ปณฺฑิโตนาม,</p>
+<p rend="gathalast">นตฺเวว อติปณฺฑิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">บัณฑิตชื่อว่าดีแท้ แต่หาใช่อติบัณฑิตไม่</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2520 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e0906n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Sarabun"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">บาลี | แปล</button><button type="button" data-mode="view-stack">บาลี — แปล</button><button type="button" data-mode="view-pali-only">เฉพาะบาลี</button><button type="button" data-mode="view-trans-only">เฉพาะแปล</button><button type="button" id="toggle-meta-btn">เชิงอรรถ</button></div>
+<div class="pair-row" data-id="e0906n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre"> นโม ตสฺส ภควโต อรหโต สมฺมาสมฺพุทฺธสฺส</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ขอนอบน้อมแด่พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้าพระองค์นั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="chapter">อภิธมฺมปิฏก</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">พระอภิธรรมปิฎก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="subhead">สํคายนสฺส ปุจฺฉา วิสฺสชฺชนา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ถาม-ตอบการสังคายนา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ปฐมมหาสํคีติกาเล <span class="pb hidden-meta" data-ed="M" data-n="0.0001">[M 0.0001]</span> อาวุโส ธมฺมสํคาหกา มหากสฺสปาทโย มหาเถรวรา โปราณสํคีติการา ปฐมํ วินยปิฏกํ สํคายิตฺวา สุตฺตนฺตปิฏเก จ ทีฆมชฺฌิมสํยุตฺตองฺคุตฺตรสํขาเต จตฺตาโร มหานิกาเย สํคายิตฺวา ตทนนฺตรํ กิํ นาม ปาวจนํ สํคายิํสุ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถาม – ท่านผู้มีอายุ ในกาลแห่งปฐมมหาสังคายนา พระมหาเถระผู้ประเสริฐมีพระมหากัสสปะเป็นต้น ผู้เป็นสังคายกะแต่ครั้งโบราณ ได้สังคายนาพระวินัยปิฎกก่อน และได้สังคายนาพระมหานิกาย ๔ คือ ทีฆนิกาย มัชฌิมนิกาย สังยุตตนิกาย อังคุตตรนิกาย ในพระสุตตันตปิฎกแล้ว หลังจากนั้น ได้สังคายนาพระพุทธพจน์ชื่ออะไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ปฐมมหาสํคีติกาเล ภนฺเต ธมฺมสํคาหกา มหากสฺสปาทโย มหาเถรวรา โปราณสํคีติการา ปฐมํ วินยปิฏกํ สํคายิตฺวา สุตฺตนฺตปิฏเก จ ทีฆมชฺฌิมสํยุตฺตองฺคุตฺตรสํขาเต จตฺตาโร นิกาเย สํคายิตฺวา ตทนนฺตรํ อภิธมฺมปิฏกํ นาม ปาวจนํ สํคายิํสุ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตอบ – ท่านผู้เจริญ ในกาลแห่งปฐมมหาสังคายนา พระมหาเถระผู้ประเสริฐมีพระมหากัสสปะเป็นต้น ผู้เป็นสังคายกะแต่ครั้งโบราณ ได้สังคายนาพระวินัยปิฎกก่อน และได้สังคายนาพระนิกาย ๔ คือ ทีฆนิกาย มัชฌิมนิกาย สังยุตตนิกาย อังคุตตรนิกาย ในพระสุตตันตปิฎกแล้ว หลังจากนั้น ได้สังคายนาพระพุทธพจน์ชื่อพระอภิธรรมปิฎก.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อิมิสฺสมฺปิ <span class="pb hidden-meta" data-ed="M" data-n="0.0002">[M 0.0002]</span> อาวุโส ฉฏฺฐสํคีติยํ สกลญฺเจว วินยปิฏกํ สํคีตํ, เต จ จตฺตาโร มหานิกายา. กาโล ทานิ อาวุโส สมฺปตฺโต อภิธมฺมปิฏกํ สํคายิตุํ, ตสฺมาหํ ตํ ตตฺถ ปุจฺฉิตพฺพานิ ปุจฺฉิสฺสามิ. อภิธมฺโม นาเมส อาวุโส เกนฏฺเฐน อภิธมฺโมติ วุจฺจติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถาม – ท่านผู้มีอายุ ในฉัฏฐสังคายนาครั้งนี้ พระวินัยปิฎกทั้งหมดก็สังคายนาแล้ว และมหานิกาย ๔ นั้นก็สังคายนาแล้ว บัดนี้ถึงเวลาแล้วที่ท่านผู้มีอายุจะสังคายนาพระอภิธรรมปิฎก เพราะฉะนั้น ข้าพเจ้าจะถามปัญหาที่ควรจะถามในเรื่องนั้นว่า ท่านผู้มีอายุ พระอภิธรรมนี้ ชื่อว่าพระอภิธรรม เพราะอรรถว่าอะไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ธมฺมาติเรก ธมฺมวิเสสฏฺเฐน ภนฺเต อภิธมฺโมติ วุจฺจติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตอบ – ท่านผู้เจริญ พระอภิธรรมนี้ ชื่อว่าพระอภิธรรม เพราะอรรถว่าธรรมยิ่งและธรรมพิเศษ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> โส <span class="pb hidden-meta" data-ed="M" data-n="0.0005">[M 0.0005]</span> ปเนส อาวุโส อภิธมฺโม เกน กตฺถ กทา จ อธิคโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถาม – ท่านผู้มีอายุ พระอภิธรรมนั้น ใครได้ตรัสรู้ ที่ไหน เมื่อไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> โส โข ภนฺเต อภิธมฺโม สพฺพญฺญุพุทฺเธน มหาโพธิมณฺฑมูเล เวสาขปุณฺณมิยํ ยถาภูตํ อธิคโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตอบ – ท่านผู้เจริญ พระอภิธรรมนั้น พระสัพพัญญูพุทธเจ้าได้ตรัสรู้ตามความเป็นจริง ที่โคนมหาโพธิบัลลังก์ ในวันเพ็ญวิสาขะ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> กตฺถ ปเนส อาวุโส อภิธมฺโม ภควตา กทา จ วิจิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถาม – ท่านผู้มีอายุ พระอภิธรรมนั้น พระผู้มีพระภาคทรงพิจารณาที่ไหน เมื่อไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> โส โข ภนฺเต อภิธมฺโม ภควตา มหาโพธิมณฺเฑ รตนฆรสตฺตาเห วิจิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตอบ – ท่านผู้เจริญ พระอภิธรรมนั้น พระผู้มีพระภาคทรงพิจารณาที่มหาโพธิบัลลังก์ ในสัปดาห์แห่งเรือนแก้ว.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> กตฺถ <span class="pb hidden-meta" data-ed="M" data-n="0.0007">[M 0.0007]</span> ปเนส อาวุโส อภิธมฺโม ภควตา กทา กสฺสตฺถาย จ เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถาม – ท่านผู้มีอายุ พระอภิธรรมนั้น พระผู้มีพระภาคทรงแสดงที่ไหน เมื่อไร และเพื่อประโยชน์แก่ใคร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> โส โข ภนฺเต อภิธมฺโม ภควตา เทเวสุ ตาวติํเสสุ ปาริจฺฉตฺตกมูลมฺหิ ปณฺฑุกมฺพลสิลายํ อภิสมฺโพธิโต สตฺตเม วสฺเส มาตรํ ปมุขํ กตฺวา ทสหิ จกฺกวาฬสหสฺเสหิ อาคมฺม สนฺนิสินฺนานํ เทวตานํ จตุโรฆนิตฺถรณตฺถาย อนฺโต วสฺสํ เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตอบ – ท่านผู้เจริญ พระอภิธรรมนั้น พระผู้มีพระภาคทรงแสดงแก่เหล่าเทพในชั้นดาวดึงส์ ที่ใต้ต้นปาริจฉัตตกะ บนบัณฑุกัมพลศิลา ในพรรษาที่ ๗ แห่งการตรัสรู้ โดยมีพระมารดาเป็นประธาน เพื่อประโยชน์แก่การข้ามโอฆะ ๔ ของเหล่าเทพที่มาประชุมกันจากหมื่นจักรวาล ตลอดพรรษา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เกเนส <span class="pb hidden-meta" data-ed="M" data-n="0.0008">[M 0.0008]</span> อาวุโส อภิธมฺโม ปฐมํ มนุสฺสโลเก ปติคฺคหิโต, กสฺส จ ปุน เตน เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถาม – ท่านผู้มีอายุ พระอภิธรรมนั้น ใครเป็นผู้รับไว้ในมนุษยโลกเป็นครั้งแรก และท่านนั้นแสดงแก่ใครอีก?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อายสฺมตา ภนฺเต สาริปุตฺตตฺเถเรน ธมฺมเสนาปตินา เอส อภิธมฺโม ปฐมํ มนุสฺสโลเก ปติคฺคหิโต, เตเนว ภนฺเต อายสฺมตา สาริปุตฺตตฺเถเรน อตฺตโน สทฺธิวิหาริกานํ ปญฺจนฺนํ ภิกฺขุสตานํ เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตอบ – ท่านผู้เจริญ พระอภิธรรมนั้น พระสารีบุตรเถระผู้เป็นพระธรรมเสนาบดี เป็นผู้รับไว้ในมนุษยโลกเป็นครั้งแรก และท่านผู้เจริญ พระสารีบุตรเถระนั้นได้แสดงแก่ภิกษุ ๕๐๐ รูปผู้เป็นสัทธิวิหาริกของท่าน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เก <span class="pb hidden-meta" data-ed="M" data-n="0.0011">[M 0.0011]</span> อาวุโส สิกฺขนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถาม – ท่านผู้มีอายุ ใครบ้างที่กำลังศึกษาอยู่?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> เสขา จ ภนฺเต ปุถุชฺชนา กลฺยาณกา จ สิกฺขนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตอบ – ท่านผู้เจริญ พระเสขะและปุถุชนผู้มีกัลยาณธรรมกำลังศึกษาอยู่.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เก อาวุโส สิกฺขิตสิกฺขา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถาม – ท่านผู้มีอายุ ใครบ้างที่ศึกษาจบแล้ว?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อรหนฺโต ภนฺเต สิกฺขิตสิกฺขา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตอบ – ท่านผู้เจริญ พระอรหันต์ทั้งหลายศึกษาจบแล้ว.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เก <span class="pb hidden-meta" data-ed="M" data-n="0.0012">[M 0.0012]</span> อาวุโส ธาเรนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถาม – ท่านผู้มีอายุ ใครบ้างที่ทรงจำไว้?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> เยสํ ภนฺเต วตฺตติ, เต ธาเรนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตอบ – ท่านผู้เจริญ ผู้ที่ยังมีการเล่าเรียนอยู่ ย่อมทรงจำไว้.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> กสฺส อาวุโส วจนํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถาม – ท่านผู้มีอายุ เป็นพระดำรัสของใคร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ภควโต ภนฺเต วจนํ อรหโต สมฺมาสมฺพุทฺธสฺส.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตอบ – ท่านผู้เจริญ เป็นพระดำรัสของพระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้า.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เกนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0013">[M 0.0013]</span> อาภตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถาม – ท่านผู้มีอายุ ใครนำมา?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ปรํปราย ภนฺเต อาภตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตอบ – ท่านผู้เจริญ นำมาโดยลำดับสืบต่อกันมา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="centre">ธมฺมสงฺคณี</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ธัมมสังคณี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> โส <span class="pb hidden-meta" data-ed="M" data-n="0.0014">[M 0.0014]</span> ปเนส อาวุโส อภิธมฺโม ธมฺมสงฺคณิวิภงฺคาทิปกรณปริจฺเฉทวเสน สตฺตวิโธ. เตสุ ปฐมํ ภควตา กตรํ ปกรณํ เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถาม – ท่านผู้มีอายุ พระอภิธรรมนั้นมี ๗ อย่าง โดยแบ่งเป็นคัมภีร์ธัมมสังคณี วิภังค์ เป็นต้น ในบรรดาคัมภีร์เหล่านั้น พระผู้มีพระภาคทรงแสดงคัมภีร์อะไรเป็นอันดับแรก?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ปฐมํ ภนฺเต ธมฺมสงฺคณิปกรณํ ภควตา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตอบ – ท่านผู้เจริญ พระผู้มีพระภาคทรงแสดงคัมภีร์ธัมมสังคณีเป็นอันดับแรก.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ธมฺมสงฺคณิยํ อาวุโส อตฺถิ มาติกา, อตฺถิ ปทภาชนียํ. เตสุ มาติกํ นิกฺขิปนฺเตน ภควตา กตํ นิกฺขิตฺตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถาม – ท่านผู้มีอายุ ในคัมภีร์ธัมมสังคณี มีมาติกา มีบทภาชนีย์ ในบรรดามาติกาและบทภาชนีย์นั้น พระผู้มีพระภาคเมื่อทรงวางมาติกา ทรงวางไว้อย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> มาติกํ ภนฺเต นิกฺขิปนฺเตน ภควตา “กุสลา ธมฺมา อกุสลา ธมฺมา อพฺยากตา ธมฺมา. สุขาย เวทนาย สมฺปยุตฺตา ธมฺมา ทุกฺขาย เวทนาย สมฺปยุตฺตา ธมฺมา อทุกฺขมสุขาย เวทนาย สมฺปยุตฺตา ธมฺมา. วิปากา ธมฺมา วิปากธมฺมธมฺมา เนววิปากนวิปากธมฺมธมฺมา”ติ เอวมาทินา ทฺวาวีสติยา ติกานํ วเสน. “เหตู ธมฺมา น เหตู ธมฺมา. สเหตุกา ธมฺมา อเหตุกา ธมฺมา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ตอบ – ท่านผู้เจริญ พระผู้มีพระภาคเมื่อทรงวางมาติกา ทรงวางมาติกาโดยนัยแห่งติกะ ๒๒ มีอาทิว่า “ธรรมเป็นกุศล ธรรมเป็นอกุศล ธรรมเป็นอัพยากฤต. ธรรมที่สัมปยุตด้วยสุขเวทนา ธรรมที่สัมปยุตด้วยทุกขเวทนา ธรรมที่สัมปยุตด้วยอทุกขมสุขเวทนา. ธรรมเป็นวิบาก ธรรมมีวิบากเป็นธรรมดา ธรรมไม่เป็นวิบากและไม่มีวิบากเป็นธรรมดา” ดังนี้. “ธรรมที่เป็นเหตุ ธรรมที่ไม่ใช่เหตุ. ธรรมที่มีเหตุ ธรรมที่ไม่มีเหตุ.”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เหตุสมฺปยุตฺตา <span class="pb hidden-meta" data-ed="M" data-n="0.0015">[M 0.0015]</span> ธมฺมา เหตุวิปฺปยุตฺตา ธมฺมา. เหตู เจว ธมฺมา สเหตุกา จ สเหตุกา เจว ธมฺมา น จ เหตู. เหตู เจว ธมฺมา เหตุสมฺปยุตฺตา จ เหตุสมฺปยุตฺตา เจว ธมฺมา น จ เหตู. น เหตู โข ปน ธมฺมา สเหตุกาปิ อเหตุกาปี”ติ เอวมาทินา ทุกสตานญฺจ วเสน มาติกา นิกฺขิตฺตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ธรรมทั้งหลายที่สัมปยุตด้วยเหตุ ธรรมทั้งหลายที่วิปปยุตจากเหตุ. ธรรมทั้งหลายที่เป็นเหตุด้วย เป็นสเหตุกะด้วย และธรรมทั้งหลายที่เป็นสเหตุกะด้วย ไม่เป็นเหตุด้วย. ธรรมทั้งหลายที่เป็นเหตุด้วย สัมปยุตด้วยเหตุด้วย และธรรมทั้งหลายที่สัมปยุตด้วยเหตุด้วย ไม่เป็นเหตุด้วย. อนึ่ง ธรรมทั้งหลายที่ไม่เป็นเหตุ ก็เป็นสเหตุกะบ้าง เป็นอเหตุกะบ้าง" ด้วยประการฉะนี้ พระผู้มีพระภาคเจ้าทรงแสดงมาติกาโดยนัยแห่งทุกะ ๑๐๐ เป็นต้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="subhead">กามาวจรกุสล</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">กุศลที่เป็นกามาวจร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0016">[M 0.0016]</span> อาวุโส ธมฺมสงฺคณิยํ ปทภาชนีเย จิตฺตุปฺปาทกณฺเฑ กุสลา ธมฺมาติปทสฺส อตฺถํ วิภชนฺเตน ภควตา กถํ กามาวจรกุสลํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนท่านผู้มีอายุ ในอภิธรรมปิฎก ธัมมสังคณีปกรณ์ ในปทภาชนีย์ จิตตุปปาทกัณฑ์ พระผู้มีพระภาคเจ้าเมื่อทรงจำแนกอรรถแห่งบทว่า "กุสลา ธัมมา" ได้ทรงจำแนกและแสดงกามาวจรกุศลโดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ธมฺมสงฺคณิปกรเณ จิตฺตุปฺปาทกณฺเฑ กุสลา ธมฺมาติ ปทสฺส อตฺถํ วิภชนฺเตน ภควตา “กตเม ธมฺมา กุสลา. ยสฺมิํ สมเย กามาวจรํ กุสลํ จิตฺตํ อุปฺปนฺนํ โหติ โสมนสฺสสหคตํ ญาณสมฺปยุตฺตํ รูปารมฺมณํ วา สทฺทารมฺมณํ วา คนฺธารมฺมณํ วา รสารมฺมณํ วา โผฏฺฐพฺพารมฺมณํ วา ธมฺมารมฺมณํ วา ยํ ยํ วา ปนารพฺภ. ตสฺมิํ สมเย ผสฺโส โหติ เวทนา โหติ สญฺญา โหติ เจตนา โหติ จิตฺตํ โหติ วิตกฺโก โหติ วิจาโร โหติ ปีติ โหติ สุขํ โหติ จิตฺตสฺเสกคฺคตา โหตี”ติ เอวมาทินา กามาวจรกุสลํ ตีหิ มหาวาเรหิ วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในอภิธรรมปิฎก ธัมมสังคณีปกรณ์ จิตตุปปาทกัณฑ์ พระผู้มีพระภาคเจ้าเมื่อทรงจำแนกอรรถแห่งบทว่า "กุสลา ธัมมา" ได้ทรงจำแนกและแสดงกามาวจรกุศลโดยพิสดารด้วยมหาวาระ ๓ อย่าง ด้วยประการฉะนี้ว่า "ธรรมทั้งหลายที่เป็นกุศลเป็นไฉน? ในสมัยใด จิตที่เป็นกามาวจรกุศลอันสหรคตด้วยโสมนัส สัมปยุตด้วยญาณ เกิดขึ้น ปรารภอารมณ์คือรูปบ้าง เสียงบ้าง กลิ่นบ้าง รสบ้าง โผฏฐัพพะบ้าง ธรรมารมณ์บ้าง อย่างใดอย่างหนึ่ง. ในสมัยนั้น มีผัสสะ มีเวทนา มีสัญญา มีเจตนา มีจิต มีวิตก มีวิจาร มีปีติ มีสุข มีจิตเตกัคคตา" ดังนี้เป็นต้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="subhead">รูปาวจรกุสล</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">กุศลที่เป็นรูปาวจร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0018">[M 0.0018]</span> อาวุโส ธมฺมสงฺคณีปาฬิยํ จิตฺตุปฺปาทกณฺเฑ กุสลา ธมฺมาติ ปทสฺส อตฺถํ วิภชนฺเตน ภควตา กถํ รูปาวจรกุสลญฺจ อรูปาวจรกุสลญฺจ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนท่านผู้มีอายุ ในอภิธรรมปิฎก ธัมมสังคณีปาฬิ จิตตุปปาทกัณฑ์ พระผู้มีพระภาคเจ้าเมื่อทรงจำแนกอรรถแห่งบทว่า "กุสลา ธัมมา" ได้ทรงจำแนกและแสดงรูปาวจรกุศลและอรูปาวจรกุศลโดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> รูปาวจรกุสลญฺจ อรูปาวจรกุสลญฺจ ภนฺเต “กตเม ธมฺมา กุสลา. ยสฺมิํ สมเย รูปูปปตฺติยา มคฺคํ ภาเวติ วิวิจฺเจว กาเมหิ วิวิจฺจ อกุสเลหิ ธมฺเมหิ สวิตกฺกํ สวิตกฺกํ วิเวกชํ ปีติสุขํ ปฐมํ ฌานํ อุปสมฺปชฺช วิหรติ ปถวีกสิณ”นฺติ เอวมาทินา ภควตา วิตฺถารโต เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ รูปาวจรกุศลและอรูปาวจรกุศลนั้น พระผู้มีพระภาคเจ้าได้ทรงจำแนกและแสดงโดยพิสดารด้วยประการฉะนี้ว่า "ธรรมทั้งหลายที่เป็นกุศลเป็นไฉน? ในสมัยใด บุคคลเจริญมรรคเพื่อการเข้าถึงรูปภพ สงัดจากกามทั้งหลาย สงัดจากอกุศลธรรมทั้งหลาย เข้าถึงปฐมฌานอันมีวิตก มีวิจาร มีปีติและสุขเกิดแต่วิเวกแล้วแลอยู่ด้วยปฐวีกกสิณ" ดังนี้เป็นต้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="subhead">โลกุตฺตรากุสล</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">กุศลที่เป็นโลกุตตระ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0021">[M 0.0021]</span> อาวุโส ธมฺมสงฺคณีปาฬิยํ จิตฺตุปฺปาทกณฺเฑ กุสลา ธมฺมาติ ปทสฺส อตฺถํ วิภชนฺเตน ภควตา กถํ โลกุตฺตรกุสลํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนท่านผู้มีอายุ ในอภิธรรมปิฎก ธัมมสังคณีปาฬิ จิตตุปปาทกัณฑ์ พระผู้มีพระภาคเจ้าเมื่อทรงจำแนกอรรถแห่งบทว่า "กุสลา ธัมมา" ได้ทรงจำแนกและแสดงโลกุตตรกุศลโดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ธมฺมสงฺคณิยํ จิตฺตุปฺปาทกณฺเฑ กุสลา ธมฺมาติ ปทสฺส อตฺถํ วิภชนฺเตน ภควตา “กตเม ธมฺมา กุสลา. ยสฺมิํ สมเย โลกุตฺตรํ ฌานํ ภาเวติ นิยฺยานิกํ อปจยคามิํ ทิฏฺฐิคตานํ ปหานาย ปฐมาย ภูมิยา ปตฺติยา วิวิจฺเจว กาเมหิ…เป… ปฐมํ ฌานํ อุปสมฺปชฺช วิหรติ ทุกฺขปฏิปทํ ทนฺธาภิญฺญ”นฺติ เอวมาทินา ภควตา โลกุตฺตรกุสลํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในอภิธรรมปิฎก ธัมมสังคณี จิตตุปปาทกัณฑ์ พระผู้มีพระภาคเจ้าเมื่อทรงจำแนกอรรถแห่งบทว่า "กุสลา ธัมมา" ได้ทรงจำแนกและแสดงโลกุตตรกุศลโดยพิสดารด้วยประการฉะนี้ว่า "ธรรมทั้งหลายที่เป็นกุศลเป็นไฉน? ในสมัยใด บุคคลเจริญโลกุตตรฌาน อันเป็นเครื่องนำออกไป อันเป็นไปเพื่อไม่สั่งสม เพื่อละทิฏฐิทั้งหลาย เพื่อบรรลุภูมิที่หนึ่ง สงัดจากกามทั้งหลาย...ละ...เข้าถึงปฐมฌานแล้วแลอยู่ด้วยทุกขาปฏิปทา ทันธาภิญญา" ดังนี้เป็นต้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="subhead">อกุสล</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อกุศล</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ตตฺเถว <span class="pb hidden-meta" data-ed="M" data-n="0.0023">[M 0.0023]</span> อาวุโส อกุสลา ธมฺมาติ มาติกาปทสฺส อตฺถํ วิภชนฺเตน ภควตา กถํ อกุสลํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนท่านผู้มีอายุ ในที่นั้นนั่นแล พระผู้มีพระภาคเจ้าเมื่อทรงจำแนกอรรถแห่งบทมาติกาว่า "อกุสลา ธัมมา" ได้ทรงจำแนกและแสดงอกุศลโดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ตตฺเถว ภนฺเต อกุสลา ธมฺมาติ มาติกาปทสฺส อตฺถํ วิภชนฺเตน ภควตา “กตเม ธมฺมา อกุสลา. ยสฺมิํ สมเย อกุสลํ จิตฺตํ อุปฺปนฺนํ โหติ โสมนสฺสสหคตํ ทิฏฺฐิคตสมฺปยุตฺตํ รูปารมฺมณํ วา สทฺธารมฺมณํ วา คนฺธารมฺมณํ วา รสารมฺมณํ วา โผฏฺฐพฺพารมฺมณํ วา ธมฺมารมฺมณํ วา ยํ ยํ วา ปนารพฺภ. ตสฺมิํ สมเย ผสฺโส โหติ เวทนา โหติ สญฺญา โหติ เจตนา โหติ จิตฺตํ โหตี”ติ เอวมาทินา อกุสลํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในที่นั้นนั่นแล พระผู้มีพระภาคเจ้าเมื่อทรงจำแนกอรรถแห่งบทมาติกาว่า "อกุสลา ธัมมา" ได้ทรงจำแนกและแสดงอกุศลโดยพิสดารด้วยประการฉะนี้ว่า "ธรรมทั้งหลายที่เป็นอกุศลเป็นไฉน? ในสมัยใด จิตที่เป็นอกุศลอันสหรคตด้วยโสมนัส สัมปยุตด้วยทิฏฐิ เกิดขึ้น ปรารภอารมณ์คือรูปบ้าง เสียงบ้าง กลิ่นบ้าง รสบ้าง โผฏฐัพพะบ้าง ธรรมารมณ์บ้าง อย่างใดอย่างหนึ่ง. ในสมัยนั้น มีผัสสะ มีเวทนา มีสัญญา มีเจตนา มีจิต" ดังนี้เป็นต้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="subhead">อพฺยากต</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อัพยากตะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก อาวุโส ธมฺมสงฺคณีปาฬิยํ จิตฺตุปฺปาทกณฺฑรูปกณฺเฑสุ อพฺยากตา ธมฺมาติ มาติกาปทสฺส อตฺถํ วิภชนฺเตน <span class="pb hidden-meta" data-ed="M" data-n="0.0024">[M 0.0024]</span> ภควตา กถํ อพฺยากตา ธมฺมา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนท่านผู้มีอายุ ในอภิธรรมปิฎก ธัมมสังคณีปาฬิ จิตตุปปาทกัณฑ์และรูปกัณฑ์ พระผู้มีพระภาคเจ้าเมื่อทรงจำแนกอรรถแห่งบทมาติกาว่า "อัพยากตา ธัมมา" ได้ทรงจำแนกและแสดงอัพยากตธรรมโดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ธมฺมสงฺคณิยํ อพฺยากตา ธมฺมาติ ปทสฺส อตฺถํ วิภชนฺเตน ภควตา “กตเม ธมฺมา อพฺยากตา. ยสฺมิํ สมเย กามาวจรสฺส กุสลสฺส กมฺมสฺส กตตฺตา อุปจิตตฺตา วิปากํ จกฺขุวิญฺญาณํ อุปฺปนฺนํ โหติ อุเปกฺขาสหคตํ รูปารมฺมณํ. ตสฺมิํ สมเย ผสฺโส โหติ เวทนา โหติ สญฺญา โหติ เจตนา โหติ จิตฺตํ โหตี”ติ เอวมาทินา จ จิตฺตุปฺปาทกณฺเฑ, รูปกณฺเฑ จ “กตเม ธมฺมา อพฺยากตา. กุสลากุสลานํ ธมฺมานํ วิปากา กามาวจรา รูปาวจรา อรูปาวจรา อปริยาปนฺนา เวทนากฺขนฺโธ สญฺญากฺขนฺโธ สงฺขารกฺขนฺโธ วิญฺญาณกฺขนฺโธ. เย จ ธมฺมา กิริยา เนว กุสลา นากุสลา น จ กมฺมวิปากา. สพฺพญฺจ รูปํ อสงฺขตา จ ธาตุ. อิเม ธมฺมา อพฺยากตา”ติ เอวมาทินา จ อพฺยากตา ธมฺมา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในอภิธรรมปิฎก ธัมมสังคณี พระผู้มีพระภาคเจ้าเมื่อทรงจำแนกอรรถแห่งบทว่า "อัพยากตา ธัมมา" ได้ทรงจำแนกและแสดงอัพยากตธรรมโดยพิสดารด้วยประการฉะนี้ว่า "ธรรมทั้งหลายที่เป็นอัพยากตะเป็นไฉน? ในสมัยใด จักขุวิญญาณอันเป็นวิบากแห่งกามาวจรกุศลกรรมที่ทำแล้ว สั่งสมแล้ว เกิดขึ้น อันสหรคตด้วยอุเบกขา มีรูปเป็นอารมณ์. ในสมัยนั้น มีผัสสะ มีเวทนา มีสัญญา มีเจตนา มีจิต" ดังนี้เป็นต้น ในจิตตุปปาทกัณฑ์ และในรูปกัณฑ์ว่า "ธรรมทั้งหลายที่เป็นอัพยากตะเป็นไฉน? เวทนาขันธ์ สัญญาขันธ์ สังขารขันธ์ วิญญาณขันธ์ อันเป็นวิบากแห่งกุศลและอกุศลธรรมทั้งหลาย ที่เป็นกามาวจร รูปาวจร อรูปาวจร และไม่นับเนื่องในภพ. และธรรมทั้งหลายที่เป็นกิริยา ไม่เป็นกุศล ไม่เป็นอกุศล และไม่เป็นวิบากแห่งกรรม. และรูปทั้งหมด อสังขตธาตุด้วย. ธรรมเหล่านี้เป็นอัพยากตะ" ดังนี้เป็นต้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="subhead">วิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">วิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> สตฺตสุ <span class="pb hidden-meta" data-ed="M" data-n="0.0026">[M 0.0026]</span> อาวุโส อภิธมฺมปฺปกรเณสุ วิภงฺคปฺปกรเณ ภควตา กติ วิภงฺคา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนท่านผู้มีอายุ ในอภิธรรมปกรณ์ ๗ คัมภีร์ ในวิภังคปกรณ์ พระผู้มีพระภาคเจ้าได้ทรงแสดงวิภังค์ไว้กี่อย่าง?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต สตฺตสุ ปกรเณสุ ทุติเย วิภงฺคปฺปกรเณ ขนฺธวิภงฺโค อายตนวิภงฺโค ธาตุวิภงฺโค สจฺจวิภงฺโค อินฺทริยวิภงฺโค ปฏิจฺจสมุปฺปาทวิภงฺโค สติปฏฺฐานวิภงฺโค สมฺมปฺปธานวิภงฺโค อิทฺธิปาทวิภงฺโค โพชฺฌงฺควิภงฺโค มคฺคงฺควิภงฺโค ฌานวิภงฺโค อปฺปมญฺญาวิภงฺโค สิกฺขาปทวิภงฺโค ปฏิสมฺภิทาวิภงฺโค ญาณวิภงฺโค ขุทฺทกวตฺถุวิภงฺโค ธมฺมหทยวิภงฺโคติ ภควตา อฏฺฐารส วิภงฺคา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในอภิธรรมปิฎก บรรดาปกรณ์ ๗ คัมภีร์ ในวิภังคปกรณ์ซึ่งเป็นคัมภีร์ที่ ๒ พระผู้มีพระภาคเจ้าทรงแสดงวิภังค์ ๑๘ คือ ขันธวิภังค์ อายตนวิภังค์ ธาตุวิภังค์ สัจจวิภังค์ อินทริยวิภังค์ ปฏิจจสมุปปาทวิภังค์ สติปัฏฐานวิภังค์ สัมมัปปธานวิภังค์ อิทธิปาทวิภังค์ โพชฌงควิภังค์ มรรคังควิภังค์ ฌานวิภังค์ อัปปมัญญาวิภังค์ สิกขาปทวิภังค์ ปฏิสัมภิทาวิภังค์ ญาณวิภังค์ ขุททกวัตถุวิภังค์ และธัมมหทยวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="subhead">ขนฺธวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ขันธวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตสุ อาวุโส อฏฺฐารสสุ วิภงฺเคสุ ปฐเม ขนฺธวิภงฺเค ภควตา กถํ ขนฺธา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนท่านผู้มีอายุ ในวิภังค์ ๑๘ เหล่านั้น ในขันธวิภังค์ที่ ๑ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงขันธ์ทั้งหลายโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> เตสุ <span class="pb hidden-meta" data-ed="M" data-n="0.0027">[M 0.0027]</span> ภนฺเต อฏฺฐารสสุ วิภงฺเคสุ ปฐเม ขนฺธวิภงฺเค “ปญฺจกฺขนฺธา รูปกฺขนฺโธ เวทนากฺขนฺโธ สญฺญากฺขนฺโธ สงฺขารกฺขนฺโธ วิญฺญาณกฺขนฺโธ. ตตฺถ กตโม รูปกฺขนฺโธ, ยํกิญฺจิ รูปํ อตีตานาคตปจฺจุปฺปนฺนํ อชฺฌตฺตํ วา พหิทฺธา วา โอฬาริกํ วา สุขุมํ วา หีนํ วา ปณีตํ วา ยํ ทูเร สนฺติเก วา, ตเทกชฺฌํ อภิสญฺญูหิตฺวา อภิสงฺขิปิตฺวา อยํ วุจฺจติ รูปกฺขนฺโธ”ติ เอวมาทินา สุตฺตนฺตภาชนียอภิธมฺมภาชนียปญฺหาปุจฺฉกสงฺขาเตหิ ตีหิ มหานเยหิ ภควตา ขนฺธา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในวิภังค์ ๑๘ เหล่านั้น ในขันธวิภังค์ที่ ๑ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงขันธ์ทั้งหลายโดยพิสดารด้วยมหานัย ๓ อันนับว่าสุตตันตภาชนีย์ อภิธรรมภาชนีย์ และปัญญาปุจฉกะ มีอาทิอย่างนี้ว่า 'ขันธ์ ๕ คือ รูปขันธ์ เวทนาขันธ์ สัญญาขันธ์ สังขารขันธ์ วิญญาณขันธ์. ในขันธ์เหล่านั้น รูปขันธ์เป็นไฉน? รูปอย่างใดอย่างหนึ่งที่เป็นอดีต อนาคต หรือปัจจุบัน เป็นภายในหรือภายนอก หยาบหรือละเอียด เลวหรือประณีต อยู่ไกลหรืออยู่ใกล้ก็ตาม รวบรวมย่อเข้าเป็นหมวดเดียวกัน นี้เรียกว่า รูปขันธ์' ดังนี้เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="subhead">อายตนวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อายตนวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ทุติเย <span class="pb hidden-meta" data-ed="M" data-n="0.0028">[M 0.0028]</span> ปน อาวุโส อายตนวิภงฺเค ภควตา กถํ อายตนานิ วิตฺถารโต วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนท่านผู้มีอายุ ก็ในอายตนวิภังค์ที่ ๒ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงอายตนะทั้งหลายโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ทุติเย ภนฺเต อายตนวิภงฺเค “ทฺวาทสายตนานิ จกฺขายตนํ รูปายตนํ โสตายตนํ สทฺทายตนํ ฆานายตนํ คนฺธายตนํ ชิวฺหายตนํ รสายตนํ กายายตนํ โผฏฺฐพฺพายตนํ มนายตนํ ธมฺมายตนํ. จกฺขุํ อนิจฺจํ ทุกฺขํ อนตฺตา วิปริณามธมฺมํ, รูปา อนิจฺจา ทุกฺขา อนตฺตา วิปริณามธมฺมา”ติ เอวมาทินา ภควตา สุตฺตนฺตภาชนียอภิธมฺมภาชนียปญฺหาปุจฺฉกสงฺขาเตหิ ตีเหว อายตนานิ วิตฺถารโต วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในอายตนวิภังค์ที่ ๒ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงอายตนะทั้งหลายโดยพิสดารด้วยนัย ๓ นั่นแล อันนับว่าสุตตันตภาชนีย์ อภิธรรมภาชนีย์ และปัญญาปุจฉกะ มีอาทิอย่างนี้ว่า 'อายตนะ ๑๒ คือ จักขายตนะ รูปายตนะ โสตายตนะ สัททายตนะ ฆานายตนะ คันธายตนะ ชิวหายตนะ รสายตนะ กายายตนะ โผฏฐัพพายตนะ มนายตนะ ธัมมายตนะ. จักขุไม่เที่ยง เป็นทุกข์ เป็นอนัตตา มีความแปรปรวนเป็นธรรมดา รูปทั้งหลายไม่เที่ยง เป็นทุกข์ เป็นอนัตตา มีความแปรปรวนเป็นธรรมดา' ดังนี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="subhead">ธาตุวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ธาตุวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0029">[M 0.0029]</span> อาวุโส วิภงฺคปฺปกรเณ ตติเย ธาตุวิภงฺเค ภควตา กถํ ธาตุโย วิตฺถาเรน วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนท่านผู้มีอายุ ในธาตุวิภังค์ที่ ๓ ในวิภังคปกรณ์แห่งพระอภิธรรมปิฎก พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงธาตุทั้งหลายโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ตติเย ภนฺเต ธาตุวิภงฺเค “ฉ ธาตุโย ปถวีธาตุ อาโปธาตุ เตโชธาตุ วาโยธาตุ อากาสธาตุ วิญฺญาณธาตู”ติ ภนฺเต สุตฺตนฺตภาชนียอภิธมฺมภาชนียปญฺหาปุจฺฉกสงฺขาเตหิ ตีหิ มหานเยหิ ภควตา ธาตุโย วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในธาตุวิภังค์ที่ ๓ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงธาตุทั้งหลายโดยพิสดารด้วยมหานัย ๓ อันนับว่าสุตตันตภาชนีย์ อภิธรรมภาชนีย์ และปัญญาปุจฉกะ มีอาทิอย่างนี้ว่า 'ธาตุ ๖ คือ ปฐวีธาตุ อาโปธาตุ เตโชธาตุ วาโยธาตุ อากาสธาตุ วิญญาณธาตุ' ดังนี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="subhead">สจฺจวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">สัจจวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> จตุตฺเถ <span class="pb hidden-meta" data-ed="M" data-n="0.0031">[M 0.0031]</span> ปน อาวุโส สจฺจวิภงฺเค ภควตา กถํ สจฺจานิ วิตฺถารโต วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนท่านผู้มีอายุ ก็ในสัจจวิภังค์ที่ ๔ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงสัจจะทั้งหลายโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> จตุตฺเถ ภนฺเต สจฺจวิภงฺเค “จตฺตาริ อริยสจฺจานิ ทุกฺขํ อริยสจฺจํ, ทุกฺขสมุทยํ อริยสจฺจํ, ทุกฺขนิโรธํ อริยสจฺจํ, ทุกฺขนิโรธคามินี ปฏิปทา อริยสจฺจํ. ตตฺถ กตมํ ทุกฺขํ อริยสจฺจํ, ชาติปิ ทุกฺขา, ชราปิ ทุกฺขา, มรณมฺปิ ทุกฺขํ, โสกปริเทวทุกฺขโทมนสฺสุปายาสาปิ ทุกฺขา, อปฺปิเยหิ สมฺปโยโค ทุกฺโข, ปิเยหิ วิปฺปโยโค ทุกฺโข, ยมฺปิจฺฉํ น ลภติ, ตมฺปิ ทุกฺขํ, สํขิตฺเตน ปญฺจุปาทานกฺขนฺธา ทุกฺขา”ติ เอวมาทินา สุตฺตนฺตภาชนียอภิธมฺมภาชนียปญฺหาปุจฺฉกสงฺขาเตหิ ตีหิ มหานเยหิ ภควตา สจฺจานิ วิตฺถารโต วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในสัจจวิภังค์ที่ ๔ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงสัจจะทั้งหลายโดยพิสดารด้วยมหานัย ๓ อันนับว่าสุตตันตภาชนีย์ อภิธรรมภาชนีย์ และปัญญาปุจฉกะ มีอาทิอย่างนี้ว่า 'อริยสัจ ๔ คือ ทุกขอริยสัจ ทุกขสมุทัยอริยสัจ ทุกขนิโรธอริยสัจ ทุกขนิโรธคามินีปฏิปทาอริยสัจ. ในอริยสัจเหล่านั้น ทุกขอริยสัจเป็นไฉน? แม้ความเกิดก็เป็นทุกข์ แม้ความแก่ก็เป็นทุกข์ แม้ความตายก็เป็นทุกข์ แม้ความโศก ความร่ำไร ความทุกข์กาย ความเสียใจ ความคับแค้นใจก็เป็นทุกข์ การประสบกับสิ่งไม่เป็นที่รักก็เป็นทุกข์ การพลัดพรากจากสิ่งเป็นที่รักก็เป็นทุกข์ ปรารถนาสิ่งใดไม่ได้สิ่งนั้นก็เป็นทุกข์ โดยย่อ อุปาทานขันธ์ ๕ เป็นทุกข์' ดังนี้เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="subhead">อินฺทริยวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อินทริยวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ปญฺจเม <span class="pb hidden-meta" data-ed="M" data-n="0.0032">[M 0.0032]</span> ปน อาวุโส อินฺทริยวิภงฺเค ภควตา กถํ อินฺทริยานิ วิตฺถารโต วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนท่านผู้มีอายุ ก็ในอินทริยวิภังค์ที่ ๕ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงอินทรีย์ทั้งหลายโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ปญฺจเม ปน ภนฺเต อินฺทริยวิภงฺเค “พาวีสตินฺทริยานิ จกฺขุนฺทริยํ โสตินฺทริยํ ฆานินฺทริยํ ชิวฺหินฺทริยํ กายินฺทริยํ มนินฺทริยํ…เป… อญฺญาตาวินฺทริย”นฺติ เอวมาทินา อภิธมฺมภาชนียปญฺหาปุจฺฉกสงฺขาเตหิ ทฺวีหิ มหานเยหิ ภควตา อินฺทริยานิ วิตฺถารโต วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ก็ในอินทริยวิภังค์ที่ ๕ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงอินทรีย์ทั้งหลายโดยพิสดารด้วยมหานัย ๒ อันนับว่าอภิธรรมภาชนีย์ และปัญญาปุจฉกะ มีอาทิอย่างนี้ว่า 'อินทรีย์ ๒๒ คือ จักขุนทรีย์ โสตินทรีย์ ฆานินทรีย์ ชิวหินทรีย์ กายินทรีย์ มนินทรีย์...ฯลฯ...อัญญาตาวินทรีย์' ดังนี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="subhead">ปฏิจฺจสมุปฺปาท วิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ปฏิจจสมุปปาทวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0033">[M 0.0033]</span> อาวุโส วิภงฺคปฺปกรเณ ฉฏฺเฐ ปฏิจฺจสมุปฺปาทวิภงฺเค ภควตา กถํ ปฏิจฺจสมุปฺปาโท วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนท่านผู้มีอายุ ในปฏิจจสมุปปาทวิภังค์ที่ ๖ ในวิภังคปกรณ์แห่งพระอภิธรรมปิฎก พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงปฏิจจสมุปบาทโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ฉฏฺเฐ ภนฺเต ปฏิจฺจสมุปฺปาทวิภงฺเค “อวิชฺชาปจฺจยา สงฺขารา…เป… สมุทโย โหตี”ติ เอวมาทินา ภควตา ปฏิจฺจสมุปฺปาโท สุตฺตนฺตภาชนียอภิธมฺมภาชนียสงฺขาเตหิ ทฺวีหิ มหานเยหิ วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในปฏิจจสมุปปาทวิภังค์ที่ ๖ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงปฏิจจสมุปบาทโดยพิสดารด้วยมหานัย ๒ อันนับว่าสุตตันตภาชนีย์ และอภิธรรมภาชนีย์ มีอาทิอย่างนี้ว่า 'เพราะอวิชชาเป็นปัจจัย สังขารทั้งหลายจึงมี...ฯลฯ...ความเกิดขึ้นแห่งกองทุกข์ทั้งสิ้นนี้ ย่อมมีด้วยประการอย่างนี้' ดังนี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="subhead">สติปฏฺฐานวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">สติปัฏฐานวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> สตฺตเม <span class="pb hidden-meta" data-ed="M" data-n="0.0034">[M 0.0034]</span> ปน อาวุโส สติปฏฺฐานวิภงฺเค ภควตา กถํ สติปฏฺฐานา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนท่านผู้มีอายุ ก็ในสติปัฏฐานวิภังค์ที่ ๗ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงสติปัฏฐานทั้งหลายโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> สตฺตเม ภนฺเต สติปฏฺฐานวิภงฺเค “จตฺตาโร สติปฏฺฐานา อิธ ภิกฺขุ อชฺฌตฺตํ กาเย กายานุปสฺสี วิหรติ, พหิทฺธา กาเย กายานุปสฺสี วิหรติ, อชฺฌตฺตพหิทฺธา กาเย กายานุปสฺสี วิหรติ อาตาปี สมฺปชาโน สติมา วิเนยฺย โลเก อภิชฺฌาโทมนสฺส”นฺติ เอวมาทินา สุตฺตนฺตภาชนียอภิธมฺมภาชนียปญฺหาปุจฺฉกสงฺขาเตหิ ตีหิ มหานเยหิ ภควตา สติปฏฺฐานา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำตอบ – ข้าแต่ท่านผู้เจริญ ในสติปัฏฐานวิภังค์ที่ ๗ พระผู้มีพระภาคทรงจำแนกสติปัฏฐานโดยพิสดารไว้ด้วย ๓ นัยใหญ่ คือ สุตตันตภาชนีย์ อภิธรรมภาชนีย์ และปัญหาปุจฉกะ มีอาทิอย่างนี้ว่า “สติปัฏฐาน ๔ คือ ภิกษุในธรรมวินัยนี้ ย่อมพิจารณาเห็นกายในกายภายในอยู่บ้าง ย่อมพิจารณาเห็นกายในกายภายนอกอยู่บ้าง ย่อมพิจารณาเห็นกายในกายทั้งภายในและภายนอกอยู่บ้าง มีความเพียร มีสัมปชัญญะ มีสติ กำจัดอภิชฌาและโทมนัสในโลกเสียได้”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="subhead">สมฺมปฺปธานวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">สัมมัปปธานวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อฏฺฐเม <span class="pb hidden-meta" data-ed="M" data-n="0.0035">[M 0.0035]</span> ปน อาวุโส สมฺมปฺปธานวิภงฺเค ภควตา กถํ สมฺมปฺปธานา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ ในสัมมัปปธานวิภังค์ที่ ๘ พระผู้มีพระภาคทรงจำแนกสัมมัปปธานโดยพิสดารไว้อย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อฏฺฐเม ภนฺเต สมฺมปฺปธานวิภงฺเค “จตฺตาโร สมฺมปฺปธานา อิธ ภิกฺขุ อนุปฺปนฺนานํ ปาปกานํ อกุสลานํ ธมฺมานํ อนุปฺปาทาย ฉนฺทํ ชเนติ วายมติ วีริยํ อารภติ จิตฺตํ ปคฺคณฺหาติ ปทหติ, อุปฺปนฺนานํ ปาปกานํ อกุสลานํ ธมฺมานํ ปหานาย ฉนฺทํ ชเนติ วายมติ วีริยํ อารภติ จิตฺตํ ปคฺคณฺหาติ ปทหติ, อนุปฺปนฺนานํ กุสลานํ ธมฺมานํ อุปฺปาทาย ฉนฺทํ ชเนติ วายมติ วีริยํ อารภติ จิตฺตํ ปคฺคณฺหาติ ปทหติ, อุปฺปนฺนานํ กุสลานํ ธมฺมานํ ฐิติยา อสมฺโมสาย ภิยฺโยภาวาย เวปุลฺลาย ภาวนาย ปาริปูริยา ฉนฺทํ ชเนติ วายมติ วีริยํ อารภติ จิตฺตํ ปคฺคณฺหาติ ปทหตี”ติ เอวมาทินา ภควตา สมฺมปฺปธานา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำตอบ – ข้าแต่ท่านผู้เจริญ ในสัมมัปปธานวิภังค์ที่ ๘ พระผู้มีพระภาคทรงจำแนกสัมมัปปธานโดยพิสดารไว้ มีอาทิอย่างนี้ว่า “สัมมัปปธาน ๔ คือ ภิกษุในธรรมวินัยนี้ ย่อมยังฉันทะให้เกิด ย่อมพยายาม ปรารภความเพียร ประคองจิต ตั้งใจมั่น เพื่อไม่ให้บาปอกุศลธรรมที่ยังไม่เกิด เกิดขึ้น, ย่อมยังฉันทะให้เกิด ย่อมพยายาม ปรารภความเพียร ประคองจิต ตั้งใจมั่น เพื่อละบาปอกุศลธรรมที่เกิดขึ้นแล้ว, ย่อมยังฉันทะให้เกิด ย่อมพยายาม ปรารภความเพียร ประคองจิต ตั้งใจมั่น เพื่อให้กุศลธรรมที่ยังไม่เกิด เกิดขึ้น, ย่อมยังฉันทะให้เกิด ย่อมพยายาม ปรารภความเพียร ประคองจิต ตั้งใจมั่น เพื่อความตั้งมั่น ไม่เลือนหาย เพื่อความเจริญยิ่ง เพื่อความไพบูลย์ เพื่อความเจริญ เพื่อความเต็มเปี่ยมแห่งกุศลธรรมที่เกิดขึ้นแล้ว”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="subhead">อิทฺธิปาทวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อิทธิบาทวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> นวเม <span class="pb hidden-meta" data-ed="M" data-n="0.0036">[M 0.0036]</span> ปน อาวุโส อิทฺธิปาทวิภงฺเค ภควตา กถํ อิทฺธิปาทา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ ในอิทธิบาทวิภังค์ที่ ๙ พระผู้มีพระภาคทรงจำแนกอิทธิบาทโดยพิสดารไว้อย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> นวเม ภนฺเต อิทฺธิปาทวิภงฺเค “จตฺตาโร อิทฺธิปาทา อิธ ภิกฺขุ ฉนฺทสมาธิปธานสงฺขารสมนฺนาคตํ อิทฺธิปาทํ ภาเวติ…เป… วีมํสาสมาธิปธานสงฺขารสมนฺนาคตํ อิทฺธิปาทํ ภาเวตี”ติ เอวมาทินา ตีหิ มหานเยหิ ภควตา อิทฺธิปาทา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำตอบ – ข้าแต่ท่านผู้เจริญ ในอิทธิบาทวิภังค์ที่ ๙ พระผู้มีพระภาคทรงจำแนกอิทธิบาทโดยพิสดารไว้ด้วย ๓ นัยใหญ่ มีอาทิอย่างนี้ว่า “อิทธิบาท ๔ คือ ภิกษุในธรรมวินัยนี้ ย่อมเจริญอิทธิบาทอันประกอบด้วยฉันทสมาธิและปธานสังขาร...ฯลฯ...ย่อมเจริญอิทธิบาทอันประกอบด้วยวิมังสาสมาธิและปธานสังขาร”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="subhead">โพชฺฌงฺควิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">โพชฌงควิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0037">[M 0.0037]</span> อาวุโส วิภงฺคปฺปกรเณ ทสเม โพชฺฌงฺควิภงฺเค ภควตา กถํ โพชฺฌงฺคา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ ในโพชฌงควิภังค์ที่ ๑๐ ในวิภังคปกรณ์แห่งพระอภิธรรมปิฎก พระผู้มีพระภาคทรงจำแนกโพชฌงค์โดยพิสดารไว้อย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ทสเม ภนฺเต โพชฺฌงฺควิภงฺเค “สตฺต โพชฺฌงฺคา สติสมฺโพชฺฌงฺโค ธมฺมวิจยสมฺโพชฺฌงฺโค วีริยสมฺโพชฺฌงฺโค ปีติสมฺโพชฺฌงฺโค ปสฺสทฺธิสมฺโพชฺฌงฺโค สมาธิสมฺโพชฺฌงฺโค อุเปกฺขาสมฺโพชฺฌงฺโค. ตตฺถ กตโม สติสมฺโพชฺฌงฺโค, อิธ ภิกฺขุ สติมา โหติ ปรเมน สติเนปกฺเกน สมนฺนาคโต จิรกตมฺปิ จิรภาสิตมฺปิ สริตา โหติ อนุสฺสริตา, อยํ วุจฺจติ สติสมฺโพชฺฌงฺโค”ติ เอวมาทินา ภควตา สุตฺตนฺตภาชนียอภิธมฺมภาชนียปญฺหาปุจฺฉกสงฺขาเตหิ ตีหิ นเยหิ โพชฺฌงฺคา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำตอบ – ข้าแต่ท่านผู้เจริญ ในโพชฌงควิภังค์ที่ ๑๐ พระผู้มีพระภาคทรงจำแนกโพชฌงค์โดยพิสดารไว้ด้วย ๓ นัย คือ สุตตันตภาชนีย์ อภิธรรมภาชนีย์ และปัญหาปุจฉกะ มีอาทิอย่างนี้ว่า “โพชฌงค์ ๗ คือ สติสัมโพชฌงค์ ธัมมวิจยสัมโพชฌงค์ วิริยสัมโพชฌงค์ ปีติสัมโพชฌงค์ ปัสสัทธิสัมโพชฌงค์ สมาธิสัมโพชฌงค์ อุเบกขาสัมโพชฌงค์. ในโพชฌงค์เหล่านั้น สติสัมโพชฌงค์เป็นไฉน? ภิกษุในธรรมวินัยนี้ เป็นผู้มีสติ ประกอบด้วยสติและเนปักกะอันยอดเยี่ยม ระลึกได้ ตามระลึกได้ซึ่งกิจที่ทำแล้วนาน หรือคำที่กล่าวแล้วนาน, นี้เรียกว่า สติสัมโพชฌงค์”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="subhead">มคฺคงฺควิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">มรรคังควิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เอกาทสเม <span class="pb hidden-meta" data-ed="M" data-n="0.0038">[M 0.0038]</span> ปน อาวุโส มคฺคงฺควิภงฺเค ภควตา กถํ มคฺคงฺคา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ ในมรรคังควิภังค์ที่ ๑๑ พระผู้มีพระภาคทรงจำแนกองค์มรรคโดยพิสดารไว้อย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> เอกาทสเม <span class="pb hidden-meta" data-ed="M" data-n="0.0039">[M 0.0039]</span> ภนฺเต มคฺคงฺควิภงฺเค “อริโย อฏฺฐงฺคิโก มคฺโค. เสยฺยถิทํ, สมฺมาทิฏฺฐิ สมฺมาสงฺกปฺโป สมฺมาวาจา สมฺมากมฺมนฺโต สมฺมาอาชีโว สมฺมาวายาโม สมฺมาสติ สมฺมาสมาธี”ติ เอวมาทินา ภควตา สุตฺตนฺตภาชนียอภิธมฺมภาชนียปญฺหาปุจฺฉกสงฺขาเตหิ ตีหิ มหานเยหิ มคฺคงฺคา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำตอบ – ข้าแต่ท่านผู้เจริญ ในมรรคังควิภังค์ที่ ๑๑ พระผู้มีพระภาคทรงจำแนกองค์มรรคโดยพิสดารไว้ด้วย ๓ นัยใหญ่ คือ สุตตันตภาชนีย์ อภิธรรมภาชนีย์ และปัญหาปุจฉกะ มีอาทิอย่างนี้ว่า “อริยมรรคมีองค์ ๘ คือ สัมมาทิฏฐิ สัมมาสังกัปปะ สัมมาวาจา สัมมากัมมันตะ สัมมาอาชีวะ สัมมาวายามะ สัมมาสติ สัมมาสมาธิ”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="subhead">ฌานวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ฌานวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ทฺวาทสโม <span class="pb hidden-meta" data-ed="M" data-n="0.0040">[M 0.0040]</span> ปน อาวุโส ฌานวิภงฺโค ภควตา กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ ในฌานวิภังค์ที่ ๑๒ พระผู้มีพระภาคทรงจำแนกโดยพิสดารไว้อย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ทฺวาทสโม ภนฺเต ฌานวิภงฺโค “อิธ ภิกฺขุ ปาติโมกฺขสํวรสํวุโต วิหรติ อาจารโคจรสมฺปนฺโน อณุมตฺเตสุ วชฺเชสุ ภยทสฺสาวี สมาทาย สิกฺขติ สิกฺขาปเทสุ อินฺทริเยสุ คุตฺตทฺวาโร โภชเน มตฺตญฺญู ปุพฺพรตฺตาปรรตฺตํ ชาคริยานุโยคมนุยุตฺโต”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำตอบ – ข้าแต่ท่านผู้เจริญ ในฌานวิภังค์ที่ ๑๒ พระผู้มีพระภาคทรงจำแนกโดยพิสดารไว้ มีอาทิอย่างนี้ว่า “ภิกษุในธรรมวินัยนี้ เป็นผู้สำรวมด้วยปาติโมกขสังวร ถึงพร้อมด้วยอาจาระและโคจร เห็นภัยในโทษเพียงเล็กน้อย สมาทานศึกษาในสิกขาบททั้งหลาย เป็นผู้คุ้มครองทวารในอินทรีย์ทั้งหลาย รู้ประมาณในการบริโภค ประกอบความเพียรในการตื่นอยู่ตลอดปฐมยามและปัจฉิมยาม”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="subhead">อปฺปมญฺญาวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อัปปมัญญาวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตรสเม <span class="pb hidden-meta" data-ed="M" data-n="0.0041">[M 0.0041]</span> ปน อาวุโส อปฺปมญฺญาวิภงฺเค ภควตา กถํ อปฺปมญฺญาโย วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ ในอัปปมัญญาวิภังค์ที่ ๑๓ พระผู้มีพระภาคทรงจำแนกอัปปมัญญาโดยพิสดารไว้อย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> เตรสเม ภนฺเต อปฺปมญฺญาวิภงฺเค “จตสฺโส อปฺปมญฺญาโย อิธ ภิกฺขุ เมตฺตาสหคเตน เจตสา เอกํ ทิสํ ผริตฺวา วิหรติ, ตถา ทุติยํ. ตถา ตติยํ. ตถา จตุตฺถํ. อิติ อุทฺธมโธ ติริยํ สพฺพธิ สพฺพตฺตตาย สพฺพาวนฺตํ โลกํ เมตฺตาสหคเตน เจตสา วิปุเลน มหคฺคเตน อปฺปมาเณน อเวเรน อพฺยาปชฺเชน ผริตฺวา วิหรตี”ติ เอวมาทินา ภควตา สุตฺตนฺตภาชนียอภิธมฺมภาชนียปญฺหาปุจฺฉกสงฺขาเตหิ ตีหิ มหานเยหิ อปฺปมญฺญาโย วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำตอบ – ข้าแต่ท่านผู้เจริญ ในอัปปมัญญาวิภังค์ที่ ๑๓ พระผู้มีพระภาคทรงจำแนกอัปปมัญญาโดยพิสดารไว้ด้วย ๓ นัยใหญ่ คือ สุตตันตภาชนีย์ อภิธรรมภาชนีย์ และปัญหาปุจฉกะ มีอาทิอย่างนี้ว่า “อัปปมัญญา ๔ คือ ภิกษุในธรรมวินัยนี้ แผ่ไปสู่ทิศที่หนึ่งด้วยใจประกอบด้วยเมตตาอยู่ ทิศที่สองก็เช่นนั้น ทิศที่สามก็เช่นนั้น ทิศที่สี่ก็เช่นนั้น แผ่ไปสู่โลกทั้งปวง ทั้งเบื้องบน เบื้องล่าง เบื้องขวาง โดยประการทั้งปวง ในที่ทุกสถาน ด้วยใจประกอบด้วยเมตตาอันไพบูลย์ เป็นมหัคคตะ ไม่มีประมาณ ไม่มีเวร ไม่มีความเบียดเบียนอยู่”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="subhead">สิกฺขาปทวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">สิกขาบทวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0042">[M 0.0042]</span> อาวุโส วิภงฺคปฺปกรเณ จุทฺทสเม สิกฺขาปทวิภงฺเค ภควตา กถํ สิกฺขาปทานิ วิตฺถารโต วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ ในสิกขาบทวิภังค์ที่ ๑๔ ในวิภังคปกรณ์แห่งพระอภิธรรมปิฎก พระผู้มีพระภาคทรงจำแนกสิกขาบทโดยพิสดารไว้อย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> จุทฺทสเม ภนฺเต สิกฺขาปทวิภงฺเค “ปญฺจ สิกฺขาปทานิ ปาณาติปาตา เวรมณี สิกฺขาปทํ, อทินฺนาทานา เวรมณี สิกฺขาปทํ, กาเมสุมิจฺฉาจารา เวรมณี สิกฺขาปทํ, มุสาวาทา เวรมณี สิกฺขาปทํ, สุราเมรยมชฺชปมาทฏฺฐานา เวรมณี สิกฺขาปทํ. ตตฺถ กตมํ ปาณาติปาตา เวรมณี สิกฺขาปทํ, ยสฺมิํ สมเย กามาวจรํ กุสลํ จิตฺตํ อุปฺปนฺนํ โหติ โสมนสฺสสหคตํ ญาณสมฺปยุตฺตํ ปาณาติปาตา วิรมนฺตสฺสา”ติ เอวมาทินา อภิธมฺมภาชนียปญฺหาปุจฺฉกสงฺขาเตหิ ทฺวีหิ มหานเยหิ ภควตา สิกฺขาปทานิ วิตฺถารโต วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การแก้ปัญหา – ข้าแต่พระองค์ผู้เจริญ ในสิกขาบทวิภังค์ที่ ๑๔ พระผู้มีพระภาคทรงจำแนกแสดงสิกขาบทโดยพิสดาร โดยนัยใหญ่ ๒ อย่าง คือ อภิธรรมภาชนีย์ และปัญหาปุจฉกะ ด้วยบทว่า “สิกขาบท ๕ อย่าง คือ สิกขาบทคือการงดเว้นจากการฆ่าสัตว์ สิกขาบทคือการงดเว้นจากการลักทรัพย์ สิกขาบทคือการงดเว้นจากการประพฤติผิดในกาม สิกขาบทคือการงดเว้นจากการพูดเท็จ สิกขาบทคือการงดเว้นจากการดื่มน้ำเมาคือสุราและเมรัยอันเป็นที่ตั้งแห่งความประมาท บรรดาสิกขาบทเหล่านั้น สิกขาบทคือการงดเว้นจากการฆ่าสัตว์เป็นไฉน คือในสมัยใด จิตกุศลที่เป็นกามาวจรเกิดขึ้น สหรคตด้วยโสมนัส สัมปยุตด้วยญาณ ของผู้ที่งดเว้นจากการฆ่าสัตว์” เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="subhead">ปฏิสมฺภิทาวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ปฏิสัมภิทาวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ปนฺนรสเม <span class="pb hidden-meta" data-ed="M" data-n="0.0043">[M 0.0043]</span> ปน อาวุโส ปฏิสมฺภิทาวิภงฺเค ภควตา กถํ ปฏิสมฺภิทาโย วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ ก็ในปฏิสัมภิทาวิภังค์ที่ ๑๕ พระผู้มีพระภาคทรงจำแนกแสดงปฏิสัมภิทาโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ปนฺนรสเม ภนฺเต ปฏิสมฺภิทาวิภงฺเค “จตสฺโส ปฏิสมฺภิทา อตฺถปฏิสมฺภิทา ธมฺมปฏิสมฺภิทา นิรุตฺติปฏิสมฺภิทา ปฏิภานปฏิสมฺภิทา. อตฺเถ ญาณํ อตฺถปฏิสมฺภิทา, ธมฺเม ญาณํ ธมฺมปฏิสมฺภิทา, ตตฺร ธมฺมนิรุตฺตาภิลาเป ญาณํ นิรุตฺติปฏิสมฺภิทา, ญาเณสุ ญาณํ ปฏิภานปฏิสมฺภิทา”ติ เอวมาทินา ภควตา จตสฺโส ปฏิสมฺภิทาโย สุตฺตนฺตภาชนียอภิธมฺมภาชนียปญฺหาปุจฺฉกสงฺขาเตหิ <span class="pb hidden-meta" data-ed="M" data-n="0.0044">[M 0.0044]</span> ตีหิ มหานเยหิ วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การแก้ปัญหา – ข้าแต่พระองค์ผู้เจริญ ในปฏิสัมภิทาวิภังค์ที่ ๑๕ พระผู้มีพระภาคทรงจำแนกแสดงปฏิสัมภิทา ๔ อย่างโดยพิสดาร โดยนัยใหญ่ ๓ อย่าง คือ สุตตันตภาชนีย์ อภิธรรมภาชนีย์ และปัญหาปุจฉกะ ด้วยบทว่า “ปฏิสัมภิทา ๔ อย่าง คือ อัตถปฏิสัมภิทา ธัมมปฏิสัมภิทา นิรุตติปฏิสัมภิทา ปฏิภาณปฏิสัมภิทา ญาณในอรรถเป็นอัตถปฏิสัมภิทา ญาณในธรรมเป็นธัมมปฏิสัมภิทา ญาณในระเบียบแห่งถ้อยคำที่เป็นภาษาอันเป็นธรรมนั้นเป็นนิรุตติปฏิสัมภิทา ญาณในญาณทั้งหลายเป็นปฏิภาณปฏิสัมภิทา” เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="subhead">ญาณวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ญาณวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> โสฬสเม ปน อาวุโส ญาณวิภงฺเค ภควตา กถํ ญาณานิ วิตฺถารโต วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ ก็ในญาณวิภังค์ที่ ๑๖ พระผู้มีพระภาคทรงจำแนกแสดงญาณโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> โสฬสเม ภนฺเต ญาณวิภงฺเค “เอกวิเธน ญาณวตฺถุ ปญฺจวิญฺญาณา น เหตู, อเหตุกา, เหตุวิปฺปยุตฺตา, สปฺปจฺจยา<span class="pb hidden-meta" data-ed="M" data-n="0.0045">[M 0.0045]</span>, สงฺขตา, อรูปา, โลกิยา, สาสวา”ติ เอวมาทินา เอกกโต ปฏฺฐาย ยาว ทสกา ภควตา ญาณานิ วิตฺถารโต วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การแก้ปัญหา – ข้าแต่พระองค์ผู้เจริญ ในญาณวิภังค์ที่ ๑๖ พระผู้มีพระภาคทรงจำแนกแสดงญาณโดยพิสดาร ตั้งแต่หมวด ๑ จนถึงหมวด ๑๐ ด้วยบทว่า “วัตถุแห่งญาณอย่างหนึ่ง คือ วิญญาณ ๕ ไม่ใช่เหตุ ไม่มีเหตุ พ้นจากเหตุ มีปัจจัย สังขตธรรม ไม่มีรูป เป็นโลกิยะ มีอาสวะ” เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="subhead">ขุทฺทกวตฺถุวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ขุททกวัตถุวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก อาวุโส วิภงฺคปฺปกรเณ สตฺตรสโม ขุทฺทกวตฺถุวิภงฺโค ภควตา กถํ เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ ในขุททกวัตถุวิภังค์ที่ ๑๗ แห่งวิภังคปกรณ์ในพระอภิธรรมปิฎก พระผู้มีพระภาคทรงแสดงอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ทุติเย วิภงฺคปฺปกรเณ สตฺตรสโม ขุทฺทกวตฺถุวิภงฺโค “ชาติมโท, โคตฺตมโท, อาโรคฺยมโท, โยพฺพนมโท, ชีวิตมโท”ติ เอวมาทินา เอกกโต ปฏฺฐาย ยาว อฏฺฐสตตณฺหาวิจริตํ ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การแก้ปัญหา – ข้าแต่พระองค์ผู้เจริญ ในขุททกวัตถุวิภังค์ที่ ๑๗ แห่งวิภังคปกรณ์ที่ ๒ ในพระอภิธรรมปิฎก พระผู้มีพระภาคทรงจำแนกแสดงโดยพิสดาร ตั้งแต่หมวด ๑ จนถึงตัณหาวิจริต ๑๐๘ ด้วยบทว่า “ความเมาในชาติ ความเมาในโคตร ความเมาในความไม่มีโรค ความเมาในความเป็นหนุ่มสาว ความเมาในชีวิต” เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="subhead">ธมฺมหทยวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ธัมมหทัยวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ตตฺถ <span class="pb hidden-meta" data-ed="M" data-n="0.0046">[M 0.0046]</span> อาวุโส อฏฺฐารสโม ธมฺมหทยวิภงฺโค ภควตา กถํ วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ ก็ในธัมมหทัยวิภังค์ที่ ๑๘ พระผู้มีพระภาคทรงจำแนกแสดงอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อฏฺฐารสโม <span class="pb hidden-meta" data-ed="M" data-n="0.0047">[M 0.0047]</span> ภนฺเต ธมฺมหทยวิภงฺโค “กติ ขนฺธา, กติ อายตนานิ, กติ ธาตุโย, กติ สจฺจานิ, กติ อินฺทริยานิ, กติ เหตู, กติ อาหารา, กติ ผสฺสา, กติ เวทนา, กติ สญฺญา, กติ เจตนา, กติ จิตฺตานิ. ปญฺจกฺขนฺธา, ทฺวาทสายตนานิ, อฏฺฐารส ธาตุโย, จตฺตาริ สจฺจานิ, พาวีสตินฺทริยานิ, นว เหตู, จตฺตาโร อาหารา, สตฺต ผสฺสา, สตฺต เวทนา, สตฺต สญฺญา, สตฺต เจตนา, สตฺต จิตฺตานี”ติ เอวมาทินา สพฺพสงฺคาหกาทีหิ ทสหิ วาเรหิ ภควตา วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การแก้ปัญหา – ข้าแต่พระองค์ผู้เจริญ ธัมมหทัยวิภังค์ที่ ๑๘ พระผู้มีพระภาคทรงจำแนกแสดงโดยพิสดาร โดยวาระ ๑๐ อย่าง มีวาระว่าด้วยการสงเคราะห์ธรรมทั้งปวงเป็นต้น ด้วยบทว่า “ขันธ์เท่าไร อายตนะเท่าไร ธาตุเท่าไร สัจจะเท่าไร อินทรีย์เท่าไร เหตุเท่าไร อาหารเท่าไร ผัสสะเท่าไร เวทนาเท่าไร สัญญาเท่าไร เจตนาเท่าไร จิตเท่าไร ขันธ์ ๕ อายตนะ ๑๒ ธาตุ ๑๘ สัจจะ ๔ อินทรีย์ ๒๒ เหตุ ๙ อาหาร ๔ ผัสสะ ๗ เวทนา ๗ สัญญา ๗ เจตนา ๗ จิต ๗” เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> กถญฺจาวุโส ตตฺถ ภควตา อุปฺปาทกกมฺมอายุปฺปมาณวาโร วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ ก็ในธัมมหทัยวิภังค์นั้น พระผู้มีพระภาคทรงจำแนกแสดงวาระว่าด้วยกรรมที่ทำให้เกิดและประมาณอายุโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ทานํ ทตฺวา สีลํ สมาทิยิตฺวา อุโปสถกมฺมํ กตฺวา กตฺถ อุปปชฺชนฺติ. ทานํ ทตฺวา, สีลํ สมาทิยิตฺวา อุโปสถกมฺมํ กตฺวา <span class="pb hidden-meta" data-ed="M" data-n="0.0048">[M 0.0048]</span> อปฺเปกจฺเจ ขตฺติยมหาสาลานํ สหพฺยตํ อุปปชฺชนฺติ, อปฺเปกจฺเจ พฺราหฺมณมหาสาลานํ, อปฺเปกจฺเจ คหปติมหาสาลานํ, อปฺเปกจฺเจ จาตุมหาราชิกานํ เทวานํ, อปฺเปกจฺเจ ตาวติํสานํ เทวานํ, อปฺเปกจฺเจ ยามานํ เทวานํ, อปฺเปกจฺเจ ตุสิตานํ เทวานํ สหพฺยตํ อุปปชฺชนฺตีติ เอวมาทินา ภนฺเต ตตฺถ ภควตา อุปฺปาทกกมฺมอายุปฺปมาณวาโร วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การแก้ปัญหา – ข้าแต่พระองค์ผู้เจริญ ในธัมมหทัยวิภังค์นั้น พระผู้มีพระภาคทรงจำแนกแสดงวาระว่าด้วยกรรมที่ทำให้เกิดและประมาณอายุโดยพิสดาร ด้วยบทว่า “ให้ทานแล้ว สมาทานศีลแล้ว กระทำอุโบสถกรรมแล้ว ย่อมไปเกิดในที่ไหน ชนบางพวกให้ทานแล้ว สมาทานศีลแล้ว กระทำอุโบสถกรรมแล้ว ย่อมเข้าถึงความเป็นสหายกับมหาศาลผู้เป็นกษัตริย์ ชนบางพวกย่อมเข้าถึงความเป็นสหายกับมหาศาลผู้เป็นพราหมณ์ ชนบางพวกย่อมเข้าถึงความเป็นสหายกับมหาศาลผู้เป็นคฤหบดี ชนบางพวกย่อมเข้าถึงความเป็นสหายกับเทวดาชั้นจาตุมหาราชิกา ชนบางพวกย่อมเข้าถึงความเป็นสหายกับเทวดาชั้นดาวดึงส์ ชนบางพวกย่อมเข้าถึงความเป็นสหายกับเทวดาชั้นยามา ชนบางพวกย่อมเข้าถึงความเป็นสหายกับเทวดาชั้นดุสิต” เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="gatha1">อุกฺขิตฺตา <span class="pb hidden-meta" data-ed="M" data-n="0.0051">[M 0.0051]</span> ปุญฺญเตเชน, กามรูปคติํ คตา;</p>
+<p rend="gathalast">ภวคฺคตมฺปิ สมฺปตฺตา, ปุนาคจฺฉนฺติ ทุคฺคติํ –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ผู้ที่ถูกยกขึ้นด้วยเดชแห่งบุญ ไปสู่คติในกามภพและรูปภพ แม้ถึงภวัคคพรหม ก็ยังกลับมาสู่ทุคติอีก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="subhead">ธาตุกถา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ธาตุกถา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0052">[M 0.0052]</span> ภควตา อฏฺฐารสหิ พุทฺธธมฺเมหิ สมนฺนาคเตน อภิธมฺเม อฏฺฐารสหิ วิภงฺเคหิ ปฏิมณฺฑิตํ ทุติยํ วิภงฺคปฺปกรณํ เทเสตฺวา ตทนนฺตรํ ธาตุกถํ นาม ตติยํ ปกรณํ กถํ วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ พระผู้มีพระภาคผู้ประกอบด้วยพุทธธรรม ๑๘ ประการนั้น ทรงแสดงวิภังคปกรณ์ที่ ๒ อันประดับด้วยวิภังค์ ๑๘ อย่างในพระอภิธรรมแล้ว ทรงจำแนกแสดงปกรณ์ที่ ๓ ชื่อธาตุกถาในลำดับนั้นอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ตติยํ ภนฺเต ธาตุกถํ นาม อภิธมฺมปิฏกํ “สงฺคโห อสงฺคโห, สงฺคหิเตน อสงฺคหิตํ, อสงฺคหิเตน สงฺคหิตํ, สงฺคหิเตน สงฺคหิตํ, อสงฺคหิเตน อสงฺคหิตํ. สมฺปโยโค วิปฺปโยโค, สมฺปยุตฺเตน วิปฺปยุตฺตํ, วิปฺปยุตฺเตน สมฺปยุตฺตํ, สมฺปยุตฺเตน สมฺปยุตฺตํ, วิปฺปยุตฺเตน วิปฺปยุตฺตํ. สงฺคหิเตน สมฺปยุตฺตํ วิปฺปยุตฺตํ, สมฺปยุตฺเตน สงฺคหิตํ อสงฺคหิตํ, อสงฺคหิเตน สมฺปยุตฺตํ วิปฺปยุตฺตํ, วิปฺปยุตฺเตน สงฺคหิตํ อสงฺคหิต”นฺติ เอวมาทินา ปญฺจ มาติกาโย ปฐมํ นิกฺขิปิตฺวา สงฺคหาสงฺคหาทีหิ จุทฺทสหิ นเยหิ ภควตา วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การแก้ปัญหา – ข้าแต่พระองค์ผู้เจริญ พระอภิธรรมปิฎกชื่อธาตุกถาที่ ๓ พระผู้มีพระภาคทรงตั้งมาติกา ๕ อย่างไว้ก่อน มีอาทิว่า 'สงเคราะห์และไม่สงเคราะห์' แล้วจึงทรงจำแนกแสดงโดยพิสดารด้วยนัย ๑๔ อย่าง มีนัยว่าด้วยการสงเคราะห์และไม่สงเคราะห์เป็นต้น ด้วยบทว่า 'สงเคราะห์ ไม่สงเคราะห์, สงเคราะห์ด้วยไม่สงเคราะห์, ไม่สงเคราะห์ด้วยสงเคราะห์, สงเคราะห์ด้วยสงเคราะห์, ไม่สงเคราะห์ด้วยไม่สงเคราะห์. สัมปยุต วิปปยุต, สัมปยุตด้วยวิปปยุต, วิปปยุตด้วยสัมปยุต, สัมปยุตด้วยสัมปยุต, วิปปยุตด้วยวิปปยุต. สงเคราะห์ด้วยสัมปยุตและวิปปยุต, สัมปยุตด้วยสงเคราะห์และไม่สงเคราะห์, ไม่สงเคราะห์ด้วยสัมปยุตและวิปปยุต, วิปปยุตด้วยสงเคราะห์และไม่สงเคราะห์' เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="subhead">ปุคฺคลปญฺญตฺติ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ปุคคลบัญญัติ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0054">[M 0.0054]</span> ภควตา สพฺพธาตุกุสเลน อภิธมฺมปิฏเก ตติยํ ธาตุกถาปกรณํ เทเสตฺวา ตทนนฺตรํ จตุตฺถํ ปุคฺคลปญฺญตฺติปฺปกรณํ กถํ วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ท่านผู้มีอายุ พระผู้มีพระภาคผู้ทรงฉลาดในธาตุทั้งปวงนั้น ทรงแสดงธาตุกถาปกรณ์ที่ ๓ ในพระอภิธรรมปิฎกแล้ว ทรงแสดงปุคคลบัญญัติปกรณ์ที่ ๔ ต่อจากนั้นอย่างไร โดยจำแนกอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต จตุตฺถํ ปุคฺคลปญฺญตฺติปฺปกรณํ “ฉ ปญฺญตฺติโย ขนฺธปญฺญตฺติ อายตนปญฺญตฺติ ธาตุปญฺญตฺติ สจฺจปญฺญตฺติ อินฺทริยปญฺญตฺติ ปุคฺคลปญฺญตฺติ. กิตฺตาวตา ขนฺธานํ ขนฺธปญฺญตฺติ, ยาวตา ปญฺจกฺขนฺธา, รูปกฺขนฺโธ เวทนากฺขนฺโธ สญฺญากฺขนฺโธ สงฺขารกฺขนฺโธ วิญฺญาณกฺขนฺโธ. เอตฺตาวตา ขนฺธานํ ขนฺธปญฺญตฺตี”ติ เอวมาทินา ขนฺธายตนธาตุสจฺจอินฺทริยปญฺญตฺติโย สํขิตฺเตน อุทฺทิสิตฺวา ปุคฺคลปญฺญตฺติํ จ เอกกทุกติกจตุกฺกปญฺจกฉกฺกสตฺตกอฏฺฐกนวกทสกวเสน วิตฺถารโต วิภชิตฺวา ภควตา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ ปุคคลบัญญัติปกรณ์ที่ ๔ ในพระอภิธรรมปิฎก พระผู้มีพระภาคทรงแสดงโดยทรงยกขันธบัญญัติ อายตนบัญญัติ ธาตุบัญญัติ สัจจบัญญัติ อินทริยบัญญัติ โดยย่อแล้ว และทรงแสดงปุคคลบัญญัติโดยจำแนกพิสดารตามนัยแห่งเอกกะ ทุกะ ติกะ จตุกกะ ปัญจกะ ฉักกะ สัตตกะ อัฏฐกะ นวกะ และทสกะ โดยเริ่มด้วยมาติกาว่า "บัญญัติ ๖ อย่าง คือ ขันธบัญญัติ อายตนบัญญัติ ธาตุบัญญัติ สัจจบัญญัติ อินทริยบัญญัติ ปุคคลบัญญัติ. ขันธบัญญัติของขันธ์ทั้งหลายมีประมาณเท่าไร? มีประมาณเท่าที่ขันธ์ ๕ คือ รูปขันธ์ เวทนาขันธ์ สัญญาขันธ์ สังขารขันธ์ วิญญาณขันธ์. ขันธบัญญัติของขันธ์ทั้งหลายมีประมาณเท่านี้"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="subhead">กถาวตฺถุ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">กถาวัตถุ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0056">[M 0.0056]</span> ภควตา สพฺพปรมตฺถปญฺญตฺติธมฺมกุสเลน อภิธมฺมปิฏเก จตุตฺถํ ปุคฺคลปญฺญตฺติปฺปกรณํ เทเสตฺวา ตทนนฺตรํ ปญฺจมํ กถาวตฺถุปฺปกรณํ กถํ เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ท่านผู้มีอายุ พระผู้มีพระภาคผู้ทรงฉลาดในปรมัตถบัญญัติธรรมทั้งปวงนั้น ทรงแสดงปุคคลบัญญัติปกรณ์ที่ ๔ ในพระอภิธรรมปิฎกแล้ว ทรงแสดงกถาวัตถุปกรณ์ที่ ๕ ต่อจากนั้นอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> สพฺพปรมตฺถปญฺญตฺติธมฺมกุสเลน ภนฺเต ภควตา โลเก อคฺคปุคฺคเลน อภิธมฺมปิฏเก จตุตฺถํ ปุคฺคลปญฺญตฺติปฺปกรณํ เทเสตฺวา ตทนนฺตรํ กถาวตฺถุเทสนาย วาเร สมฺปตฺเต “อนาคเต มม สาวโก โมคฺคลิปุตฺตติสฺสตฺเถโร นาม อุปฺปนฺนํ สาสนมลํ โสเธตฺวา ตติยสงฺคีติํ กโรนฺโต ภิกฺขุสงฺฆสฺส มชฺเฌ นิสินฺโน สกวาเท ปญฺจ สุตฺตสตานิ ปรวาเท ปญฺจาติ สุตฺตสหสฺสํ สโมธาเนตฺวา, อิมํ ปกรณํ ภาเชสฺสตี”ติ ตสฺโสกาสํ กโรนฺเตน ปุคฺคลวาเร อฏฺฐมุขา วาทยุตฺติํ อาทิํ กตฺวา สพฺพกถามคฺเคสุ อสมฺปุณฺณภาณวารตฺถาย ตนฺติยา มาติกา นิกฺเขปมตฺเตน ปญฺจมํ กถาวตฺถุปฺปกรณํ สํเขปโต เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคผู้ทรงฉลาดในปรมัตถบัญญัติธรรมทั้งปวง ผู้เป็นยอดบุคคลในโลก ทรงแสดงปุคคลบัญญัติปกรณ์ที่ ๔ ในพระอภิธรรมปิฎกแล้ว เมื่อถึงวาระแห่งการแสดงกถาวัตถุต่อจากนั้น ทรงเปิดโอกาสแก่พระเถระนั้นว่า "ในอนาคต พระสาวกของเราชื่อพระโมคคัลลีบุตรติสสเถระ จักชำระมลทินแห่งพระศาสนาที่เกิดขึ้นแล้ว กระทำตติยสังคายนา นั่งอยู่ท่ามกลางภิกษุสงฆ์ รวบรวมพระสูตร ๕๐๐ ในสกวาทะ และ ๕๐๐ ในปรวาทะ รวมเป็น ๑,๐๐๐ พระสูตร แล้วจักจำแนกปกรณ์นี้" ด้วยเหตุนี้ จึงทรงแสดงกถาวัตถุปกรณ์ที่ ๕ โดยย่อ เพียงแค่ทรงวางมาติกาไว้ในพระบาลี เพื่อให้เป็นภาณวารที่ไม่สมบูรณ์ในกถาหลักทั้งหมด โดยเริ่มด้วยวาทะยุติ ๘ ประการในปุคคลวาร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อธุนา <span class="pb hidden-meta" data-ed="M" data-n="0.0057">[M 0.0057]</span> ปากฏํ ปนาวุโส วิตฺถารํ กถาวตฺถุปฺปกรณํ กทา เกน กตฺถ กถญฺจ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ท่านผู้มีอายุ กถาวัตถุปกรณ์ที่พิสดารซึ่งปรากฏอยู่ในปัจจุบันนี้ ใครแสดง จำแนกโดยพิสดารเมื่อไร ที่ไหน และอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ตํ โข ภนฺเต ภควโต นยมุขํ นิสฺสาย อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน ตติยสํคีติกาเล ปาฏลิปุตฺเต อโสการาเม สฏฺฐิภิกฺขุสตสหสฺสานํ สมาคเม ภควตา ทินฺนนยวเสน ตถาคเตน ฐปิตมาติกํ วิภชนฺเตน สกวาเท ปญฺจสุตฺตสตานิ ปรวาเท ปญฺจาติ สุตฺตสหสฺสํ อาหริตฺวา อิทํ ปรวาทมถนํ อธุนา ปากฏํ กถาวตฺถุปฺปกรณํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ กถาวัตถุปกรณ์นั้นแล อาศัยแนวทางที่พระผู้มีพระภาคทรงประทานไว้ โดยพระเถระผู้มีอายุพระโมคคัลลีบุตรติสสะ ในกาลแห่งตติยสังคายนา ณ อโศการาม เมืองปาฏลีบุตร ท่ามกลางภิกษุหกล้านรูป โดยจำแนกมาติกาที่พระตถาคตทรงตั้งไว้ตามแนวทางที่พระผู้มีพระภาคประทานไว้ โดยยกพระสูตร ๕๐๐ ในสกวาทะ และ ๕๐๐ ในปรวาทะ รวมเป็น ๑,๐๐๐ พระสูตร จึงได้แสดงกถาวัตถุปกรณ์ที่พิสดารซึ่งปรากฏอยู่ในปัจจุบันนี้ อันเป็นเครื่องขยี้วาทะของผู้อื่น โดยจำแนกอย่างพิสดาร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> กติ <span class="pb hidden-meta" data-ed="M" data-n="0.0062">[M 0.0062]</span> อาวุโส ตตฺถ กถาโย เตน อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน วิตฺถารโต วิภชิตฺวา กถิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ท่านผู้มีอายุ กถาในนั้นที่พระเถระผู้มีอายุพระโมคคัลลีบุตรติสสะนั้นกล่าวจำแนกโดยพิสดารมีเท่าไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ตตฺถ ภนฺเต วาจนามคฺคโต ทฺเว จ สตานิ สตฺตวีสติ จ กถาโย อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน วิตฺถารโต วิภชิตฺวา กถิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ กถาในนั้นโดยทางแห่งการกล่าว ที่พระเถระผู้มีอายุพระโมคคัลลีบุตรติสสะกล่าวจำแนกโดยพิสดารมี ๒๒๗ กถา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="subhead">ปุคฺคลกถา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ปุคคลกถา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> กถญฺจาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0063">[M 0.0063]</span> ตตฺถ ปฐมา ปุคฺคลกถา อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน วิตฺถารโต วิภชิตฺวา กถิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ท่านผู้มีอายุ ปุคคลกถาที่ ๑ ในนั้น พระเถระผู้มีอายุพระโมคคัลลีบุตรติสสะกล่าวจำแนกโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ปุคฺคโล อุปลพฺภติ สจฺจิกฏฺฐปรมตฺเถนาติ, อามนฺตา. โย สจฺจิกฏฺโฐ ปรมตฺโถ, ตโต โส ปุคฺคโล อุปลพฺภติ สจฺจิกฏฺฐปรมตฺเถนาติ, น เหวํ วตฺตพฺเพ. อาชานาหิ นิคฺคหํ หญฺจิ ปุคฺคโล อุปลพฺภติ สจฺจิกฏฺฐปรมตฺเถน, เตน วต เร วตฺตพฺเพ “โย สจฺจิกฏฺโฐ ปรมตฺโถ, ตโต โส ปุคฺคโล อุปลพฺภติ สจฺจิกฏฺฐปรมตฺเถนา”ติ. ยํ ตตฺถ วเทสิ “วตฺตพฺเพ โข ‘ปุคฺคโล อุปลพฺภติ สจฺจิกฏฺฐปรมตฺเถน’, โน จ วตฺตพฺเพ ‘โย สจฺจิกฏฺโฐ ปรมตฺโถ, ตโต โส ปุคฺคโล อุปลพฺภติ สจฺจิกฏฺฐปรมตฺเถนา”ติ, มิจฺฉาติ เอวมาทินา ภนฺเต ตตฺถ ปฐมา ปุคฺคลกถา ปญฺจ ภาณวารมตฺตาย ตนฺติยา อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน วิตฺถารโต วิภชิตฺวา กถิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ ปุคคลกถาที่ ๑ ในนั้น พระเถระผู้มีอายุพระโมคคัลลีบุตรติสสะกล่าวจำแนกโดยพิสดารด้วยพระบาลีมีประมาณ ๕ ภาณวาร โดยมีอาทิอย่างนี้ว่า "บุคคลย่อมปรากฏโดยปรมัตถ์อันเป็นของจริงหรือ?" "ใช่" "ปรมัตถ์อันเป็นของจริงใด บุคคลนั้นย่อมปรากฏโดยปรมัตถ์อันเป็นของจริงนั้นหรือ?" "ไม่พึงกล่าวอย่างนั้น" "จงรู้การข่มขี่เถิด หากบุคคลย่อมปรากฏโดยปรมัตถ์อันเป็นของจริงไซร้ ท่านก็พึงกล่าวว่า 'ปรมัตถ์อันเป็นของจริงใด บุคคลนั้นย่อมปรากฏโดยปรมัตถ์อันเป็นของจริงนั้น'" "ที่ท่านกล่าวในข้อนั้นว่า 'พึงกล่าวว่า "บุคคลย่อมปรากฏโดยปรมัตถ์อันเป็นของจริง" แต่ไม่พึงกล่าวว่า "ปรมัตถ์อันเป็นของจริงใด บุคคลนั้นย่อมปรากฏโดยปรมัตถ์อันเป็นของจริงนั้น"' นั่นผิด"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:123">
+  <div class="pair-col col-pali">
+<p rend="subhead">อญฺญาณกถา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อัญญาณกถา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:124">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0064">[M 0.0064]</span> อาวุโส กถาวตฺถุปฺปกรเณ ทุติยวคฺเค ทุติยา อญฺญาณกถา อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน กถํ วิตฺถารโต วิภชิตฺวา กถิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ท่านผู้มีอายุ อัญญาณกถาที่ ๒ ในวรรคที่ ๒ แห่งกถาวัตถุปกรณ์ในพระอภิธรรมปิฎก พระเถระผู้มีอายุพระโมคคัลลีบุตรติสสะกล่าวจำแนกโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:125">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ปญฺจเม กถาวตฺถุปฺปกรเณ ทุติยวคฺเค ทุติยา อญฺญาณกถา “อตฺถิ อรหโต อญฺญาณนฺติ, อามนฺตา. อตฺถิ อรหโต อวิชฺชา อวิชฺโชโฆ อวิชฺชาโยโค อวิชฺชานุสโย อวิชฺชาปริยุฏฺฐานํ อวิชฺชาสํโยชนํ อวิชฺชานีวรณนฺติ, น เหวํ วตฺตพฺเพ. นตฺถิ อรหโต อวิชฺชา อวิชฺโชโฆ อวิชฺชาโยโค อวิชฺชานุสโย อวิชฺชาปริยุฏฺฐานํ อวิชฺชาสํโยชนํ อวิชฺชานิวรณนฺติ, อามนฺตา. หญฺจิ นตฺถิ อรหโต อวิชฺชา อวิชฺโชโฆ อวิชฺชาโยโค อวิชฺชานุสโย อวิชฺชาปริยุฏฺฐานํ อวิชฺชาสํโยชนํ อวิชฺชานีวรณํ, โน จ วต เร วตฺตพฺเพ “อตฺถิ อรหโต อญฺญาณ”นฺติ เอวมาทินา อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน วิตฺถารโต วิภชิตฺวา ภาสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ อัญญาณกถาที่ ๒ ในวรรคที่ ๒ แห่งกถาวัตถุปกรณ์ที่ ๕ ในพระอภิธรรมปิฎก พระเถระผู้มีอายุพระโมคคัลลีบุตรติสสะกล่าวจำแนกโดยพิสดารโดยมีอาทิอย่างนี้ว่า "พระอรหันต์มีความไม่รู้หรือ?" "ใช่" "พระอรหันต์มีอวิชชา อวิชโชฆะ อวิชชาโยคะ อวิชชานุสัย อวิชชาปริยุฏฐาน อวิชชาสังโยชน์ อวิชชานิวรณ์หรือ?" "ไม่พึงกล่าวอย่างนั้น" "พระอรหันต์ไม่มีอวิชชา อวิชโชฆะ อวิชชาโยคะ อวิชชานุสัย อวิชชาปริยุฏฐาน อวิชชาสังโยชน์ อวิชชานิวรณ์หรือ?" "ใช่" "หากพระอรหันต์ไม่มีอวิชชา อวิชโชฆะ อวิชชาโยคะ อวิชชานุสัย อวิชชาปริยุฏฐาน อวิชชาสังโยชน์ อวิชชานิวรณ์ไซร้ ท่านก็ไม่พึงกล่าวว่า 'พระอรหันต์มีความไม่รู้'"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:126">
+  <div class="pair-col col-pali">
+<p rend="subhead">อสญฺญกถา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อสัญญกถา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:127">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0067">[M 0.0067]</span> อาวุโส ปญฺจเม กถาวตฺถุปฺปกรเณ ตติยวคฺเค เอกาทสมา อสญฺญกถา อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน กถํ วิตฺถารโต วิภชิตฺวา กถิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ท่านผู้มีอายุ อสัญญกถาที่ ๑๑ ในวรรคที่ ๓ แห่งกถาวัตถุปกรณ์ เล่มที่ ๕ ในพระอภิธรรมปิฎก พระโมคคัลลีบุตรติสสเถระผู้มีอายุได้จำแนกและกล่าวไว้โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:128">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ปญฺจเม กถาวตฺถุปฺปกรเณ ตติยวคฺเค เอกาทสมา อสญฺญกถา “อสญฺญสตฺเตสุ สญฺญา อตฺถีติ, อามนฺตา. สญฺญาภโว สญฺญาคติ สญฺญาสตฺตาวาโส สญฺญาสํสาโร สญฺญาโยนิ สญฺญตฺตภาวปฏิลาโภติ, น เหวํ วตฺตพฺเพ”ติ เอวมาทินา อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน วิตฺถารโต วิภชิตฺวา กถิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ อสัญญกถาที่ ๑๑ ในวรรคที่ ๓ แห่งกถาวัตถุปกรณ์ เล่มที่ ๕ ในพระอภิธรรมปิฎก พระโมคคัลลีบุตรติสสเถระผู้มีอายุได้จำแนกและกล่าวไว้โดยพิสดาร ด้วยประการฉะนี้ว่า ‘ในอสัญญีสัตว์มีสัญญาหรือ’ ‘ใช่’ ‘ภพเป็นสัญญา คติเป็นสัญญา ที่อยู่ของสัตว์เป็นสัญญา สังสารเป็นสัญญา กำเนิดเป็นสัญญา การได้อัตภาพเป็นสัญญา’ ‘ไม่พึงกล่าวอย่างนั้น’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:129">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อสญฺญสตฺเตสุ <span class="pb hidden-meta" data-ed="M" data-n="0.0068">[M 0.0068]</span> สญฺญา อตฺถิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ในอสัญญีสัตว์มีสัญญา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:130">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สญฺญาภโว <span class="pb hidden-meta" data-ed="M" data-n="0.0069">[M 0.0069]</span> สญฺญาคติ สญฺญาสตฺตาวาโส สญฺญาสํสาโร สญฺญาโยนิ สญฺญตฺตภาวปฏิลาโภ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภพเป็นสัญญา คติเป็นสัญญา ที่อยู่ของสัตว์เป็นสัญญา สังสารเป็นสัญญา กำเนิดเป็นสัญญา การได้อัตภาพเป็นสัญญา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:131">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น เหวํ วตฺตพฺเพ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ไม่พึงกล่าวอย่างนั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:132">
+  <div class="pair-col col-pali">
+<p rend="bodytext">นนุ อสญฺญภโว อสญฺญคติ อสญฺญสตฺตาวาโส อสญฺญสํสาโร อสญฺญโยนิ อสญฺญตฺตภาวปฏิลาโภ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ก็ภพเป็นอสัญญา คติเป็นอสัญญา ที่อยู่ของสัตว์เป็นอสัญญา สังสารเป็นอสัญญา กำเนิดเป็นอสัญญา การได้อัตภาพเป็นอสัญญา มิใช่หรือ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:133">
+  <div class="pair-col col-pali">
+<p rend="bodytext">หญฺจิ <span class="pb hidden-meta" data-ed="M" data-n="0.0070">[M 0.0070]</span> อสญฺญภโว อสญฺญคติ อสญฺญสตฺตาวาโส อสญฺญสํสาโร อสญฺญโยนิ อสญฺญตฺตภาวปฏิลาโภ, โน จ วต เร วตฺตพฺเพ อสญฺญสตฺเตสุ สญฺญา อตฺถิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถ้าภพเป็นอสัญญา คติเป็นอสัญญา ที่อยู่ของสัตว์เป็นอสัญญา สังสารเป็นอสัญญา กำเนิดเป็นอสัญญา การได้อัตภาพเป็นอสัญญาไซร้ ก็ไม่พึงกล่าวว่า ‘ในอสัญญีสัตว์มีสัญญา’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:134">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อสญฺญสตฺเตสุ สญฺญา อตฺถิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ในอสัญญีสัตว์มีสัญญา</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:135">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปญฺจโวการภโว คติ สตฺตาวาโส สํสาโร โยนิ อตฺตภาวปฏิลาโภ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ภพเป็นปัญจโวการะ คติเป็นปัญจโวการะ ที่อยู่ของสัตว์เป็นปัญจโวการะ สังสารเป็นปัญจโวการะ กำเนิดเป็นปัญจโวการะ การได้อัตภาพเป็นปัญจโวการะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:136">
+  <div class="pair-col col-pali">
+<p rend="bodytext">นนุ <span class="pb hidden-meta" data-ed="M" data-n="0.0071">[M 0.0071]</span> เอกโวการภโว คติ สตฺตาวาโส สํสาโร โยนิ อตฺตภาวปฏิลาโภ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ก็ภพเป็นเอกโวการะ คติเป็นเอกโวการะ ที่อยู่ของสัตว์เป็นเอกโวการะ สังสารเป็นเอกโวการะ กำเนิดเป็นเอกโวการะ การได้อัตภาพเป็นเอกโวการะ มิใช่หรือ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:137">
+  <div class="pair-col col-pali">
+<p rend="bodytext">หญฺจิ เอกโวการภโว คติ สตฺตาวาโส สํสาโร โยนิ อตฺตภาวปฏิลาโภ, โน จ วต เร วตฺตพฺเพ อสญฺญสตฺเตสุ สญฺญา อตฺถิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถ้าภพเป็นเอกโวการะ คติเป็นเอกโวการะ ที่อยู่ของสัตว์เป็นเอกโวการะ สังสารเป็นเอกโวการะ กำเนิดเป็นเอกโวการะ การได้อัตภาพเป็นเอกโวการะไซร้ ก็ไม่พึงกล่าวว่า ‘ในอสัญญีสัตว์มีสัญญา’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:138">
+  <div class="pair-col col-pali">
+<p rend="subhead">ฉฏฺฐวคฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">วรรคที่ ๖</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:139">
+  <div class="pair-col col-pali">
+<p rend="subhead">ปถวีธาตุสนิทสฺสนาติอาทิกถา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">กถาว่าด้วยปฐวีธาตุมีนิทัสสนะเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:140">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ฉฏฺฐวคฺเค <span class="pb hidden-meta" data-ed="M" data-n="0.0072">[M 0.0072]</span> ปน อาวุโส อฏฺฐมา ปถวีธาตุ สนิทสฺสนาติอาทิกถา อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน กถํ วิตฺถารโต วิภชิตฺวา กถิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ท่านผู้มีอายุ ก็เรื่องปฐวีธาตุมีนิทัสสนะเป็นต้นที่ ๘ ในวรรคที่ ๖ พระโมคคัลลีบุตรติสสเถระผู้มีอายุได้จำแนกและกล่าวไว้โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:141">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ฉฏฺฐวคฺเค ภนฺเต อฏฺฐมา ปถวีธาตุ สนิทสฺสนาติอาทิกถา “ปถวีธาตุ สนิทสฺสนาติ อามนฺตา. รูปํ รูปายตนํ รูปธาตุ นีลํ ปีตกํ โลหิตกํ โอทาตํ จกฺขุวิญฺเญยฺยํ จกฺขุสฺมิํ ปฏิหญฺญติ จกฺขุสฺส อาปาถํ อาคจฺฉตีติ, น เหวํ วตฺตพฺเพ”ติ เอวมาทินา อายสฺมตา มหาโมคฺคลิ ปุตฺตติสฺสตฺเถเรน วิตฺถารโต วิภชิตฺวา กถิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ เรื่องปฐวีธาตุมีนิทัสสนะเป็นต้นที่ ๘ ในวรรคที่ ๖ พระโมคคัลลีบุตรติสสเถระผู้มีอายุได้จำแนกและกล่าวไว้โดยพิสดาร ด้วยประการฉะนี้ว่า ‘ปฐวีธาตุมีนิทัสสนะหรือ’ ‘ใช่’ ‘รูป รูปายตนะ รูปธาตุ สีเขียว สีเหลือง สีแดง สีขาว อันจักษุวิญญาณพึงรู้ กระทบกับจักษุ เข้ามาสู่คลองจักษุ’ ‘ไม่พึงกล่าวอย่างนั้น’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:142">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปถวีธาตุ <span class="pb hidden-meta" data-ed="M" data-n="0.0073">[M 0.0073]</span> สนิทสฺสนา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปฐวีธาตุมีนิทัสสนะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:143">
+  <div class="pair-col col-pali">
+<p rend="bodytext">จกฺขุญฺจ <span class="pb hidden-meta" data-ed="M" data-n="0.0074">[M 0.0074]</span> ปฏิจฺจ ปถวีธาตุญฺจ อุปฺปชฺชติ จกฺขุวิญฺญาณํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">จักษุวิญญาณย่อมเกิดขึ้นเพราะอาศัยจักษุและปฐวีธาตุ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:144">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เตน <span class="pb hidden-meta" data-ed="M" data-n="0.0075">[M 0.0075]</span> หิ น วตฺตพฺพํ จกฺขุญฺจ ปฏิจฺจ ปถวีธาตุญฺจ อุปฺปชฺชติ จกฺขุวิญฺญาณํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถ้าอย่างนั้น ก็ไม่พึงกล่าวว่า ‘จักษุวิญญาณย่อมเกิดขึ้นเพราะอาศัยจักษุและปฐวีธาตุ’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:145">
+  <div class="pair-col col-pali">
+<p rend="subhead">อนฺตราภวกถา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">กถาว่าด้วยอันตรภพ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:146">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก อาวุโส ปญฺจเม กถาวตฺถุปฺปกรเณ อฏฺฐมวคฺเค ทุติยา อนฺตราภวกถา อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน <span class="pb hidden-meta" data-ed="M" data-n="0.0076">[M 0.0076]</span> กถํ วิตฺถารโต วิภชิตฺวา กถิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ท่านผู้มีอายุ อันตรภพกถาที่ ๒ ในวรรคที่ ๘ แห่งกถาวัตถุปกรณ์ เล่มที่ ๕ ในพระอภิธรรมปิฎก พระโมคคัลลีบุตรติสสเถระผู้มีอายุได้จำแนกและกล่าวไว้โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:147">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ปญฺจเม กถาวตฺถุปฺปกรเณ อฏฺฐมวคฺเค ทุติยา อนฺตราภวกถา “อตฺถิ อนฺตราภโวติ, อามนฺตา. กามภโวติ, น เหวํ วตฺตพฺเพ…เป… อตฺถิ อนฺตราภโวติ, อามนฺตา. รูปภโวติ, น เหวํ วตฺตพฺเพ…เป… อตฺถิ อนฺตราภโวติ, อามนฺตา. อรูปภโวติ, น เหวํ วตฺตพฺเพ”ติ เอวมาทินา อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน วิตฺถารโต วิภชิตฺวา กถิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ อันตรภพกถาที่ ๒ ในวรรคที่ ๘ แห่งกถาวัตถุปกรณ์ เล่มที่ ๕ ในพระอภิธรรมปิฎก พระโมคคัลลีบุตรติสสเถระผู้มีอายุได้จำแนกและกล่าวไว้โดยพิสดาร ด้วยประการฉะนี้ว่า ‘มีอันตรภพหรือ’ ‘ใช่’ ‘เป็นกามภพหรือ’ ‘ไม่พึงกล่าวอย่างนั้น’...ฯลฯ... ‘มีอันตรภพหรือ’ ‘ใช่’ ‘เป็นรูปภพหรือ’ ‘ไม่พึงกล่าวอย่างนั้น’...ฯลฯ... ‘มีอันตรภพหรือ’ ‘ใช่’ ‘เป็นอรูปภพหรือ’ ‘ไม่พึงกล่าวอย่างนั้น’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:148">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อตฺถิ <span class="pb hidden-meta" data-ed="M" data-n="0.0077">[M 0.0077]</span> อนฺตราภโว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">มีอันตรภพ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:149">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น <span class="pb hidden-meta" data-ed="M" data-n="0.0078">[M 0.0078]</span> เหวํ วตฺตพฺเพ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ไม่พึงกล่าวอย่างนั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:150">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อตฺถิ อนฺตราภโว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">มีอันตรภพ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:151">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กามภวสฺส <span class="pb hidden-meta" data-ed="M" data-n="0.0079">[M 0.0079]</span> จ รูปภวสฺส จ อนฺตเร อตฺถิ อนฺตราภโว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อันตรภพมีอยู่ในระหว่างกามภพและรูปภพ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:152">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น เหวํ วตฺตพฺเพ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ไม่พึงกล่าวอย่างนั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:153">
+  <div class="pair-col col-pali">
+<p rend="bodytext">รูปภวสฺส จ อรูปภวสฺส จ อนฺตเร อตฺถิ อนฺตราภโว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อันตรภพมีอยู่ในระหว่างรูปภพและอรูปภพ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:154">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กามภวสฺส จ รูปภวสฺส จ อนฺตเร นตฺถิ อนฺตราภโว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อันตรภพไม่มีอยู่ในระหว่างกามภพและรูปภพ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:155">
+  <div class="pair-col col-pali">
+<p rend="bodytext">หญฺจิ <span class="pb hidden-meta" data-ed="M" data-n="0.0080">[M 0.0080]</span> กามภวสฺส จ รูปภวสฺส จ อนฺตเร นตฺถิ อนฺตราภโว, โน จ วต เร วตฺตพฺเพ อตฺถิ อนฺตราภโว.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ถ้าอันตรภพไม่มีอยู่ในระหว่างกามภพและรูปภพไซร้ ก็ไม่พึงกล่าวว่า ‘มีอันตรภพ’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:156">
+  <div class="pair-col col-pali">
+<p rend="subhead">สฬายตนุปฺปตฺติกถา</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">กถาว่าด้วยการเกิดขึ้นแห่งสฬายตนะ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:157">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก อาวุโส ปญฺจเม กถาวตฺถุปฺปกรเณ จุทฺทสมวคฺเค ทุติยา สฬายตนุปฺปตฺติกถา อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน กถํ วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ สฬายตนุปปัตติกถาที่ ๒ ในวรรคที่ ๑๔ แห่งกถาวัตถุปกรณ์ที่ ๕ ในอภิธรรมปิฎก พระเถระนามว่าพระมหามุคคัลลีบุตรติสสะได้จำแนกและแสดงไว้โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:158">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ปญฺจเม กถาวตฺถุปฺปกรเณ จุทฺทสเมวคฺเค ทุติยา สฬายตนุปฺปตฺติกถา “สฬายตนํ อปุพฺพํ อจริมํ มาตุกุจฺฉิสฺมิํ สณฺฐาตีติ, อามนฺตา. สพฺพงฺคปจฺจงฺคี อหีนินฺทริโย มาตุกุจฺฉิสฺมิํ โอกฺกมตีติ, น เหวํ วตฺตพฺเพ”ติ เอวมาทินา <span class="pb hidden-meta" data-ed="M" data-n="0.0081">[M 0.0081]</span> อายสฺมตา มหาโมคฺคลิปุตฺตติสฺสตฺเถเรน วิตฺถารโต วิภชิตฺวา กถิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ ในอภิธรรมปิฎก กถาวัตถุปกรณ์ที่ ๕ วรรคที่ ๑๔ สฬายตนุปปัตติกถาที่ ๒ อันพระเถระผู้มีอายุ พระมหาโมคคัลลีบุตรติสสะ ได้จำแนกแสดงไว้โดยพิสดารแล้ว ด้วยบทมีอาทิว่า ‘อายตนะ ๖ ย่อมตั้งอยู่ในครรภ์มารดาโดยไม่ก่อนไม่หลังกันหรือ? ขอรับ. สัตว์ผู้มีอวัยวะน้อยใหญ่ครบถ้วน มีอินทรีย์ไม่บกพร่อง ย่อมลงสู่ครรภ์มารดาหรือ? ไม่พึงกล่าวอย่างนั้น’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:159">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สฬายตนํ <span class="pb hidden-meta" data-ed="M" data-n="0.0082">[M 0.0082]</span> อปุพฺพํ อจริมํ มาตุกุจฺฉิสฺมิํ สณฺฐาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อายตนะ ๖ ย่อมตั้งอยู่ในครรภ์มารดาโดยไม่ก่อนไม่หลังกัน.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:160">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สพฺพงฺคปฺปจฺจงฺคี อหีนินฺทริโย มาตุกุจฺฉิสฺมิํ โอกฺกมติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">สัตว์ผู้มีอวัยวะน้อยใหญ่ครบถ้วน มีอินทรีย์ไม่บกพร่อง ย่อมลงสู่ครรภ์มารดา.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:161">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น <span class="pb hidden-meta" data-ed="M" data-n="0.0083">[M 0.0083]</span> เหวํ วตฺตพฺเพ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ไม่พึงกล่าวอย่างนั้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:162">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อุปปตฺเตสิเยน จิตฺเตน จกฺขายตนํ สณฺฐาติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">จักขายตนะย่อมตั้งขึ้นด้วยจิตที่ควรแก่การอุบัติ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:163">
+  <div class="pair-col col-pali">
+<p rend="bodytext">อุปปตฺเตสิเยน จิตฺเตน หตฺถา สณฺฐนฺติ, ปาทา สณฺฐนฺติ, สีสํ สณฺฐาติ, กณฺโณ สณฺฐาติ, นาสิกา สณฺฐาติ, มุขํ สณฺฐาติ, ทนฺตา สณฺฐนฺติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">มือทั้งหลายย่อมตั้งขึ้น เท้าทั้งหลายย่อมตั้งขึ้น ศีรษะย่อมตั้งขึ้น หูย่อมตั้งขึ้น จมูกย่อมตั้งขึ้น ปากย่อมตั้งขึ้น ฟันทั้งหลายย่อมตั้งขึ้น ด้วยจิตที่ควรแก่การอุบัติ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:164">
+  <div class="pair-col col-pali">
+<p rend="bodytext">น <span class="pb hidden-meta" data-ed="M" data-n="0.0084">[M 0.0084]</span> เหวํ วตฺตพฺเพ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ไม่พึงกล่าวอย่างนั้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:165">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0085">[M 0.0085]</span> ภควตา ยมกปาฏิหีราวสาเน ตาวติํสเทวโลกํ คนฺตวา ทสสหสฺสโลกธาตูหิ อาคมฺม สนฺนิสินฺนานํ เทวานํ อภิธมฺมเทสนํ เทเสนฺเตน ปฐมํ อภิธมฺมปิฏเก ปญฺจปฺปกรณานิ เทเสตฺวา ตทนนฺตรํ ฉฏฺฐํ ยมกปฺปกรณํ เทเสนฺเตน กติ ยมกปฺปกรณานิ วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ พระผู้มีพระภาคเจ้าพระองค์นั้น เมื่อทรงกระทำยมกปาฏิหาริย์เสร็จแล้ว เสด็จไปสู่เทวโลกชั้นดาวดึงส์ เมื่อทรงแสดงพระอภิธรรมเทศนาแก่เหล่าเทพที่มาประชุมกันจากหมื่นโลกธาตุ ทรงแสดงปกรณ์ ๕ ในพระอภิธรรมปิฎกก่อน จากนั้นทรงแสดงยมกปกรณ์ที่ ๖ ทรงจำแนกยมกปกรณ์ไว้กี่อย่าง?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:166">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ภควตา ภนฺเต ยมสฺส วิสยาตีเตน ยมกปาฏิหีราวสาเน ตาวติํสเทวโลกํ คนฺตวา ตตฺถ ทสสหสฺสโลกธาตูหิ อาคมฺม สนฺนิสินฺนานํ เทวตานํ อภิธมฺมปิฏกํ เทเสนฺเตน อภิธมฺมปิฏเก ปูริมานิ ปญฺจปฺปกรณานิ เทเสตฺวา ตทนนฺตรํ ฉฏฺฐํ ยมกปฺปกรณํ มูลยมกํ ขนฺธยมกํ อายตนยมกํ ธาตุยมกํ สจฺจยมกํ สงฺขารยมกํ อนุสยยมกํ จิตฺตยมกํ ธมฺมยมกํ อินฺทริยยมกนฺติ ทส ยมกปฺปกรณานิ วิตฺถารโต วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคเจ้าผู้ทรงล่วงพ้นวิสัยแห่งยมก เมื่อทรงกระทำยมกปาฏิหาริย์เสร็จแล้ว เสด็จไปสู่เทวโลกชั้นดาวดึงส์ ณ ที่นั้น เมื่อทรงแสดงพระอภิธรรมปิฎกแก่เหล่าเทพที่มาประชุมกันจากหมื่นโลกธาตุ ทรงแสดงปกรณ์ ๕ เบื้องต้นในพระอภิธรรมปิฎกแล้ว จากนั้นทรงแสดงยมกปกรณ์ที่ ๖ คือ มูลยมก ขันธยมก อายตนยมก ธาตุยมก สัจจยมก สังขารยมก อนุสยยมก จิตตยมก ธรรมยมก อินทริยยมก รวม ๑๐ ยมกปกรณ์ ได้ทรงจำแนกแสดงไว้โดยพิสดารแล้ว.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:167">
+  <div class="pair-col col-pali">
+<p rend="subhead">มูลยมก</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">มูลยมก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:168">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> กถญฺจาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0086">[M 0.0086]</span> ตตฺถ ภควตา ปฐมํ มูลยมกํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ ก็พระผู้มีพระภาคเจ้าทรงแสดงมูลยมกปกรณ์ที่ ๑ ณ ที่นั้น โดยจำแนกไว้โดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:169">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> เย เกจิ กุสลา ธมฺมา, สพฺเพ เต กุสลมูลา. เย วา ปน กุสลมูลา, สพฺเพ เต ธมฺมา กุสลา. เย เกจิ กุสลา ธมฺมา, สพฺเพ เต กุสลมูเลน เอกมูลา. เย วา <span class="pb hidden-meta" data-ed="M" data-n="0.0087">[M 0.0087]</span> ปน กุสลมูเลน เอกมูลา, สพฺเพ เต ธมฺมา กุสลา. เย เกจิ กุสลมูเลน เอกมูลา ธมฺมา, สพฺเพ เต ธมฺมา กุสลมูเลน อญฺญมญฺญมูลา. เย วา ปน กุสลมูเลน อญฺญมญฺญมูลา, สพฺเพ เต ธมฺมา กุสลาติ เอวมาทินา ภนฺเต ตตฺถ ภควตา ปฐมํ มูลยมกํ พาวีสติยา จ ติเกหิ ทุกสเตน จ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคเจ้าทรงแสดงมูลยมกปกรณ์ที่ ๑ ณ ที่นั้น โดยจำแนกไว้โดยพิสดารด้วยบทมีอาทิว่า ‘ธรรมทั้งหลายที่เป็นกุศลทั้งหมดนั้น เป็นกุศลมูล. อนึ่ง ธรรมทั้งหลายที่เป็นกุศลมูลทั้งหมดนั้น เป็นกุศลธรรม. ธรรมทั้งหลายที่เป็นกุศลทั้งหมดนั้น มีกุศลมูลเป็นมูลเดียวกัน. อนึ่ง ธรรมทั้งหลายที่มีกุศลมูลเป็นมูลเดียวกันทั้งหมดนั้น เป็นกุศลธรรม. ธรรมทั้งหลายที่เป็นกุศล มีกุศลมูลเป็นมูลเดียวกันทั้งหมดนั้น มีกุศลมูลเป็นมูลซึ่งกันและกัน. อนึ่ง ธรรมทั้งหลายที่มีกุศลมูลเป็นมูลซึ่งกันและกันทั้งหมดนั้น เป็นกุศลธรรม’ ด้วยติกะ ๒๒ และทุกะ ๑๐๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:170">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เย เกจิ กุสลา ธมฺมา, สพฺเพ เต กุสลมูลา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ธรรมทั้งหลายที่เป็นกุศลทั้งหมดนั้น เป็นกุศลมูล.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:171">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เย เกจิ กุสลา ธมฺมา, สพฺเพ เต กุสลมูลาติ, ตีเณว กุสลมูลานิ อวเสสา กุสลา ธมฺมา, น กุสลมูลา, เย วา ปน กุสลมูลา, สพฺเพ เต ธมฺมา กุสลาติ, อามนฺตา –</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ธรรมทั้งหลายที่เป็นกุศลทั้งหมดนั้น เป็นกุศลมูลหรือ? กุศลมูลมี ๓ อย่างเท่านั้น กุศลธรรมที่เหลือ ไม่ใช่กุศลมูล. อนึ่ง ธรรมทั้งหลายที่เป็นกุศลมูลทั้งหมดนั้น เป็นกุศลธรรมหรือ? ขอรับ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:172">
+  <div class="pair-col col-pali">
+<p rend="subhead">ขนฺธยมก</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ขันธยมก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:173">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0088">[M 0.0088]</span> อาวุโส ฉฏฺเฐ ยมกปฺปกรเณ ทุติยํ ขนฺธยมกํ ภควตา กถํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ ในอภิธรรมปิฎก ยมกปกรณ์ที่ ๖ ขันธยมกปกรณ์ที่ ๒ พระผู้มีพระภาคเจ้าทรงจำแนกแสดงไว้โดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:174">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ฉฏฺเฐ ยมกปฺปกรเณ ทุติยํ ขนฺธยมกํ “ปญฺจกฺขนฺธา – รูปกฺขนฺโธ เวทนากฺขนฺโธ สญฺญากฺขนฺโธ สงฺขารกฺขนฺโธ วิญฺญาณกฺขนฺโธ. รูปํ รูปกฺขนฺโธ, รูปกฺขนฺโธ รูปํ. เวทนา เวทนากฺขนฺโธ, เวทนากฺขนฺโธ เวทนา. สญฺญา สญฺญากฺขนฺโธ, สญฺญากฺขนฺโธ สญฺญา. สงฺขารา สงฺขารกฺขนฺโธ, สงฺขารกฺขนฺโธ สงฺขารา. วิญฺญาณํ วิญฺญาณกฺขนฺโธ, วิญฺญาณกฺขนฺโธ วิญฺญาณ”นฺติ เอวมาทินา ภควตา ปณฺณตฺติวารปวตฺติวารปริญฺญาวารสงฺขาเตหิ ตีหิ วาเรหิ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ ในอภิธรรมปิฎก ยมกปกรณ์ที่ ๖ ขันธยมกปกรณ์ที่ ๒ พระผู้มีพระภาคเจ้าทรงจำแนกแสดงไว้โดยพิสดารด้วยบทมีอาทิว่า ‘ขันธ์ ๕ คือ รูปขันธ์ เวทนาขันธ์ สัญญาขันธ์ สังขารขันธ์ วิญญาณขันธ์. รูปเป็นรูปขันธ์, รูปขันธ์เป็นรูป. เวทนาเป็นเวทนาขันธ์, เวทนาขันธ์เป็นเวทนา. สัญญาเป็นสัญญาขันธ์, สัญญาขันธ์เป็นสัญญา. สังขารเป็นสังขารขันธ์, สังขารขันธ์เป็นสังขาร. วิญญาณเป็นวิญญาณขันธ์, วิญญาณขันธ์เป็นวิญญาณ’ ด้วยวาระ ๓ อย่าง คือ ปัญญัตติวาระ ปวัตติวาระ และปริญญาวาระ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:175">
+  <div class="pair-col col-pali">
+<p rend="subhead">อายตนยมก</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อายตนยมก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:176">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0089">[M 0.0089]</span> อาวุโส ฉฏฺเฐ ยมกปฺปกรเณ ตติยํ อายตนยมกํ ภควตา กถํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ ในอภิธรรมปิฎก ยมกปกรณ์ที่ ๖ อายตนยมกปกรณ์ที่ ๓ พระผู้มีพระภาคเจ้าทรงจำแนกแสดงไว้โดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:177">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ฉฏฺเฐ ยมกปฺปกรเณ ตติยํ อายตนยมกํ “ทฺวาทสายตนานิ – จกฺขายตนํ โสตายตนํ ฆานายตนํ ชิวฺหายตนํ กายายตนํ รูปายตนํ สทฺทายตนํ คนฺธายตนํ รสายตนํ โผฏฺฐพฺพายตนํ มนายตนํ ธมฺมายตนํ. จกฺขุ จกฺขายตนํ, จกฺขายตนํ จกฺขุ. โสตํ โสตายตนํ, โสตายตนํ โสต”นฺติ เอวมาทินา ปณฺณตฺติวารปวตฺติวารปริญฺญาวารสงฺขาเตหิ ตีหิ วาเรหิ ภควตา วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ ในอภิธรรมปิฎก ยมกปกรณ์ที่ ๖ อายตนยมกปกรณ์ที่ ๓ พระผู้มีพระภาคเจ้าทรงจำแนกแสดงไว้โดยพิสดารด้วยบทมีอาทิว่า ‘อายตนะ ๑๒ คือ จักขายตนะ โสตายตนะ ฆานายตนะ ชิวหายตนะ กายายตนะ รูปายตนะ สัททายตนะ คันธายตนะ รสายตนะ โผฏฐัพพายตนะ มนายตนะ ธัมมายตนะ. จักขุเป็นจักขายตนะ, จักขายตนะเป็นจักขุ. โสตะเป็นโสตายตนะ, โสตายตนะเป็นโสตะ’ ด้วยวาระ ๓ อย่าง คือ ปัญญัตติวาระ ปวัตติวาระ และปริญญาวาระ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:178">
+  <div class="pair-col col-pali">
+<p rend="subhead">ธาตุยมก</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ธาตุยมก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:179">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0090">[M 0.0090]</span> อาวุโส ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ จตุตฺถํ ธาตุยมกํ ภควตา กถํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ ในอภิธรรมปิฎก ยมกปกรณ์ที่ ๖ ธาตุยมกปกรณ์ที่ ๔ ในยมก ๑๐ อย่าง พระผู้มีพระภาคเจ้าทรงจำแนกแสดงไว้โดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:180">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0091">[M 0.0091]</span> ภนฺเต ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ จตุตฺถํ ธาตุยมกํ “อฏฺฐารส ธาตุโย – จกฺขุธาตุ โสตธาตุ ฆานธาตุ ชิวฺหาธาตุ กายธาตุ รูปธาตุ สทฺทธาตุ คนฺธธาตุ รสธาตุ โผฏฺฐพฺพธาตุ จกฺขุวิญฺญาณธาตุ โสตวิญฺญาณธาตุ ฆานวิญฺญาณธาตุ ชิวฺหาวิญฺญาณธาตุ กายวิญฺญาณธาตุ มโนธาตุ มโนวิญฺญาณธาตุ ธมฺมธาตู”ติ เอวมาทินา ภควตา ปณฺณตฺติวารปวตฺติวารปริญฺญาวารสงฺขาเตหิ ตีหิ มหาวาเรหิ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคทรงจำแนกแสดงธาตุยมกที่ ๔ ในยมก ๑๐ แห่งยมกปกรณ์ที่ ๖ ในอภิธรรมปิฎก โดยพิสดารด้วยมหาวาร ๓ คือ ปัญญัตติวาร ปวัตติวาร และปริญญาวาร เป็นต้นอย่างนี้ว่า ‘ธาตุ ๑๘ คือ จักขุธาตุ โสตธาตุ ฆานธาตุ ชิวหาธาตุ กายธาตุ รูปธาตุ สัททธาตุ คันธธาตุ รสธาตุ โผฏฐัพพธาตุ จักขุวิญญาณธาตุ โสตวิญญาณธาตุ ฆานวิญญาณธาตุ ชิวหาวิญญาณธาตุ กายวิญญาณธาตุ มโนธาตุ มโนวิญญาณธาตุ ธัมมธาตุ’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:181">
+  <div class="pair-col col-pali">
+<p rend="subhead">สจฺจยมก</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">สัจจยมก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:182">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0092">[M 0.0092]</span> อาวุโส ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ ปญฺจมํ สจฺจยมกํ ภควตา กถํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ พระผู้มีพระภาคทรงจำแนกแสดงสัจจยมกที่ ๕ ในยมก ๑๐ แห่งยมกปกรณ์ที่ ๖ ในอภิธรรมปิฎก โดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:183">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ ปญฺจมํ สจฺจยมกํ “จตฺตาริ สจฺจานิ – ทุกฺขสจฺจํ สมุทยสจฺจํ นิโรธสจฺจํ มคฺคสจฺจํ. ทุกฺขํ ทุกฺขสจฺจํ, ทุกฺขสจฺจํ ทุกฺขํ. สมุทโย สมุทยสจฺจํ, สมุทยสจฺจํ สมุทโย. นิโรโธ นิโรธสจฺจํ, นิโรธสจฺจํ นิโรโธ. มคฺโค มคฺคสจฺจํ, มคฺคสจฺจํ มคฺโค”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคทรงจำแนกแสดงสัจจยมกที่ ๕ ในยมก ๑๐ แห่งยมกปกรณ์ที่ ๖ ในอภิธรรมปิฎก โดยพิสดารเป็นต้นอย่างนี้ว่า ‘สัจจะ ๔ คือ ทุกขสัจจะ สมุทยสัจจะ นิโรธสัจจะ มรรคสัจจะ. ทุกข์เป็นทุกขสัจจะ ทุกขสัจจะคือทุกข์. สมุทัยเป็นสมุทยสัจจะ สมุทยสัจจะคือสมุทัย. นิโรธเป็นนิโรธสัจจะ นิโรธสัจจะคือนิโรธ. มรรคเป็นมรรคสัจจะ มรรคสัจจะคือมรรค’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:184">
+  <div class="pair-col col-pali">
+<p rend="subhead">สงฺขารยมก</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">สังขารยมก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:185">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0093">[M 0.0093]</span> อาวุโส ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ ฉฏฺฐํ สงฺขารยมกํ ภควตา กถํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ พระผู้มีพระภาคทรงจำแนกแสดงสังขารยมกที่ ๖ ในยมก ๑๐ แห่งยมกปกรณ์ที่ ๖ ในอภิธรรมปิฎก โดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:186">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ ฉฏฺฐํ สงฺขารยมกํ “ตโย สงฺขารา – กายสงฺขาโร วจีสงฺขาโร<span class="pb hidden-meta" data-ed="M" data-n="0.0094">[M 0.0094]</span>, จิตฺตสงฺขาโร. อสฺสาสปสฺสาสา กายสงฺขาโร, วิตกฺกวิจารา วจีสงฺขารา, สญฺญา จ เวทนา จ จิตฺตสงฺขาโร ฐเปตฺวา วิตกฺกวิจาเร สพฺเพปิ จิตฺตสมฺปยุตฺตกา ธมฺมา จิตฺตสงฺขาโร”ติ เอวมาทินา ภควตา ปณฺณตฺติวารปวตฺติวารปริญฺญาวารสงฺขาเตหิ ตีหิ มหาวาเรหิ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคทรงจำแนกแสดงสังขารยมกที่ ๖ ในยมก ๑๐ แห่งยมกปกรณ์ที่ ๖ ในอภิธรรมปิฎก โดยพิสดารด้วยมหาวาร ๓ คือ ปัญญัตติวาร ปวัตติวาร และปริญญาวาร เป็นต้นอย่างนี้ว่า ‘สังขาร ๓ คือ กายสังขาร วจีสังขาร จิตตสังขาร. ลมหายใจเข้าและลมหายใจออกเป็นกายสังขาร วิตกและวิจารเป็นวจีสังขาร สัญญาและเวทนาเป็นจิตตสังขาร เว้นวิตกและวิจารเสีย ธรรมทั้งปวงที่สัมปยุตด้วยจิตเป็นจิตตสังขาร’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:187">
+  <div class="pair-col col-pali">
+<p rend="subhead">อนุสยยมก</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อนุสยยมก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:188">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0095">[M 0.0095]</span> อาวุโส ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ สตฺตมํ อนุสยยมกํ ภควตา กถํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ พระผู้มีพระภาคทรงจำแนกแสดงอนุสยยมกที่ ๗ ในยมก ๑๐ แห่งยมกปกรณ์ที่ ๖ ในอภิธรรมปิฎก โดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:189">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ สตฺตมํ อนุสยยมกํ “สตฺต อนุสยา – กามราคานุสโย ปฏิฆานุสโย มานานุสโย ทิฏฺฐานุสโย วิจิกิจฺฉานุสโย ภวราคานุสโย อวิชฺชานุสโย. กตฺถ กามราคานุสโย อนุเสติ, กามธาตุยา ทฺวีสุ เวทนาสุ เอตฺถ กามราคานุสโย อนุเสตี”ติ เอวมาทินา ภควตา อุปฺปตฺติฏฺฐานวาร อนุสยวาร สานุสยวาร ปชหนวาร ปริญฺญาวาร ปหีนวาร อุปฺปชฺชนวาร ธาตุวารสงฺขาเตหิ อฏฺฐหิ มหาวาเรหิ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคทรงจำแนกแสดงอนุสยยมกที่ ๗ ในยมก ๑๐ แห่งยมกปกรณ์ที่ ๖ ในอภิธรรมปิฎก โดยพิสดารด้วยมหาวาร ๘ คือ อุปปัตติฐานวาร อนุสยวาร สานุสยวาร ปชหนวาร ปริญญาวาร ปหีนวาร อุปปัชชนวาร และธาตุวาร เป็นต้นอย่างนี้ว่า ‘อนุสัย ๗ คือ กามราคานุสัย ปฏิฆานุสัย มานานุสัย ทิฏฐานุสัย วิจิกิจฉานุสัย ภวราคานุสัย อวิชชานุสัย. กามราคานุสัยย่อมตามนอนในที่ไหน? กามราคานุสัยย่อมตามนอนในเวทนา ๒ ในกามธาตุนี้’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:190">
+  <div class="pair-col col-pali">
+<p rend="subhead">จิตฺตยมก</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">จิตตยมก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:191">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0096">[M 0.0096]</span> อาวุโส ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ อฏฺฐมํ จิตฺตยมกํ ภควตา กถํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ พระผู้มีพระภาคทรงจำแนกแสดงจิตตยมกที่ ๘ ในยมก ๑๐ แห่งยมกปกรณ์ที่ ๖ ในอภิธรรมปิฎก โดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:192">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ อฏฺฐมํ จิตฺตยมกํ “ยสฺส จิตฺตํ อุปฺปชฺชติ น นิรุชฺฌติ, ตสฺส จิตฺตํ นิรุชฺฌิสฺสติ น อุปฺปชฺชิสฺสติ. ยสฺส วา ปน จิตฺตํ นิรุชฺฌิสฺสติ น อุปฺปชฺชิสฺสติ, ตสฺส จิตฺตํ อุปฺปชฺชติ น นิรุชฺฌตี”ติ เอวมาทินา ภควตา สุทฺธจิตฺตสามญฺญสุตฺตนฺตจิตฺตมิสฺสกวิเสสอภิธมฺมจิตฺตมิสฺสกวิเสส- สงฺขาเตหิ ตีหิ มหานเยติ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคทรงจำแนกแสดงจิตตยมกที่ ๘ ในยมก ๑๐ แห่งยมกปกรณ์ที่ ๖ ในอภิธรรมปิฎก โดยพิสดารด้วยมหานัย ๓ คือ สุทธจิตตสามัญญะ สุตตันตจิตตมิสสกวิเสส และอภิธรรมจิตตมิสสกวิเสส เป็นต้นอย่างนี้ว่า ‘จิตของบุคคลใดเกิดขึ้นแต่ไม่ดับ จิตของบุคคลนั้นจักดับแต่ไม่เกิดขึ้น. หรือว่าจิตของบุคคลใดจักดับแต่ไม่เกิดขึ้น จิตของบุคคลนั้นเกิดขึ้นแต่ไม่ดับ’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:193">
+  <div class="pair-col col-pali">
+<p rend="subhead">ธมฺมยมก</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ธัมมยมก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:194">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0098">[M 0.0098]</span> อาวุโส ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ นวมํ ธมฺมยมกํ ภควตา กถํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ พระผู้มีพระภาคทรงจำแนกแสดงธัมมยมกที่ ๙ ในยมก ๑๐ แห่งยมกปกรณ์ที่ ๖ ในอภิธรรมปิฎก โดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:195">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ นวมํ ธมฺมยมกํ “กุสลา กุสลา ธมฺมา, กุสลา ธมฺมา กุสลา. อกุสลา อกุสลา ธมฺมา, อกุสลา ธมฺมา อกุสลา. อพฺยากตา อพฺยากตา ธมฺมา, อพฺยากตา ธมฺมา อพฺยากตา”ติ เอวมาทินา ภควตา ปณฺณตฺติวารปวตฺติวารปริญฺญาวารสงฺขาเตหิ ตีหิ มหาวาเรหิ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคทรงจำแนกแสดงธัมมยมกที่ ๙ ในยมก ๑๐ แห่งยมกปกรณ์ที่ ๖ ในอภิธรรมปิฎก โดยพิสดารด้วยมหาวาร ๓ คือ ปัญญัตติวาร ปวัตติวาร และปริญญาวาร เป็นต้นอย่างนี้ว่า ‘ธรรมที่เป็นกุศล เป็นกุศลธรรม, กุศลธรรม เป็นธรรมที่เป็นกุศล. ธรรมที่เป็นอกุศล เป็นอกุศลธรรม, อกุศลธรรม เป็นธรรมที่เป็นอกุศล. ธรรมที่เป็นอัพยากฤต เป็นอัพยากฤตธรรม, อัพยากฤตธรรม เป็นธรรมที่เป็นอัพยากฤต’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:196">
+  <div class="pair-col col-pali">
+<p rend="subhead">อินฺทริยยมก</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อินทริยยมก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:197">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0099">[M 0.0099]</span> อาวุโส ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ ทสมํ อินฺทริยยมกํ ภควตา กถํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ พระผู้มีพระภาคทรงจำแนกแสดงอินทริยยมกที่ ๑๐ ในยมก ๑๐ แห่งยมกปกรณ์ที่ ๖ ในอภิธรรมปิฎก โดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:198">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต ฉฏฺเฐ ยมกปฺปกรเณ ทสสุ ยมเกสุ ทสมํ อินฺทริยยมกํ “พาวีสตินฺทริยานิ – จกฺขุนฺทริยํ โสตินฺทริยํ ฆานินฺทริยํ ชิวฺหินฺทริยํ กายินฺทริยํ อิตฺถินฺทริยํ ปุริสินฺทริยํ ชีวิตินฺทริยํ มนินฺทริยํ สุขินฺทริยํ ทุกฺขินฺทริยํ โสมนสฺสินฺทริยํ โทมนสฺสินฺทริยํ อุเปกฺขินฺทริยํ สทฺธินฺทริยํ วีริยินฺทริยํ สมาธินฺทริยํ ปญฺญินฺทริยํ อนญฺญาตญฺญสฺสามีตินฺทริยํ อญฺญินฺทริยํ อญฺญาตาวินฺทริย”นฺติ เอวมาทินา ภควตา ปณฺณตฺติวาร ปวตฺติวาร ปริญฺญาวารสงฺขาเตหิ ตีหิ มหาวาเรหิ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคทรงจำแนกแสดงอินทริยยมกที่ ๑๐ ในยมก ๑๐ แห่งยมกปกรณ์ที่ ๖ ในพระอภิธรรมปิฎก โดยพิสดารด้วยมหาวาร ๓ คือ ปัญญัตติวาร ปวัตติวาร และปริญญาวาร เป็นต้นอย่างนี้ว่า อินทรีย์ ๒๒ คือ จักขุนทรีย์ โสตินทรีย์ ฆานินทรีย์ ชิวหินทรีย์ กายินทรีย์ อิตถินทรีย์ ปุริสินทรีย์ ชีวิตินทรีย์ มนินทรีย์ สุขินทรีย์ ทุกขินทรีย์ โสมนัสสินทรีย์ โทมนัสสินทรีย์ อุเบกขินทรีย์ สัทธินทรีย์ วิริยินทรีย์ สตินทรีย์ สมาธินทรีย์ ปัญญินทรีย์ อนัญญาตัญญัสสามีตินทรีย์ อัญญินทรีย์ อัญญาตาวินทรีย์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:199">
+  <div class="pair-col col-pali">
+<p rend="subhead">อตีตวาร</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อดีตวาร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:200">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0100">[M 0.0100]</span> อาวุโส อินฺทริยยมเก ตีสุ มหาวาเรสุ ปวตฺติวาเร อุปฺปาทอตีตวาโร ภควตา กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ท่านผู้มีอายุ พระผู้มีพระภาคทรงจำแนกแสดงอุปปาทอดีตวาร ในปวัตติวาร ในมหาวาร ๓ ในอินทริยยมก ในพระอภิธรรมปิฎก โดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:201">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0101">[M 0.0101]</span> ภนฺเต อินฺทริยยมเก ตีสุ มหาวาเรสุ ปวตฺติวาเร อุปฺปาทอตีตวาโร “ยสฺส จกฺขุนฺทริยํ อุปฺปชฺชิตฺต, ตสฺส โสตินฺทริยํ, ฆานินฺทริยํ, ชิวฺหินฺทริยํ, กายินฺทริยํ, อิตฺถินฺทริยํ, ปุริสินฺทริยํ, ชีวิตินฺทริยํ, โสมนสฺสินฺทริยํ, อุเปกฺขินฺทริยํ, สทฺธินฺทริยํ, วีริยินฺทริยํ, สตินฺทริยํ, สมาธินฺทริยํ, ปญฺญินฺทริยํ, มนินฺทริยํ, อุปฺปชฺชิตฺถาติ, อามนฺตา. ยสฺส วา ปน มนินฺทริยํ อุปฺปชฺชิตฺถ, ตสฺส จกฺขุนฺทริยํ อุปฺปชฺชิตฺถาติ, อามนฺตา”ติ เอวมาทินา ภควตา วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคทรงจำแนกแสดงอุปปาทอดีตวาร ในปวัตติวาร ในมหาวาร ๓ ในอินทริยยมก ในพระอภิธรรมปิฎก เป็นต้นอย่างนี้ว่า จักขุนทรีย์ของบุคคลใดเคยเกิดขึ้นแล้ว โสตินทรีย์ ฆานินทรีย์ ชิวหินทรีย์ กายินทรีย์ อิตถินทรีย์ ปุริสินทรีย์ ชีวิตินทรีย์ โสมนัสสินทรีย์ อุเบกขินทรีย์ สัทธินทรีย์ วิริยินทรีย์ สตินทรีย์ สมาธินทรีย์ ปัญญินทรีย์ มนินทรีย์ ของบุคคลนั้นเคยเกิดขึ้นแล้วหรือ? ใช่. หรือว่ามนินทรีย์ของบุคคลใดเคยเกิดขึ้นแล้ว จักขุนทรีย์ของบุคคลนั้นเคยเกิดขึ้นแล้วหรือ? ใช่.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:202">
+  <div class="pair-col col-pali">
+<p rend="subhead">อุปฺปาทอนาคตวาร</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อุปปาทอนาคตวาร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:203">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0103">[M 0.0103]</span> อาวุโส อินฺทริยยมเก ตีสุ มหาวาเรสุ ปวตฺติวาเร อุปฺปาทอนาคตวาโร ภควตา กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ท่านผู้มีอายุ พระผู้มีพระภาคทรงจำแนกแสดงอุปปาทอนาคตวาร ในปวัตติวาร ในมหาวาร ๓ ในอินทริยยมก ในพระอภิธรรมปิฎก โดยพิสดารอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:204">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต อินฺทริยยมเก ตีสุ มหาวาเรสุ ปวตฺติวาเร อุปฺปาทอนาคตวาโร “ยสฺส จกฺขุนฺทริยํ อุปฺปชฺชิสฺสติ, ตสฺส โสตินฺทริยํ อุปฺปชฺชิสฺสตีติ, อามนฺตา. ยสฺส วา ปน โสตินฺทริยํ อุปฺปชฺชิสฺสติ, ตสฺส จกฺขุนฺทริยํ อุปฺปชฺชิสฺสตี”ติ อามนฺตา. ยสฺส จกฺขุนฺทริยํ อุปฺปชฺชิสฺสติ, ตสฺส ฆานินฺทริยํ, ชิวฺหินฺทริยํ, กายินฺทริยํ อุปฺปชฺชิสฺสตีติ, เย รูปาวจรํ อุปปชฺชิตฺวา ปรินิพฺพายิสฺสนฺติ, เตสํ จกฺขุนฺทริยํ อุปฺปชฺชิสฺสติ, โน จ เตสํ กายินฺทริยํ อุปฺปชฺชิสฺสติ, อิตเรสํ เตสํ จกฺขุนฺทริยญฺจ อุปฺปชฺชิสฺสติ กายินฺทริยญฺจ อุปฺปชฺชิสฺสตี”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำเฉลย – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคทรงจำแนกแสดงอุปปาทอนาคตวาร ในปวัตติวาร ในมหาวาร ๓ ในอินทริยยมก ในพระอภิธรรมปิฎก โดยพิสดารเป็นต้นอย่างนี้ว่า จักขุนทรีย์ของบุคคลใดจักเกิดขึ้น โสตินทรีย์ของบุคคลนั้นจักเกิดขึ้นหรือ? ใช่. หรือว่าโสตินทรีย์ของบุคคลใดจักเกิดขึ้น จักขุนทรีย์ของบุคคลนั้นจักเกิดขึ้นหรือ? ใช่. จักขุนทรีย์ของบุคคลใดจักเกิดขึ้น ฆานินทรีย์ ชิวหินทรีย์ กายินทรีย์ ของบุคคลนั้นจักเกิดขึ้นหรือ? บุคคลเหล่าใดจักเข้าถึงรูปาวจรภูมิแล้วปรินิพพาน จักขุนทรีย์ของบุคคลเหล่านั้นจักเกิดขึ้น แต่กายินทรีย์ของบุคคลเหล่านั้นจักไม่เกิดขึ้น. สำหรับบุคคลที่เหลือ จักขุนทรีย์ของบุคคลเหล่านั้นก็จักเกิดขึ้น กายินทรีย์ก็จักเกิดขึ้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:205">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยสฺส <span class="pb hidden-meta" data-ed="M" data-n="0.0105">[M 0.0105]</span> จกฺขุนฺทริยํ อุปฺปชฺชิสฺสติ, ตสฺส อิตฺถินฺทริยํ อุปฺปชฺชิสฺสตีติ. เย รูปาวจรํ อุปปชฺชิตฺวา ปรินิพฺพายิสฺสนฺติ, เย จ ปุริสา เอเตเนว ภาเวน กติจิ ภเว ทสฺเสตฺวา ปรินิพฺพายิสฺสนฺติ เตสํ จกฺขุนฺทริยํ อุปฺปชฺชิสฺสติ, โน จ เตสํ อิตฺถินฺทริยํ อุปฺปชฺชิสฺสติ, อิตเรสํ เตสํ จกฺขุนฺทริยญฺจ อุปฺปชฺชิสฺสติ อิตฺถินฺทริยญฺจ อุปฺปชฺชิสฺสติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">จักขุนทรีย์ของบุคคลใดจักเกิดขึ้น อิตถินทรีย์ของบุคคลนั้นจักเกิดขึ้นหรือ? บุคคลเหล่าใดจักเข้าถึงรูปาวจรภูมิแล้วปรินิพพาน และบุรุษเหล่าใดจักแสดงภาวะนี้ไปอีกสองสามภพแล้วปรินิพพาน จักขุนทรีย์ของบุคคลเหล่านั้นจักเกิดขึ้น แต่อิตถินทรีย์ของบุคคลเหล่านั้นจักไม่เกิดขึ้น. สำหรับบุคคลที่เหลือ จักขุนทรีย์ของบุคคลเหล่านั้นก็จักเกิดขึ้น อิตถินทรีย์ก็จักเกิดขึ้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:206">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยสฺส <span class="pb hidden-meta" data-ed="M" data-n="0.0106">[M 0.0106]</span> จกฺขุนฺทริยํ อุปฺปชฺชิสฺสติ, ตสฺส ปุริสินฺทริยํ อุปฺปชฺชิสฺสตีติ, เย รูปาวจรํ อุปปชฺชิตฺวา ปรินิพฺพายิสฺสนฺติ, ยา จ อิตฺถิโย เอเตเนว ภาเวน กติจิ ภเว ทสฺเสตฺวา ปรินิพฺพายิสฺสนฺติ, เตสํ จกฺขุนฺทริยํ อุปฺปชฺชิสฺสติ, โน จ เตสํ ปุริสินฺทริยํ อุปฺปชฺชิสฺสติ. อิตเรสํ เตสํ จกฺขุนฺทริยญฺจ อุปฺปชฺชิสฺสติ ปุริสินฺทริยญฺจ อุปฺปชฺชิสฺสติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">จักขุนทรีย์ของบุคคลใดจักเกิดขึ้น ปุริสินทรีย์ของบุคคลนั้นจักเกิดขึ้นหรือ? บุคคลเหล่าใดจักเข้าถึงรูปาวจรภูมิแล้วปรินิพพาน และสตรีเหล่าใดจักแสดงภาวะนี้ไปอีกสองสามภพแล้วปรินิพพาน จักขุนทรีย์ของบุคคลเหล่านั้นจักเกิดขึ้น แต่ปุริสินทรีย์ของบุคคลเหล่านั้นจักไม่เกิดขึ้น. สำหรับบุคคลที่เหลือ จักขุนทรีย์ของบุคคลเหล่านั้นก็จักเกิดขึ้น ปุริสินทรีย์ก็จักเกิดขึ้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:207">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ยสฺส อิตฺถินฺทริยํ อุปฺปชฺชิสฺสติ, ตสฺส ปุริสินฺทริยํ อุปฺปชฺชิสฺสตีติ, ยา อิตฺถิโย เอเตเนว ภาเวน กติจิ ภเว ทสฺเสตฺวา ปรินิพฺพายิสฺสนฺติ, ตาสํ <span class="pb hidden-meta" data-ed="M" data-n="0.0107">[M 0.0107]</span> อิตฺถินฺทริยํ อุปฺปชฺชิสฺสติ, โน จ ตาสํ ปุริสินฺทริยํ อุปฺปชฺชิสฺสติ. อิตเรสํ เตสํ อิตฺถินฺทริยญฺจ อุปฺปชฺชิสฺสติ ปุริสินฺทริยญฺจ อุปฺปชฺชิสฺสติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อิตถินทรีย์ของบุคคลใดจักเกิดขึ้น ปุริสินทรีย์ของบุคคลนั้นจักเกิดขึ้นหรือ? สตรีเหล่าใดจักแสดงภาวะนี้ไปอีกสองสามภพแล้วปรินิพพาน อิตถินทรีย์ของสตรีเหล่านั้นจักเกิดขึ้น แต่ปุริสินทรีย์ของสตรีเหล่านั้นจักไม่เกิดขึ้น. สำหรับบุคคลที่เหลือ อิตถินทรีย์ของบุคคลเหล่านั้นก็จักเกิดขึ้น ปุริสินทรีย์ก็จักเกิดขึ้น.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:208">
+  <div class="pair-col col-pali">
+<p rend="subhead">ปฏฺฐาน</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ปัฏฐาน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:209">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0109">[M 0.0109]</span> ภควตา ชานตา ปสฺสตา อรหตา สมฺมาสมฺพุทฺเธน อภิสมฺพุทฺธกาลโต สตฺตมวสฺเส มนุสฺสโลเก ยมกปาฏิหีรํ ทสฺเสตฺวา ตทนนฺตรํ ตาวติํสเทวโลกํ คนฺตวา ตตฺถ ปณฺฑุกมฺพลสิลายํ สนฺนิสีทิตฺวา ทสหิ จกฺกวาฬสหสฺเสหิ อาคมฺม สนฺนิสินฺนานํ เทวานํ อภิธมฺมเทสนํ เทเสนฺเตน ยาว ยมกปฺปกรณา ปุริมานิ ฉ อภิธมฺมปฺปกรณานิ เทเสตฺวา ตทนนฺตรํ กิํนาม ปกรณํ เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ท่านผู้มีอายุ พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้า ผู้ทรงรู้ ผู้ทรงเห็น ทรงแสดงยมกปาฏิหาริย์ในมนุษยโลก ในปีที่ ๗ นับแต่ตรัสรู้ หลังจากนั้นเสด็จไปสู่เทวโลกชั้นดาวดึงส์ ประทับนั่งบนบัณฑุกัมพลศิลา ณ ที่นั้น ทรงแสดงพระอภิธรรมเทศนาแก่เหล่าเทพที่มาประชุมกันจากหมื่นจักรวาล ทรงแสดงพระอภิธรรมปกรณ์ ๖ ปกรณ์แรกจนถึงยมกปกรณ์แล้ว หลังจากนั้นทรงแสดงปกรณ์ชื่ออะไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:210">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> เตน ภนฺเต ภควตา ชานตา ปสฺสตา อรหตา สมฺมาสมฺพุทฺเธน อภิสมฺพุทฺธกาลโต สตฺตเม วสฺเส มนุสฺสโลเก สาวตฺถิยํ กณฺฑมฺพมูเล ยมกปาฏิหีรํ ทสฺเสตฺวา ตทนนฺตรํ ตาวติํสเทวโลกํ คนฺตวา ตตฺถ ปณฺฑุกมฺพลสิลายํ สนฺนิปติตฺวา ทสหิ จกฺกวาฬสหสฺเสหิ อาคมฺม สนฺนิสินฺนานํ เทวานํ อภิธมฺมเทสนํ เทเสนฺเตน ปุริมานิ ฉ อภิธมฺมปฺปกรณานิ เทเสตฺวา ตทนนฺตรํ อนนฺตนยสมนฺตปฏฺฐานํ นาม สตฺตมํ มหาปกรณํ เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสสัชนา – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้า ผู้ทรงรู้ ผู้ทรงเห็น ทรงแสดงยมกปาฏิหาริย์ที่โคนต้นมะม่วงคัณฑะ ในเมืองสาวัตถี ในมนุษยโลก ในปีที่ ๗ นับแต่ตรัสรู้ หลังจากนั้นเสด็จไปสู่เทวโลกชั้นดาวดึงส์ ประทับนั่งบนบัณฑุกัมพลศิลา ณ ที่นั้น ทรงแสดงพระอภิธรรมเทศนาแก่เหล่าเทพที่มาประชุมกันจากหมื่นจักรวาล ทรงแสดงพระอภิธรรมปกรณ์ ๖ ปกรณ์แรกแล้ว หลังจากนั้นทรงแสดงมหาปกรณ์ที่ ๗ ชื่อว่า อนันตนยสมันตปัฏฐาน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:211">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ตํ <span class="pb hidden-meta" data-ed="M" data-n="0.0110">[M 0.0110]</span> ปเนตํ อาวุโส ปฏฺฐานํ เกนฏฺเฐน ปฏฺฐานนฺติ วุจฺจติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ท่านผู้มีอายุ ปัฏฐานนั้น ชื่อว่าปัฏฐาน เพราะอรรถว่าอะไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:212">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ตํ ปเนตํ ภนฺเต ปฏฺฐานํ นานปฺปการปจฺจยฏฺเฐน วิภชนฏฺเฐน ปฏฺฐิตฏฺเฐน จ ปฏฺฐานนฺติ วุจฺจติ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสสัชนา – ข้าแต่ท่านผู้เจริญ ปัฏฐานนั้น ชื่อว่าปัฏฐาน เพราะอรรถว่ามีปัจจัยต่างๆ เพราะอรรถว่าจำแนก และเพราะอรรถว่าตั้งไว้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:213">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ตญฺจาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0111">[M 0.0111]</span> ภควตา ปฏฺฐานมหาปกรณํ เทเสนฺเตน กติหิ วาเรหิ วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ท่านผู้มีอายุ พระผู้มีพระภาคเมื่อทรงแสดงมหาปกรณ์ปัฏฐานนั้น ทรงจำแนกแสดงด้วยวาระเท่าไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:214">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ตํ โข ภนฺเต ภควตา ปฏฺฐานมหาปกรณํ เทเสนฺเตน มาติกานิกฺเขปวารสงฺขาโต ปจฺจยุทฺเทโส ปจฺจยนิทฺเทโส มหาวาเรติ ทฺวีหิ ปริจฺเฉทวาเรหิ วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสสัชนา – ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคเมื่อทรงแสดงมหาปกรณ์ปัฏฐานนั้น ทรงจำแนกแสดงด้วยปริจเฉทวาระ ๒ คือ ปัจจัยุทเทสอันนับว่าเป็นมาติกานิกเขปวาระ และปัจจยนิทเทสอันเป็นมหาวาระ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:215">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตสุ <span class="pb hidden-meta" data-ed="M" data-n="0.0112">[M 0.0112]</span> อาวุโส วาเรสุ ปฐเม มาติกานิกฺเขปวาเร ปจฺจยุทฺเทสวาโร ภควตา กถํ เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ท่านผู้มีอายุ ในวาระเหล่านั้น ในมาติกานิกเขปวาระแรก พระผู้มีพระภาคทรงแสดงปัจจัยุทเทสวาระอย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:216">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> เตสุ ภนฺเต ทฺวีสุ ปริจฺเฉทวาเรสุ ปฐเม มาติกานิกฺเขปวาเร ปจฺจยุทฺเทเส เหตุปจฺจโย อารมฺมณปจฺจโย อธิปติปจฺจโย อนนฺตรปจฺจโย สมนนฺตรปจฺจโย สหชาตปจฺจโย อญฺญมญฺญปจฺจโย นิสฺสยปจฺจโย…เป… อวิคตปจฺจโย”ติ. เอวํ โข ภนฺเต ภควตา วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสสัชนา – ข้าแต่ท่านผู้เจริญ ในปริจเฉทวาระ ๒ นั้น ในมาติกานิกเขปวาระแรก ในปัจจัยุทเทส พระผู้มีพระภาคทรงจำแนกแสดงไว้ว่า เหตุปัจจัย อารัมมณปัจจัย อธิปติปัจจัย อนันตรปัจจัย สมนันตรปัจจัย สหชาตปัจจัย อัญญมัญญปัจจัย นิสสยปัจจัย...เป... อวิคตปัจจัย ข้าแต่ท่านผู้เจริญ พระผู้มีพระภาคทรงจำแนกแสดงไว้อย่างนี้แล</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:217">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> ตทนนฺตรํ <span class="pb hidden-meta" data-ed="M" data-n="0.0113">[M 0.0113]</span> ปน อาวุโส ปจฺจยนิทฺเทสวาโร ภควตา กถํ วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ท่านผู้มีอายุ หลังจากนั้น พระผู้มีพระภาคทรงจำแนกแสดงปัจจยนิทเทสวาระไว้อย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:218">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> ตทนนฺตรํ ปน ภนฺเต ปจฺจยนิทฺเทสวาโร “เหตุปจฺจโยติ – เหตู เหตุสมฺปยุตฺตกานํ ธมฺมานํ ตํสมุฏฺฐานานญฺจ รูปานํ เหตุปจฺจเยน ปจฺจโย. อารมฺมณปจฺจโยติ – รูปารมฺมณํ จกฺขุวิญฺญาณธาตุยา ตํสมฺปยุตฺตกานญฺจ ธมฺมานํ อารมฺมณปจฺจเยน ปจฺจโย. สทฺธายตนํ โสตวิญฺญาณธาตุยา…. คนฺธายตนํ ฆานวิญฺญาณธาตุยา…. รสายตนํ ชิวฺหาวิญฺญาณธาตุยา…. โผฏฺฐพฺพายตนํ กายวิญฺญาณธาตุยา ตํสมฺปยุตฺตกานญฺจ ธมฺมานํ อารมฺมณปจฺจเยน ปจฺจโย. รูปายตนํ สทฺทายตนํ คนฺธายตนํ รสายตนํ โผฏฺฐพฺพายตนํ มโนธาตุยา ตํสมฺปยุตฺตกานญฺจ ธมฺมานํ อารมฺมณปจฺจเยน ปจฺจโย. สพฺเพ ธมฺมา มโนวิญฺญาณธาตุยา ตํสมฺปยุตฺตกานญฺจ ธมฺมานํ อารมฺมณปจฺจเยน ปจฺจโย. ยํ ยํ ธมฺมํ อารพฺภ เย เย ธมฺมา อุปฺปชฺชนฺติ จิตฺตเจตสิกา ธมฺมา, เต เต ธมฺมา เตสํ เตสํ ธมฺมานํ อารมฺมณปจฺจเยน ปจฺจโย”ติ เอวมาทินา ภควตา วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสสัชนา – ข้าแต่ท่านผู้เจริญ หลังจากนั้น ปัจจยนิทเทสวาระ พระผู้มีพระภาคทรงจำแนกแสดงไว้ว่า “เหตุปัจจัย คือ เหตุเป็นปัจจัยโดยเหตุปัจจัยแก่ธรรมทั้งหลายที่สัมปยุตด้วยเหตุ และแก่รูปทั้งหลายที่มีธรรมนั้นเป็นสมุฏฐาน อารัมมณปัจจัย คือ รูปารมณ์เป็นปัจจัยโดยอารัมมณปัจจัยแก่จักขุวิญญาณธาตุและธรรมทั้งหลายที่สัมปยุตด้วยจักขุวิญญาณธาตุนั้น สัททายตนะ เป็นปัจจัยแก่โสตวิญญาณธาตุ... คันธายตนะ เป็นปัจจัยแก่ฆานวิญญาณธาตุ... รสายตนะ เป็นปัจจัยแก่ชิวหาวิญญาณธาตุ... โผฏฐัพพายตนะ เป็นปัจจัยโดยอารัมมณปัจจัยแก่กายวิญญาณธาตุและธรรมทั้งหลายที่สัมปยุตด้วยกายวิญญาณธาตุนั้น รูปายตนะ สัททายตนะ คันธายตนะ รสายตนะ โผฏฐัพพายตนะ เป็นปัจจัยโดยอารัมมณปัจจัยแก่มโนธาตุและธรรมทั้งหลายที่สัมปยุตด้วยมโนธาตุนั้น ธรรมทั้งปวงเป็นปัจจัยโดยอารัมมณปัจจัยแก่มโนวิญญาณธาตุและธรรมทั้งหลายที่สัมปยุตด้วยมโนวิญญาณธาตุนั้น ธรรมเหล่าใดคือจิตและเจตสิกย่อมเกิดขึ้นเพราะปรารภธรรมใดๆ ธรรมเหล่านั้นๆ เป็นปัจจัยโดยอารัมมณปัจจัยแก่ธรรมเหล่านั้นๆ” พระผู้มีพระภาคทรงจำแนกแสดงไว้ด้วยประการฉะนี้เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:219">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส…เป… <span class="pb hidden-meta" data-ed="M" data-n="0.0114">[M 0.0114]</span> สมฺมาสมฺพุทฺเธน อภิธมฺมปิฏเก สตฺตเม มหาปกรเณ ทฺวีสุ ปธานวาเรสุ ทุติเย มหาวาเร กติ ฐานานิ วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ท่านผู้มีอายุ...เป... พระสัมมาสัมพุทธเจ้า ในมหาปกรณ์ที่ ๗ แห่งพระอภิธรรมปิฎก ในวาระประธาน ๒ นั้น ในมหาวาระที่ ๒ ทรงจำแนกแสดงไว้กี่ฐาน?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:220">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต สตฺตสุ ปกรเณสุ สตฺตเม อนนฺตนยสมนฺตปฏฺฐาเน มหาปกรเณ ทฺวีสุ ปธานปริจฺเฉทวาเรสุ ทุติเย มหาวาเร ธมฺมานุโลเม ฉ ปฏฺฐานานิ, ตถา ธมฺมปจฺจนีเย ธมฺมานุโลมปจฺจนีเย ธมฺมปจฺจนียานุโลเมติ จตุวีสติ ปฏฺฐานานิ ภควตา วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสสัชนา – ข้าแต่ท่านผู้เจริญ ในมหาปกรณ์อนันตนยสมันตปัฏฐานที่ ๗ แห่งปกรณ์ ๗ ในพระอภิธรรมปิฎก ในปริจเฉทวาระประธาน ๒ นั้น ในมหาวาระที่ ๒ พระผู้มีพระภาคทรงจำแนกแสดงปัฏฐานไว้ ๒๔ คือ ในธรรมานุโลมมีปัฏฐาน ๖ และในธรรมปัจจนียะ ธรรมานุโลมปัจจนียะ ธรรมปัจจนียานุโลม รวมเป็นปัฏฐาน ๒๔</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:221">
+  <div class="pair-col col-pali">
+<p rend="subhead">ธมฺมานุโลม ติกปฏฺฐาน</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ธรรมานุโลมติกปัฏฐาน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:222">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตสุปิ <span class="pb hidden-meta" data-ed="M" data-n="0.0116">[M 0.0116]</span> อาวุโส จตุวีสติยา ปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเน ทฺวาวีสติติกา ภควตา กติหิ วาเรหิ วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ท่านผู้มีอายุ ในปัฏฐาน ๒๔ นั้น ในธรรมานุโลมติกปัฏฐานแรก พระผู้มีพระภาคทรงจำแนกแสดงติกะ ๒๒ ด้วยวาระเท่าไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:223">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> เตสุ ภนฺเต จตุวีสติยา มหาปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเน ทฺวาวีสติติกา ปฏิจฺจวาโร สหชาตวาโร ปจฺจยวาโร นิสฺสยวาโร สํสฏฺฐวาโร สมฺปยุตฺตวาโร ปญฺหาวาโรติ สตฺตหิ สตฺตหิ วาเรหิ วิภชิตฺวา ภควตา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสสัชนา – ข้าแต่ท่านผู้เจริญ ในมหาปัฏฐาน ๒๔ นั้น ในธรรมานุโลมติกปัฏฐานแรก พระผู้มีพระภาคทรงจำแนกแสดงติกะ ๒๒ ด้วยวาระอย่างละ ๗ คือ ปฏิจจวาระ สหชาตวาระ ปัจจยวาระ นิสสยวาระ สังสัฏฐวาระ สัมปยุตตวาระ และปัญหาวาระ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:224">
+  <div class="pair-col col-pali">
+<p rend="subhead">กุสลติก ปฏิจฺจวาร</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">กุสลติกปฏิจจวาระ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:225">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตสุ <span class="pb hidden-meta" data-ed="M" data-n="0.0117">[M 0.0117]</span> จาวุโส ทฺวาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ ปฐโม ปฏิจฺจมหาวาโร ภควตา กถํ วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ท่านผู้มีอายุ ในติกะ ๒๒ นั้น ในกุสลติกะแรก ในมหาวาระ ๗ นั้น พระผู้มีพระภาคทรงจำแนกแสดงปฏิจจมหาวาระแรกไว้อย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:226">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> เตสุ ภนฺเต ทฺวาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ ปฐโม ปฏิจฺจมหาวาโร สิยา กุสลํ ธมฺมํ ปฏิจฺจ กุสโล ธมฺโม อุปฺปชฺเชยฺย เหตุปจฺจยา. สิยา กุสลํ ธมฺมํ ปฏิจฺจ อกุสโล ธมฺโม อุปฺปชฺเชยฺย เหตุปจฺจยา. สิยา กุสลํ ธมฺมํ ปฏิจฺจ อพฺยากโต ธมฺโม อุปฺปชฺเชยฺย เหตุปจฺจยา. สิยา กุสลํ ธมฺมํ ปฏิจฺจ กุสลา จ อพฺยากตา จ ธมฺมา อุปฺปชฺเชยฺยุํ เหตุปจฺจยา. สิยา กุสลํ ธมฺมํ ปฏิจฺจ อกุสโล จ อพฺยากโต จ ธมฺมา อุปฺปชฺเชยฺยุํ เหตุปจฺจยา. สิยา กุสลํ ธมฺมํ ปฏิจฺจ กุสโล จ อกุสโล จ ธมฺมา อุปฺปชฺเชยฺยุํ เหตุปจฺจยา. สิยา กุสลํ ธมฺมํ ปฏิจฺจ กุสโล จ อกุสโล จ อพฺยากโต จ ธมฺมา อุปฺปชฺเชยฺยุํ เหตุปจฺจยา”ติ เอวมาทินา ปุจฺฉาวาเรน จ. “กุสลํ ธมฺมํ ปฏิจฺจ กุสโล ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา. กุสลํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา, ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ, ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา. กุสลํ ธมฺมํ ปฏิจฺจ อพฺยากโต ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา. กุสเล ขนฺเธ ปฏิจฺจ จิตฺตสมุฏฺฐานํ รูปํ. กุสลํ ธมฺมํ ปฏิจฺจ กุสโล จ อพฺยากโต จ ธมฺมา อุปฺปชฺชนฺติ เหตุปจฺจยา. กุสลํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา จิตฺตสมุฏฺฐานญฺจ รูปํ, ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ จิตฺตสมุฏฺฐานญฺจ รูปํ, ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา จิตฺตสมุฏฺฐานญฺจ รูป”นฺติ เอวมาทินา วิสฺสชฺชนา วิสฺสชฺชนาวาเรน จ. “เหตุยา นว, อารมฺมเณ ตีณิ, อธิปติยา นว, อนนฺตเร สมนนฺตเร ตีณิ, สหชาเต นว, อญฺญมญฺเญ ตีณิ, นิสฺสเย นว, อุปนิสฺสเย ตีณิ, ปุเรชาเต ตีณิ, อาเสวเน ตีณิ, กมฺเม นว, วิปาเก เอกํ, อาหาเร ฌาเน อินฺทริเย <span class="pb hidden-meta" data-ed="M" data-n="0.0118">[M 0.0118]</span> มคฺเค นว, สมฺปยุตฺเต ตีณิ, วิปฺปยุตฺเต อตฺถิยา นว, นตฺถิยา วิคเต ตีณิ, อวิคเต นวา”ติ เอวมาทินา สงฺขยาวาเรน จ ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การจำแนก – ข้าแต่ท่าน ในติกะ ๒๒ หมวดนั้น ในกุสลติกะที่ ๑ ในมหาวาระ ๗ วาระนั้น ปฏิจจมหาวาระที่ ๑ พึงมีอยู่ว่า กุศลธรรมอาศัยกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย พึงมีอยู่ว่า อกุศลธรรมอาศัยกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย พึงมีอยู่ว่า อัพยากตธรรมอาศัยกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย พึงมีอยู่ว่า กุศลธรรมและอัพยากตธรรมอาศัยกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย พึงมีอยู่ว่า อกุศลธรรมและอัพยากตธรรมอาศัยกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย พึงมีอยู่ว่า กุศลธรรมและอกุศลธรรมอาศัยกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย พึงมีอยู่ว่า กุศลธรรม อกุศลธรรม และอัพยากตธรรมอาศัยกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย ด้วยปุจฉาวาระเป็นต้นอย่างนี้ และกุศลธรรมอาศัยกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย ขันธ์ ๓ อาศัยกุศลขันธ์ ๑, ขันธ์ ๑ อาศัยกุศลขันธ์ ๓, ขันธ์ ๒ อาศัยกุศลขันธ์ ๒ อัพยากตธรรมอาศัยกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย รูปที่มีจิตเป็นสมุฏฐานอาศัยกุศลขันธ์ทั้งหลายเกิดขึ้น กุศลธรรมและอัพยากตธรรมอาศัยกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย ขันธ์ ๓ และรูปที่มีจิตเป็นสมุฏฐานอาศัยกุศลขันธ์ ๑, ขันธ์ ๑ และรูปที่มีจิตเป็นสมุฏฐานอาศัยกุศลขันธ์ ๓, ขันธ์ ๒ และรูปที่มีจิตเป็นสมุฏฐานอาศัยกุศลขันธ์ ๒ ด้วยวิสัชนาและวิสัชชนวาระเป็นต้นอย่างนี้ และในเหตุปัจจัยมี ๙, ในอารัมมณปัจจัยมี ๓, ในอธิปติปัจจัยมี ๙, ในอนันตรปัจจัยและสมนันตรปัจจัยมี ๓, ในสหชาตปัจจัยมี ๙, ในอัญญมัญญปัจจัยมี ๓, ในนิสสยปัจจัยมี ๙, ในอุปนิสสยปัจจัยมี ๓, ในปุเรชาตปัจจัยมี ๓, ในอาเสวนปัจจัยมี ๓, ในกรรมปัจจัยมี ๙, ในวิปากปัจจัยมี ๑, ในอาหารปัจจัย ฌานปัจจัย อินทริยปัจจัย มรรคปัจจัยมี ๙, ในสัมปยุตตปัจจัยมี ๓, ในวิปปยุตตปัจจัยมี ๓, ในอัตถิปัจจัยมี ๙, ในนัตถิปัจจัยและวิคตปัจจัยมี ๓, ในอวิคตปัจจัยมี ๙ พระผู้มีพระภาคทรงจำแนกแสดงโดยพิสดารด้วยสังขยาวาระเป็นต้นอย่างนี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:227">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สิยา กุสลํ ธมฺมํ ปฏิจฺจ กุสโล ธมฺโม อุปฺปชฺเชยฺย เหตุปจฺจยา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">พึงมีอยู่ว่า กุศลธรรมอาศัยกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:228">
+  <div class="pair-col col-pali">
+<p rend="subhead">กุสลติก สหชาตวาร</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">กุสลติกะ สหชาตวาระ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:229">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0119">[M 0.0119]</span> ภควตา…เป… สมฺมาสมฺพุทฺเธน อภิธมฺมปิฏเก มหาปกรเณ จตุวีสติยา ปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเน ทฺวาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ ทุติโย สหชาตวาโร กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนอาวุโส พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้าพระองค์นั้น ...เป... ในมหาปกรณ์แห่งพระอภิธรรมปิฎก ในปัฏฐาน ๒๔ หมวด ในธัมมานุโลมติกปัฏฐานที่ ๑ ในติกะ ๒๒ หมวด ในกุสลติกะที่ ๑ ในมหาวาระ ๗ วาระ ทรงจำแนกแสดงสหชาตวาระที่ ๒ โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:230">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต อนนฺตนยปฏฺฐาเน มหาปกรเณ จตุวีสติยา ปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเน ทฺวาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ ทุติโย สหชาตาวาโร “กุสลํ ธมฺมํ สหชาโต กุสโล ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา, กุสลํ เอกํ ขนฺธํ สหชาตา ตโย ขนฺธา, ตโย ขนฺเธ สหชาโต เอโก ขนฺโธ, ทฺเว ขนฺเธ สหชาตา ทฺเว ขนฺธา. กุสลํ ธมฺมํ สหชาโต อพฺยากโต ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา, กุสเล ขนฺเธ สหชาตํ จิตฺตสมุฏฺฐานํ รูปํ. กุสลํ ธมฺมํ สหชาโต กุสโล จ อพฺยากโต จ ธมฺมา อุปฺปชฺชนฺติ เหตุปจฺจยา, กุสลํ เอกํ ขนฺธํ สหชาตา ตโย ขนฺธา จิตฺตสมุฏฺฐานญฺจ รูปํ, ตโย ขนฺเธ สหชาโต เอโก ขนฺโธ จิตฺตสมุฏฺฐานญฺจ รูปํ, ทฺเว ขนฺเธ จิตฺตสมุฏฺฐานญฺจ รูป”นฺติ เอวมาทินา วิสฺสชฺชนาวาเรน จ. เหตุยา นว, อารมฺมเณ ตีณิ, อธิปติยา นว, อนนฺตเร สมนนฺตเร ตีณี”ติ เอวมาทินา สงฺขยาวาเรน จ วาจนามคฺคโต ทฺวีหิ วาเรหิ ปฏิมณฺฑิตฺวา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การจำแนก – ข้าแต่ท่าน ในมหาปกรณ์อนันตนยปัฏฐานแห่งพระอภิธรรมปิฎก ในปัฏฐาน ๒๔ หมวด ในธัมมานุโลมติกปัฏฐานที่ ๑ ในติกะ ๒๒ หมวด ในกุสลติกะที่ ๑ ในมหาวาระ ๗ วาระ สหชาตวาระที่ ๒ คือ กุศลธรรมเกิดพร้อมกับกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย ขันธ์ ๓ เกิดพร้อมกับกุศลขันธ์ ๑, ขันธ์ ๑ เกิดพร้อมกับกุศลขันธ์ ๓, ขันธ์ ๒ เกิดพร้อมกับกุศลขันธ์ ๒ อัพยากตธรรมเกิดพร้อมกับกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย รูปที่มีจิตเป็นสมุฏฐานเกิดพร้อมกับกุศลขันธ์ทั้งหลาย กุศลธรรมและอัพยากตธรรมเกิดพร้อมกับกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย ขันธ์ ๓ และรูปที่มีจิตเป็นสมุฏฐานเกิดพร้อมกับกุศลขันธ์ ๑, ขันธ์ ๑ และรูปที่มีจิตเป็นสมุฏฐานเกิดพร้อมกับกุศลขันธ์ ๓, ขันธ์ ๒ และรูปที่มีจิตเป็นสมุฏฐานเกิดพร้อมกับกุศลขันธ์ ๒ ด้วยวิสัชชนวาระเป็นต้นอย่างนี้ และในเหตุปัจจัยมี ๙, ในอารัมมณปัจจัยมี ๓, ในอธิปติปัจจัยมี ๙, ในอนันตรปัจจัยและสมนันตรปัจจัยมี ๓ ด้วยสังขยาวาระเป็นต้นอย่างนี้ พระผู้มีพระภาคทรงประดับด้วยวาระ ๒ โดยทางแห่งการสวด ทรงจำแนกแสดงโดยพิสดาร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:231">
+  <div class="pair-col col-pali">
+<p rend="subhead">กุสลติก ปจฺจยวาร</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">กุสลติกะ ปัจจยวาระ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:232">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0121">[M 0.0121]</span> ภควตา…เป… สมฺมาสมฺพุทฺเธน ปฏฺฐานมหาปกรเณ จตุวีสติยา ปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเน ทฺวาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ ตติโย ปจฺจยวาโร กถํ วิภชิตฺวา วิตฺถาเรน เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนอาวุโส พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้าพระองค์นั้น ...เป... ในปัฏฐานมหาปกรณ์ ในปัฏฐาน ๒๔ หมวด ในธัมมานุโลมติกปัฏฐานที่ ๑ ในติกะ ๒๒ หมวด ในกุสลติกะที่ ๑ ในมหาวาระ ๗ วาระ ทรงจำแนกแสดงปัจจยวาระที่ ๓ โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:233">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต สตฺตสุ ปกรเณสุ สตฺตเม อนนฺตนยสมนฺตปฏฺฐาเน มหาปกรเณ จตุวีสติยา ปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเน พาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ ตติโย ปจฺจยวาโร “สิยา กุสลํ ธมฺมํ ปจฺจยา กุสโล ธมฺโม อุปฺปชฺเชยฺย เหตุปจฺจยา, สิยา กุสลํ ธมฺมํ ปจฺจยา อกุสโล ธมฺโม อุปฺปชฺเชยฺย เหตุปจฺจยา, สิยา กุสลํ ธมฺมํ ปจฺจยา อพฺยากโต ธมฺโม อุปฺปชฺเชยฺย เหตุปจฺจยา”ติ เอวมาทินา ปุจฺฉาวาเรน จ. “กุสลํ ธมฺมํ ปจฺจยา กุสโล ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา, กุสลํ เอกํ ขนฺธํ ปจฺจยา ตโย ขนฺธา, ตโย ขนฺเธ ปจฺจยา เอโก ขนฺโธ, ทฺเว ขนฺเธ ปจฺจยา ทฺเว ขนฺธา”ติ เอวมาทินา วิสฺสชฺชนาวาเรน จ. “เหตุยา สตฺตรส, อารมฺมเณ สตฺต, อธิปติยา สตฺตรส, อนนฺตเร สมนนฺตเร สตฺต, สหชาเต สตฺตรส. อญฺญมญฺเญ สตฺตา”ติ เอวมาทินา สงฺขยาวาเรน จ. ปจฺจยานุโลม ปจฺจย ปจฺจนิย ปจฺจยานุโลม ปจฺจนีย ปจฺจย ปจฺจนียานุโลมสงฺขาเตหิ <span class="pb hidden-meta" data-ed="M" data-n="0.0122">[M 0.0122]</span> จตูหิ นเยหิ วิภชิตฺวา ภควตา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่าน ปัจจยวาระที่ ๓ ในมหาวาระ ๗ วาระ ในกุสลติกะที่ ๑ ในติกะ ๒๒ หมวด ในธัมมานุโลมติกปัฏฐานที่ ๑ ในปัฏฐาน ๒๔ หมวด ในมหาปกรณ์อนันตนยสมันตปัฏฐานที่ ๗ ในปกรณ์ ๗ แห่งพระอภิธรรมปิฎก คือ พึงมีอยู่ว่า กุศลธรรมเป็นปัจจัยแก่กุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย พึงมีอยู่ว่า กุศลธรรมเป็นปัจจัยแก่อกุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย พึงมีอยู่ว่า กุศลธรรมเป็นปัจจัยแก่อัพยากตธรรมเกิดขึ้นด้วยเหตุปัจจัย ด้วยปุจฉาวาระเป็นต้นอย่างนี้ และกุศลธรรมเป็นปัจจัยแก่กุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย ขันธ์ ๑ เป็นปัจจัยแก่ขันธ์ ๓, ขันธ์ ๓ เป็นปัจจัยแก่ขันธ์ ๑, ขันธ์ ๒ เป็นปัจจัยแก่ขันธ์ ๒ ด้วยวิสัชชนวาระเป็นต้นอย่างนี้ และในเหตุปัจจัยมี ๑๗, ในอารัมมณปัจจัยมี ๗, ในอธิปติปัจจัยมี ๑๗, ในอนันตรปัจจัยและสมนันตรปัจจัยมี ๗, ในสหชาตปัจจัยมี ๑๗, ในอัญญมัญญปัจจัยมี ๗ ด้วยสังขยาวาระเป็นต้นอย่างนี้ พระผู้มีพระภาคทรงจำแนกแสดงด้วย ๔ นัย คือ ปัจจยานุโลม ปัจจยปัจจนียะ ปัจจยานุโลมปัจจนียะ และปัจจยปัจจนียานุโลม</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:234">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กุสลํ ธมฺมํ ปจฺจยา กุสโล ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา. กุสลํ เอกํ ขนฺธํ ปจฺจยา ตโย ขนฺธา, ตโย ขนฺเธ ปจฺจยา เอโก ขนฺโธ, ทฺเว ขนฺเธ ปจฺจยา ทฺเว ขนฺธา- ….</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">กุศลธรรมเป็นปัจจัยแก่กุศลธรรมเกิดขึ้นด้วยเหตุปัจจัย ขันธ์ ๑ เป็นปัจจัยแก่ขันธ์ ๓, ขันธ์ ๓ เป็นปัจจัยแก่ขันธ์ ๑, ขันธ์ ๒ เป็นปัจจัยแก่ขันธ์ ๒ เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:235">
+  <div class="pair-col col-pali">
+<p rend="subhead">ปญฺหาวาร</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ปัญหาวาระ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:236">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0123">[M 0.0123]</span> ภควตา…เป… สมฺมาสมฺพุทฺเธน อภิธมฺมปิฏเก สตฺตสุ มหาปกรเณสุ สตฺตเม ปฏฺฐานมหาปกรเณ จตุวีสติยา ปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเน ทฺวาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ สตฺตโม ปญฺหาวาโร กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนอาวุโส พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้าพระองค์นั้น ทรงจำแนกแสดงปัญหาวาระที่ ๗ ในมหาวาระ ๗ วาระ ในกุสลติกะที่ ๑ ในติกะ ๒๒ หมวด ในธัมมานุโลมติกปัฏฐานที่ ๑ ในปัฏฐาน ๒๔ หมวด ในปัฏฐานมหาปกรณ์ที่ ๗ ในมหาปกรณ์ ๗ แห่งพระอภิธรรมปิฎก โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:237">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต สตฺตสุ ปกรเณสุ สตฺตเม อนนฺตนยสมนฺตปฏฺฐาเน มหาปกรเณ จตุวีสติยา ปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเน ทฺวาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ สตฺตโม ปญฺหาวาโร “สิยา กุสโล ธมฺโม กุสลสฺส ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย. สิยา กุสโล ธมฺโม อกุสลสฺส ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย. สิยา กุสโล ธมฺโม อพฺยากตสฺส <span class="pb hidden-meta" data-ed="M" data-n="0.0124">[M 0.0124]</span> ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย”ติ เอวมาทินา ปุจฺฉาวาเรน จ. “กุสโล ธมฺโม กุสลสฺส ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย, กุสลา เหตู สมฺปยุตฺตกานํ ขนฺธานํ เหตุปจฺจเยน ปจฺจโย. กุสโล ธมฺโม อพฺยากตสฺส ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย, กุสลา เหตู จิตฺตสมุฏฺฐานานํ รูปานํ เหตุปจฺจเยน ปจฺจโย”ติ เอวมาทินา วิสฺสชฺชนาวาเรน จ “เหตุยา สตฺต, อารมฺมเณ นว, อธิปติยา ทส, อนนฺตเร สมนนฺตเร สตฺต, สหชาเต นว, อญฺญมญฺเญ ตีณิ, นิสฺสเย เตรส, อุปนิสฺสเย นว, ปุเรชาเต ปจฺฉาชาเต อาเสวเน ตีณิ, กมฺเม สตฺต, วิปาเก เอกํ. อาหาเร อินฺทริเย ฌาเน มคฺเค สตฺต, สมฺปยุตฺเต ตีณิ, วิปฺปยุตฺเต ปญฺจ, อตฺถิยา เตรส, นตฺถิยา วิคเต สตฺต, อวิคเต เตรสา”ติ เอวมาทินา สงฺขยาวาเรน จ ปจฺจยานุโลมปจฺจยปจฺจนียปจฺจยานุโลมปจฺจนียปจฺจยปจฺจนียานุโลมสงฺขาเตหิ จตูหิ นเยหิ ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่าน ในพระอภิธรรมปิฎก คัมภีร์มหาปกรณ์อนันตนยสมันตปัฏฐานที่ ๗ ในบรรดาคัมภีร์ ๗ คัมภีร์, ในธัมมานุโลมติกปัฏฐานที่ ๑ ในบรรดาปัฏฐาน ๒๔ ปัฏฐาน, ในกุสลติกะที่ ๑ ในบรรดาติกะ ๒๒ ติกะ, ในปัญหาวาระที่ ๗ ในบรรดามหาวาระ ๗ วาระ, พระผู้มีพระภาคทรงจำแนกแสดงไว้โดยพิสดาร ด้วยปุจฉาวาระมีอาทิว่า "พึงมีอยู่ว่า กุศลธรรมเป็นปัจจัยแก่กุศลธรรม ด้วยเหตุปัจจัย, พึงมีอยู่ว่า กุศลธรรมเป็นปัจจัยแก่อกุศลธรรม ด้วยเหตุปัจจัย, พึงมีอยู่ว่า กุศลธรรมเป็นปัจจัยแก่อัพยากตธรรม ด้วยเหตุปัจจัย" และด้วยวิสัชชนวาระมีอาทิว่า "กุศลธรรม เป็นปัจจัยแก่กุศลธรรม ด้วยเหตุปัจจัย, กุศลเหตุ เป็นปัจจัยแก่ขันธ์ที่สัมปยุตด้วยเหตุปัจจัย. กุศลธรรม เป็นปัจจัยแก่อัพยากตธรรม ด้วยเหตุปัจจัย, กุศลเหตุ เป็นปัจจัยแก่รูปที่เกิดจากจิตด้วยเหตุปัจจัย" และด้วยสังขยาวาระมีอาทิว่า "ในเหตุปัจจัยมี ๗, ในอารัมมณปัจจัยมี ๙, ในอธิปติปัจจัยมี ๑๐, ในอนันตรปัจจัยและสมนันตรปัจจัยมี ๗, ในสหชาตปัจจัยมี ๙, ในอัญญมัญญปัจจัยมี ๓, ในนิสสยปัจจัยมี ๑๓, ในอุปนิสสยปัจจัยมี ๙, ในปุเรชาตปัจจัย ปัจฉาชาตปัจจัย และอาเสวนปัจจัยมี ๓, ในกัมมปัจจัยมี ๗, ในวิปากปัจจัยมี ๑. ในอาหารปัจจัย อินทริยปัจจัย ฌานปัจจัย และมัคคปัจจัยมี ๗, ในสัมปยุตตปัจจัยมี ๓, ในวิปปยุตตปัจจัยมี ๕, ในอัตถิปัจจัยมี ๑๓, ในนัตถิปัจจัยและวิคตปัจจัยมี ๗, ในอวิคตปัจจัยมี ๑๓" ด้วย ๔ นัย คือ ปัจจยานุโลม ปัจจยปัจจนียะ ปัจจยานุโลมปัจจนียะ และปัจจยปัจจนียานุโลม</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:238">
+  <div class="pair-col col-pali">
+<p rend="bodytext">กุสโล <span class="pb hidden-meta" data-ed="M" data-n="0.0125">[M 0.0125]</span> ธมฺโม กุสลสฺส ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย, กุสลา เหตู สมฺปยุตฺตกานํ ขนฺธานํ เหตุปจฺจเยน ปจฺจโย. กุสโล ธมฺโม อพฺยากตสฺส ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย, กุสลา เหตู จิตฺตสมุฏฺฐานานํ รูปานํ เหตุปจฺจเยน ปจฺจโย. กุสโล ธมฺโม กุสลสฺส จ อพฺยากตสฺส จ ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย, กุสลา เหตู สมฺปยุตฺตกานํ ขนฺธานํ จิตฺตสมุฏฺฐานานญฺจ รูปานํ เหตุปจฺจเยน ปจฺจโย ….</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">กุศลธรรม เป็นปัจจัยแก่กุศลธรรม ด้วยเหตุปัจจัย, กุศลเหตุ เป็นปัจจัยแก่ขันธ์ที่สัมปยุตด้วยเหตุปัจจัย. กุศลธรรม เป็นปัจจัยแก่อัพยากตธรรม ด้วยเหตุปัจจัย, กุศลเหตุ เป็นปัจจัยแก่รูปที่เกิดจากจิตด้วยเหตุปัจจัย. กุศลธรรม เป็นปัจจัยแก่กุศลธรรมและอัพยากตธรรม ด้วยเหตุปัจจัย, กุศลเหตุ เป็นปัจจัยแก่ขันธ์ที่สัมปยุตและรูปที่เกิดจากจิตด้วยเหตุปัจจัย ...</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:239">
+  <div class="pair-col col-pali">
+<p rend="subhead">วิสฺสชฺชนาวาร</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">วิสัชชนวาระ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:240">
+  <div class="pair-col col-pali">
+<p rend="subhead">เหตุปจฺจยวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">เหตุปัจจัยวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:241">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0126">[M 0.0126]</span> ภควตา…เป… สมฺมาสมฺพุทฺเธน อภิธมฺมปิฏเก สตฺตสุ ปกรเณสุ สตฺตเม ปฏฺฐานมหาปกรเณ จตุวีสติยา ปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเน ทฺวาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ สตฺตเม ปญฺหาวาเร ปุจฺฉาวิสฺสชฺชนาสงฺขยาวารสงฺขาเตสุ ตีสุ วาเรสุ วิสฺสชฺชนาวาเร เหตุปจฺจยวิภงฺโค กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ดูก่อนอาวุโส พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้าพระองค์นั้น ทรงจำแนกแสดงเหตุปัจจัยวิภังค์ไว้โดยพิสดารอย่างไร ในวิสัชชนวาระ ในบรรดาวาระ ๓ คือ ปุจฉาวาระ วิสัชชนวาระ และสังขยาวาระ ในปัญหาวาระที่ ๗ ในบรรดามหาวาระ ๗ วาระ ในกุสลติกะที่ ๑ ในบรรดาติกะ ๒๒ ติกะ ในธัมมานุโลมติกปัฏฐานที่ ๑ ในบรรดาปัฏฐาน ๒๔ ปัฏฐาน ในคัมภีร์มหาปกรณ์ปัฏฐานที่ ๗ ในบรรดาคัมภีร์ ๗ คัมภีร์ ในพระอภิธรรมปิฎก?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:242">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต สตฺตสุ ปกรเณสุ สตฺตเม อนนฺตนยสมนฺตปฏฺฐาเน มหาปกรเณ จตุวีสติยา ปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเน ทฺวาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ สตฺตเม ปญฺหาวาเร ปจฺจยานุโลมปจฺจยปจฺจนีย ปจฺจยานุโลม ปจฺจนียปจฺจย ปจฺจยนียานุโลมสงฺขาเตสุ จตูสุ นเยสุ ปฐเม ปจฺจยานุโลมนเย ปุจฺฉาวารวิสฺสชฺชนาวารสงฺขยาวารสงฺขาเตสุ ตีสุปิ วาเรสุ ทุติเย วิสฺสชฺชนาวาเร เหตุปจฺจยวิภงฺโค “กุสโล ธมฺโม กุสลสฺส ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย, กุสลา เหตู สมฺปยุตฺตกานํ ขนฺธานํ เหตุปจฺจเยน ปจฺจโย. กุสโล ธมฺโม อพฺยากตสฺส ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย. กุสลา เหตู จิตฺตสมุฏฺฐานานํ รูปานํ เหตุปจฺจเยน <span class="pb hidden-meta" data-ed="M" data-n="0.0127">[M 0.0127]</span> ปจฺจโย. กุสโล ธมฺโม กุสลสฺส จ อพฺยากตสฺส จ ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย, กุสลา เหตู สมฺปยุตฺตกานํ ขนฺธานํ จิตฺตสมุฏฺฐานานญฺจ รูปานํ เหตุปจฺจเยน ปจฺจโย”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่าน ในพระอภิธรรมปิฎก ในบรรดาปกรณ์ ๗ ปกรณ์ที่ ๗ คือมหาปกรณ์อนันตนยสมันตปัฏฐาน ในบรรดาปัฏฐาน ๒๔ ปัฏฐานที่ ๑ คือธัมมานุโลมติกปัฏฐาน ในบรรดาติกะ ๒๒ ติกะที่ ๑ คือกุสลติกะ ในบรรดามหาวาระ ๗ วาระที่ ๗ คือปัญหาวาระ ในบรรดานัย ๔ ที่เรียกว่า ปัจจยานุโลม ปัจจยปัจจนียะ ปัจจยานุโลมปัจจนียะ และปัจจยปัจจนียานุโลม นัยที่ ๑ คือปัจจยานุโลมนัย ในบรรดาวาระทั้ง ๓ ที่เรียกว่า ปุจฉาวาระ วิสัชชนวาระ และสังขยาวาระ วาระที่ ๒ คือวิสัชชนวาระ เหตุปัจจัยวิภังค์ อันพระผู้มีพระภาคทรงจำแนกแสดงไว้โดยพิสดาร มีอาทิว่า 'กุศลธรรม เป็นปัจจัยแก่กุศลธรรม ด้วยเหตุปัจจัย คือ กุศลเหตุ เป็นปัจจัยแก่ขันธ์ที่สัมปยุตด้วยเหตุปัจจัย กุศลธรรม เป็นปัจจัยแก่อัพยากตธรรม ด้วยเหตุปัจจัย คือ กุศลเหตุ เป็นปัจจัยแก่รูปที่มีจิตเป็นสมุฏฐานด้วยเหตุปัจจัย กุศลธรรม เป็นปัจจัยแก่กุศลธรรมและอัพยากตธรรม ด้วยเหตุปัจจัย คือ กุศลเหตุ เป็นปัจจัยแก่ขันธ์ที่สัมปยุตและรูปที่มีจิตเป็นสมุฏฐานด้วยเหตุปัจจัย' ดังนี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:243">
+  <div class="pair-col col-pali">
+<p rend="bodytext">… “กุสโล <span class="pb hidden-meta" data-ed="M" data-n="0.0129">[M 0.0129]</span> ธมฺโม กุสลสฺส ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย, กุสลา เหตู สมฺปยตฺตกานํ ขนฺธานํ เหตุปจฺจเยน ปจฺจโย. กุสโล ธมฺโม อพฺยากตสฺส ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย, กุสลา เหตู จิตฺตสมุฏฺฐานํ รูปานํ เหตุปจฺจเยน ปจฺจโย. กุสโล ธมฺโม กุสลสฺส จ อพฺยากตสฺส จ ธมฺมสฺส เหตุปจฺจเยน ปจฺจโย, กุสลา เหตู สมฺปยุตฺตกานํ ขนฺธานํ จิตฺตสมุฏฺฐานานญฺจ รูปานํ เหตุปจฺจเยน ปจฺจโย”.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">... 'กุศลธรรม เป็นปัจจัยแก่กุศลธรรม ด้วยเหตุปัจจัย คือ กุศลเหตุ เป็นปัจจัยแก่ขันธ์ที่สัมปยุตด้วยเหตุปัจจัย กุศลธรรม เป็นปัจจัยแก่อัพยากตธรรม ด้วยเหตุปัจจัย คือ กุศลเหตุ เป็นปัจจัยแก่รูปที่มีจิตเป็นสมุฏฐานด้วยเหตุปัจจัย กุศลธรรม เป็นปัจจัยแก่กุศลธรรมและอัพยากตธรรม ด้วยเหตุปัจจัย คือ กุศลเหตุ เป็นปัจจัยแก่ขันธ์ที่สัมปยุตและรูปที่มีจิตเป็นสมุฏฐานด้วยเหตุปัจจัย'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:244">
+  <div class="pair-col col-pali">
+<p rend="subhead">อารมฺมณปจฺจยวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อารัมมณปัจจัยวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:245">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส…เป… สมฺมาสมฺพุทฺเธน อภิธมฺมปิฏเก สตฺตสุ ปกรเณสุ สตฺตเม ปฏฺฐานมหาปกรเณ จตุวีสติยา ปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเน ทฺวาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ สตฺตเม ปญฺหาวาเร จตูสุ นเยสุ ปฐเม ปจฺจยานุโลมนเย ปุจฺฉาวิสฺสชฺชนาสงฺขยาวารสงฺขาเตสุ ตีสุ วาเรสุ ทุติเย วิสฺสชฺชนาวาเร เหตุปจฺจยวิภงฺคาทีสุ จตุวีสติยา วิภงฺเคสุ ทุติโย อารมฺมณปจฺจยวิภงฺโค กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ท่านผู้มีอายุ... พระสัมมาสัมพุทธเจ้าทรงจำแนกแสดงอารัมมณปัจจัยวิภังค์ที่ ๒ ในบรรดาวิภังค์ ๒๔ มีเหตุปัจจัยวิภังค์เป็นต้น ไว้โดยพิสดารอย่างไร ในวิสัชชนวาระที่ ๒ ในบรรดาวาระ ๓ ที่เรียกว่า ปุจฉาวาระ วิสัชชนวาระ และสังขยาวาระ ในปัจจยานุโลมนัยที่ ๑ ในบรรดานัย ๔ ในปัญหาวาระที่ ๗ ในบรรดามหาวาระ ๗ วาระ ในกุสลติกะที่ ๑ ในบรรดาติกะ ๒๒ ติกะ ในธัมมานุโลมติกปัฏฐานที่ ๑ ในบรรดาปัฏฐาน ๒๔ ปัฏฐาน ในมหาปกรณ์ปัฏฐานที่ ๗ ในบรรดาปกรณ์ ๗ ปกรณ์ ในพระอภิธรรมปิฎก?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:246">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0130">[M 0.0130]</span> ภนฺเต สตฺตสุ ปกรเณสุ สตฺตเม อนนฺตนยสมนฺตปฏฺฐาเน มหาปกรเณ จตุวีสติยา ปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเน ทฺวาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ สตฺตเม ปญฺหาวาเร จตูสุ นเยสุ ปฐเม ปจฺจยานุโลมนเย ตีสุ จ วาเรสุ ทุติเย วิภงฺควาเร เหตุปจฺจยวิภงฺคาทีสุ จตุวีสติยา วิภงฺเคสุ ทุติโย อารมฺมณปจฺจยวิภงฺโค “กุสโล ธมฺโม กุสลสฺส ธมฺมสฺส อารมฺมณปจฺจเยน ปจฺจโย, ทานํ ทตฺวา สีลํ สมาทิยิตฺวา อุโปสถกมฺมํ กตฺวา ตํ ปจฺจเวกฺขติ, ปุพฺเพ สุจิณฺณานิ ปจฺจเวกฺขติ, ฌานา วุฏฺฐหิตฺวา ฌานํ ปจฺจเวกฺขติ, เสกฺขา โคตฺรภุํ ปจฺจเวกฺขนฺติ, โวทานํ ปจฺจเวกฺขนฺติ, เสกฺขา มคฺคา วุฏฺฐหิตฺวา มคฺคํ ปจฺจเวกฺขนฺติ, เสกฺขา วา ปุถุชฺชนา วา กุสลํ อนิจฺจโต ทุกฺขโต อนตฺตโต วิปสฺสนฺติ, เจโตปริยญาเณน กุสลจิตฺตสมงฺคิสฺส จิตฺตํ ชานนฺติ, อากาสานญฺจายตนกุสลํ วิญฺญาณญฺจายตนกุสลสฺส อารมฺมณปจฺจเยน ปจฺจโย. อากิญฺจญฺญายตนกุสลํ เนวสญฺญานาสญฺญายตนกุสลสฺส อารมฺมณปจฺจเยน ปจฺจโย. กุสลา ขนฺธา อิทฺธิวิธญาณสฺส, เจโตปริยญาณสฺส, ปุพฺเพนิวาสานุสฺสติญาณสฺส, ยถากมฺมุปคญาณสฺส, อนาคตํสญาณสฺส อารมฺมณปจฺจเยน ปจฺจโย”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่าน ในพระอภิธรรมปิฎก ในบรรดาปกรณ์ ๗ ปกรณ์ที่ ๗ คือมหาปกรณ์อนันตนยสมันตปัฏฐาน ในบรรดาปัฏฐาน ๒๔ ปัฏฐานที่ ๑ คือธัมมานุโลมติกปัฏฐาน ในบรรดาติกะ ๒๒ ติกะที่ ๑ คือกุสลติกะ ในบรรดามหาวาระ ๗ วาระที่ ๗ คือปัญหาวาระ ในบรรดานัย ๔ นัยที่ ๑ คือปัจจยานุโลมนัย ในบรรดาวาระ ๓ วาระที่ ๒ คือวิภังควาระ ในบรรดาวิภังค์ ๒๔ มีเหตุปัจจัยวิภังค์เป็นต้น วิภังค์ที่ ๒ คืออารัมมณปัจจัยวิภังค์ อันพระผู้มีพระภาคทรงจำแนกแสดงไว้โดยพิสดาร มีอาทิว่า 'กุศลธรรม เป็นปัจจัยแก่กุศลธรรม ด้วยอารัมมณปัจจัย คือ บุคคลให้ทานแล้ว สมาทานศีลแล้ว กระทำอุโบสถกรรมแล้ว ย่อมพิจารณากุศลนั้น ย่อมพิจารณากุศลที่เคยสั่งสมไว้ดีแล้วในกาลก่อน ออกจากฌานแล้ว ย่อมพิจารณาฌาน พระเสกขะทั้งหลาย ย่อมพิจารณาโคตรภู ย่อมพิจารณาโวทาน พระเสกขะทั้งหลาย ออกจากมรรคแล้ว ย่อมพิจารณามรรค พระเสกขะหรือปุถุชนทั้งหลาย ย่อมวิปัสสนากุศลโดยความเป็นของไม่เที่ยง เป็นทุกข์ เป็นอนัตตา ย่อมรู้จิตของบุคคลผู้เพียบพร้อมด้วยกุศลจิตด้วยเจโตปริยญาณ อากาสานัญจายตนกุศล เป็นปัจจัยแก่วิญญาณัญจายตนกุศล ด้วยอารัมมณปัจจัย อากิญจัญญายตนกุศล เป็นปัจจัยแก่เนวสัญญานาสัญญายตนกุศล ด้วยอารัมมณปัจจัย กุศลขันธ์ทั้งหลาย เป็นปัจจัยแก่อิทธิวิธญาณ เจโตปริยญาณ ปุพเพนิวาสานุสสติญาณ ยถากัมมูปคญาณ และอนาคตังสญาณ ด้วยอารัมมณปัจจัย'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:247">
+  <div class="pair-col col-pali">
+<p rend="subhead">อธิปติปจฺจยวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อธิปติปัจจัยวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:248">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0133">[M 0.0133]</span> อาวุโส สตฺตสุ ปกรเณสุ สตฺตเม ปฏฺฐานมหาปกรเณ จตุวีสติยา ปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเนสุ พาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ สตฺตเม ปญฺหาวาเร จตูสุ นเยสุ ปฐเม ปจฺจยานุโลมนเย ปุจฺฉาวิสฺสชฺชนาสงฺขยาสงฺขาเตสุ ตีสุ วาเรสุ ทุติเย วิสฺสชฺชนาสงฺขาเต วิภงฺควาเร เหตุปจฺจยวิภงฺคาทีสุ จตุวีสติยา วิภงฺเคสุ ตติโย อธิปติปจฺจยวิภงฺโค กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ท่านผู้มีอายุ ในพระอภิธรรมปิฎก ในบรรดาปกรณ์ ๗ ปกรณ์ที่ ๗ คือมหาปกรณ์ปัฏฐาน ในบรรดาปัฏฐาน ๒๔ ปัฏฐานที่ ๑ คือธัมมานุโลมติกปัฏฐาน ในบรรดาติกะ ๒๒ ติกะที่ ๑ คือกุสลติกะ ในบรรดามหาวาระ ๗ วาระที่ ๗ คือปัญหาวาระ ในบรรดานัย ๔ นัยที่ ๑ คือปัจจยานุโลมนัย ในบรรดาวาระ ๓ ที่เรียกว่า ปุจฉา วิสัชนา และสังขยา วาระที่ ๒ คือวิภังควาระที่เรียกว่าวิสัชนา ในบรรดาวิภังค์ ๒๔ มีเหตุปัจจัยวิภังค์เป็นต้น วิภังค์ที่ ๓ คืออธิปติปัจจัยวิภังค์ อันพระผู้มีพระภาคทรงจำแนกแสดงไว้โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:249">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต สตฺตสุ ปกรเณสุ สตฺตเม อนนฺตนยสมนฺตปฏฺฐาเน มหาปกรเณ จตุวีสติยา ปฏฺฐาเนสุ ปฐเม ธมฺมานุโลมติกปฏฺฐาเน พาวีสติยา ติเกสุ ปฐเม กุสลตฺติเก สตฺตสุ มหาวาเรสุ สตฺตเม ปญฺหาวาเร จตูสุ นเยสุ ปฐเม ปจฺจยานุโลมนเย ปุจฺฉาวิสฺสชฺชนาสงฺขยาสงฺขาเตสุ ตีสุ วาเรสุ ทุติเย วิสฺสชฺชนาสงฺขาเต วิภงฺควาเร เหตุปจฺจยวิภงฺคาทีสุ จตุวีสติยา วิภงฺเคสุ ตติโย อธิปติปจฺจยวิภงฺโค “กุสโล ธมฺโม กุสลสฺส ธมฺมสฺส อธิปติปจฺจเยน ปจฺจโย. อารมฺมณาธิปติ, สหชาตาธิปติ. อารมฺมณาธิปติ–ทานํ ทตฺวา สีลํ สมาทิยิตฺวา อุโปสถกมฺมํ กตฺวา ตํ ครุํ กตฺวา ปจฺจเวกฺขติ. ปุพฺเพ สุจิณฺณานิ ครุํ กตฺวา ปจฺจเวกฺขติ, ฌานา วุฏฺฐหิตฺวา ฌานํ ครุํ กตฺวา ปจฺจเวกฺขติ, เสกฺขา โคตฺรภุํ ครุํ กตฺวา ปจฺจเวกฺขนฺติ, โวทานํ ครุํ กตฺวา ปจฺจเวกฺขนฺติ, เสกฺขา มคฺคา วุฏฺฐหิตฺวา มคฺคํ ครุํ กตฺวา ปจฺจเวกฺขนฺติ. สหชาตาธิปติ–กุสลาธิปติ สมฺปยุตฺตกานํ ขนฺธานํ อธิปติปจฺจเยน ปจฺจโย”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่พระองค์ผู้เจริญ ในพระอภิธรรมปิฎก ในคัมภีร์ ๗ คัมภีร์ ในคัมภีร์ที่ ๗ ชื่ออนันตนยสมันตปัฏฐานมหัปปกรณ์ ในปัฏฐาน ๒๔ ในปัฏฐานที่ ๑ ชื่อธัมมานุโลมติกปัฏฐาน ในติกะ ๒๒ ในติกะที่ ๑ ชื่อกุสลติกะ ในมหาวาร ๗ ในวารที่ ๗ ชื่อปัญหาวาร ในนัย ๔ ในนัยที่ ๑ ชื่อปัจจยานุโลมนัย ในวาร ๓ ที่นับว่าปุจฉาวิสัชนา ในวารที่ ๒ ที่นับว่าวิสัชนา ชื่อวิภังควาร ในวิภังค์ ๒๔ มีเหตุปัจจัยวิภังค์เป็นต้น วิภังค์ที่ ๓ ชื่ออธิปติปัจจัยวิภังค์ พระผู้มีพระภาคทรงจำแนกและแสดงไว้โดยพิสดารด้วยประการฉะนี้เป็นต้นว่า “ธรรมที่เป็นกุศล เป็นปัจจัยแก่ธรรมที่เป็นกุศล ด้วยอำนาจอธิปติปัจจัย อารัมมณาธิปติ สหชาตาธิปติ อารัมมณาธิปติ – บุคคลให้ทานแล้ว สมาทานศีลแล้ว กระทำอุโบสถกรรมแล้ว กระทำสิ่งนั้นให้เป็นใหญ่แล้ว ย่อมพิจารณา กระทำกรรมดีที่ทำไว้ในกาลก่อนให้เป็นใหญ่แล้ว ย่อมพิจารณา ออกจากฌานแล้ว กระทำฌานให้เป็นใหญ่แล้ว ย่อมพิจารณา พระเสกขะทั้งหลาย กระทำโคตรภูให้เป็นใหญ่แล้ว ย่อมพิจารณา กระทำโวทานให้เป็นใหญ่แล้ว ย่อมพิจารณา พระเสกขะทั้งหลาย ออกจากมรรคแล้ว กระทำมรรคให้เป็นใหญ่แล้ว ย่อมพิจารณา สหชาตาธิปติ – กุศลาธิปติ เป็นปัจจัยแก่ขันธ์ทั้งหลายที่สัมปยุตด้วยอำนาจอธิปติปัจจัย”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:250">
+  <div class="pair-col col-pali">
+<p rend="subhead">อนนฺตรปจฺจยวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อนันตรปัจจัยวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:251">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0137">[M 0.0137]</span> ภควตา…เป… จตุตฺโถ อนนฺตรปจฺจยวิภงฺโค กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ พระผู้มีพระภาคเจ้า... อนันตรปัจจัยวิภังค์ที่ ๔ ทรงจำแนกและแสดงไว้โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:252">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต…เป… จตุตฺโถ อนนฺตรปจฺจยวิภงฺโค “กุสโล ธมฺโม กุสลสฺส ธมฺมสฺส อนนฺตรปจฺจเยน ปจฺจโย, ปุริมา ปุริมา กุสลา ขนฺธา ปจฺฉิมานํ ปจฺฉิมานํ กุสลานํ ขนฺธานํ อนนฺตรปจฺจเยน ปจฺจโย. อนุโลมํ โคตฺรภุสฺส, อนุโลมํ โวทานสฺส, โคตฺรภุ มคฺคสฺส, โวทานํ มคฺคสฺส อนนฺตรปจฺจเยน ปจฺจโย”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่พระองค์ผู้เจริญ ในพระอภิธรรมปิฎก... อนันตรปัจจัยวิภังค์ที่ ๔ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงไว้โดยพิสดารด้วยประการฉะนี้เป็นต้นว่า “ธรรมที่เป็นกุศล เป็นปัจจัยแก่ธรรมที่เป็นกุศล ด้วยอำนาจอนันตรปัจจัย กุศลขันธ์ทั้งหลายที่เกิดก่อนๆ เป็นปัจจัยแก่กุศลขันธ์ทั้งหลายที่เกิดหลังๆ ด้วยอำนาจอนันตรปัจจัย อนุโลม เป็นปัจจัยแก่โคตรภู อนุโลม เป็นปัจจัยแก่โวทาน โคตรภู เป็นปัจจัยแก่มรรค โวทาน เป็นปัจจัยแก่มรรค ด้วยอำนาจอนันตรปัจจัย”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:253">
+  <div class="pair-col col-pali">
+<p rend="subhead">สหชาตปจฺจยวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">สหชาตปัจจัยวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:254">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส…เป… <span class="pb hidden-meta" data-ed="M" data-n="0.0138">[M 0.0138]</span> ฉฏฺโฐ สหชาตปจฺจยวิภงฺโค กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ... สหชาตปัจจัยวิภังค์ที่ ๖ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงไว้โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:255">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก <span class="pb hidden-meta" data-ed="M" data-n="0.0139">[M 0.0139]</span> ภนฺเต…เป… ฉฏฺโฐ สหชาตปจฺจยวิภงฺโค “กุสโล ธมฺโม กุสลสฺส ธมฺมสฺส สหชาตปจฺจเยน ปจฺจโย, กุสโล เอโก ขนฺโธ ติณฺณนฺนํ ขนฺธานํ สหชาตปจฺจเยน ปจฺจโย, ตโย ขนฺธา เอกสฺส ขนฺธสฺส สหชาตปจฺจเยน ปจฺจโย, ทฺเว ทฺวินฺนํ ขนฺธานํ สหชาตปจฺจเยน ปจฺจโย. กุสโล ธมฺโม อพฺยากตสฺส ธมฺมสฺส สหชาตปจฺจเยน ปจฺจโย, กุสลา ขนฺธา จิตฺตสมุฏฺฐานานํ รูปานํ สหชาตปจฺจเยน ปจฺจโย”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่พระองค์ผู้เจริญ ในพระอภิธรรมปิฎก... สหชาตปัจจัยวิภังค์ที่ ๖ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงไว้โดยพิสดารด้วยประการฉะนี้เป็นต้นว่า “ธรรมที่เป็นกุศล เป็นปัจจัยแก่ธรรมที่เป็นกุศล ด้วยอำนาจสหชาตปัจจัย กุศลขันธ์ ๑ เป็นปัจจัยแก่ขันธ์ ๓ ด้วยอำนาจสหชาตปัจจัย ขันธ์ ๓ เป็นปัจจัยแก่ขันธ์ ๑ ด้วยอำนาจสหชาตปัจจัย ขันธ์ ๒ เป็นปัจจัยแก่ขันธ์ ๒ ด้วยอำนาจสหชาตปัจจัย ธรรมที่เป็นกุศล เป็นปัจจัยแก่ธรรมที่เป็นอัพยากฤต ด้วยอำนาจสหชาตปัจจัย กุศลขันธ์ทั้งหลาย เป็นปัจจัยแก่รูปทั้งหลายที่เกิดจากจิต ด้วยอำนาจสหชาตปัจจัย”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:256">
+  <div class="pair-col col-pali">
+<p rend="subhead">อุปนิสฺสยปจฺจยวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">อุปนิสสยปัจจัยวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:257">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0140">[M 0.0140]</span> ภควตา…เป… นวโม อุปนิสฺสยปจฺจยวิภงฺโค กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ พระผู้มีพระภาคเจ้า... อุปนิสสยปัจจัยวิภังค์ที่ ๙ ทรงจำแนกและแสดงไว้โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:258">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต…เป… นวโม อุปนิสฺสยปจฺจยวิภงฺโค “กุสโล ธมฺโม กุสลสฺส ธมฺมสฺส อุปนิสฺสยปจฺจเยน ปจฺจโย. อารมฺมณูปนิสฺสโย, อนนฺตรูปนิสฺสโย, ปกตูปนิสฺสโย. อารมฺมณูปนิสฺสโย–ทานํ ทตฺวา สีลํ สมาทิยิตฺวา อุโปสถกมฺมํ กตฺวา กํ ครุํ กตฺวา ปจฺจเวกฺขติ…เป…</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่พระองค์ผู้เจริญ ในพระอภิธรรมปิฎก... อุปนิสสยปัจจัยวิภังค์ที่ ๙ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงไว้โดยพิสดารด้วยประการฉะนี้เป็นต้นว่า “ธรรมที่เป็นกุศล เป็นปัจจัยแก่ธรรมที่เป็นกุศล ด้วยอำนาจอุปนิสสยปัจจัย อารัมมณูปนิสสยะ อนันตรูปนิสสยะ ปกตูปนิสสยะ อารัมมณูปนิสสยะ – บุคคลให้ทานแล้ว สมาทานศีลแล้ว กระทำอุโบสถกรรมแล้ว กระทำสิ่งนั้นให้เป็นใหญ่แล้ว ย่อมพิจารณา...”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:259">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ปกตูปนิสฺสโย – สทฺธํ <span class="pb hidden-meta" data-ed="M" data-n="0.0141">[M 0.0141]</span> อุปนิสฺสาย ทานํ เทติ สีลํ สมาทิยติ อุโปสถกมฺมํ กโรติ, ฌานํ อุปฺปาเทติ, วิปสฺสนํ อุปฺปาเทติ, มคฺคํ อุปฺปาเทติ, อภิญฺญํ อุปฺปาเทติ, สมาปตฺติํ อุปฺปาเทตี”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปกตูปนิสสยะ – อาศัยศรัทธาแล้ว ย่อมให้ทาน ย่อมสมาทานศีล ย่อมกระทำอุโบสถกรรม ย่อมยังฌานให้เกิด ย่อมยังวิปัสสนาให้เกิด ย่อมยังมรรคให้เกิด ย่อมยังอภิญญาให้เกิด ย่อมยังสมาบัติให้เกิด” พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงไว้โดยพิสดารด้วยประการฉะนี้เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:260">
+  <div class="pair-col col-pali">
+<p rend="subhead">ปุเรชาตปจฺจยวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ปุเรชาตปัจจัยวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:261">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส…เป… <span class="pb hidden-meta" data-ed="M" data-n="0.0144">[M 0.0144]</span> ทสโม ปุเรชาตปจฺจยวิภงฺโค กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ... ปุเรชาตปัจจัยวิภังค์ที่ ๑๐ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงไว้โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:262">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต…เป… ทสโม ปุเรชาตปจฺจยวิภงฺโค “อพฺยากโต ธมฺโม อพฺยากตสฺส ธมฺมสฺส ปุเรชาตปจฺจเยน ปจฺจโย. อารมฺมณปุเรชาตํ, วตฺถุปุเรชาตํ. อารมฺมณปุเรชาตํ–อรหา จกฺขุํ อนิจฺจโต ทุกฺขโต อนตฺตโต วิปสฺสติ. ฆานํ, ชิวฺหํ, กายํ, รูเป, สทฺเท, คนฺเธ, รเส, โผฏฺฐพฺเพ, วตฺถุํ อนิจฺจโต ทุกฺขโต อนตฺตโต วิปสฺสติ. ทิพฺเพน จกฺขุนา รูปํ ปสฺสติ, ทิพฺพาย โสตธาตุยา สทฺทํ สุณาติ, รูปายตนํ จกฺขุวิญฺญาณสฺส, สทฺทายตนํ โสตวิญฺญาณสฺส, คนฺธายตนํ ฆานวิญฺญาณสฺส, รสายตนํ ชิวฺหาวิญฺญาณสฺส, โผฏฺฐพฺพายตนํ กายวิญฺญาณสฺส ปุเรชาตปจฺจเยน ปจฺจโย. วตฺถุปุเรชาตํ–จกฺขายตนํ จกฺขุวิญฺญาณสฺส, โสตายตนํ โสตวิญฺญาณสฺส, ฆานายตนํ ฆานวิญฺญาณสฺส, ชิวฺหายตนํ ชิวฺหาวิญฺญาณสฺส, กายายตนํ กายวิญฺญาณสฺส, วตฺถุ วิปากาพฺยากตานํ กฺริยาพฺยากตานํ ขนฺธานํ ปุเรชาตปจฺจเยน ปจฺจโย”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่พระองค์ผู้เจริญ ในพระอภิธรรมปิฎก... ปุเรชาตปัจจัยวิภังค์ที่ ๑๐ พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงไว้โดยพิสดารด้วยประการฉะนี้เป็นต้นว่า “ธรรมที่เป็นอัพยากฤต เป็นปัจจัยแก่ธรรมที่เป็นอัพยากฤต ด้วยอำนาจปุเรชาตปัจจัย อารัมมณปุเรชาต วัตถุปุเรชาต อารัมมณปุเรชาต – พระอรหันต์ย่อมพิจารณาเห็นจักษุโดยความเป็นของไม่เที่ยง เป็นทุกข์ เป็นอนัตตา ย่อมพิจารณาเห็นฆานะ ชิวหา กาย รูป เสียง กลิ่น รส โผฏฐัพพะ วัตถุ โดยความเป็นของไม่เที่ยง เป็นทุกข์ เป็นอนัตตา ย่อมเห็นรูปด้วยทิพยจักษุ ย่อมฟังเสียงด้วยทิพยโสตธาตุ รูปายตนะ เป็นปัจจัยแก่จักขุวิญญาณ สัททายตนะ เป็นปัจจัยแก่โสตวิญญาณ คันธายตนะ เป็นปัจจัยแก่ฆานวิญญาณ รสายตนะ เป็นปัจจัยแก่ชิวหาวิญญาณ โผฏฐัพพายตนะ เป็นปัจจัยแก่กายวิญญาณ ด้วยอำนาจปุเรชาตปัจจัย วัตถุปุเรชาต – จักขายตนะ เป็นปัจจัยแก่จักขุวิญญาณ โสตายตนะ เป็นปัจจัยแก่โสตวิญญาณ ฆานายตนะ เป็นปัจจัยแก่ฆานวิญญาณ ชิวหายตนะ เป็นปัจจัยแก่ชิวหาวิญญาณ กายายตนะ เป็นปัจจัยแก่กายวิญญาณ วัตถุ เป็นปัจจัยแก่ขันธ์ที่เป็นวิปากอัพยากฤตและกิริยาอัพยากฤต ด้วยอำนาจปุเรชาตปัจจัย”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:263">
+  <div class="pair-col col-pali">
+<p rend="subhead">กมฺมปจฺจยวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">กรรมปัจจัยวิภังค์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:264">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0147">[M 0.0147]</span> ภควตา…เป… เตรสโม กมฺมปจฺจยวิภงฺโค กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูกรท่านผู้มีอายุ พระผู้มีพระภาคเจ้า... กรรมปัจจัยวิภังค์ที่ ๑๓ ทรงจำแนกและแสดงไว้โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:265">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต…เป… เตรสโม กมฺมปจฺจยวิภงฺโค “กุสโล ธมฺโม กุสลสฺส ธมฺมสฺส กมฺมปจฺจเยน ปจฺจโย, กุสลา เจตนา สมฺปยุตฺตกานํ ขนฺธานํ กมฺมปจฺจเยน ปจฺจโย. กุสโล ธมฺโม อพฺยากตสฺส ธมฺมสฺส กมฺมปจฺจเยน ปจฺจโย. สหชาตา, นานากฺขณิกา. สหชาตา–กุสลา เจตนา จิตฺตสมุฏฺฐานานํ รูปานํ กมฺมปจฺจเยน ปจฺจโย. นานากฺขณิกา–กุสลา เจตนา วิปากานํ ขนฺธานํ กฏตฺตา จ รูปานํ กมฺมปจฺจเยน ปจฺจโย. กุสโล ธมฺโม กุสลสฺส จ อพฺยากตสฺส จ ธมฺมสฺส กมฺมปจฺจเยน ปจฺจโย. กุสลา เจตนา สมฺปยุตฺตกานํ ขนฺธานํ จิตฺตสมุฏฺฐานานญฺจ รูปานํ กมฺมปจฺจเยน ปจฺจโย”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในพระอภิธรรมปิฎก... (ละไว้)... วิภังค์แห่งกรรมปัจจัยที่ ๑๓ (แสดงว่า) “ธรรมที่เป็นกุศล เป็นปัจจัยแก่ธรรมที่เป็นกุศล ด้วยกรรมปัจจัย, เจตนาที่เป็นกุศล เป็นปัจจัยแก่ขันธ์ที่สัมปยุตด้วยกรรมปัจจัย. ธรรมที่เป็นกุศล เป็นปัจจัยแก่ธรรมที่เป็นอัพยากฤต ด้วยกรรมปัจจัย. สหชาต, นานาขณิก. สหชาต – เจตนาที่เป็นกุศล เป็นปัจจัยแก่รูปที่เกิดจากจิต ด้วยกรรมปัจจัย. นานาขณิก – เจตนาที่เป็นกุศล เป็นปัจจัยแก่ขันธ์ที่เป็นวิบากและรูปที่เกิดจากกรรม ด้วยกรรมปัจจัย. ธรรมที่เป็นกุศล เป็นปัจจัยแก่ธรรมที่เป็นกุศลและอัพยากฤต ด้วยกรรมปัจจัย. เจตนาที่เป็นกุศล เป็นปัจจัยแก่ขันธ์ที่สัมปยุตและรูปที่เกิดจากจิต ด้วยกรรมปัจจัย” พระผู้มีพระภาคได้ทรงจำแนกแสดงโดยพิสดารด้วยประการฉะนี้เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:266">
+  <div class="pair-col col-pali">
+<p rend="subhead">อาหารปจฺจยวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">วิภังค์แห่งอาหารปัจจัย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:267">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส…เป… <span class="pb hidden-meta" data-ed="M" data-n="0.0150">[M 0.0150]</span> ปนฺนรสโม อาหารปจฺจยวิภงฺโค กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ... (ละไว้)... ทรงจำแนกแสดงวิภังค์แห่งอาหารปัจจัยที่ ๑๕ โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:268">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต…เป… ปนฺนรสโม อาหารปจฺจยวิภงฺโค “กุสโล ธมฺโม กุสลสฺส ธมฺมสฺส อาหารปจฺจเยน ปจฺจโย. กุสลา อาหารา สมฺปยุตฺตกานํ ขนฺธานํ อาหารปจฺจเยน ปจฺจโย. กุสโล ธมฺโม อพฺยากตสฺส ธมฺมสฺส อาหารปจฺจเยน ปจฺจโย. กุสลา อาหารา จิตฺตสมุฏฺฐานานํ รูปานํ อาหารปจฺจเยน ปจฺจโย”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในพระอภิธรรมปิฎก... (ละไว้)... วิภังค์แห่งอาหารปัจจัยที่ ๑๕ (แสดงว่า) “ธรรมที่เป็นกุศล เป็นปัจจัยแก่ธรรมที่เป็นกุศล ด้วยอาหารปัจจัย. อาหารที่เป็นกุศล เป็นปัจจัยแก่ขันธ์ที่สัมปยุตด้วยอาหารปัจจัย. ธรรมที่เป็นกุศล เป็นปัจจัยแก่ธรรมที่เป็นอัพยากฤต ด้วยอาหารปัจจัย. อาหารที่เป็นกุศล เป็นปัจจัยแก่รูปที่เกิดจากจิต ด้วยอาหารปัจจัย” พระผู้มีพระภาคได้ทรงจำแนกแสดงโดยพิสดารด้วยประการฉะนี้เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:269">
+  <div class="pair-col col-pali">
+<p rend="subhead">อินฺทริยปจฺจยวิภงฺค</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">วิภังค์แห่งอินทริยปัจจัย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:270">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0151">[M 0.0151]</span> ภควตา…เป… โสฬสโม อินฺทริยปจฺจยวิภงฺโค กถํ วิตฺถาเรน วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ พระผู้มีพระภาค... (ละไว้)... ทรงจำแนกแสดงวิภังค์แห่งอินทริยปัจจัยที่ ๑๖ โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:271">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต…เป… โสฬสโม อินฺทริยปจฺจยวิภงฺโค “กุสโล ธมฺโม กุสลสฺส ธมฺมสฺส อินฺทริยปจฺจเยน ปจฺจโย, กุสโล อินฺทริยา สมฺปยุตฺตกานํ ขนฺธานํ อินฺทริยปจฺจเยน ปจฺจโย. กุสโล ธมฺโม อพฺยากตสฺส ธมฺมสฺส อินฺทริยปจฺจเยน ปจฺจโย, กุสลา อินฺทริยา จิตฺตสมุฏฺฐานานํ <span class="pb hidden-meta" data-ed="M" data-n="0.0152">[M 0.0152]</span> รูปานํ อินฺทริยปจฺจเยน ปจฺจโย”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในพระอภิธรรมปิฎก... (ละไว้)... วิภังค์แห่งอินทริยปัจจัยที่ ๑๖ (แสดงว่า) “ธรรมที่เป็นกุศล เป็นปัจจัยแก่ธรรมที่เป็นกุศล ด้วยอินทริยปัจจัย, อินทรีย์ที่เป็นกุศล เป็นปัจจัยแก่ขันธ์ที่สัมปยุตด้วยอินทริยปัจจัย. ธรรมที่เป็นกุศล เป็นปัจจัยแก่ธรรมที่เป็นอัพยากฤต ด้วยอินทริยปัจจัย, อินทรีย์ที่เป็นกุศล เป็นปัจจัยแก่รูปที่เกิดจากจิต ด้วยอินทริยปัจจัย” พระผู้มีพระภาคได้ทรงจำแนกแสดงโดยพิสดารด้วยประการฉะนี้เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:272">
+  <div class="pair-col col-pali">
+<p rend="subhead">สงฺขยาวาร</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">สังขยาวาระ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:273">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส…เป… <span class="pb hidden-meta" data-ed="M" data-n="0.0154">[M 0.0154]</span> ปุจฺฉาวิสฺสชฺชนาสงฺขยาวารสงฺขาเตสุ ตีสุ วาเรสุ ตติโย สงฺขยาวาโร กถํ วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ... (ละไว้)... ในวาระ ๓ อย่าง คือ ปุจฉาวาระ วิสัชนาวาระ และสังขยาวาระนั้น สังขยาวาระที่ ๓ ทรงจำแนกแสดงโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:274">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต…เป… ตติโย สงฺขยาวาโร “เหตุยา สตฺต, อารมฺมเณ นว, อธิปติยา ทส, อนนฺตร สมนนฺตเร สตฺต, สหชาเต นว, อญฺญมญฺเญ ตีณิ, นิสฺสเย เตรส, อุปนิสฺสเย นว, ปุเรชาเต ปจฺฉาชาเต อาเสวเน ตีณิ<span class="pb hidden-meta" data-ed="M" data-n="0.0155">[M 0.0155]</span>, กมฺเม สตฺต, วิปาเก เอกํ, อาหาเร อินฺทริเย ฌาเน มคฺเค สตฺต, สมฺปยุตฺเต ตีณิ, วิปฺปยุตฺเต ปญฺจ, อตฺถิยา เตรส, นตฺถิยา วิคเต สตฺต, อวิคเต เตรสา”ติ เอวมาทินา ภควตา วิตฺถารโต วิภชิตฺวา เทสิโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในพระอภิธรรมปิฎก... (ละไว้)... สังขยาวาระที่ ๓ (แสดงว่า) “ในเหตุปัจจัยมี ๗, ในอารัมมณปัจจัยมี ๙, ในอธิปติปัจจัยมี ๑๐, ในอนันตรปัจจัยและสมนันตรปัจจัยมี ๗, ในสหชาตปัจจัยมี ๙, ในอัญญมัญญปัจจัยมี ๓, ในนิสสยปัจจัยมี ๑๓, ในอุปนิสสยปัจจัยมี ๙, ในปุเรชาตปัจจัย ปัจฉาชาตปัจจัย และอาเสวนปัจจัยมี ๓, ในกรรมปัจจัยมี ๗, ในวิปากปัจจัยมี ๑, ในอาหารปัจจัย อินทริยปัจจัย ฌานปัจจัย และมัคคปัจจัยมี ๗, ในสัมปยุตตปัจจัยมี ๓, ในวิปปยุตตปัจจัยมี ๕, ในอัตถิปัจจัยมี ๑๓, ในนัตถิปัจจัยและวิคตปัจจัยมี ๗, ในอวิคตปัจจัยมี ๑๓” พระผู้มีพระภาคได้ทรงจำแนกแสดงโดยพิสดารด้วยประการฉะนี้เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:275">
+  <div class="pair-col col-pali">
+<p rend="bodytext">เหตุ <span class="pb hidden-meta" data-ed="M" data-n="0.0156">[M 0.0156]</span> สหชาต นิสฺสย อตฺถิ อวิคตนฺติ สตฺต, เหตุ สหชาต อญฺญมญฺญ นิสฺสย อตฺถิ อวิคตนฺติ ตีณิ, เหตุ สหชาต อญฺญมญฺญ นิสฺสย สมฺปยุตฺต อตฺถิ อวิคตนฺติ ตีณิ …</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">เหตุ สหชาต นิสสยะ อัตถิ อวิคตะ มี ๗, เหตุ สหชาต อัญญมัญญะ นิสสยะ อัตถิ อวิคตะ มี ๓, เหตุ สหชาต อัญญมัญญะ นิสสยะ สัมปยุตตะ อัตถิ อวิคตะ มี ๓...</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:276">
+  <div class="pair-col col-pali">
+<p rend="subhead">เวทนาติก ปฏิจฺจวาร</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">เวทนาติกปฏิจจวาระ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:277">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส ภควตา…เป… ปฐมํ กุสลตฺติกํ วิตฺถารโต วิภชิตฺวา ตทนนฺตรํ อวเสสา เวทนาตฺติกาทโย เอกวีสติติกา กถํ วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ พระผู้มีพระภาค... (ละไว้)... ทรงจำแนกกุสลติกะที่ ๑ โดยพิสดารแล้ว ติกะที่เหลือ ๒๑ ติกะ มีเวทนาติกะเป็นต้น ทรงจำแนกแสดงโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:278">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต…เป… ปฐมํ กุสลตฺติกํ วิตฺถารโต วิภชิตฺวา ตทนนฺตรํ อวเสสา เวทนาตฺติกาทโย เอกวีสติติกา <span class="pb hidden-meta" data-ed="M" data-n="0.0157">[M 0.0157]</span> “สุขาย เวทนาย สมฺปยุตฺตํ ธมฺมํ ปฏิจฺจ สุขาย เวทนาย สมฺปยุตฺโต ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา. สุขาย เวทนาย สมฺปยุตฺตํ เอกํ ขนฺธํ ปฏิจฺจ ทฺเว ขนฺธา, ทฺเว ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ, ปฏิสนฺธิกฺขเณ สุขาย เวทนาย สมฺปยุตฺตํ เอกํ ขนฺธํ ปฏิจฺจ ทฺเว ขนฺธา, ทฺเว ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ”ติ เอวมาทินา จ. วิปากํ ธมฺมํ ปฏิจฺจ วิปาโก ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา. วิปากํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา, ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ, ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา, ปฏิสนฺธิกฺขเณ วิปากํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา, ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ, ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา. วิปากํ ธมฺมํ ปฏิจฺจ เนววิปากนวิปากธมฺมธมฺโม อุปฺปชฺชติ เหตุปจฺจยา, วิปาเก ขนฺเธ ปฏิจฺจ จิตฺตสมุฏฺฐานรูปํ, ปฏิสนฺธิกฺขเณ วิปาเก ขนฺเธ ปฏิจฺจ กฏตฺตารูปํ, ขนฺเธ ปฏิจฺจ วตฺถู”ติ เอวมาทินา จ เอเกกสฺมิํ ติเก สตฺตหิ สตฺตหิ มหาวาเรหิ เอเกกสฺมิญฺจ มหาวาเร จตูหิ จตูหิ นเยหิ ภควตา วิตฺถารโต วิภชิตฺวา เทสิตา.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในพระอภิธรรมปิฎก... (ละไว้)... ทรงจำแนกกุสลติกะที่ ๑ โดยพิสดารแล้ว ติกะที่เหลือ ๒๑ ติกะ มีเวทนาติกะเป็นต้น (แสดงว่า) “ธรรมที่สัมปยุตด้วยสุขเวทนา อาศัยธรรมที่สัมปยุตด้วยสุขเวทนา เกิดขึ้นด้วยเหตุปัจจัย. อาศัยขันธ์หนึ่งที่สัมปยุตด้วยสุขเวทนา ขันธ์สองจึงเกิดขึ้น, อาศัยขันธ์สอง ขันธ์หนึ่งจึงเกิดขึ้น, ในปฏิสนธิขณะ อาศัยขันธ์หนึ่งที่สัมปยุตด้วยสุขเวทนา ขันธ์สองจึงเกิดขึ้น, อาศัยขันธ์สอง ขันธ์หนึ่งจึงเกิดขึ้น” ด้วยประการฉะนี้เป็นต้น. “ธรรมที่เป็นวิบาก อาศัยธรรมที่เป็นวิบาก เกิดขึ้นด้วยเหตุปัจจัย. อาศัยขันธ์หนึ่งที่เป็นวิบาก ขันธ์สามจึงเกิดขึ้น, อาศัยขันธ์สาม ขันธ์หนึ่งจึงเกิดขึ้น, อาศัยขันธ์สอง ขันธ์สองจึงเกิดขึ้น, ในปฏิสนธิขณะ อาศัยขันธ์หนึ่งที่เป็นวิบาก ขันธ์สามจึงเกิดขึ้น, อาศัยขันธ์สาม ขันธ์หนึ่งจึงเกิดขึ้น, อาศัยขันธ์สอง ขันธ์สองจึงเกิดขึ้น. ธรรมที่ไม่ใช่วิบากและไม่ใช่ธรรมมีวิบาก อาศัยธรรมที่เป็นวิบาก เกิดขึ้นด้วยเหตุปัจจัย, อาศัยขันธ์ที่เป็นวิบาก รูปที่เกิดจากจิตจึงเกิดขึ้น, ในปฏิสนธิขณะ อาศัยขันธ์ที่เป็นวิบาก รูปที่เกิดจากกรรมจึงเกิดขึ้น, อาศัยขันธ์ วัตถุจึงเกิดขึ้น” ด้วยประการฉะนี้เป็นต้น. พระผู้มีพระภาคได้ทรงจำแนกแสดงโดยพิสดารด้วยมหาวาระ ๗ อย่างในติกะแต่ละติกะ และด้วยนัย ๔ อย่างในมหาวาระแต่ละมหาวาระ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:279">
+  <div class="pair-col col-pali">
+<p rend="subhead">ทุกปฏฺฐาน</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ทุกปัฏฐาน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:280">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส…เป… <span class="pb hidden-meta" data-ed="M" data-n="0.0158">[M 0.0158]</span> ติกปฏฺฐานาทีสุ ฉสุ อนฺโตคธปฏฺฐานาทีสุ ปฐมํ ติกปฏฺฐานํ เทเสตฺวา ตทนนฺตรํ ทุกปฏฺฐานํ กถํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ... (ละไว้)... ในปัฏฐาน ๖ อย่าง มีติกปัฏฐานเป็นต้นนั้น ทรงแสดงติกปัฏฐานที่ ๑ แล้ว ทุกปัฏฐานที่ตามมา ทรงจำแนกแสดงโดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:281">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต…เป… ติกปฏฺฐานาทีสุ ฉสุ อนฺโตคธปฏฺฐานาทีสุ ปฐมํ ติกปฏฺฐานํ วิภชิตฺวา ตทนนฺตรํ ทุกปฏฺฐานํ “เหตุํ ธมฺมํ ปฏิจฺจ เหตุ ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา, อโลภํ ปฏิจฺจ อโทโส อโมโห, อโทสํ ปฏิจฺจ อโลโภ อโมโห, อโมหํ ปฏิจฺจ อโลโภ อโทโส. โลภํ ปฏิจฺจ โมโห, โมหํ ปฏิจฺจ โลโภ, โทสํ ปฏิจฺจ โมโห, โมหํ ปฏิจฺจ โทโส”ติ เอวมาทินา จ. สรณํ ธมฺมํ ปฏิจฺจ สรโณ ทมฺโม อุปฺปชฺชติ เหตุปจฺจยา, สรณํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา, ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ, ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา. สรณํ ธมฺมํ ปฏิจฺจ อรโณ ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา, สรโณ ขนฺเธ ปฏิจฺจ จิตฺตสมุฏฺฐานํ รูปํ. สรณํ ธมฺมํ ปฏิจฺจ สรโณ จ อรโณ จ ธมฺมา อุปฺปชฺชนฺติ เหตุปจฺจยา. สรณํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา จิตฺตสมุฏฺฐานญฺจ รูปํ, ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ จิตฺตสมุฏฺฐานญฺจ รูปํ, ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา จิตฺตสมุฏฺฐานญฺจ <span class="pb hidden-meta" data-ed="M" data-n="0.0159">[M 0.0159]</span> รูป”นฺติ เอวมาทินา จ. เอเกกสฺมิํ ทุเก สตฺตหิ สตฺตหิ มหาวาเรหิ เอเกกสฺมิญฺจ มหาวาเร จตูหิ จตูหิ นเยหิ ภควตา วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การแก้ – ข้าแต่ท่านผู้เจริญ ในพระอภิธรรมปิฎก... (ละไว้) ในปัฏฐาน 6 อย่างที่รวมอยู่ภายในมีติกปัฏฐานเป็นต้น ทรงจำแนกติกปัฏฐานที่ 1 แล้ว หลังจากนั้น ทรงจำแนกทุกปัฏฐานว่า "อาศัยธรรมที่เป็นเหตุ ธรรมที่เป็นเหตุย่อมเกิดขึ้นด้วยเหตุปัจจัย, อาศัยอโลภะ อโทสะและอโมหะย่อมเกิดขึ้น, อาศัยอโทสะ อโลภะและอโมหะย่อมเกิดขึ้น, อาศัยอโมหะ อโลภะและอโทสะย่อมเกิดขึ้น. อาศัยโลภะ โมหะย่อมเกิดขึ้น, อาศัยโมหะ โลภะย่อมเกิดขึ้น, อาศัยโทสะ โมหะย่อมเกิดขึ้น, อาศัยโมหะ โทสะย่อมเกิดขึ้น" เป็นต้นอย่างนี้. "อาศัยธรรมที่เป็นสรณะ ธรรมที่เป็นสรณะย่อมเกิดขึ้นด้วยเหตุปัจจัย, อาศัยขันธ์ 1 ที่เป็นสรณะ ขันธ์ 3 ย่อมเกิดขึ้น, อาศัยขันธ์ 3 ขันธ์ 1 ย่อมเกิดขึ้น, อาศัยขันธ์ 2 ขันธ์ 2 ย่อมเกิดขึ้น. อาศัยธรรมที่เป็นสรณะ ธรรมที่เป็นอรณะย่อมเกิดขึ้นด้วยเหตุปัจจัย, อาศัยขันธ์ที่เป็นสรณะ รูปที่มีจิตเป็นสมุฏฐานย่อมเกิดขึ้น. อาศัยธรรมที่เป็นสรณะ ธรรมที่เป็นสรณะและที่เป็นอรณะย่อมเกิดขึ้นด้วยเหตุปัจจัย. อาศัยขันธ์ 1 ที่เป็นสรณะ ขันธ์ 3 และรูปที่มีจิตเป็นสมุฏฐานย่อมเกิดขึ้น, อาศัยขันธ์ 3 ขันธ์ 1 และรูปที่มีจิตเป็นสมุฏฐานย่อมเกิดขึ้น, อาศัยขันธ์ 2 ขันธ์ 2 และรูปที่มีจิตเป็นสมุฏฐานย่อมเกิดขึ้น" เป็นต้นอย่างนี้. พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงโดยพิสดารด้วยมหาวารอย่างละ 7 ในทุกะแต่ละอย่าง และด้วยนัยอย่างละ 4 ในมหาวารแต่ละอย่าง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:282">
+  <div class="pair-col col-pali">
+<p rend="bodytext">สรณํ ธมฺมํ ปฏิจฺจ สรโณ ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา, สรณํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา, ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ, ทฺเว</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อาศัยธรรมที่เป็นสรณะ ธรรมที่เป็นสรณะย่อมเกิดขึ้นด้วยเหตุปัจจัย, อาศัยขันธ์ 1 ที่เป็นสรณะ ขันธ์ 3 ย่อมเกิดขึ้น, อาศัยขันธ์ 3 ขันธ์ 1 ย่อมเกิดขึ้น, อาศัยขันธ์ 2</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:283">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ขนฺเธ <span class="pb hidden-meta" data-ed="M" data-n="0.0160">[M 0.0160]</span> ปฏิจฺจ ทฺเว ขนฺธา …</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">อาศัยขันธ์ 2 ขันธ์ 2 ย่อมเกิดขึ้น...</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:284">
+  <div class="pair-col col-pali">
+<p rend="subhead">ทุกติกปฏฺฐาน ทุกทุกปฏฺฐาน</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ทุกติกปัฏฐาน ทุกทุกปัฏฐาน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:285">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส…เป… ติกปฏฺฐานาทีสุ ฉสุ อนฺโตคธปฏฺฐาเนสุ ปฐมํ ติกปฏฺฐานญฺจ ทุติยํ ทุกปฏฺฐานญฺจ วิภชิตฺวา ตทวเสสานิ ทุกติกปฏฺฐานาทีนิ จตฺตาโร ปฏฺฐานานิ กถํ วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ... (ละไว้) ในปัฏฐาน 6 อย่างที่รวมอยู่ภายในมีติกปัฏฐานเป็นต้น ทรงจำแนกติกปัฏฐานที่ 1 และทุกปัฏฐานที่ 2 แล้ว ปัฏฐานที่เหลือ 4 อย่างมีทุกติกปัฏฐานเป็นต้น ทรงจำแนกและแสดงไว้อย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:286">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต…เป… ติกปฏฺฐานาทีสุ ฉสุ อนฺโตคธปฏฺฐาเนสุ ปฐมํ ติกปฏฺฐานญฺจ ทุติยํ ทุกปฏฺฐานญฺจ วิภชิตฺวา ตทวเสสา <span class="pb hidden-meta" data-ed="M" data-n="0.0161">[M 0.0161]</span> ทุกติกปฏฺฐานาทโย “เหตุํ กุสลํ ธมฺมํ ปฏิจฺจ เหตุ กุสโล ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา. เหตุํ กุสลํ ธมฺมํ ปฏิจฺจ นเหตุ กุสโล ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา. เหตุํ กุสลํ ธมฺมํ ปฏิจฺจ เหตุ กุสโล จ นเหตุ กุสโล จ ธมฺมา อุปฺปชฺชนฺติ เหตุปจฺจยา, นเหตุํ กุสลํ ธมฺมํ ปฏิจฺจ นเหตุ กุสโล ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา, นเหตุํ กุสลํ ธมฺมํ ปฏิจฺจ เหตุ กุสโล ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา, นเหตุํ กุสลํ ธมฺมํ ปฏิจฺจ เหตุ กุสโล จ นเหตุ กุสโล จ ธมฺมา อุปฺปชฺชนฺติ เหตุปจฺจยา”ติ เอวมาทินา วิตฺถารโต วิภชิตฺวา เทสิตานิ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การแก้ – ข้าแต่ท่านผู้เจริญ ในพระอภิธรรมปิฎก... (ละไว้) ในปัฏฐาน 6 อย่างที่รวมอยู่ภายในมีติกปัฏฐานเป็นต้น ทรงจำแนกติกปัฏฐานที่ 1 และทุกปัฏฐานที่ 2 แล้ว ปัฏฐานที่เหลือมีทุกติกปัฏฐานเป็นต้น ทรงจำแนกและแสดงโดยพิสดารว่า "อาศัยธรรมที่เป็นกุศลที่เป็นเหตุ ธรรมที่เป็นกุศลที่เป็นเหตุย่อมเกิดขึ้นด้วยเหตุปัจจัย. อาศัยธรรมที่เป็นกุศลที่เป็นเหตุ ธรรมที่เป็นกุศลที่ไม่ใช่เหตุย่อมเกิดขึ้นด้วยเหตุปัจจัย. อาศัยธรรมที่เป็นกุศลที่เป็นเหตุ ธรรมที่เป็นกุศลที่เป็นเหตุและที่เป็นกุศลที่ไม่ใช่เหตุย่อมเกิดขึ้นด้วยเหตุปัจจัย. อาศัยธรรมที่เป็นกุศลที่ไม่ใช่เหตุ ธรรมที่เป็นกุศลที่ไม่ใช่เหตุย่อมเกิดขึ้นด้วยเหตุปัจจัย. อาศัยธรรมที่เป็นกุศลที่ไม่ใช่เหตุ ธรรมที่เป็นกุศลที่เป็นเหตุย่อมเกิดขึ้นด้วยเหตุปัจจัย. อาศัยธรรมที่เป็นกุศลที่ไม่ใช่เหตุ ธรรมที่เป็นกุศลที่เป็นเหตุและที่เป็นกุศลที่ไม่ใช่เหตุย่อมเกิดขึ้นด้วยเหตุปัจจัย" เป็นต้นอย่างนี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:287">
+  <div class="pair-col col-pali">
+<p rend="subhead">ธมฺมปจฺจนียปฏฺฐาน</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ธัมมปัจจนียปัฏฐาน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:288">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0163">[M 0.0163]</span> ภควตา…เป… ปฐมํ ธมฺมานุโลมปฏฺฐานํ วิภชิตฺวา ตทนนฺตรํ ทุติยํ ธมฺมปจฺจนียปฏฺฐานํ กถํ วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ พระผู้มีพระภาคเจ้า... (ละไว้) ทรงจำแนกธัมมานุโลมปัฏฐานที่ 1 แล้ว หลังจากนั้น ธัมมปัจจนียปัฏฐานที่ 2 ทรงจำแนกและแสดงไว้อย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:289">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต…เป… ปฐมํ ธมฺมานุโลมปฏฺฐานํ วิภชิตฺวา ตทนนฺตรํ ทุติยํ ธมฺมปจฺจนียปฏฺฐานํ “นกุสลํ ธมฺมํ ปฏิจฺจ นกุสโล ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา. อกุสลาพฺยากตํ เอกํ ขนฺธํ ปฏิจฺจ อกุสลาพฺยากตา ตโย ขนฺธา จิตฺตสมุฏฺฐานญฺจ รูปํ. ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ จิตฺตสมุฏฺฐานญฺจ รูปํ. ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา จิตฺตสมุฏฺฐานญฺจ รูปํ. นกุสลํ ธมฺมํ ปฏิจฺจ นอกุสโล ธมฺโม อุปฺปชฺชติ เหตุ ปจฺจยา. วิปากาพฺยากตํ กิริยาพฺยากตํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา จิตฺตสมุฏฺฐานญฺจ รูปํ. ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ จิตฺตสมุฏฺฐานญฺจ รูปํ. ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา จิตฺตสมุฏฺฐานญฺจ <span class="pb hidden-meta" data-ed="M" data-n="0.0164">[M 0.0164]</span> รูปํ. ปฏิสนฺธิกฺขเณ…เป… นกุสลํ ธมฺมํ ปฏิจฺจ นอพฺยากโต ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา. อกุสลํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา, ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ, ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา”ติ เอวมาทินา ติกปฏฺฐานาทีหิ ฉหิ อนฺโตคธปฏฺฐาเนหิ เอเกกสฺมิญฺจ ติกปฏฺฐาเน ทุกปฏฺฐาเน ทุกติกปฏฺฐาเน ติกทุกปฏฺฐาเน ติกติกปฏฺฐาเน ทุกทุกปฏฺฐาเน สตฺตหิ สตฺตหิ มหาวาเรหิ เอเกกสฺมิญฺจ มหาวาเร จตูหิ จตูหิ นเยหิ ภควตา วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">การแก้ – ข้าแต่ท่านผู้เจริญ ในพระอภิธรรมปิฎก... (ละไว้) ทรงจำแนกธัมมานุโลมปัฏฐานที่ 1 แล้ว หลังจากนั้น ทรงจำแนกธัมมปัจจนียปัฏฐานที่ 2 โดยพิสดารว่า "อาศัยธรรมที่ไม่ใช่กุศล ธรรมที่ไม่ใช่กุศลย่อมเกิดขึ้นด้วยเหตุปัจจัย. อาศัยอกุศลอัพยากตะ 1 ขันธ์ ขันธ์ 3 ที่เป็นอกุศลอัพยากตะและรูปที่มีจิตเป็นสมุฏฐานย่อมเกิดขึ้น. อาศัยขันธ์ 3 ขันธ์ 1 และรูปที่มีจิตเป็นสมุฏฐานย่อมเกิดขึ้น. อาศัยขันธ์ 2 ขันธ์ 2 และรูปที่มีจิตเป็นสมุฏฐานย่อมเกิดขึ้น. อาศัยธรรมที่ไม่ใช่กุศล ธรรมที่ไม่ใช่อกุศลย่อมเกิดขึ้นด้วยเหตุปัจจัย. อาศัยวิปากอัพยากตะและกิริยาอัพยากตะ 1 ขันธ์ ขันธ์ 3 และรูปที่มีจิตเป็นสมุฏฐานย่อมเกิดขึ้น. อาศัยขันธ์ 3 ขันธ์ 1 และรูปที่มีจิตเป็นสมุฏฐานย่อมเกิดขึ้น. อาศัยขันธ์ 2 ขันธ์ 2 และรูปที่มีจิตเป็นสมุฏฐานย่อมเกิดขึ้น. ในขณะปฏิสนธิ... (ละไว้) อาศัยธรรมที่ไม่ใช่กุศล ธรรมที่ไม่ใช่อัพยากตะย่อมเกิดขึ้นด้วยเหตุปัจจัย. อาศัยอกุศล 1 ขันธ์ ขันธ์ 3 ย่อมเกิดขึ้น, อาศัยขันธ์ 3 ขันธ์ 1 ย่อมเกิดขึ้น, อาศัยขันธ์ 2 ขันธ์ 2 ย่อมเกิดขึ้น" เป็นต้นอย่างนี้ ด้วยปัฏฐาน 6 อย่างที่รวมอยู่ภายในมีติกปัฏฐานเป็นต้น และในติกปัฏฐาน ทุกปัฏฐาน ทุกติกปัฏฐาน ติกทุกปัฏฐาน ติกติกปัฏฐาน ทุกทุกปัฏฐาน แต่ละอย่าง ด้วยมหาวารอย่างละ 7 และในมหาวารแต่ละอย่าง ด้วยนัยอย่างละ 4 พระผู้มีพระภาคเจ้าทรงจำแนกและแสดงโดยพิสดารแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:290">
+  <div class="pair-col col-pali">
+<p rend="subhead">ธมฺมานุโลมปจฺจนียปฏฺฐาน</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ธัมมานุโลมปัจจนียปัฏฐาน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:291">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0165">[M 0.0165]</span> ภควตา…เป… ตติยํ ธมฺมานุโลมปจฺจนียปฏฺฐานํ กถํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">คำถาม – ดูก่อนท่านผู้มีอายุ พระผู้มีพระภาคเจ้า... (ละไว้) ธัมมานุโลมปัจจนียปัฏฐานที่ 3 ทรงจำแนกและแสดงโดยพิสดารไว้อย่างไร?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:292">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก…เป… ตติยํ ธมฺมานุโลมปจฺจนียปฏฺฐานํ “กุสลํ ธมฺมํ ปฏิจฺจ นกุสโล ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา. กุสเล ขนฺเธ ปฏิจฺจ จิตฺตสมุฏฺฐานรูปํ. กุสลํ ธมฺมํ ปฏิจฺจ นอกุสโล ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา. กุสลํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา จิตฺตสมุฏฺฐานญฺจ รูปํ. ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ จิตฺตสมุฏฺฐานญฺจ รูปํ. ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา จิตฺตสมุฏฺฐานญฺจ รูปํ. กุสลํ ธมฺมํ ปฏิจฺจ นอพฺยากโต ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา. กุสลํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา, ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ, ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา. กุสลํ ธมฺมํ ปฏิจฺจ นอกุสโล จ นอพฺยากโต จ ธมฺมา อุปฺปชฺชนฺติ เหตุปจฺจยา. กุสลํ เอกํ ขนฺธํ ปฏิจฺจ <span class="pb hidden-meta" data-ed="M" data-n="0.0166">[M 0.0166]</span> ตโย ขนฺธา…เป… ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา. กุสลํ ธมฺมํ ปฏิจฺจ นกุสโล จ นอกุสโล จ ธมฺมา อุปฺปชฺชนฺติ เหตุปจฺจยา. กุสเล ขนฺเธ ปฏิจฺจ จิตฺตสมุฏฺฐานรูป”นฺติ เอวมาทินา ภนฺเต ติกปฏฺฐานาทีหิ ฉหิ อนฺโตคธปฏฺฐาเนหิ เอเกกสฺมิญฺจ ติกปฏฺฐาเน ทุกปฏฺฐาเน ติกทุกปฏฺฐาเน ทุกติกปฏฺฐาเน ติกติกปฏฺฐาเน ทุกทุกปฏฺฐาเน สตฺตหิ สตฺตหิ มหาวาเรหิ เอเกกสฺมิญฺจ มหาวาเร จตูหิ จตูหิ นเยหิ ภควตา วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ในพระอภิธรรมปิฎก... (ละไว้) ธัมมานุโลมปัจจนียปัฏฐานที่ 3 ทรงจำแนกและแสดงโดยพิสดารว่า 'ธรรมที่ไม่ใช่กุศล อาศัยธรรมที่เป็นกุศล เกิดขึ้นด้วยเหตุปัจจัย รูปที่เกิดจากจิต อาศัยขันธ์ที่เป็นกุศล ธรรมที่ไม่ใช่อกุศล อาศัยธรรมที่เป็นกุศล เกิดขึ้นด้วยเหตุปัจจัย ขันธ์ 3 และรูปที่เกิดจากจิต อาศัยกุศลขันธ์ 1 ขันธ์ 1 และรูปที่เกิดจากจิต อาศัยกุศลขันธ์ 3 ขันธ์ 2 และรูปที่เกิดจากจิต อาศัยกุศลขันธ์ 2 ธรรมที่ไม่ใช่อัพยากตะ อาศัยธรรมที่เป็นกุศล เกิดขึ้นด้วยเหตุปัจจัย ขันธ์ 3 อาศัยกุศลขันธ์ 1 ขันธ์ 1 อาศัยกุศลขันธ์ 3 ขันธ์ 2 อาศัยกุศลขันธ์ 2 ธรรมที่ไม่ใช่อกุศลและที่ไม่ใช่อัพยากตะ อาศัยธรรมที่เป็นกุศล เกิดขึ้นด้วยเหตุปัจจัย ขันธ์ 3 อาศัยกุศลขันธ์ 1... (ละไว้) ขันธ์ 2 อาศัยกุศลขันธ์ 2 ธรรมที่ไม่ใช่กุศลและที่ไม่ใช่อกุศล อาศัยธรรมที่เป็นกุศล เกิดขึ้นด้วยเหตุปัจจัย รูปที่เกิดจากจิต อาศัยขันธ์ที่เป็นกุศล' ดังนี้เป็นต้น ข้าแต่ท่านผู้เจริญ ด้วยปัฏฐานที่รวมอยู่ภายใน 6 อย่าง มีติกปัฏฐานเป็นต้น และในติกปัฏฐาน ทุกปัฏฐาน ติกทุกปัฏฐาน ทุกติกปัฏฐาน ติกติกปัฏฐาน ทุกทุกปัฏฐาน แต่ละอย่าง ด้วยมหาวารอย่างละ 7 และในมหาวารแต่ละอย่าง ด้วยนัยอย่างละ 4 พระผู้มีพระภาคทรงจำแนกแสดงไว้โดยพิสดาร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:293">
+  <div class="pair-col col-pali">
+<p rend="subhead">ธมฺมปจฺจนียานุโลมปฏฺฐาน</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ธัมมปัจจนียานุโลมปัฏฐาน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:294">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">ปุจฺฉา –</span> เตนาวุโส <span class="pb hidden-meta" data-ed="M" data-n="0.0167">[M 0.0167]</span> ภควตา…เป… ธมฺมานุโลมาทีสุ ปธานภูเตสุ จตูสุ ปฏฺฐาเนสุ จตุตฺถํ ปริโยสานภูตํ ธมฺมปจฺจนียานุโลมปฏฺฐานํ กถํ วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ปุจฉา – ท่านผู้มีอายุ พระผู้มีพระภาคเจ้านั้น... (ละไว้) ทรงจำแนกแสดงธัมมปัจจนียานุโลมปัฏฐาน อันเป็นลำดับสุดท้ายที่ 4 ในปัฏฐาน 4 ที่เป็นประธาน มีธัมมานุโลมปัฏฐานเป็นต้น โดยพิสดารอย่างไร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0906n_nrf:295">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span rend="bold">วิสฺสชฺชนา –</span> อภิธมฺมปิฏเก ภนฺเต…เป… ธมฺมานุโลมปฏฺฐานาทีสุ จตูสุ ปธานภูเตสุ มหาปฏฺฐาเนสุ จตุตฺถํ ปริโยสานภูตํ ธมฺมปจฺจนียานุโลมปฏฺฐานํ “นกุสลํ ธมฺมํ ปฏิจฺจ อกุสโล ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา, อกุสลํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา, ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ, ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา. นกุสลํ ธมฺมํ ปฏิจฺจ นอกุสโล ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา. อกุสเล ขนฺเธ ปฏิจฺจ จิตฺตสมุฏฺฐานรูปํ, วิปากาพฺยากตํ กฺริยาพฺยากตํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา จิตฺตสมุฏฺฐานญฺจ รูปํ…เป… ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา จิตฺตสมุฏฺฐานญฺจ รูปํ. ขนฺเธ ปฏิจฺจ วตฺถุ, วตฺถุํ ปฏิจฺจ ขนฺธา. นกุสลํ ธมฺมํ ปฏิจฺจ นอพฺยากโต ธมฺโม อุปฺปชฺชติ เหตุปจฺจยา, อกุสลํ เอกํ ขนฺธํ ปฏิจฺจ ตโย ขนฺธา, ตโย ขนฺเธ ปฏิจฺจ เอโก ขนฺโธ, ทฺเว ขนฺเธ ปฏิจฺจ ทฺเว ขนฺธา”ติ เอวมาทินา ติกปฏฺฐานาทีหิ จาติ อนฺโตคธปเภทปฏฺฐาเนหิ เอเกกสฺมิญฺจ ติกปฏฺฐาเน ทุกปฏฺฐาเน ทุกติกติกทุกติกติกทุกทุกปฏฺฐาเน ปฏิจฺจวาราทีหิ สตฺตหิ มหาวาเรหิ เอเกกสฺมิญฺจ มหาวาเร ปจฺจยานุโลมาทีหิ จตูหิ จตูหิ นเยหิ ภควตา วิตฺถารโต วิภชิตฺวา เทสิตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">วิสัชนา – ข้าแต่ท่านผู้เจริญ ในพระอภิธรรมปิฎก... (ละไว้) พระผู้มีพระภาคทรงจำแนกแสดงธัมมปัจจนียานุโลมปัฏฐาน อันเป็นลำดับสุดท้ายที่ 4 ในมหาปัฏฐาน 4 ที่เป็นประธาน มีธัมมานุโลมปัฏฐานเป็นต้น โดยพิสดารว่า 'ธรรมที่เป็นอกุศล อาศัยธรรมที่ไม่ใช่กุศล เกิดขึ้นด้วยเหตุปัจจัย ขันธ์ 3 อาศัยอกุศลขันธ์ 1 ขันธ์ 1 อาศัยอกุศลขันธ์ 3 ขันธ์ 2 อาศัยอกุศลขันธ์ 2 ธรรมที่ไม่ใช่อกุศล อาศัยธรรมที่ไม่ใช่กุศล เกิดขึ้นด้วยเหตุปัจจัย รูปที่เกิดจากจิต อาศัยอกุศลขันธ์ ขันธ์ 3 และรูปที่เกิดจากจิต อาศัยวิบากอัพยากตขันธ์หรือกิริยาอัพยากตขันธ์ 1... (ละไว้) ขันธ์ 2 และรูปที่เกิดจากจิต อาศัยขันธ์ 2 วัตถุอาศัยขันธ์ ขันธ์อาศัยวัตถุ ธรรมที่ไม่ใช่อัพยากตะ อาศัยธรรมที่ไม่ใช่กุศล เกิดขึ้นด้วยเหตุปัจจัย ขันธ์ 3 อาศัยอกุศลขันธ์ 1 ขันธ์ 1 อาศัยอกุศลขันธ์ 3 ขันธ์ 2 อาศัยอกุศลขันธ์ 2' ดังนี้เป็นต้น ด้วยปัฏฐานที่มีประเภทที่รวมอยู่ภายใน มีติกปัฏฐานเป็นต้น และในติกปัฏฐาน ทุกปัฏฐาน ติกทุกปัฏฐาน ทุกติกปัฏฐาน ติกติกปัฏฐาน ทุกทุกปัฏฐาน แต่ละอย่าง ด้วยมหาวาร 7 มีปฏิจจวารเป็นต้น และในมหาวารแต่ละอย่าง ด้วยนัยอย่างละ 4 มีปัจจยานุโลมเป็นต้น พระผู้มีพระภาคทรงจำแนกแสดงไว้โดยพิสดาร</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1213n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Sarabun"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">บาลี | แปล</button><button type="button" data-mode="view-stack">บาลี — แปล</button><button type="button" data-mode="view-pali-only">เฉพาะบาลี</button><button type="button" data-mode="view-trans-only">เฉพาะแปล</button><button type="button" id="toggle-meta-btn">เชิงอรรถ</button></div>
+<div class="pair-row" data-id="e1213n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="chapter">สทฺทพินฺทุ <span class="pb hidden-meta" data-ed="O" data-n="0.0001">[O 0.0001]</span> ปกรณํ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">สัททบินทุปกรณ์</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="centre">นโม ตสฺส ภควโต อรหโต สมฺมาสมฺพุทฺธสฺส</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ขอนอบน้อมแด่พระผู้มีพระภาคอรหันตสัมมาสัมพุทธเจ้าพระองค์นั้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ยสฺสเญยฺเยสุ ธมฺเมสุ, นาณุมตฺตมฺปเวทิตํ,</p>
+<p rend="gathalast">นตฺวาสทฺธมฺมสงฺฆํตํ, สทฺทพินฺทุํสมารเภ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าไหว้พระสัทธรรมและพระสงฆ์นั้น และพระพุทธเจ้าผู้ซึ่งธรรมทั้งหลายอันพึงรู้ แม้เพียงประมาณปรมาณูก็มิได้ไม่ทรงทราบแล้ว จักเริ่มต้นคัมภีร์สัททบินทุ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0002">[O 0.0002]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กาทิริตา นวสงฺขยา, กเมนฏา ทิ ยาทิจ,</p>
+<p rend="gathalast">ปาทโยปญฺจ สงฺขยาตา, สุญฺญนามา สรญฺญนา;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พยัญชนะที่มี ก เป็นต้น มีจำนวน ๙, ที่มี ฏ เป็นต้น และ ย เป็นต้น ก็มีจำนวน ๙ ตามลำดับ, พยัญชนะที่มี ป เป็นต้น มีจำนวน ๕, ส่วนสระและพยัญชนะ ณ และ น ชื่อว่าสุญญะ (ศูนย์)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๓</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สเรเหวสราปุพฺเพ ลุตฺตาวาวีปเรรมา,</p>
+<p rend="gathalast">พฺยญฺชนาจาคมาวาวี ทีฆรสฺสาทิสมฺภวา;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">เมื่อสระอยู่หลัง สระหน้าลบไปบ้าง หรือสระหลังลบไปบ้าง, พยัญชนะอาคมมีบ้าง ไม่มาบ้าง, และมีการทำให้เป็นทีฆะและรัสสะเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๔</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0003">[O 0.0003]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กากาเสนาคโตสิส เกนิทฺธิมจฺจทสฺสยิ,</p>
+<p rend="gathalast">อราชขฺวคฺคิเมสีนํ โสตุกมฺเมฆยิตฺถิโย;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กา กา, ในอากาศ, มาแล้ว, ท่านเป็นใคร, ด้วยอะไร, แสดงฤทธิ์ยิ่ง, ไม่ใช่พระราชาหนอ, ไฟ, ของผู้แสวงหาทั้งหลาย, เพื่อจะฟัง, ในเมฆ, หญิงทั้งหลาย</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ สนฺธิกปฺโป สมตฺโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">หมวดสนธิจบลงแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๕</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0004">[O 0.0004]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> พุทฺธปุมยุวสนฺต ราชพฺรหฺมสขาจสา,</p>
+<p rend="gathalast">ยตาทิเทหีชนฺตุจ สตฺถุปิตาภิภูวิทู;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พุทธะ, ปุมะ, ยุวะ, สันตะ, ราชา, พรหม, สขา และ สา, ยตาทิ, เทหี, ชันตุ และ สัตถุ, ปิตุ, อภิภู, วิทู</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๖</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กญฺญามฺมารตฺติถิโป, กฺขรณีนทิรุมาตุภู,</p>
+<p rend="gathalast">นปุํสเกติยนฺตาจ, ปทกมฺมทธายุโน;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กัญญา, อัมมา, รัตติ, อิตถี, โปกขรณี, นที, มาตุ, ภู, และคำที่มีสระ ๓ (อิ อี อุ) เป็นที่สุดในนปุงสกลิงค์, (เหล่านี้คือ) ผู้ทรงไว้ซึ่งบทและกรรม</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๗</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0005">[O 0.0005]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> คหิตาคหเณเนตฺถ สุทฺโธสฺยาทฺยนฺตกาปุเม,</p>
+<p rend="gathalast">วิมลาโหนฺติชานฺเตหิ ถฺยํปญฺจนฺเตหิทาธิกา;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ในที่นี้ (ศัพท์) ที่ถูกถือเอาด้วยการถือเอา (ตามแบบ) เป็นศัพท์บริสุทธิ์ มี สิ วิภัตติเป็นที่สุดในปุงลิงค์, ศัพท์ที่สะอาด (ถูกต้อง) ย่อมมีด้วยปัจจัยมี ช เป็นต้น, ทฺยํ, ปัญจะ และ ทา เป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> นปุํสเกปโยคาตุ ชนกาโหนฺติตฺยนฺตโต,</p>
+<p rend="gathalast">ปธานานุคตาสพฺพ นามสมาสตทฺธิตา;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ส่วนการใช้ในนปุงสกลิงค์ ย่อมเกิดจาก (สระ) ๓ (อิ อี อุ) เป็นที่สุด, นาม สมาส และตัทธิตทั้งหมด ย่อมคล้อยตามประธาน</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๙</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0006">[O 0.0006]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อตฺติลิงฺคานิปาตาทิ ตโตลุตฺตาวสฺยาทโย,</p>
+<p rend="gathalast">สุตฺตานุรูปโตสิทฺธา โหนฺติวตฺตามนาทโย;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">นิบาตเป็นต้นเป็นอิตถีลิงค์ (หรือไม่มีลิงค์), จากนั้นวิภัตติมี สิ เป็นต้นก็ลบไป, (กิริยา) มีวัตตมานาเป็นต้น ย่อมสำเร็จตามสมควรแก่สูตร</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ นามกปฺโป สมตฺโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">หมวดนามจบลงแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ฉการเกสสามิสฺมิํ สมาโสโหติสมฺภวา,</p>
+<p rend="gathalast">ตทฺธีตากตฺตุกมฺมส, มฺปทาโนกาสสามิสุ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">สมาสย่อมมีในกากะทั้ง ๖ และในสามี (สัมพันธะ) ตามความเหมาะสม, ส่วนตัทธิตย่อมมีในอรรถกัตตุ, กรรม, สัมปทาน, โอกาสะ และสามี</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๑</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0007">[O 0.0007]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> สาธตฺตยมฺหิอาขฺยาโต กิตโกสตฺตสาธเน,</p>
+<p rend="gathalast">สพฺพตฺถปฐมาวุตฺเต อวุตฺเตทุติยาทโย;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">อาขยาตมีในสาธนะ ๓, กิตกะมีในสาธนะ ๗, ในที่ทั้งปวง ปฐมาวิภัตติใช้ในอรรถที่ (กิริยา) กล่าวแล้ว, ทุติยาวิภัตติเป็นต้นใช้ในอรรถที่ (กิริยา) ไม่ได้กล่าว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๒</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๒.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> มนสามุนิโนวุตฺยา วเนพุทฺเธนวณฺณิเต,</p>
+<p rend="gathalast">วฏฺฏาหิโตวิวฏฺฏตฺถํ ภิกฺขุภาเวติภาวนํ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ภิกษุผู้ (ต้องการ) ออกจากวัฏฏะ ย่อมเจริญภาวนาเพื่อวิวัฏฏะ ในป่าอันพระพุทธเจ้าพรรณนาแล้ว ตามพระดำรัสของพระมุนีด้วยใจ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ การกกปฺโป สมตฺโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">หมวดการกจบลงแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๓</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0008">[O 0.0008]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๓.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ราสีทฺวิปทิกาทฺวนฺทา ลิงฺเคนวจเนนจ,</p>
+<p rend="gathalast">ลุตฺตาตุลฺยาธิกรณา พหุพฺพีหีตุเขมรู;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ทวันทสมาสคือการรวมกันของบทตั้งแต่สองบทขึ้นไป โดยลิงค์และวจนะ, ส่วนพหุพพีหิสมาสที่มีวิภัตติลบไปแล้วและมีอธิกรณ์เสมอกัน มีรูปอันเกษม</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๔</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๔.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ตปฺปุริสาจเขโมรา ทยาจกมฺมธารยา,</p>
+<p rend="gathalast">ทิคโวจาวฺยยาหารา เอเตสพฺเพปิหาริตา;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ตัปปุริสสมาส, กัมมธารยสมาสมี 'เขโม' และ 'ราชา' เป็นต้น, ทิคุสมาส และอัพพยยีภาวสมาส, สมาสทั้งหมดเหล่านี้ (ข้าพเจ้า) ก็นำมาแสดงแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ สมาสกปฺโป สมตฺโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">หมวดสมาสจบลงแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๕</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๕.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กจฺจาทิโตปิเอกมฺหา สทฺทโตนิยมํวินา,</p>
+<p rend="gathalast">เนกตฺเถสติโภนฺเตว สพฺเพตทฺธิตปจฺจยา;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ตัทธิตปัจจัยทั้งหมด ย่อมมีได้แม้จากศัพท์เพียงศัพท์เดียว (ตามนัย) แห่งคัมภีร์กัจจายนะเป็นต้น โดยไม่มีข้อกำหนด เมื่อมีอรรถหลายอย่าง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ ตทฺธิตกปฺโป สมตฺโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">หมวดตัทธิตจบลงแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๖</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0009">[O 0.0009]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๖.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กตฺตรินาญฺญถากมฺเม ตถาภาเวตุเมรยา,</p>
+<p rend="gathalast">สพฺเพเตปจธาตุมฺหิ สงฺเขเปนมรูมยา;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ปัจจัยทั้งหลายมี ตุมะ และ เอรยะ เป็นต้น ในอรรถกัตตุ, ในอรรถกรรม และในอรรถภาวะ ก็เช่นเดียวกัน, ปัจจัยเหล่านั้นทั้งหมดในธาตุมี ปจธาตุ เป็นต้น ข้าพเจ้าได้กล่าวไว้โดยย่อแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๗</span>.<span class="pb hidden-meta" data-ed="O" data-n="0.0010">[O 0.0010]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๗.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> คมีมฺหาติคุณาผตฺโต สมฺภวาอญฺญธาตุสุ,</p>
+<p rend="gathalast">อนนฺตาวปโยคาเต อาเทสปจฺจยาทิหิ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">คุณศัพท์ (กิริยา) ที่สำเร็จมาจาก คมุธาตุ เป็นต้น ย่อมมีได้ในธาตุอื่นๆ, การใช้เหล่านั้นไม่มีที่สุด ด้วยอำนาจแห่งอาเทศและปัจจัยเป็นต้น</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ อาขฺยาตกปฺโป สมตฺโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">หมวดอาขยาตจบลงแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๘</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๘.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> กิตาทิปจฺจยาสพฺเพ, เอกมฺหาอปิธาตุโต,</p>
+<p rend="gathalast">สิยุํนุรูปโตสตฺต, สาธเนสติปายโต;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">กิตกปัจจัยเป็นต้นทั้งหมด แม้จากธาตุเพียงธาตุเดียว พึงมีได้ตามสมควรในสาธนะทั้ง ๗ โดยส่วนมาก</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ กิตกปฺโป สมตฺโต.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">หมวดกิตกะจบลงแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๑๙</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0011">[O 0.0011]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๑๙.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> อิมินากิญฺจิเลเสน, สกฺกาญาตุํชินาคเม,</p>
+<p rend="gathalast">ปโยคาญาณินาสินฺธุ, รโสเวเกนพินฺทุนา;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ด้วยวิธีเพียงเล็กน้อยนี้ ผู้รู้สามารถรู้การใช้ (ภาษา) ในพระธรรมวินัยของพระชินเจ้าได้ เหมือนรู้รสแห่งมหาสมุทรด้วยหยดน้ำเพียงหยดเดียว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๐</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๐.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> รมฺมํสีฆปฺปเวสาย, ปุรํปิฏกสญฺญิตํ,</p>
+<p rend="gathalast">มคฺโคชุมคฺคตํมคฺคํ, สทฺทารญฺเญวิโสธิโต;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">หนทางอันตรงเพื่อการเข้าสู่เมืองอันน่ารื่นรมย์ชื่อว่าปิฎกะโดยเร็ว อันสัททาจารย์ชำระแล้วในป่าคือสัททะ (เสียง/คำ)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">๒๑</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0012">[O 0.0012]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">๒๑.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> เตเนว กิญฺจิ ชลิโต ชลิโต ปทีโป</p>
+<p rend="gatha2">กจฺจายนุตฺติรตโน จิตคพฺภโกเณ,</p>
+<p rend="gatha3">ธมฺมาทิราชคุรุนา ครุมามเกน</p>
+<p rend="gathalast">ธมฺเมน โยพฺพิปตินา สครุตฺตนีโต;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ด้วยเหตุนั้น ประทีปคือคัมภีร์สัททบินทุนี้ อันรุ่งเรืองขึ้นเล็กน้อยในมุมแห่งห้องอันวิจิตรคือคัมภีร์กัจจายนะอันเป็นรัตนะอันยอดเยี่ยม อันพระธรรมราชครูผู้เป็นที่รักของครู (ของข้าพเจ้า) ผู้เป็นใหญ่แห่งโยคี ได้นำไปสู่ความเชี่ยวชาญแล้ว</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="centre">อิติ สทฺทพินฺทุ ปกรณํ ปริสมตฺตํ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">คัมภีร์สัททบินทุจบเพียงเท่านี้</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="gatha1">โยสญฺญโม คุณธโน นยนํ นิชํว</p>
+<p rend="gatha2">สิกฺขาปยี มม มวํ สุคตาคมาโท,</p>
+<p rend="gatha3">สลฺโลก ปุญฺช สุหโท ปทุมาทิ ราม</p>
+<p rend="gathalast">นาโม มหา ยติวรา จริโย สมยฺหํ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">พระมหาเถราจารย์ผู้ประเสริฐของข้าพเจ้า ผู้มีนามว่าปทุมมาทีรามะ ผู้มีความสำรวม มีคุณธรรมเป็นทรัพย์ เป็นมิตรของหมู่สัตบุรุษ ได้พร่ำสอนข้าพเจ้าจากพระอาคมของพระสุคต ประดุจถนอมดวงตาของตนเอง</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="gatha1">สทฺธาธเนน วสตา วิทิตมฺหิ ปุปฺผา</p>
+<p rend="gatha2">ราเมธุนา อริยวํส ธชวฺหเยน,</p>
+<p rend="gatha3">สนฺเตน ญาณติลโก ตฺยปราขฺยเกน</p>
+<p rend="gathalast">พาลานเมตมวิธียิ มยาหิตาย;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ข้าพเจ้าผู้มีศรัทธาเป็นทรัพย์ ผู้สงบระงับ มีนามว่าอริยวงสธชะ และมีอีกนามหนึ่งว่าญาณติลกะ พำนักอยู่ในบุปผารามอันเป็นที่ปรากฏในกาลนี้ ได้รจนาคัมภีร์นี้ขึ้นเพื่อประโยชน์แก่เหล่ากุลบุตรผู้เริ่มศึกษา</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>
