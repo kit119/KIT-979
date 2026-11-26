@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ဝုတ္တောဒယံ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Myanmar:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif Myanmar"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">ပါဠိ | မြန်မာ</button><button type="button" data-mode="view-stack">ပါဠိ — မြန်မာ</button><button type="button" data-mode="view-pali-only">ပါဠိ</button><button type="button" data-mode="view-trans-only">မြန်မာ</button><button type="button" id="toggle-meta-btn">မှတ်ချက်</button></div>
+<div class="pair-row" data-id="e0808n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre">နမော တဿ ဘဂဝတော အရဟတော သမ္မာသမ္ဗုဒ္ဓဿ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ထိုဘုန်းတော်ကြီးတော်မူသော၊ ပူဇော်အထူးကို ခံယူတော်မူထိုက်သော၊ အလုံးစုံသောတရားတို့ကို ကိုယ်တိုင်မှန်ကန်စွာ သိတော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="book">ဝုတ္တောဒယံ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="book">ဝုတ္တောဒယကျမ်း</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="chapter">၁. သညာပရိဘာသာနိဒ္ဒေသ-ပဌမပရိစ္ဆေဒ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">၁.  သညာပရိဘာသာနိဒ္ဒေသ - ပထမပရိစ္ဆေဒ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="title">ရတနတ္တယပ္ပဏာမ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">ရတနာသုံးပါး ရှိခိုးခြင်း</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> နမ’တ္ထု ဇန သန္တာန၊ တမ သန္တာန ဘေဒိနော၊</p>
+<p rend="gathalast">ဓမ္မု’ဇ္ဇလန္တ ရုစိနော၊ မုနိန္ဒေါ’ဒါတ ရောစိနော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သတ္တဝါတို့၏ သန္တာန်၌ဖြစ်သော ကိလေသာအမိုက်မှောင်ကို ဖျက်ဆီးတော်မူတတ်သော၊ တရားတည်းဟူသော တောက်ပသော အရောင်ရှိတော်မူသော၊ ဖြူစင်သောဉာဏ်တော်အလင်းရှိတော်မူသော မြတ်စွာဘုရားအား ရှိခိုးခြင်းဖြစ်ပါစေသတည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="title">နိမိတ္တ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">အကြောင်းနိမိတ်</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပိင်္ဂလာ’စရိယာဒီဟိ၊ ဆန္ဒံ ယ မုဒိတံ ပုရာ၊</p>
+<p rend="gathalast">သုဒ္ဓမာဂဓိကာနံ တံ၊ န သာဓေတိ ယထိစ္ဆိတံ <span class="note hidden-meta">ယ’ဒိစ္ဆိတံ ယတိ’စ္ဆိတံ (က.)</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရှေးအခါက အရှင်ပိင်္ဂလဆရာကြီး စသည်တို့သည် စပ်ဆိုတော်မူအပ်သော ဆန်းကျမ်းသည် စင်ကြယ်သော မာဂဓဘာသာသင်ယူသူတို့အဖို့ အလိုရှိအပ်သော အကျိုးကို အပြည့်အဝ မပြီးမြောက်စေနိုင်။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="title">ဂန္ထပရိမာဏ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">ကျမ်း၏ပမာဏ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တတော မာဂဓဘာသာယ၊ မတ္တာ၊ဝဏ္ဏ၊ဝိဘေဒနံ၊</p>
+<p rend="gathalast">လက္ခယ လက္ခဏ သံယုတ္တံ၊ ပသန္န’တ္ထ၊ပဒ၊က္ကမံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ထို့ကြောင့် ပါဠိဘာသာဖြင့် မတြာနှင့် ဝဏ္ဏ ခွဲခြားမှုရှိသော၊ သာဓကနှင့် လက္ခဏာတို့နှင့် ပြည့်စုံသော၊ ကြည်လင်သော အနက်နှင့် ပုဒ်အစီအစဉ်ရှိသော (ဤကျမ်းကို ပြုစုပါအံ့)။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="title">အဘိဓာနာဒိ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">အမည်စသည်</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဣဒံ <span rend="bold">ဝုတ္တောဒယံ</span> နာမ၊ လောကိယ’စ္ဆန္ဒနိဿိတံ၊</p>
+<p rend="gathalast">အာရဘိဿ’မဟံ ဒါနိ၊ တေသံ သုခဝိဗုဒ္ဓိယာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လောကီဆန်းကို အမှီပြု၍ စီရင်အပ်သော 'ဝုတ္တောဒယ' အမည်ရှိသော ဤကျမ်းကို ထိုသူတို့ လွယ်ကူစွာ နားလည်သိမြင်စေခြင်းငှာ ယခုအခါ ငါသည် စတင်ပါအံ့။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="title">ဂဏသင်္ကေတသညာ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">ဂိုဏ်းသင်္ကေတ အမှတ်အသားများ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သဗ္ဗဂ္လါ မ္နာ၊’ဒိဂလဟූ၊ <span rend="bold">ဘျာ’</span>၊မဇ္ဈ’န္တ ဂရූ <span rend="bold">ဇသာ၊</span></p>
+<p rend="gathalast">မဇ္ဈ’န္တလာ <span rend="bold">ရ၊တေ’</span>တေ’ဋ္ဌ၊ ဂဏာ ဂေါ ဂရု၊လော လဟု.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မ-ဂိုဏ်းသည် အလုံးစုံဂရု၊ န-ဂိုဏ်းသည် အလုံးစုံလဟု၊ ဘ-ဂိုဏ်းသည် အစဂရု၊ ယ-ဂိုဏ်းသည် အစလဟု၊ ဇ-ဂိုဏ်းသည် အလယ်ဂရု၊ သ-ဂိုဏ်းသည် အဆုံးဂရု၊ ရ-ဂိုဏ်းသည် အလယ်လဟု၊ တ-ဂိုဏ်းသည် အဆုံးလဟု ဖြစ်၏။ ဤရှစ်ဂိုဏ်းတို့ ဖြစ်ကြကုန်၏။ 'ဂေါ' သည် ဂရု၊ 'လော' သည် လဟု ဖြစ်သည်။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="title">ဂဏနိယမ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">ဂိုဏ်းသတ်မှတ်ချက်</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဘ၊ဇ၊သာ <span class="pb hidden-meta" data-ed="M" data-n="0.0192">[M 0.0192]</span> သဗ္ဗဂ၊လဟූ၊ ပဉ္စိ’မေ သဏ္ဌိတာ ဂဏာ၊</p>
+<p rend="gathalast"><span rend="bold">အရိယာဒိမှိ</span> ဝိညေယျာ၊ ဂဏော ဣဓ စတု’က္ကလော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘဂိုဏ်း၊ ဇဂိုဏ်း၊ သဂိုဏ်း၊ သဗ္ဗဂရု (မဂိုဏ်း)၊ သဗ္ဗလဟု (နဂိုဏ်း) ဟူသော ဤငါးဂိုဏ်းတို့ကို အရိယာဂါထာစသည်တို့၌ သိအပ်ကုန်၏။ ဤအရိယာဆန်း၌ ဂိုဏ်းတစ်ခုသည် လေးမတြာ ရှိရမည်။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="title">ဂရု၊လဟုသရූပ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">ဂရုနှင့် လဟု သဘောသဘာဝ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သံယောဂါ’ဒိ စ၊ ဒီဃော စ၊ နိဂ္ဂဟီတပရော စ၊ ယော၊</p>
+<p rend="gathalast"><span rend="bold">ဂရု၊</span> ဝင်္ကော၊ ပါဒန္တော၊ဝါ၊ ရဿော’ညော မတ္တိကော <span rend="bold">လု’</span>ဇု.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဗျည်းဆင့်၏ ရှေး၌ရှိသော အက္ခရာ၊ ဒီဃအက္ခရာ (အသံရှည်)၊ နိဂ္ဂဟိတ်၏ ရှေ့၌ရှိသော အက္ခရာ၊ ထို့ပြင် ဂါထာ၏အဆုံး၌ရှိသော အက္ခရာတို့သည် 'ဂရု' မည်၏။ ကောက်သော သင်္ကေတရှိ၏။ ထိုမှတစ်ပါးသော တစ်မတြာရှိသော ရဿအက္ခရာသည် 'လဟု' မည်၏။ ဖြောင့်သော သင်္ကေတရှိ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပရေ ပါဒါဒိသံယောဂေ၊ ယော ပုဗ္ဗော ဂရုက’က္ခရော၊</p>
+<p rend="gathalast"><span rend="bold">လဟု</span> သ ကွစိ ဝိညေယျော၊ တဒုဒါဟရဏံ ယထာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဂါထာ၏ ပါဒအစ၌ရှိသော ဗျည်းဆင့်သည် နောက်၌ရှိပါက၊ ရှေ့၌ရှိသော ဂရုအက္ခရာကို တစ်ခါတစ်ရံ လဟုဟု သိအပ်၏။ ယင်း၏ သာဓကမှာ အောက်ပါအတိုင်း ဖြစ်သည်။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒဿနရသာ’နုဘာဝနေ၊ နိဗဒ္ဓဂေဓာ ဇိနဿ’ယံ ဇနတာ၊</p>
+<p rend="gathalast">ဝိမှယဇနနီ သည<span rend="bold">တ၊ ကြိ</span>ယာ နု ကံ နာ’နုရဉ္ဇယတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မြတ်စွာဘုရား၏ ဖူးမြင်ရခြင်း အရသာကို ခံစားရသဖြင့် အစဉ်မပြတ် တွယ်တာခြင်းရှိသော ဤလူအပေါင်းကို အံ့ဩဖွယ်ဖြစ်စေသော၊ စောင့်စည်းအပ်သော ကိုယ်နှုတ်အမူအရာသည် အဘယ်သူအား မနှစ်သက်စေဘဲ ရှိအံ့နည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝိညေယျာ လောကတော သညာ၊ <span rend="bold">သမုဒ္ဒေါ၊သု၊ရသာ</span>ဒိနံ၊</p>
+<p rend="gathalast"><span rend="bold">ပါဒေါ</span>ဉေယျော စတုတ္ထံ’သော၊ ပဒစ္ဆေဒေါ <span rend="bold">ယတီ</span> ဘဝေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လောကသုံးနှုန်းမှုမှ သမုဒ္ဒရာ (လေးခု)၊ သုရ (၃၃ ကျိပ်သောနတ်) စသော အမှတ်အသားတို့ကို သိအပ်၏။ ဂါထာ၏ လေးပုံတစ်ပုံကို 'ပါဒ' ဟု သိအပ်၏။ ပုဒ်ဖြတ်ခြင်းကို 'ယတိ' ဟု ခေါ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> <span rend="bold">သမ၊မဍ္ဎသမံ၊</span> ဝုတ္တံ၊ <span rend="bold">ဝိသမံ</span> စာ’ပရံ တိဓာ၊</p>
+<p rend="gathalast">သမာ လက္ခဏတော ပါဒါ၊ စတ္တာရော ယဿ တံ <span rend="bold">သမံ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဝုတ္တ (ဆန်း) သည် သမဝုတ္တ၊ အဍ္ဎသမဝုတ္တ၊ ဝိသမဝုတ္တ ဟု သုံးမျိုးရှိ၏။ အကြင်ဆန်း၌ ပါဒလေးခုလုံးသည် လက္ကဏာတူညီကြကုန်၏၊ ထိုဆန်းကို 'သမဝုတ္တ' ဟု ခေါ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယဿ’န္တိမေန ဒုတိယော၊ တတိယေနာ’ဒိမော သမော၊</p>
+<p rend="gathalast">တ’<span rend="bold">ဒဍ္ဎသမ၊ မညံ</span> တု၊ ဘိန္န လက္ခဏ ပါဒိကံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြင်ဆန်း၌ ဒုတိယပါဒသည် စတုတ္ထပါဒနှင့် တူညီ၍၊ ပထမပါဒသည် တတိယပါဒနှင့် တူညီ၏၊ ထိုဆန်းကို 'အဍ္ဎသမဝုတ္တ' ဟု ခေါ်၏။ ထိုမှတစ်ပါးသော ပါဒအားလုံး လက္ခဏာ ကွဲပြားသော ဆန်းကိုမူ 'ဝိသမဝုတ္တ' ဟု ခေါ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပါဒ’မေကက္ခရာ’ရဗ္ဘ၊ ယာဝ ဆဗ္ဗီသတ’က္ခရာ၊</p>
+<p rend="gathalast">ဘဝေ ပါဒေဟိ တံ ဆန္ဒံ၊ နာနာနာမော’ဒိတံ တတော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပါဒတစ်ခုလျှင် အက္ခရာတစ်လုံးမှ စတင်၍ နှစ်ဆယ့်ခြောက်လုံးအထိ ရှိသော ထိုဆန်းတို့ကို ပါဒများဖြင့် အမျိုးမျိုးသော အမည်တို့ဖြင့် ဟောကြားအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> <span rend="bold">ဒဏ္ဍကာ</span> စဏ္ဍဝုဋ္ဌယာ’ဒိ၊ ပါဒေဟိ ဆဟိ၊ တီဟိ တု၊</p>
+<p rend="gathalast"><span rend="bold">‘ဂါထာ’</span>တိ စ ပရတ္ထေ’ဝံ၊ ဆန္ဒေါ သညာ ပကာသိတာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပါဒ၌ အက္ခရာ ၂၆ လုံးထက် ကျော်လွန်သော ဆန်းတို့ကို စဏ္ဍဝုတ္တိအစရှိသော 'ဒဏ္ဍက' ဟု ခေါ်၏။ ပါဒ သုံးခု သို့မဟုတ် ပါဒ ခြောက်ခုရှိသော ဆန်းတို့ကိုမူ အခြားကျမ်းတို့၌ 'ဂါထာ' ဟူ၍လည်း ဆန်းအမည်ကို ပြသအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အနန္တရော’ဒိတံ စ’ည၊ မေတံ သာမည နာမတော၊</p>
+<p rend="gathalast"><span rend="bold">‘ဂါထာ’</span>ဣစ္စေဝ နိဒ္ဒိဋ္ဌံ၊ မုနိန္ဒဝစနေ ပန.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ယခုဆိုခဲ့ပြီးသော ဆန်းနှင့် အခြားသော ဆန်းတို့ကို ဘုရားဟောပါဠိတော်၌မူ 'ဂါထာ' ဟူသော ယေဘုယျအမည်ဖြင့်သာ ညွှန်ပြတော်မူ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝိသေသနာမတော ကိဉ္စိ၊ ဂဟေတွာ သဗ္ဗထော’စိတံ၊</p>
+<p rend="gathalast">ဒဿယိဿာမ’ဟံ တေ’တ္ထ၊ နာမာနာ’ဝိ ဘဝိဿရေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ငါသည် အလုံးစုံ သင့်လျော်သော အထူးအမည်အချို့ကို ယူ၍ ဤကျမ်း၌ ပြသပါအံ့၊ ထိုအမည်တို့သည် ထင်ရှားလတ္တံ့။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ ဝုတ္တောဒယေ ဆန္ဒသိ သညာပရိဘာသာ နိဒ္ဒေသော နာမ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဝုတ္တောဒယဆန်းကျမ်း၌ သညာပရိဘာသာနိဒ္ဒေသ ဟုခေါ်သော ပထမပရိစ္ဆေဒ ပြီး၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="centre">ပဌမော ပရိစ္ဆေဒေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ပထမပရိစ္ဆေဒ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="chapter">၂. မတ္တာဝုတ္တိနိဒ္ဒေသ-ဒုတိယပရိစ္ဆေဒ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">၂.  မတြာဝုတ္တိနိဒ္ဒေသ - ဒုတိယပရိစ္ဆေဒ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="title">ဂဏနိယမ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">ဂိုဏ်းသတ်မှတ်ချက်</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဆဋ္ဌော’ခိလလဟု၊ဇော <span class="pb hidden-meta" data-ed="M" data-n="0.0193">[M 0.0193]</span> ဝါ၊</p>
+<p rend="gatha2">ဂယုတာ’ညေ၊ဆ’ဂ္ဂဏာ၊န ဇော ဝိသမေ၊၊</p>
+<p rend="gathalast">အရိယာယ’န္တဍ္ဎေ လော၊ ဆဋ္ဌော၊’န္တေ ဂေါ၊ဂဏာ ဆ’ညေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အရိယာဆန်း၏ ရှေ့ဝက်၌ ဆဋ္ဌမဂိုဏ်းသည် အလုံးစုံလဟု ဖြစ်စေ၊ သို့မဟုတ် ဇဂိုဏ်းဖြစ်စေ ရမည်။ ကြွင်းသော ဂိုဏ်းငါးခုတို့သည် ဂရုနှင့်ယှဉ်ရမည်။ မကိန်း (ဂိုဏ်း) တို့၌ ဇဂိုဏ်း မဖြစ်ရ။ နောက်ဝက်၌မူ ဆဋ္ဌမဂိုဏ်းသည် လဟုတစ်လုံးသာ ဖြစ်ရမည်။ အဆုံး၌ ဂရုရှိရမည်။ ကြွင်းသော ဂိုဏ်းခြောက်ခုတို့ ရှိရမည်။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="title">ယတိနိယမ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">ယတိသတ်မှတ်ချက်</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပဌမဍ္ဎေ ဆဋ္ဌော စေ၊</p>
+<p rend="gatha2">သဗ္ဗလဟေ၊’တ္ထာ’ဒိလဟုနိ ဘဝတိယတိ၊</p>
+<p rend="gathalast">တပ္ပရကော၊န္တေပိ၊ သစေ၊ စရိမေပိ၊ ဘဝတိ စတုတ္ထော’န္တေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရှေ့ဝက်၌ ဆဋ္ဌမဂိုဏ်းသည် အလုံးစုံလဟု ဖြစ်ပါက ယင်း၏ အစလဟုအက္ခရာ၌ ယတိ (ပုဒ်ဖြတ်) ဖြစ်ရမည်။ ယင်းနောက်ရှိ အက္ခရာ၌ သော်လည်းကောင်း၊ အဆုံး၌သော်လည်းကောင်း ဖြစ်ခဲ့ပါက နောက်ဝက်၌လည်း စတုတ္ထဂိုဏ်း၏ အဆုံး၌ ယတိ ဖြစ်ရမည်။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၉</span>. <span rend="bold">အရိယာသာမညံ</span> စေ၊ ပုဗ္ဗော’ဒိတ လက္ခဏံ ဘဝေ ယဿာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၉.  အကြင်ဆန်း၌ ရှေး၌ဆိုအပ်ပြီးသော လက္ခဏာရှိပါက ထိုဆန်းကို 'သာမညအရိယာ' ဟု ခေါ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၂၀</span>. အာဒိမ’မထ ပါဒယုဂံ၊ ယဿာ တျံ’သေဟိ သာ <span rend="bold">ပထျာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၂၀.  အကြင်ဆန်း၏ ရှေ့ပါဒနှစ်ခုသည် သုံးပုံတစ်ပုံ (၁၂ မတြာစီ) ဖြင့် ပြီးပါက ထိုဆန်းသည် 'ပထျာ' အရိယာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယတ္ထ ဂဏတ္တယ မုလ္လင်္ဃိ၊</p>
+<p rend="gathalast">ယော’ဘယတ္ထာ’ဒိမော ဘဝေ <span rend="bold">ဝိပုလာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြင်အရိယာဆန်း၌ ပါဒနှစ်ဖက်လုံး၌ ရှေ့ဂိုဏ်းသုံးခုကို ကျော်လွန်၍ ယတိဖြစ်ပါက ထိုဆန်းသည် 'ဝိပုလာ' မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၂၂</span>. ဂရုမဇ္ဈဂေါ ဇကာရော၊ စတုတ္ထကော ဒုတိယကော <span rend="bold">စပလာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၂၂.  အကယ်၍ ဂရုအလယ်ရှိသော ဇဂိုဏ်းသည် ဒုတိယနှင့် စတုတ္ထဂိုဏ်း ဖြစ်ခဲ့ပါက 'စပလာ' အရိယာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> စပလာ’ဂတာ’ခိလံ စေ၊ ဒလာ’ဒိမံ လက္ခဏံ ဘဇတိ ယဿာ၊</p>
+<p rend="gathalast">ပထျာလက္ခဏ’မညံ၊ <span rend="bold">မုခစပလာ</span> နာမ သာ ဘဝတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြင်ဆန်း၏ ရှေ့ဝက်သည် စပလာဆန်း၏ လက္ခဏာအားလုံးကို ယူ၍၊ နောက်ဝက်သည် ပထျာဆန်း၏ လက္ခဏာကို ယူပါက ထိုဆန်းကို 'မုခစပလာ' ဟု ခေါ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပထျာယ လက္ခဏံ စေ၊ ပဌမဍ္ဎေ လက္ခဏံ တု စပလာယ၊</p>
+<p rend="gathalast">ဒုတိယေ ဒလေ’ထ ယဿာ၊ ပကိတ္တိတာ သာ <span rend="bold">ဇဃနစပလာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြင်ဆန်း၏ ရှေ့ဝက်သည် ပထျာဆန်း၏ လက္ခဏာရှိပြီး၊ နောက်ဝက်၌ စပလာဆန်း၏ လက္ခဏာရှိပါက ထိုဆန်းကို 'ဇဃနစပလာ' ဟု ခေါ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="centre">အရိယာဇာတိယော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">အရိယာဆန်းအမျိုးအစားများ ပြီး၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သဗ္ဗံပဌမဒလေ ယဒိ၊ လက္ခဏ’မရိယာယ ဝုတ္တ’မုဘယေသု၊</p>
+<p rend="gatha2">ယဿာ ဒလေသု ယုတ္တံ၊</p>
+<p rend="gathalast">ဝုတ္တာ သာ <span rend="bold">ဂီတိ</span> ဝုတ္တ ယတိ လလိတာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြင်ဂါထာ၏ ရှေးဦးပထမအခြမ်း၌ (အပိုင်းနှစ်ဘက်လုံးအတွက်) ဆိုအပ်ပြီးသော အရိယာဂါထာ၏ လက္ခဏာသည် အပိုင်းနှစ်ဘက်လုံး၌ ယှဉ်စပ်အပ်ပါမူ၊ သာယာသော ယတိ (အနားယူခြင်း) ရှိသော ထိုဂါထာကို 'ဂီတိ' ဂါထာဟူ၍ ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အရိယာယံ ဒုတိယ’ဍ္ဎေ၊ ဂဒိတာ’ခိလလက္ခဏံ ယံ တံ၊</p>
+<p rend="gatha2">ဘဝတိ ဒလေသု’ဘယေသုပိ၊</p>
+<p rend="gathalast">ယဒိ ယဿာ သာ’ယ <span rend="bold">မုပဂီတိ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြင်ဂါထာ၏ အပိုင်းနှစ်ဘက်လုံး၌ အရိယာဂါထာ၏ ဒုတိယအခြမ်း၌ ပြဆိုအပ်ပြီးသော အလုံးစုံသော လက္ခဏာသည် ဖြစ်ပါမူ၊ ထိုဂါထာကို 'ဥပဂီတိ' ဂါထာဟူ၍ ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အရိယာယ’ဍ္ဎဒွိတယံ၊ ပုဗ္ဗောဒိတ လက္ခဏော’ပေတံ၊</p>
+<p rend="gatha2">ဝိပရိယယေနာ’ဘိဟိတံ၊</p>
+<p rend="gathalast">ယဿာ သမ္ဘဝတိ စေ’ဟ သော’<span rend="bold">ဂ္ဂီတိ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြင်ဂါထာ၌ ရှေး၌ဆိုအပ်ပြီးသော လက္ခဏာနှင့် ပြည့်စုံသော အရိယာဂါထာ၏ အခြမ်းနှစ်ခုတို့သည် ပြောင်းပြန်အားဖြင့် တည်ရှိပါမူ၊ ထိုဂါထာကို 'ဥဂ္ဂီတိ' ဂါထာဟူ၍ ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အရိယာပုဗ္ဗ’ဍ္ဎံ <span class="pb hidden-meta" data-ed="M" data-n="0.0194">[M 0.0194]</span> ယဒိ၊ ဂရုနေ’ကေနာ’ဓိကေန နိဓနေ ယုတ္တံ၊</p>
+<p rend="gathalast">ယဒိ ပုဗ္ဗ’ဍ္ဎသမာနံ၊ ဒလ မိတရံ စော’ဒိတာ’ယ’<span rend="bold">မရိယာဂီတိ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြင်ဂါထာ၏ အရိယာဂါထာ၏ ရှေးဦးပထမအခြမ်းသည် အဆုံး၌ တစ်လုံးသော ဂရုဖြင့် ပိုလွန်၍ ယှဉ်စပ်အပ်ပါမူ၊ အခြားတစ်ဖက်သော အခြမ်းသည်လည်း ရှေးဦးပထမအခြမ်းနှင့် တူညီပါမူ၊ ထိုဂါထာကို 'အရိယာဂီတိ' ဂါထာဟူ၍ ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="centre">ဂီတိဇာတိယော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဂီတိအနွယ်ဝင် ဂါထာများ ပြီး၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝိသမေ ဆ သိယုံ ကလာ မုခေ၊</p>
+<p rend="gatha2">သမေ တွ’ဋ္ဌ၊ ရ၊လ၊ဂါ၊ တတော’ပရိ၊</p>
+<p rend="gathalast"><span rend="bold">ဝေတာလီယံ</span> တ မုစ္စတေ၊ လဟု ဆက္ကံ န နိရန္တရံ သမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မတူသော (မကိန်း) အက္ခရာအစ၌ မတြာခြောက်ခု၊ တူသော (စုံကိန်း) အက္ခရာအစ၌ မတြာရှစ်ခု၊ ထိုမှတစ်ပါး နောက်၌ ရကောဏ်၊ လဟု၊ ဂရု (ရ လ ဂ) တို့ ရှိပါမူ 'ဝေတာလီယ' ဂါထာဟူ၍ ဆိုအပ်၏။ စုံကိန်းအခြမ်း၌ လဟုခြောက်လုံးသည် အစဉ်အတိုင်း ဆက်တိုက်မဖြစ်စေရ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝေတာလီယောပမံ မုခေ တံ၊</p>
+<p rend="gathalast"><span rend="bold">ဩပစ္ဆန္ဒသကံ</span> ရ၊ယာ ယ’ဒန္တေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ထိုဝေတာလီယနှင့် တူသောအစရှိ၍ အဆုံး၌ ရကောဏ်နှင့် ယကောဏ် (ရ ယ) တို့ ယှဉ်စပ်အပ်ပါမူ 'ဩပစ္ဆန္ဒသက' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၃၁</span>. <span rend="bold">အာပါတလိကာ</span> ကထိတာ’ယံ၊ ဘဂဂါ’န္တေ ယဒိ ပုဗ္ဗမိဝ’ညံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၃၁.  အကယ်၍ အခြားသော အစပိုင်းသည် ရှေး၌ဆိုအပ်ခဲ့ပြီးသော ဝေတာလီယကဲ့သို့ ဖြစ်၍ အဆုံး၌ ဘကောဏ်၊ ဂရု၊ ဂရု (ဘ ဂ ဂ) တို့ ရှိပါမူ ဤဂါထာကို 'အာပါတလိကာ' ဂါထာဟူ၍ ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယဒါ’ဒိတော <span rend="bold">ဒက္ခိဏန္တိကာ၊</span></p>
+<p rend="gathalast">ဌိတေ’တ္ထ ပါဒေသွာ’ခိလေသု ဇော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကယ်၍ ဤဂါထာ၏ အလုံးစုံသော ပါဒတို့၏ အစ၌ ဇကောဏ် တည်ရှိပါမူ 'ဒက္ခိဏန္တိကာ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> <span rend="bold">‘ဥဒိစ္စဝုတ္တီ’</span>တိ ဝုစ္စတေ၊</p>
+<p rend="gathalast">ဇော စာ’ဒေါ ဝိသမေသု သဏ္ဌိတော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကယ်၍ မကိန်းပါဒတို့၏ အစ၌ ဇကောဏ် တည်ရှိပါမူ 'ဥဒိစ္စဝုတ္တိ' ဂါထာဟူ၍ ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၃၄</span>. ပုဗ္ဗတ္ထ၊ သမေသု စေ ဂ၊ ဇာ၊ <span rend="bold">‘ပစ္စဝုတ္တိ’</span> ရုဒိတာ’တိ သဏ္ဌိတာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၃၄.  ရှေး၌ဆိုအပ်သော ဥဒိစ္စဝုတ္တိမှတစ်ပါး စုံကိန်းပါဒတို့၏ အစ၌ ဂရုနှင့် ဇကောဏ် (ဂ ဇ) တို့ တည်ရှိပါမူ 'ပစ္စဝုတ္တိ' ဂါထာဟူ၍ ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သမာသမာ’တြာ’ဒိနံ သမာ၊</p>
+<p rend="gathalast">သံယုတာ ဘဝတိ တံ <span rend="bold">ပဝတ္တကံ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မတြာစသည်တို့၏ ညီမျှခြင်း၊ မညီမျှခြင်းနှင့် စပ်လျဉ်း၍ (ဥဒိစ္စဝုတ္တိနှင့် ပစ္စဝုတ္တိ နှစ်မျိုးလုံး) ပေါင်းစပ်ထားပါမူ ထိုဂါထာသည် 'ပဝတ္တက' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၃၆</span>. အဿ သာ သမ ကတာ’ <span rend="bold">ပရန္တိကာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၃၆.  ထိုပဝတ္တကဂါထာ၏ (တစ်ဖက်ကို) ညီမျှအောင် ပြုလုပ်အပ်ပါမူ 'အပရန္တိကာ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၃၇</span>. တဒ’ညဇာ <span rend="bold">စာရုဟာသိနီ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၃၇.  ထိုမှတစ်ပါးသောနည်းဖြင့် ဖြစ်ပေါ်လာသော ဂါထာသည် 'စာရုဟာသိနီ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="centre">ဝေတာလီယဇာတိယော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဝေတာလီယအနွယ်ဝင် ဂါထာများ ပြီး၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၃၈</span>. ဒွိက ဝိဟတ ဝသု လဟု <span rend="bold">အစလဓိတိ</span> ရိ’ဟ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၃၈.  ဤဆန်းကျမ်း၌ ရှစ်လုံး (ဝသု) ကို နှစ်ဖြင့် မြှောက်အပ်သော တစ်ဆယ့်ခြောက်လုံးသော လဟုတို့ဖြင့် ပြီးသောဂါထာသည် 'အစလဓိတိ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၃၉</span>. <span rend="bold">မတ္တာသမကံ</span> နဝမော လ္ဂ’န္တေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၃၉.  အဆုံး၌ ကိုးလုံးမြောက်သော အက္ခရာသည် လဟုနှင့် ဂရု (လ ဂ) ဖြစ်ပါမူ 'မတြာသမက' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၄၀</span>. ဇော န္လာ’ ထဝါ’ဏ္ဏဝါ <span rend="bold">ဝိသိလောကော.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၄၀.  ဇကောဏ် သို့မဟုတ် နကောဏ်နှင့် လဟု (န လ) တို့သည် (မတြာလေးခုရှိသော ဂိုဏ်းတို့၏နောက်၌) ရှိပါမူ 'ဝိသိလောက' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၄၁</span>. တဒွယတော <span rend="bold">ဝါနဝါသိကာ’</span>ချာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၄၁.  ထိုနှစ်မျိုးလုံး၏ ပေါင်းစပ်မှုကြောင့် 'ဝါနဝါသိကာ' ဟူသော အမည်ရှိ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၄၂</span>. ပဉ္စ၊ဋ္ဌ၊နဝသု ယဒိ လော <span rend="bold">စိတြာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၄၂.  အကယ်၍ ငါးခုမြောက်၊ ရှစ်ခုမြောက်၊ ကိုးခုမြောက် အက္ခရာတို့၌ လဟုရှိပါမူ 'စိတြာ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၄၃</span>. ဂ၊လျာ’ဋ္ဌဟိ စေ’သာ ဝု’<span rend="bold">ပစိတြာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၄၃.  အကယ်၍ ဂရုနှင့် လဟု (ဂ လ) တို့ ရှိ၍ ရှစ်လုံးမြောက်၌ လဟုရှိပါမူ ဤဂါထာသည် 'ဥပစိတြာ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယ’မတီတ လက္ခဏ ဝိသေသ ယုတံ၊ (စိတြာ)</p>
+<p rend="gatha2">မတ္တာ သမာ’ဒိ ပါဒါ’ဘိဟိတံ၊ (ဝိသိလောက)</p>
+<p rend="gatha3">အနိယတ ဝုတ္တ ပရိမာဏ သဟိတံ၊ (ဝါနဝါသိကာ)</p>
+<p rend="gathalast">ပထိတံ ဇနေသု <span rend="bold">ပါဒါကုလကံ.</span> (ဝိသိလောက)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လွန်ခဲ့သော ထူးခြားသော လက္ခဏာတို့နှင့် ပြည့်စုံ၍၊ မတြာသမက စသော ပါဒတို့ဖြင့် ပြဆိုအပ်ပြီးသော၊ အကန့်အသတ်မရှိသော ဝတ္တ (ဆန်း) အတိုင်းအရှည်နှင့် တကွဖြစ်သော ဂါထာကို လူတို့အလယ်၌ 'ပါဒါကုလက' ဂါထာဟူ၍ ကျော်စောထင်ရှားစွာ ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="centre">မတ္တာသမက ဇာတိယော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">မတြာသမကအနွယ်ဝင် ဂါထာများ ပြီး၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝိနာ <span class="pb hidden-meta" data-ed="M" data-n="0.0195">[M 0.0195]</span> ဝဏ္ဏေဟိ မတ္တာ ဂါ၊ ဝိနာ ဝဏ္ဏာ ဂရූဟိ တု၊</p>
+<p rend="gathalast">ဝိနာ လဟූဟိ ဂရဝေါ၊ ဒလေ ပထျာဒိနော မတာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အက္ခရာတို့ကို မရေတွက်ဘဲ မတြာတို့ဖြင့်သာ ဂရုပြုခြင်း၊ ဂရုတို့ကို မရေတွက်ဘဲ အက္ခရာတို့ဖြင့်သာ ဂရုပြုခြင်း၊ လဟုတို့မပါဘဲ ဂရုသက်သက်ရှိခြင်းတို့သည် ပတ္ထျာစသော ဂါထာ၏ ပါဒ၌ ဖြစ်ထိုက်သည်ဟု ယူဆအပ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ ဝုတ္တောဒယေ ဆန္ဒသိ မတ္တာဝုတ္တိနိဒ္ဒေသော နာမ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့လျှင် ဝုတ္တောဒယဆန်းကျမ်း၌ မတြာဝုတ္တိနိဒ္ဒေသ မည်သော</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="centre">ဒုတိယော ပရိစ္ဆေဒေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဒုတိယပရိစ္ဆေဒ ပြီး၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="chapter">၃. သမဝုတ္တိနိဒ္ဒေသ-တတိယပရိစ္ဆေဒ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">၃.  သမဝုတ္တိနိဒ္ဒေသတည်းဟူသော တတိယပရိစ္ဆေဒ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၄၆</span>. တျာ’ စေ <span rend="bold">တနုမဇ္ဈာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၄၆.  တကောဏ်နှင့် ယကောဏ် (တ ယ) တို့ ရှိပါမူ 'တနုမဇ္ဈာ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="centre">ဂါယတ္တီ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဂါယတ္တီဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၄၇</span>. <span rend="bold">ကုမာရ လလိတာ</span> ဇ္သဂါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၄၇.  ဇကောဏ်၊ သကောဏ်နှင့် ဂရု (ဇ သ ဂ) တို့ ရှိပါမူ 'ကုမာရလလိတာ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="centre">ဥဏှိကာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဥဏှိကာဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၄၈</span>. <span rend="bold">စိတြပဒါ</span> ယဒိ ဘာ ဂါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၄၈.  အကယ်၍ ဘကောဏ်နှစ်ခုနှင့် ဂရုနှစ်ခု (ဘ ဘ ဂ ဂ) တို့ ရှိပါမူ 'စိတြပဒါ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၄၉</span>. မော မော ဂေါ ဂေါ <span rend="bold">ဝိဇ္ဇုမ္မာလာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၄၉.  မကောဏ်နှစ်ခုနှင့် ဂရုနှစ်ခု (မ မ ဂ ဂ) တို့ ရှိပါမူ 'ဝိဇ္ဇုမ္မာလာ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၅၀</span>. ဘာ တ၊ လ၊ ဂါ <span rend="bold">မာဏဝကံ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၅၀.  ဘကောဏ်၊ တကောဏ်၊ လဟုနှင့် ဂရု (ဘ တ လ ဂ) တို့ ရှိပါမူ 'မာဏဝက' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၅၁</span>. ဂ္လါ <span rend="bold">သမာနိကာ</span> ရ၊ဇာ စ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၅၁.  ရကောဏ်၊ ဇကောဏ်၊ ဂရုနှင့် လဟု (ရ ဇ ဂ လ) တို့ ရှိပါမူ 'သမာနิကာ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၅၂</span>. <span rend="bold">ပမာဏိကာ</span> ဇ၊ ရာ လ၊ ဂါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၅၂.  ဇကောဏ်၊ ရကောဏ်၊ လဟုနှင့် ဂရု (ဇ ရ လ ဂ) တို့ ရှိပါမူ 'ပမာဏိကာ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="centre">အနုဋ္ဌုဘာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">အနုဋ္ဌုဘဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၅၃</span>. ရာ န၊သာ ယဒိ <span rend="bold">ဟလမုခီ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၅၃.  အကယ်၍ ရကောဏ်၊ နကောဏ်၊ သကောဏ် (ရ န သ) တို့ ရှိပါမူ 'ဟလမုခီ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၅၄</span>. <span rend="bold">ဘုဇဂ သုသု သဋာ</span> နာ မော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၅၄.  နကောဏ်နှစ်ခုနှင့် မကောဏ် (န န မ) တို့ ရှိပါမူ 'ဘုဇဂသုသုသဋာ' ဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="centre">ဗြဟတီ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဗြဟတီဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၅၅</span>. မ္သာဇ္ဂါ <span rend="bold">သုဒ္ဓဝိရာဇိတံ</span> မတံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၅၅.  မဂိုဏ်း၊ သဂိုဏ်း၊ ဇဂိုဏ်းနှင့် ဂုရုတစ်လုံးရှိသော ဂါထာသည် သုဒ္ဓဝိရာဇိတမည်၏ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၅၆</span>. မ္နာ ယော ဂေါ ယဒိ <span rend="bold">ပဏဝေါ</span> ချာတော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၅၆.  မဂိုဏ်း၊ နဂိုဏ်း၊ ယဂိုဏ်းနှင့် ဂုရုတစ်လုံးရှိလျှင် ပဏဝဂါထာဟု ကျော်စောအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၅၇</span>. မ္ဘာ သ၊ဂယုတ္တာ <span rend="bold">ရုမ္မဝတီ</span> သာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၅၇.  မဂိုဏ်း၊ ဘဂိုဏ်း၊ သဂိုဏ်း၊ ဂုရုတစ်လုံးနှင့် ယှဉ်အပ်သော ထိုဂါထာသည် ရုမ္မဝတီမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၅၈</span>. ဉေယျာ <span rend="bold">မတ္တာ</span> မ၊ ဘ၊ သ၊ ဂယုတ္တာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၅၈.  မဂိုဏ်း၊ ဘဂိုဏ်း၊ သဂိုဏ်း၊ ဂုရုတစ်လုံးနှင့် ယှဉ်အပ်သော ဂါထာကို မတ္တာမည်၏ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၅၉</span>. <span rend="bold">စမ္ပကမာလာ</span> စေ ဘ၊ မ၊ သာ ဂေါ <span class="note hidden-meta">ဣဒံ နာမန္တရဉာပနတ္ထမေဝ ပုန ဝုတ္တံ (ဋီ.)</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၅၉.  ဘဂိုဏ်း၊ မဂိုဏ်း၊ သဂိုဏ်းနှင့် ဂုရုတစ်လုံးရှိလျှင် စမ္ပကမာလာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၆၀</span>. န၊ ရ၊ ဇ၊ ဂေဟိ သာ <span rend="bold">မနောရမာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၆၀.  နဂိုဏ်း၊ ရဂိုဏ်း၊ ဇဂိုဏ်းနှင့် ဂုရုတို့ဖြင့် ထိုဂါထာသည် မနောရမာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၆၁</span>. <span rend="bold">ဥဗ္ဘာသကံ</span> တံ စေ တော မ၊ ရာ လ္စ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၆၁.  တဂိုဏ်း၊ မဂိုဏ်း၊ ရဂိုဏ်း၊ လဟုနှင့် ဂုရုတစ်လုံးရှိလျှင် ထိုဂါထာသည် ဥဗ္ဘာသကမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၆၂</span>. တော ဇာ ဂရုနာ’ယ’<span rend="bold">မုပဋ္ဌိတာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၆၂.  တဂိုဏ်းနှစ်ခု၊ ဇဂိုဏ်း၊ ဂုရုတစ်လုံးတို့ဖြင့် ဤဂါထာသည် ဥပဋ္ဌိတာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="centre">ပန္တိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ပန္တိဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၆၃</span>. <span rend="bold">ဣန္ဒါ</span>ဒိကာ <span class="pb hidden-meta" data-ed="M" data-n="0.0196">[M 0.0196]</span> တာ <span rend="bold">ဝဇိရာ</span> ဇ၊ ဂါ ဂေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၆၃.  တဂိုဏ်းနှစ်ခု၊ ဇဂိုဏ်း၊ ဂုရုနှစ်လုံးရှိလျှင် ထိုဂါထာသည် ဣန္ဒဝဇိရာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:123">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၆၄</span>. <span rend="bold">ဥပါဒိ</span>ကာ သာ’ဝ ဇ၊တာ ဇ၊ဂါ ဂေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၆၄.  ဇဂိုဏ်း၊ တဂိုဏ်း၊ ဇဂိုဏ်း၊ ဂုရုနှစ်လုံးရှိလျှင် ထိုဂါထာသည် ဥပေန္ဒဝဇိရာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:124">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:125">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အနန္တရော’ဒီရိတ လက္ခဏာ စေ၊ (ဥပေန္ဒဝဇိရ)</p>
+<p rend="gatha2">ပါဒါ ဝိမိဿာ <span rend="bold">ဥပဇာတိယော</span> တာ၊ (ဣန္ဒဝဇိရ)</p>
+<p rend="gatha3">ဧဝံ ကိလ’ညာသုပိ မိဿိတာသု၊ (ဣန္ဒဝဇိရ)</p>
+<p rend="gathalast">ဝဒန္တိ ဇာတိသွိဒ’ မေဝ နာမံ. (ဥပေန္ဒဝဇိရ)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရှေ့၌ဆိုအပ်ပြီးသော လက္ခဏာရှိကုန်သော (ဣန္ဒဝဇိရာနှင့် ဥပေန္ဒဝဇိရာ) ပါဒ်တို့သည် ရောနှောကုန်အံ့၊ ထိုဂါထာတို့ကို ဥပဇာတိဂါထာတို့ဟူ၍ ဆိုကုန်၏။ ဤသို့လျှင် အခြားသော ဂါထာတို့သည်လည်း ရောနှောအပ်သည်ရှိသော် ဤဂါထာမျိုးတို့၌ ဤဥပဇာတိဟူသော အမည်ကိုပင် ဆိုကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:126">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၆၆</span>. န၊ ဇ၊ ဇ၊ လ၊ ဂါ ဂဒိတာ <span rend="bold">သုမုခီ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၆၆.  နဂိုဏ်း၊ ဇဂိုဏ်း၊ ဇဂိုဏ်း၊ လဟု၊ ဂုရုတို့ရှိလျှင် သုမုခီဂါထာဟု ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:127">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၆၇</span>. <span rend="bold">ဒေါဓက</span> မိစ္ဆတိ စေ ဘ၊ဘ၊ဘာ ဂါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၆၇.  ဘဂိုဏ်းသုံးခု၊ ဂုရုနှစ်လုံးရှိလျှင် ဒေါဓကဂါထာဟု အလိုရှိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:128">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၆၈</span>. ဝေဒ၊ဿေဟိ၊ဓ္တာ တ္ဂဂါ၊<span rend="bold">သာလိနီ</span> သာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၆၈.  ၄ လုံး၊ ၇ လုံးတို့၌ အနားရှိ၍ မဂိုဏ်း၊ တဂိုဏ်းနှစ်ခု၊ ဂုရုနှစ်လုံးရှိသော ထိုဂါထာသည် သာလိနီမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:129">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၆၉</span>. <span rend="bold">ဝါတောမ္မီ</span> သာ၊ ယတိ သာ မ္ဘာ တ၊ ဂါ ဂေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၆၉.  ၅ လုံး၊ ၆ လုံးတို့၌ အနားရှိ၍ မဂိုဏ်း၊ ဘဂိုဏ်း၊ တဂိုဏ်း၊ ဂုရုနှစ်လုံးရှိသော ထိုဂါထာသည် ဝါတောမ္မီမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:130">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၇၀</span>. ဘာ တ၊ န၊ ဂါ ဂေါ’သု၊ ရသ <span rend="bold">သိရီ</span> သာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၇၀.  ၅ လုံး၊ ၆ လုံးတို့၌ အနားရှိ၍ ဘဂိုဏ်း၊ တဂိုဏ်း၊ နဂိုဏ်း၊ ဂုရုနှစ်လုံးရှိသော ထိုဂါထာသည် သီရိမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:131">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၇၁</span>. ရော န၊ ရာ ဣဟ <span rend="bold">ရထောဒ္ဓတာ</span> လ၊ ဂါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၇၁.  ရဂိုဏ်း၊ နဂိုဏ်း၊ ရဂိုဏ်း၊ လဟု၊ ဂုရုရှိသော ဤဂါထာသည် ရထုဒ္ဓတာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:132">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၇၂</span>. <span rend="bold">သွာဂတေ’</span>တိ ရ၊ န၊ ဘာ ဂရုကာ ဒွေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၇၂.  ရဂိုဏ်း၊ နဂိုဏ်း၊ ဘဂိုဏ်းနှင့် ဂုရုနှစ်လုံးရှိသော ဂါထာသည် သွာဂတာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:133">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၇၃</span>. န၊န၊ရ၊လဟု၊ဂရූဟိ <span rend="bold">ဘဒ္ဒိကာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၇၃.  နဂိုဏ်းနှစ်ခု၊ ရဂိုဏ်း၊ လဟု၊ ဂုရုတို့ဖြင့် ဘဒ္ဒိကာဂါထာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:134">
+  <div class="pair-col col-pali">
+<p rend="centre">တိဋ္ဌုဘာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">တိဋ္ဌုဘဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:135">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၇၄</span>. ဝဒန္တိ <span rend="bold">ဝံသဋ္ဌမိ’</span>ဒံ ဇ၊ တာ ဇ၊ ရာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၇၄.  ဇဂိုဏ်း၊ တဂိုဏ်း၊ ဇဂိုဏ်း၊ ရဂိုဏ်းရှိသော ဤဂါထာကို ဝံသဋ္ဌမည်၏ဟု ဆိုကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:136">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၇၅</span>. သာ <span rend="bold">ဣန္ဒဝံသာ</span> ခလု ယတ္ထ တာ ဇ၊ရာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၇၅.  တဂိုဏ်းနှစ်ခု၊ ဇဂိုဏ်း၊ ရဂိုဏ်းရှိသော ထိုဂါထာသည် စင်စစ် ဣန္ဒဝံသာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:137">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၇၆</span>. ဣဓ <span rend="bold">တောဋက</span> မမ္ဗုဓိ၊သေဟိ မိတံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၇၆.  သဂိုဏ်းလေးခုဖြင့် တိုင်းတာအပ်သော (သဂိုဏ်းလေးခုရှိသော) ဂါထာသည် ဤဆန်း၌ တောဋကမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:138">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၇၇</span>. <span rend="bold">ဒုတဝိလမ္ဗိတ</span> မာဟ န၊ ဘာ ဘ၊ရာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၇၇.  နဂိုဏ်း၊ ဘဂိုဏ်း၊ ဘဂိုဏ်း၊ ရဂိုဏ်းရှိသော ဂါထာကို ဒုတဝိလမ္ဗိတမည်၏ဟု ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:139">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၇၈</span>. ဝသု ယုဂ ဝိရတီ နာ၊မျာ’ <span rend="bold">ပုဋော’</span>ယံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၇၈.  ၈ လုံး၊ ၄ လုံးတို့၌ အနားရှိ၍ နဂိုဏ်းနှစ်ခု၊ မဂိုဏ်း၊ ယဂိုဏ်းရှိသော ဤဂါထာသည် ပုဋမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:140">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၇၉</span>. န၊ ယ၊ သဟိတာ နျာ’ <span rend="bold">ကုသုမဝိစိတ္တာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၇၉.  နဂိုဏ်းနှစ်ခု၊ ယဂိုဏ်းနှစ်ခုရှိသော ဂါထာသည် ကုသုမဝိစိတ္တာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:141">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၈၀</span>. <span rend="bold">ဘုဇင်္ဂ’ပ္ပယာတံ</span> ဘဝေ ဝေဒ၊ ယေဟိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၈၀.  ယဂိုဏ်းလေးခုရှိလျှင် ဘုဇင်္ဂပ္ပယါတဂါထာ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:142">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၈၁</span>. န၊ ဘ၊ ဇ၊ ရေဟိ ဘဝတိ’<span rend="bold">ပ္ပိယံဝဒါ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၈၁.  နဂိုဏ်း၊ ဘဂိုဏ်း၊ ဇဂိုဏ်း၊ ရဂိုဏ်းတို့ဖြင့် ပိယံဝဒါဂါထာ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:143">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၈၂</span>. ဝုတ္တာ သုဓီဟိ <span rend="bold">လလိတာ</span> တ၊ ဘာ ဇ၊ ရာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၈၂.  တဂိုဏ်း၊ ဘဂိုဏ်း၊ ဇဂိုဏ်း၊ ရဂိုဏ်းရှိသော ဂါထာကို လလိတာမည်၏ဟု ပညာရှိတို့ ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:144">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၈၃</span>. <span rend="bold">ပမိတက္ခရာ</span> သ၊ ဇ၊ သ၊သေဟု’ဒိတာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၈၃.  သဂိုဏ်း၊ ဇဂိုဏ်း၊ သဂိုဏ်း၊ သဂိုဏ်းတို့ဖြင့် ပမိတက္ခရာဂါထာကို ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:145">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၈၄</span>. န၊န၊ဘ၊ရ၊သဟိတာ’ဘိဟိတု’<span rend="bold">ဇ္ဇလာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၈၄.  နဂိုဏ်းနှစ်ခု၊ ဘဂိုဏ်း၊ ရဂိုဏ်းတို့နှင့် ယှဉ်သော ဂါထာကို ဥဇ္ဇလာမည်၏ဟု ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:146">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၈၅</span>. ပဉ္စ’ဿ’စ္ဆိန္နာ၊ <span rend="bold">ဝေဿဒေဝီ</span> မ၊မာ ယာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၈၅.  ၅ လုံး၊ ၇ လုံးတို့၌ အနားရှိ၍ မဂိုဏ်းလေးခုရှိသော ထိုဂါထာသည် ဝေဿဒေဝီမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:147">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၈၆</span>. ဘဝတိ <span class="pb hidden-meta" data-ed="M" data-n="0.0197">[M 0.0197]</span> ဟိ <span rend="bold">တာမရသံ</span> န၊ ဇ၊ ဇာ ယော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၈၆.  နဂိုဏ်း၊ ဇဂိုဏ်း၊ ဇဂိုဏ်း၊ ယဂိုဏ်းရှိလျှင် တတာမရသဂါထာ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:148">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၈၇</span>. <span rend="bold">‘ကမလာ’</span>တိ ဉေယျာ သ၊ယ၊သေဟိ ယော စေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၈၇.  သဂိုဏ်း၊ ယဂိုဏ်း၊ သဂိုဏ်း၊ ယဂိုဏ်းတို့ရှိလျှင် ကမလာမည်၏ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:149">
+  <div class="pair-col col-pali">
+<p rend="centre">ဇဂတီ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဇဂတီဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:150">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၈၈</span>. မ္နာ ဇြာ ဂေါ၊ တိဒသယတိ’<span rend="bold">ပ္ပဟဿိဏီ</span> သာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၈၈.  ၃ လုံး၊ ၁၀ လုံးတို့၌ အနားရှိ၍ မဂိုဏ်း၊ နဂိုဏ်း၊ ဇဂိုဏ်း၊ ရဂိုဏ်း၊ ဂုရုတစ်လုံးရှိသော ထိုဂါထာသည် ပဟဿိဏီမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:151">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၈၉</span>. စတု၊ဂ္ဂဟေ၊ဟိ’ဟ <span rend="bold">ရုစိရာ၊</span> ဇ၊ဘာ သ္ဇ၊ဂါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၈၉.  ၄ လုံး၊ ၉ လုံးတို့၌ အနားရှိ၍ ဇဂိုဏ်း၊ ဘဂိုဏ်း၊ သဂိုဏ်း၊ ဇဂိုဏ်း၊ ဂုရုတစ်လုံးရှိသော ဂါထာသည် ဤဆန်း၌ ရုစိရာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:152">
+  <div class="pair-col col-pali">
+<p rend="centre">အတိဇဂတီ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">အတိဇဂတီဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:153">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၉၀</span>. န၊န၊ရ၊သ၊လဟု၊ဂါ၊သရေဟိ’<span rend="bold">ပရာဇိတာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၉၀.  ၇ လုံး၊ ၇ လုံးတို့၌ အနားရှိ၍ နဂိုဏ်းနှစ်ခု၊ ရဂိုဏ်း၊ သဂိုဏ်း၊ လဟု၊ ဂုရုတစ်လုံးရှိသော ထိုဂါထာသည် အပရာဇိတာမည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:154">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၉၁</span>. န၊န၊ဘ၊န၊လ၊ဂိ’တိ၊<span rend="bold">ပ္ပဟရဏကလိကာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၉၁.  နဂိုဏ်းနှစ်ခု၊ ဘဂိုဏ်း၊ နဂိုဏ်း၊ လဟု၊ ဂရုတို့သည် ပ္ပဟရဏကလိကာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:155">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၉၂</span>. ဝုတ္တာ <span rend="bold">ဝသန္တတိလကာ</span> တ၊ဘ၊ဇာ ဇ၊ဂါ ဂေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၉၂.  တဂိုဏ်း၊ ဘဂိုဏ်း၊ ဇဂိုဏ်းနှစ်ခု၊ ဂရုနှစ်ခုတို့သည် ဝသန္တတိလကာ မည်၏ဟု ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:156">
+  <div class="pair-col col-pali">
+<p rend="centre">သက္ကရီ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">သက္ကရီဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:157">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၉၃</span>. ဒွိဟတ ဟယ လဟု ရ’ထ ဂိ’တိ <span rend="bold">သသိကလာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၉၃.  တစ်ဆယ့်လေးလုံးသော လဟုတို့၏နောက်၌ ဂရုတစ်လုံးရှိလျှင် သသိကလာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:158">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၉၄</span>. ဝသု၊ဟယ၊ယတိ ရိ’ဟ၊<span rend="bold">မဏိဂုဏနိကရော.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၉၄.  ရှစ်လုံး၊ ခုနစ်လုံး၌ ယတိရှိ၍၊ နဂိုဏ်းလေးခုနှင့် သဂိုဏ်းရှိလျှင် မဏိဂုဏနိကရ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:159">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၉၅</span>. န၊န၊မ၊ယ၊ယ၊ယုတာ’ယံ၊<span rend="bold">မာလိနီ</span> ဘောဂိ’သီဟိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၉၅.  နဂိုဏ်းနှစ်ခု၊ မဂိုဏ်း၊ ယဂိုဏ်းနှစ်ခုတို့နှင့် ယှဉ်လျက်၊ ရှစ်လုံး၊ ခုနစ်လုံး၌ ယတိရှိသော ဤဂါထာသည် မာလိနီ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:160">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၉၆</span>. ဘဝတိ န၊ဇာ၊ဘ၊ဇာ ရသဟိတာ <span rend="bold">ပဘဒ္ဒကံ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၉၆.  နဂိုဏ်း၊ ဇဂိုဏ်း၊ ဘဂိုဏ်း၊ ဇဂိုဏ်း၊ ရဂိုဏ်းတို့နှင့် ပြည့်စုံလျှင် ပဘဒ္ဒက မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:161">
+  <div class="pair-col col-pali">
+<p rend="centre">အတိသက္ကရီ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">အတိသက္ကရီဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:162">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၉၇</span>. န၊ဇ၊ဘ၊ဇ၊ရာ သဒါ ဘဝတိ <span rend="bold">ဝါဏိနီ</span> ဂ၊ ယုတ္တာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၉၇.  နဂိုဏ်း၊ ဇဂိုဏ်း၊ ဘဂိုဏ်း၊ ဇဂိုဏ်း၊ ရဂိုဏ်းနှင့် ဂရုတစ်လုံး ယှဉ်လျှင် အမြဲပင် ဝါဏိနီ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:163">
+  <div class="pair-col col-pali">
+<p rend="centre">အဋ္ဌိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">အဋ္ဌိဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:164">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၉၈</span>. ယ၊ မာ နော သော ဘလ္ဂါ၊ ရသ၊ ဟရဝိရာမာ <span rend="bold">သိခရဏီ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၉၈.  ယဂိုဏ်း၊ မဂိုဏ်း၊ နဂိုဏ်း၊ သဂိုဏ်း၊ ဘဂိုဏ်း၊ လဟု၊ ဂရုတို့ရှိပြီး ခြောက်လုံး၊ တစ်ဆယ့်တစ်လုံး၌ ယတိရှိသော ဂါထာသည် သိခရိဏီ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:165">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၉၉</span>. ရသ၊ ယုဂိ၊ သိတော၊ နော သော မြာ သ္လာ၊ ဂျ’ဒါ <span rend="bold">ဟရိဏီ</span> တဒါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၉၉.  ခြောက်လုံး၊ လေးလုံး၊ ခုနစ်လုံးတို့၌ ယတိရှိပြီး၊ နဂိုဏ်း၊ သဂိုဏ်း၊ မဂိုဏ်း၊ ရဂိုဏ်း၊ သဂိုဏ်း၊ လဟု၊ ဂရုတို့ရှိလျှင် ထိုအခါ ဟရိဏီ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:166">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၀၀</span>. <span rend="bold">မန္ဒက္ကန္တာ၊</span> မ၊ဘ၊န၊တ၊တ၊ဂါ၊ ဂေါ ယုဂု၊တွ၊ဿကေဟိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၀၀.  လေးလုံး၊ ခြောက်လုံး၊ ခုနစ်လုံးတို့၌ ယတိရှိပြီး၊ မဂိုဏ်း၊ ဘဂိုဏ်း၊ နဂိုဏ်း၊ တဂိုဏ်းနှစ်ခု၊ ဂရုနှစ်ခုတို့ရှိလျှင် မန္ဒက္ကန္တာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:167">
+  <div class="pair-col col-pali">
+<p rend="centre">အစ္စဋ္ဌိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">အစ္စဋ္ဌိဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:168">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၀၁</span>. မော တော နော ယော ယာ၊ <span rend="bold">ကုသုမိတလတာ၊ ဝေလ္လိတာ’</span> က္ခု၊တွိ၊သီဟိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၀၁.  ငါးလုံး၊ ခြောက်လုံး၊ ခုနစ်လုံးတို့၌ ယတိရှိပြီး၊ မဂိုဏ်း၊ တဂိုဏ်း၊ နဂိုဏ်း၊ ယဂိုဏ်းသုံးခုတို့ရှိလျှင် ကုသုမိတလတာဝေလ္လိတာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:169">
+  <div class="pair-col col-pali">
+<p rend="centre">ဓုတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဓုတိဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:170">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၀၂</span>. ရသု၊တွ၊ဿေဟိ ယ္မာ၊ န၊သ၊ရ၊ရ၊ဂရූ၊ <span rend="bold">မေဃဝိပ္ဖုဇ္ဇိတာ</span> သာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၀၂.  ခြောက်လုံး၊ ခြောက်လုံး၊ ခုနစ်လုံးတို့၌ ယတိရှိပြီး၊ ယဂိုဏ်း၊ မဂိုဏ်း၊ နဂိုဏ်း၊ သဂိုဏ်း၊ ရဂိုဏ်းနှစ်ခု၊ ဂရုတစ်လုံးရှိလျှင် မေဃဝိပ္ဖုဇ္ဇိတာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:171">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၀၃</span>. အက္ကဿေဟိ ယတိ မ္သ၊ဇာသ၊တ၊တ၊ဂါ၊ <span rend="bold">သဒ္ဒූလဝိက္ကီဠိတံ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၀၃.  တစ်ဆယ့်နှစ်လုံး၊ ခုနစ်လုံးတို့၌ ယတိရှိပြီး၊ မဂိုဏ်း၊ သဂိုဏ်း၊ ဇဂိုဏ်း၊ သဂိုဏ်း၊ တဂိုဏ်းနှစ်ခု၊ ဂရုတစ်လုံးရှိလျှင် သဒ္ဒူလဝိက္ကီဠိတ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:172">
+  <div class="pair-col col-pali">
+<p rend="centre">အတိဓုတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">အတိဓုတိဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:173">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၀၄</span>. <span rend="bold">ဝုတ္တ</span> <span class="pb hidden-meta" data-ed="M" data-n="0.0198">[M 0.0198]</span> မီဒိသံ တု နာမတော ရ၊ဇာ ရ၊ဇာ ရ၊ဇာ ဂရූ၊လဟූ စ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၀၄.  ရဂိုဏ်း၊ ဇဂိုဏ်း၊ ရဂိုဏ်း၊ ဇဂိုဏ်း၊ ရဂိုဏ်း၊ ဇဂိုဏ်း၊ ဂရုနှင့် လဟုရှိလျှင် ဤသို့သော ဂါထာကို 'ဝုတ္တ' ဟူသောအမည်ဖြင့် ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:174">
+  <div class="pair-col col-pali">
+<p rend="centre">ကတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ကတိဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:175">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၀၅</span>. မြာ ဘ္နာ ယော ယော’တြ ယေန၊တ္တိ၊မုနိ၊ ယတိယုတာ၊ <span rend="bold">သန္ဓရာ</span> ကိတ္တိတာ’ယံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၀၅.  ခုနစ်လုံးစီ သုံးကြိမ် ယတိရှိပြီး၊ မဂိုဏ်း၊ ရဂိုဏ်း၊ ဘဂိုဏ်း၊ နဂိုဏ်း၊ ယဂိုဏ်းသုံးခုတို့ရှိလျှင် ဤဂါထာကို သန္ဓရာ (သရဂ္ဂဓရာ) ဟု ချီးမွမ်းအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:176">
+  <div class="pair-col col-pali">
+<p rend="centre">ပကတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ပကတိဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:177">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၀၆</span>. ဩ န၊ရ၊နာ ရ၊နာ စ ထ ဂရූ ဒသ၊က္က၊ဝိရမဉှိ <span rend="bold">ဘဒ္ဒက’</span>မိဒံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၀၆.  တစ်ဆယ်လုံး၊ တစ်ဆယ့်နှစ်လုံးတို့၌ ယတိရှိပြီး၊ နဂိုဏ်း၊ ရဂိုဏ်း၊ နဂိုဏ်း၊ ရဂိုဏ်း၊ နဂိုဏ်း၊ ရဂိုဏ်းနှင့် ဂရုတစ်လုံးရှိလျှင် ဤဂါထာသည် ဘဒ္ဒက မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:178">
+  <div class="pair-col col-pali">
+<p rend="centre">အာကတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">အာကတိဆန်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:179">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ ဝုတ္တောဒယေ ဆန္ဒသိ သမဝုတ္တိနိဒ္ဒေသော နာမ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့ ဝုတ္တောဒယဆန်းကျမ်း၌ သမဝုတ္တိနိဒ္ဒေသ မည်သော</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:180">
+  <div class="pair-col col-pali">
+<p rend="centre">တတိယော ပရိစ္ဆေဒေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">တတိယပရိစ္ဆေဒ ပြီး၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:181">
+  <div class="pair-col col-pali">
+<p rend="chapter">၄. အဍ္ဎသမဝုတ္တိနိဒ္ဒေသ-စတုတ္ထပရိစ္ဆေဒ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">၄.  အဍ္ဎသမဝုတ္တိနိဒ္ဒေသ မည်သော စတုတ္ထပရိစ္ဆေဒ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:182">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:183">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝိသမေ ယဒိ သာ သ၊လ၊ဂါ သမေ၊</p>
+<p rend="gathalast">ဘ၊တ္တယတော ဂရုကာ ဝု’<span rend="bold">ပစိတ္တံ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မတ်ခြေ၌ သဂိုဏ်းသုံးခု၊ လဟု၊ ဂရုရှိပြီး၊ စုံခြေ၌ ဘဂိုဏ်းသုံးခု၊ ဂရုနှစ်ခုရှိလျှင် ဥပစိတ္တ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:184">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:185">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဘ၊တ္တယတော ယဒိ ဂါ <span rend="bold">ဒုတမဇ္ဈာ၊</span></p>
+<p rend="gathalast">ယဒိ ပုနရေ’ဝ ဘဝန္တိ န၊ ဇာ <span rend="bold">ဇျာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မတ်ခြေ၌ ဘဂိုဏ်းသုံးခုနှင့် ဂရုနှစ်ခုရှိပြီး၊ စုံခြေ၌ နဂိုဏ်း၊ ဇဂိုဏ်းနှစ်ခု၊ ယဂိုဏ်းရှိလျှင် ဒုတမဇ္ဈာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:186">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:187">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယဒိ သ၊တ္တိတယံ ဂရုယုတ္တံ၊</p>
+<p rend="gathalast"><span rend="bold">ဝေဂဝတီ</span> ယဒိ ဘ၊တ္တိတယာ ဂါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မတ်ခြေ၌ သဂိုဏ်းသုံးခုနှင့် ဂရုတစ်လုံးရှိပြီး၊ စုံခြေ၌ ဘဂိုဏ်းသုံးခုနှင့် ဂရုနှစ်ခုရှိလျှင် ဝေဂဝတီ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:188">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:189">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တော ဇော ဝိသမေ ရတော ဂရූ စေ၊</p>
+<p rend="gathalast">သ္မာ ဇ္ဂါ <span rend="bold">ဘဒ္ဒဝိရာဇ</span> မေတ္ထ ဂေါ စေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မတ်ခြေ၌ တဂိုဏ်း၊ ဇဂိုဏ်း၊ ရဂိုဏ်း၊ ဂရုရှိပြီး၊ စုံခြေ၌ သဂိုဏ်း၊ မဂိုဏ်း၊ ဇဂိုဏ်း၊ ဂရုနှစ်ခုရှိလျှင် ဤဂါထာသည် ဘဒ္ဒဝိရာဇ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:190">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:191">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝိသမေ သ၊ ဇာ သ၊ဂရု၊ယုတ္တာ၊</p>
+<p rend="gathalast"><span rend="bold">ကေတုမတီ</span> သမေ ဘ၊ရ၊န၊ဂါ ဂေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မတ်ခြေ၌ သဂိုဏ်း၊ ဇဂိုဏ်း၊ သဂိုဏ်း၊ ဂရုရှိပြီး၊ စုံခြေ၌ ဘဂိုဏ်း၊ ရဂိုဏ်း၊ နဂိုဏ်း၊ ဂရုနှစ်ခုရှိလျှင် ကေတုမတီ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:192">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:193">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> <span rend="bold">အာချာနကီ</span> တာ ဝိသမေ ဇ၊ ဂါ ဂေါ၊ (ဣန္ဒဝဇိရ)</p>
+<p rend="gathalast">ဇ၊တာ ဇ၊ဂါ ဂေါ တု သမေ’ထ ပါဒေ. (ဥပေန္ဒဝဇိရ)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မတ်ခြေ၌ တဂိုဏ်းနှစ်ခု၊ ဇဂိုဏ်း၊ ဂရုနှစ်ခု (အိန္ဒဝဇိရာ) ရှိပြီး၊ စုံခြေ၌ ဇဂိုဏ်း၊ တဂိုဏ်း၊ ဇဂိုဏ်း၊ ဂရုနှစ်ခု (ဥပေန္ဒဝဇိရာ) ရှိလျှင် အာချာနကီ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:194">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:195">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဇ၊တာ ဇ၊ဂါ ဂေါ ဝိသမေ သမေ တု၊ (ဥပေန္ဒဝဇိရ)</p>
+<p rend="gathalast">တာ ဇော ဂ၊ဂါ စေ <span rend="bold">ဝိပရီတပုဗ္ဗာ.</span> (ဣန္ဒဝဇိရ)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မတ်ခြေ၌ ဇဂိုဏ်း၊ တဂိုဏ်း၊ ဇဂိုဏ်း၊ ဂရုနှစ်ခု (ဥပေန္ဒဝဇိရာ) ရှိပြီး၊ စုံခြေ၌ တဂိုဏ်းနှစ်ခု၊ ဇဂိုဏ်း၊ ဂရုနှစ်ခု (အိန္ဒဝဇိရာ) ရှိလျှင် ဝိပရီတပုဗ္ဗာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:196">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:197">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သ၊သ၊တော သ၊လ၊ဂါ ဝိသမေ သမေ၊</p>
+<p rend="gathalast">န၊ဘ၊ဘ၊ရာ ဘဝတေ <span rend="bold">ဟရိဏပ္လုတာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မတ်ခြေ၌ သဂိုဏ်းနှစ်ခု၊ တဂိုဏ်း၊ သဂိုဏ်း၊ လဟု၊ ဂရုရှိပြီး၊ စုံခြေ၌ နဂိုဏ်း၊ ဘဂိုဏ်းနှစ်ခု၊ ရဂိုဏ်းရှိလျှင် ဟရိဏပ္လုတာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:198">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:199">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယဒိ န၊န၊ရ၊လ၊ဂါ န၊ဇာ ဇ၊ရာ၊</p>
+<p rend="gathalast">ယဒိ စ တဒါ’<span rend="bold">ပရဝတ္တ</span> မိစ္ဆတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မတ်ခြေ၌ နဂိုဏ်းနှစ်ခု၊ ရဂိုဏ်း၊ လဟု၊ ဂရုရှိပြီး၊ စုံခြေ၌ နဂိုဏ်း၊ ဇဂိုဏ်းနှစ်ခု၊ ရဂိုဏ်းရှိလျှင် အပရဝတ္တ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:200">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:201">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝိသမ <span class="pb hidden-meta" data-ed="M" data-n="0.0199">[M 0.0199]</span> မုပဂတာ န၊နာ ရ၊ယာ စေ၊</p>
+<p rend="gathalast">န၊ဇ၊ဇ၊ရ၊ဂါ သမကေ စ <span rend="bold">ပုပ္ဖိတဂ္ဂါ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မတ်ခြေ၌ နဂိုဏ်းနှစ်ခု၊ ရဂိုဏ်း၊ ယဂိုဏ်းရှိပြီး၊ စုံခြေ၌ နဂိုဏ်း၊ ဇဂိုဏ်းနှစ်ခု၊ ရဂိုဏ်း၊ ဂရုရှိလျှင် ပုပ္ဖိတဂ္ဂါ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:202">
+  <div class="pair-col col-pali">
+<p rend="centre">ဒွယံ မိဒံ <span rend="bold">ဝေတာလီယ’</span>ပ္ပဘေဒေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤနှစ်မျိုးသည် ဝေတာလီယဆန်း၏ အပြားတည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:203">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:204">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သာ <span rend="bold">ယဝါ</span>ဒိကာ <span rend="bold">မတီ</span> ရ၊ဇာ ရ၊ဇာ တွ၊</p>
+<p rend="gathalast">သမေ သမေ ဇ၊ရာ ဇ၊ရာ ဂရූ ဘဝေယျုံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မတ်ခြေ၌ ရဂိုဏ်း၊ ဇဂိုဏ်း၊ ရဂိုဏ်း၊ ဇဂိုဏ်းရှိပြီး၊ စုံခြေ၌ ဇဂိုဏ်း၊ ရဂိုဏ်း၊ ဇဂိုဏ်း၊ ရဂိုဏ်း၊ ဂရုရှိလျှင် ယဝါဓိကာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:205">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ ဝုတ္တောဒယေ ဆန္ဒသိ အဍ္ဎသမဝုတ္တိနိဒ္ဒေသော နာမ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့ ဝုတ္တောဒယဆန်းကျမ်း၌ အဍ္ဎသမဝုတ္တိနိဒ္ဒေသ မည်သော</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:206">
+  <div class="pair-col col-pali">
+<p rend="centre">စတုတ္ထော ပရိစ္ဆေဒေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">စတုတ္ထပရိစ္ဆေဒ ပြီး၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:207">
+  <div class="pair-col col-pali">
+<p rend="chapter">၅. ဝိသမဝုတ္တိနိဒ္ဒေသ-ပဉ္စမပရိစ္ဆေဒ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">၅.  ဝိသမဝုတ္တိနိဒ္ဒေသ - ပဉ္စမပရိစ္ဆေဒ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:208">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၁၈</span>. န’ဋ္ဌက္ခရေသု ပါဒေသု၊ သ္နာ’ဒိမှာ ယော’ဏ္ဏဝါ <span rend="bold">ဝတ္တံ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၁၈.  အက္ခရာရှစ်လုံးရှိသော ပါဒ်တို့၌ အစဖြစ်သော ‘သ’ ဂိုဏ်း၊ ‘န’ ဂိုဏ်းတို့၏ နောက်မှလည်းကောင်း၊ စတုတ္ထအက္ခရာ၏ နောက်မှလည်းကောင်း ‘ယ’ ဂိုဏ်း ဖြစ်လျှင် ဝတ္တဂါထာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:209">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၁၉</span>. သမေသု သိန္ဓုတော ဇေန၊ <span rend="bold">ပထျာဝတ္တံ</span> ပကိတ္တိတံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၁၉.  စုံပါဒ်တို့၌ စတုတ္ထအက္ခရာမှ နောက်၌ ‘ဇ’ ဂိုဏ်း ဖြစ်ခဲ့လျှင် ပထျာဝတ္တဂါထာဟု ချီးမွမ်းအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:210">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၂၀</span>. ဩဇေသု ဇေန သိန္ဓုတော၊ တ’မေဝ <span rend="bold">ဝီပရီတာ’ဒိ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၂၀.  မပါဒ်တို့၌ စတုတ္ထအက္ခရာမှ နောက်၌ ‘ဇ’ ဂိုဏ်း ဖြစ်ခဲ့လျှင် ထိုဂါထာကိုပင် ဝိပရီတပထျာဝတ္တဂါထာ စသည်ဖြင့် ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:211">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၂၁</span>. န၊ကာရော စေ ဇလဓိတော၊ <span rend="bold">စပလာဝတ္တ’</span>မိစ္စေ’တံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၂၁.  စတုတ္ထအက္ခရာမှ နောက်၌ ‘န’ ဂိုဏ်း ဖြစ်ခဲ့အံ့၊ ထိုဂါထာကို စပလာဝတ္တဂါထာဟူ၍ ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:212">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၂၂</span>. သမေ လော သတ္တမော ယဿာ၊ <span rend="bold">ဝိပုလာ</span> ပိင်္ဂလဿ သာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၂၂.  စုံပါဒ်၌ သတ္တမအက္ခရာသည် လဟုဖြစ်၍ အကြင်ဂါထာသည် ဖြစ်၏၊ ထိုဂါထာသည် ပိင်္ဂလဆရာ၏ အလိုအားဖြင့် ဝိပုလာဂါထာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:213">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၂၃</span>. <span rend="bold">သေတဝ</span>ဿာ’ခိလေသုပိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၂၃.  သေတဗျဆရာ၏ အလိုအားဖြင့်မူကား ပါဒ်အားလုံးတို့၌ပင် (ဝိပုလာဂါထာ မည်၏)။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:214">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၂၄</span>. ဘေန’ဏ္ဏဝါ <span rend="bold">ဘ’ဗ္ဗိပုလာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၂၄.  စတုတ္ထအက္ခရာမှ နောက်၌ ‘ဘ’ ဂိုဏ်း ဖြစ်ခဲ့အံ့၊ ဘဝိပုလာဂါထာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:215">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၂၅</span>. ဧဝ’<span rend="bold">မညာ ရော</span> စတုတ္ထာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၂၅.  ထို့အတူ စတုတ္ထအက္ခရာမှ နောက်၌ ‘ရ’ ဂိုဏ်း ဖြစ်ခဲ့အံ့၊ ရဝိပုလာဂါထာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:216">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၂၆</span>. နော’ဏ္ဏဝါ စေ <span rend="bold">နဝိပုလာ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၂၆.  စတုတ္ထအက္ခရာမှ နောက်၌ ‘န’ ဂိုဏ်း ဖြစ်ခဲ့အံ့၊ နဝိပုလာဂါထာ မည်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:217">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၂၇</span>. တော’ဏ္ဏဝါ တထာ’<span rend="bold">ညာ</span> သိယာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၂၇.  စတုတ္ထအက္ခရာမှ နောက်၌ ‘တ’ ဂိုဏ်း ဖြစ်ခဲ့အံ့၊ ထို့အတူ တဝိပုလာဂါထာ ဖြစ်ရာ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:218">
+  <div class="pair-col col-pali">
+<p rend="centre">ဝတ္တ’ပ္ပဘေဒေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဝတ္တဂါထာအပြား ပြီး၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:219">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:220">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> နဒိဿတေ’တ္ထ ယံ ဆန္ဒံ၊ ပယောဂေ ဒိဿတေ ယဒိ၊</p>
+<p rend="gathalast">ဝိသမ’က္ခရပါဒံ တံ၊ <span rend="bold">ဂါထာ</span> သာမညနာမတော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဤကျမ်း၌ မပြအပ်သော အကြင်ဆန်းကို ကျမ်းဂန်တို့၌ တွေ့မြင်ရအံ့၊ ထိုပါဒ်မညီသောဂါထာကို သာမညဟူသော အမည်ဖြင့် ခေါ်ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:221">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ ဝုတ္တောဒယေ ဆန္ဒသိ ဝိသမဝုတ္တိ နိဒ္ဒေသော နာမ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့ ဝုတ္တောဒယဆန်းကျမ်း၌ ဝိသမဝုတ္တိနိဒ္ဒေသ မည်သော</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:222">
+  <div class="pair-col col-pali">
+<p rend="centre">ပဉ္စမော ပရိစ္ဆေဒေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ပဉ္စမပရိစ္ဆေဒ ပြီး၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:223">
+  <div class="pair-col col-pali">
+<p rend="chapter">၆. ဆပ္ပစ္စယဝိဘာဂ-ဆဋ္ဌပရိစ္ဆေဒ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">၆.  ဆပ္ပစ္စယဝိဘာဂ - ဆဋ္ဌပရိစ္ဆေဒ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:224">
+  <div class="pair-col col-pali">
+<p rend="title">ပတ္ထာရနယ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">ပတ္ထာရနည်း (ဖြန့်နည်း)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:225">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:226">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပတ္ထာရေ <span class="pb hidden-meta" data-ed="M" data-n="0.0200">[M 0.0200]</span> သဗ္ဗဂေ ပါဒေ၊ ပုဗ္ဗဂါ’ဓော လ္ပ’ရေ သမာ၊</p>
+<p rend="gathalast">ပုဗ္ဗေ ဂရု တေ စ မိမေ၊ ကတ္တဗ္ဗာ ယာဝ သဗ္ဗလာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပတ္ထာရပြုရာ၌ ခပ်သိမ်းသော ဂရုရှိသောပါဒ်ကို အစဦး၌ ထားအပ်၏။ ရှေးဂရု၏ အောက်၌ လဟုကို ရေးအပ်၏။ ကြွင်းသော နောက်အက္ခရာတို့ကို အထက်နှင့်တူစွာ ရေးအပ်၏။ ထိုအထက်ပါဒ်၌ ရှေးဂရုဖြစ်ကုန်သော ထိုအက္ခရာတို့ကိုလည်းကောင်း၊ ဤအောက်ပါဒ်၌ ရေးအပ်ကုန်သော အက္ခရာတို့ကိုလည်းကောင်း ခပ်သိမ်းသော လဟု ဖြစ်သည်တိုင်အောင် ပြုအပ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:227">
+  <div class="pair-col col-pali">
+<p rend="title">နဋ္ဌနယ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">နဋ္ဌနည်း (ပျောက်သောဂါထာကို ရှာနည်း)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:228">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:229">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> နဋ္ဌဿ ယော ဘဝေယျ’င်္ကော၊ တသ္မိံ လော’ဒ္ဓိကတေ သမေ၊</p>
+<p rend="gathalast">ဝိသမေ တွေ’ကသဟိတေ၊ ဘဝေယျ’ဒ္ဓိကတေ ဂရု.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပျောက်အပ်သော ဂါထာ၏ အကြင်ဂဏန်းသည် ဖြစ်အံ့၊ ထိုဂဏန်းသည် စုံဖြစ်ခဲ့သော် နှစ်ဖြင့် စား၍ လဟုကို ပြုရာ၏။ မဖြစ်ခဲ့သော် တစ်နှင့် ပေါင်း၍ နှစ်ဖြင့် စားပြီးလျှင် ဂရုကို ပြုရာ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:230">
+  <div class="pair-col col-pali">
+<p rend="title">ဥဒ္ဒိဋ္ဌနယ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">ဥဒ္ဒိဋ္ဌနည်း (ဂါထာ၏ဂဏန်းကို ရှာနည်း)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:231">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:232">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဧကာ’ဒိနုက္ကမေန’င်္ကေ၊ ပုဗ္ဗာဓော ဒွိဂုဏေ လိခေ၊</p>
+<p rend="gathalast">မိဿကေဟိ လဟုဋ္ဌေဟိ၊ သေ’ကေဟု’ဒ္ဒိဋ္ဌကံ ဘဝေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တစ်မှစ၍ အစဉ်အတိုင်း အောက်အောက်၌ နှစ်ဆတိုးသော ဂဏန်းတို့ကို ရေးရာ၏။ လဟု တည်ရာဌာန၌ ရှိကုန်သော ထိုဂဏန်းတို့ကို ပေါင်း၍ တစ်ခုနှင့်တကွ ဥဒ္ဒိဋ္ဌဂဏန်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:233">
+  <div class="pair-col col-pali">
+<p rend="title">သဗ္ဗဂလကြိယနယ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">အလုံးစုံ မျိုချခြင်းနည်း</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:234">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:235">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝုတ္တ’က္ခရ သမာ သင်္ခယာ၊ လိက္ခယ သေကော’ပရූ’ပရိ၊</p>
+<p rend="gathalast">ဧကေကဟီန မေကာဒိ၊ နု’ဋ္ဌာနေ သဗ္ဗဂါဒိကံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဂါထာ၏ အက္ခရာအရေအတွက်နှင့် ညီမျှသော၊ တစ်ခုတိုးထားသော ဂဏန်းတို့ကို အထက်အထက်၌ ရေးရာ၏။ တစ်ခုစီ ယုတ်လျော့သော တစ်မှစသော တည်ရာဌာန၌ ခပ်သိမ်းသော ဂရုစသည်တို့ ဖြစ်ပေါ်လာပုံကို ပြုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:236">
+  <div class="pair-col col-pali">
+<p rend="title">ဝုတ္တသင်္ခယာနယ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">ဝုတ္တသင်္ချာနည်း (ဂါထာအရေအတွက် သိနည်း)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:237">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:238">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဂရုကြိယာ’င်္က သန္ဒေါဟေ၊ ဘဝေ သင်္ခယာ ဝိမိဿိတေ၊</p>
+<p rend="gathalast">ဥဒ္ဒိဋ္ဌ’င်္က သမာဟာရော၊ သေ’ကော ဝေ’မံ သမာ’နယေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဂရုပြုရာ အပြားရှိသော ဂဏန်းအပေါင်း၌ ရောနှောအပ်သော သင်္ချာသည် ဖြစ်၏။ ဥဒ္ဒိဋ္ဌ၌ ပြအပ်သော ဂဏန်းတို့၏ ပေါင်းခြင်းသည် တစ်ခုနှင့်တကွ ဤဝုတ္တသင်္ချာသို့ ရောက်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:239">
+  <div class="pair-col col-pali">
+<p rend="title">ဝုတ္တအဒ္ဓါနယ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">ဝုတ္တအဒ္ဓါနည်း (ခရီးအလျား တိုင်းတာနည်း)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:240">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:241">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သင်္ခယေဝ ဒွိဂုဏေ’ကූနာ၊ ဝိတ္ထာရာ’ယာမသမ္ဘဝါ၊</p>
+<p rend="gathalast">ဝုတ္တဿ’ဒ္ဓ’န္တရာနဉ္စ၊ ဂရုလာနဉ္စ အင်္ဂုလံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကျယ်နှင့် အလျား ဖြစ်ခြင်းကြောင့် သင်္ချာကိုပင် နှစ်ဆပြု၍ တစ်ခုယုတ်စေအပ်၏။ ဝုတ္တတို့၏လည်းကောင်း၊ ကြားတို့၏လည်းကောင်း၊ ဂရုလဟုတို့၏လည်းကောင်း တစ်လက်မစီ ပြုရာ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:242">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ ဝုတ္တောဒယေ ဆန္ဒသိ ဆပ္ပစ္စယဝိဘာဂေါ နာမ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့ ဝုတ္တောဒယဆန်းကျမ်း၌ ဆပ္ပစ္စယဝိဘာဂ မည်သော</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:243">
+  <div class="pair-col col-pali">
+<p rend="centre">ဆဋ္ဌော ပရိစ္ဆေဒေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဆဋ္ဌပရိစ္ဆေဒ ပြီး၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:244">
+  <div class="pair-col col-pali">
+<p rend="title">နိဂမန</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">နိဂုံး</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:245">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:246">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သေလ’န္တရာ’ယတန <span class="pb hidden-meta" data-ed="M" data-n="0.0201">[M 0.0201]</span> ဝါသိက <span rend="bold">သီလ’</span>တ္ထေရ၊</p>
+<p rend="gatha2">ပါဒေါ ဂရု ဂ္ဂုဏဂရု ဇ္ဇယတံ မမေ’သော၊</p>
+<p rend="gatha3">ယဿ ပ္ပဘာဝ’မဝလမ္ဗ မယေ’ဒိသောပိ၊</p>
+<p rend="gathalast">သမ္ပါဒိတော’ဘိမတ သိဒ္ဓိကရော ပရတ္ထော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကျောက်တောင်တောရကျောင်း၌ သီတင်းသုံးတော်မူသော၊ သီလမထေရ်မြတ်၏ ခြေတော်သည်လည်းကောင်း၊ ဂုဏ်တို့ဖြင့် ကြီးမြတ်တော်မူသော အကျွန်ုပ်၏ ဆရာသမားသည်လည်းကောင်း အောင်မြင်တော်မူပါစေသတည်း။ အကြင်ဆရာသမား၏ တန်ခိုးအာနုဘော်ကို အမှီပြု၍ အကျွန်ုပ်သည် ဤသို့သော သူတစ်ပါးအကျိုးကို ပြီးစေတတ်သော၊ အလိုရှိအပ်သော အကျိုးကို ပေးတတ်သော (ဤဝုတ္တောဒယကျမ်း) ကို ပြီးမြောက်စေအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:247">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:248">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပရတ္ထ သမ္ပါဒနတော၊ ပုညေနာ’ဓိဂတေန’ဟံ၊</p>
+<p rend="gathalast">ပရတ္ထ သမ္ပါဒနကော၊ ဘဝေယျံ ဇာတိ ဇာတိယံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သူတစ်ပါးအကျိုးကို ပြီးစေခြင်းကြောင့် ရအပ်သော ကုသိုလ်ကောင်းမှုကြောင့် အကျွန်ုပ်သည် ဘဝဆက်တိုင်း ဆက်တိုင်း သူတစ်ပါးအကျိုးကို ပြီးစေတတ်သူ ဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:249">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:250">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အဝလောကိတ မတ္တေန၊ ယထာ ဆပ္ပစ္စယာ မယာ၊</p>
+<p rend="gathalast">သာဓိတာ သာဓယန္တေ’ဝ၊ မိစ္ဆိတတ္ထမ္ပိ ပါဏိနောတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကျွန်ုပ်သည် ကြည့်ရှုရုံမျှဖြင့် ဆပ္ပစ္စယတို့ကို ပြီးစေသကဲ့သို့ သတ္တဝါတို့သည်လည်း မိမိတို့ အလိုရှိအပ်သော အကျိုးကို ပြီးစေနိုင်ကြပါစေကုန်သတည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:251">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ သင်္ဃရက္ခိတမဟာသာမိတ္ထေရေန ဝိရစိတံ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့ သံဃရက္ခိတ မဟာသာမိမထေရ် စီရင်တော်မူအပ်သော</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:252">
+  <div class="pair-col col-pali">
+<p rend="centre">ဝုတ္တောဒယပ္ပကရဏံ ပရိနိဋ္ဌိတံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဝုတ္တောဒယကျမ်း ပြီးဆုံးပါပြီ။</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

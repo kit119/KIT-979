@@ -1,0 +1,2942 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1214n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Myanmar:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif Myanmar"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">ပါဠိ | မြန်မာ</button><button type="button" data-mode="view-stack">ပါဠိ — မြန်မာ</button><button type="button" data-mode="view-pali-only">ပါဠိ</button><button type="button" data-mode="view-trans-only">မြန်မာ</button><button type="button" id="toggle-meta-btn">မှတ်ချက်</button></div>
+<div class="pair-row" data-id="e1214n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="chapter">ကစ္စာယန <span class="pb hidden-meta" data-ed="O" data-n="0.0001">[O 0.0001]</span> ဓာတု မဉ္ဇූသာ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">ကစ္စည်းဓာတုမဉ္ဇူသာကျမ်း</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="centre"> နမော တဿ ဘဂဝတော အရဟတော သမ္မာသမ္ဗုဒ္ဓဿ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ထိုဘုန်းတော်ကြီးတော်မူသော၊ ပူဇော်အထူးကို ခံတော်မူထိုက်သော၊ သယမ္ဘူဉာဏ်တော်ဖြင့် တရားအပေါင်းကို ကိုယ်တိုင်မှန်စွာ သိတော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="gatha1">နိရုတ္တိ နိကရာ’ပါရ-ပါရဝါရ’န္တဂံ မုနိံ၊</p>
+<p rend="gathalast">ဝန္ဒိတွာ ဓာတုမဉ္ဇූသံ-ဗြූမိ ပါဝစနဉ္ဇသံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သဒ္ဒါကျမ်းအပေါင်းတည်းဟူသော အပိုင်းအခြားမရှိ ကျယ်ဝန်းသော သမုဒ္ဒရာ၏ တစ်ဖက်ကမ်းသို့ ရောက်တော်မူသော မြတ်စွာဘုရားကို ရှိခိုး၍၊ ပိဋကတ်တော်တည်းဟူသော လမ်းမကြီးသဖွယ်ဖြစ်သော ဓာတုမဉ္ဇူသာကျမ်းကို ပြုစုပါအံ့။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1">သောဂတာဂမ မာ’ဂမ္မ-တံ တံဝျာကရဏာနိ စ၊</p>
+<p rend="gathalast">ပါဌေ စာ’ပဌိတာပေ’တ္ထ ဓာတွတ္ထာ စ ပဝုစ္စရေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မြတ်စွာဘုရား၏ ပိဋကတ်တော်နှင့် ထိုထိုသော သဒ္ဒါကျမ်းတို့ကို မှီငြမ်း၍၊ ပါဠိတော်၌ တိုက်ရိုက်ပါရှိသော ဓာတ်များ၊ တိုက်ရိုက်မပါရှိသော်လည်း ရှိအပ်သော ဓာတ်များနှင့် ယင်းတို့၏ အနက်တို့ကို ဤကျမ်း၌ ပြဆိုပါအံ့။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ဆန္ဒ’ဟာနိတ္ထမော’ကာရံ-ဓာတွန္တာနံ <span class="pb hidden-meta" data-ed="O" data-n="0.0002">[O 0.0002]</span> သိယာကွ စိ၊ ယූနံ ဒီဃော စ ဓာတုမှာ-ပုဗ္ဗမ’တ္ထပဒံ အပိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ဂါထာဆန်း မပျက်စေရန်အတွက် ဓာတ်တို့၏အဆုံး၌ သရချေခြင်း၊ ဩကာရပြုခြင်း၊ သရတို့ကို ဒီဃပြုခြင်းနှင့် ဓာတ်၏ ရှေ့၌ အနက်ပြပုဒ်ကို ထားခြင်းတို့သည်လည်း တစ်ခါတစ်ရံ ရှိတတ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဘූ သတ္တာယံ ပစ ပါကေ ဂမုသပ္ပ ဂတိမှိ (စ)၊</p>
+<p rend="gathalast">သိလောက (ဓာတု) သင်္ဃာတေ သကိ သင်္ကာယ (ဝတ္တတေ၊).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘူ (bhū) ဓာတ်သည် တည်ရှိခြင်းအနက်၌၊ ပစ (paca) ဓာတ်သည် ချက်ခြင်းအနက်၌၊ ဂမု (gamu) နှင့် သပ္ပ (sappa) ဓာတ်တို့သည် သွားခြင်းအနက်၌၊ သိလောက (siloka) ဓာတ်သည် ပေါင်းစပ်စုဝေးခြင်းအနက်၌၊ သကိ (saki) ဓာတ်သည် ယုံမှားခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (အထော) ကုက-ဝကာ’ဒါနေ ကေ သဒ္ဒေ အကိ လက္ခဏေ၊</p>
+<p rend="gathalast">ကု သဒ္ဒေ ကုစ္ဆိတေ ဋင်္က ဓာရဏေ မကိ မဏ္ဍနေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ထို့ပြင် ကုက (kuka) နှင့် ဝက (vaka) ဓာတ်တို့သည် ယူခြင်းအနက်၌၊ ကေ (ke) ဓာတ်သည် အသံပြုခြင်းအနက်၌၊ အကိ (aki) ဓာတ်သည် မှတ်သားခြင်းအနက်၌၊ ကု (ku) ဓာတ်သည် စက်ဆုပ်ဖွယ်သော အသံကို ပြုခြင်းအနက်၌၊ ဋင်္က (ṭaṅka) ဓာတ်သည် ဆောင်ထားခြင်းအနက်၌၊ မကိ (maki) ဓာတ်သည် တန်ဆာဆင်ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝကိ ကောဋိလ္လယာတြာသု သက္က-ဋီကဒွယံ ဂတေ၊</p>
+<p rend="gathalast">ကကိ လောလတ္တနေ ယာတေ တကီ (ဣဓ) ဂတာဒိသု.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဝကိ (vaki) ဓာတ်သည် ကောက်ကွေ့ခြင်းနှင့် သွားခြင်းအနက်တို့၌၊ သက္က (sakka) နှင့် ဋီက (ṭīka) ဓာတ်နှစ်ခုတို့သည် သွားခြင်းအနက်၌၊ ကကိ (kaki) ဓာတ်သည် မတည်ငြိမ်ခြင်းနှင့် သွားခြင်းအနက်တို့၌၊ တကီ (takī) ဓာတ်သည် သွားခြင်းအစရှိသော အနက်တို့၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၄</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0003">[O 0.0003]</span> ဝဝ၊ လောကနဝိတ္တိသု စက္ခဝုတိမှိ (တု) ရုက္ခ (စ) ခေ ထိရဟိံသခဏေ နိယ၊ မော’ပနယိဋ္ဌိ ဝတာဒိသ မုဏ္ဍိသု ဒိက္ခ (’ထ) ကက္ခ-ကခါ ဟသနေ တုရ၊ ဟိံသနဝုဒ္ဓိဂတီသု (ဟိ) ဒက္ခ’ဒနမှိ (တု) ဇက္ခ (စ) ဘက္ခ (မတာ) အန၊ ဇာလဒုခေသု (တု) ဒိက္ခ (စ) ဒုက္ခ (စ) ဣက္ခ ဒိသ’င်္က န ကော’ခ သုသေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၄.  ဝဝ (vava) ဓာတ်သည် ကြည့်ရှုခြင်း၊ ဖြစ်ခြင်းတို့၌။ စက္ခ (cakkha) ဓာတ်သည် သက်မွေးခြင်း၌။ ရုက္ခ (rukkha) ဓာတ်သည် ပိတ်ပင်ခြင်း၊ ခိုင်ခံ့ခြင်း၊ ညှဉ်းဆဲခြင်း၊ တူးဆွခြင်းတို့၌။ နိယ (niya) ဓာတ်သည် စွန့်ခြင်း၊ လမ်းညွှန်ခြင်း၊ အလိုရှိခြင်း၊ ပြောဆိုခြင်း၊ ရိတ်ခြင်းတို့၌။ ဒိက္ခ (dikkha) ဓာတ်သည်လည်းကောင်း၊ ကက္ခ (kakkha)၊ ကခါ (kakhā) ဓာတ်တို့သည် ရယ်မောခြင်း၌။ တုရ (tura) ဓာတ်သည် ညှဉ်းဆဲခြင်း၊ တိုးတက်ခြင်း၊ သွားခြင်းတို့၌။ ဒက္ခ (dakkha) ဓာတ်သည် ပေးကမ်းခြင်း၌။ ဇက္ခ (jakkha) နှင့် ဘက္ခ (bhakkha) ဓာတ်တို့သည် စားခြင်း၌။ ဒိက္ခ (dikkha) နှင့် ဒုက္ခ (dukkha) ဓာတ်တို့သည် ပိုက်ကွန်နှင့် ဆင်းရဲခြင်းတို့၌။ ဣက္ခ (ikkha) ဓာတ်သည် မြင်ခြင်း၌။ ဩခ (okha) ဓာတ်သည် ခြောက်သွေ့ခြင်း၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၅</span>. [အ] နိက္ခ စုမ္ဗနေ’(ပိ) သိက္ခ ဝိဇ္ဇု’ပါဒု’ ပါသာနမှိ ရက္ခ ဂုတ္တိဝါရဏေ (ပိ) ဥဉ္ဆနေ (သိယာ’ပိ) ဘိက္ခ ယာဝလဒ္ဓယ’လဒ္ဓိသූ (ပိ) ဝက္ခ ရောသသံဟတေသု မောက္ခ မုတ္တိယံ စဇေ (ပိ) စိက္ခ ဝါစဗောဓနေသု.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၅. နိက္ခ (nikkha) ဓာတ်သည် နမ်းရှုပ်ခြင်းအနက်၌လည်းကောင်း၊ သိက္ခ (sikkha) ဓာတ်သည် လျှပ်ပြက်ခြင်း၊ ကျောက်တုံးအနက်တို့၌လည်းကောင်း၊ ရက္ခ (rakkha) ဓာတ်သည် စောင့်ရှောက်ခြင်း၊ တားမြစ်ခြင်းနှင့် ကောက်သင်းကောက်ခြင်းအနက်တို့၌လည်းကောင်း၊ ဘိက္ခ (bhikkha) ဓာတ်သည် တောင်းခံခြင်း၊ ရအပ် မရအပ်သော အရာတို့ကို ရယူခြင်းအနက်၌လည်းကောင်း၊ ဝက္ခ (vakkha) ဓာတ်သည် အမျက်ထွက်ခြင်းနှင့် စုဝေးခြင်းအနက်တို့၌လည်းကောင်း၊ မောက္ခ (mokkha) ဓာတ်သည် လွတ်မြောက်ခြင်းနှင့် စွန့်လွှတ်ခြင်းအနက်တို့၌လည်းကောင်း၊ စိက္ခ (cikkha) ဓာတ်သည် ပြောဆိုခြင်းနှင့် သိစေခြင်းအနက်တို့၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="bodytext">[ဗ] <span class="pb hidden-meta" data-ed="O" data-n="0.0004">[O 0.0004]</span> နခ မခ ရခ နင်္ခါမင်္ခရက္ခီ’ခီလင်္ခါ လခ ဝခ ဣခ ဣင်္ခါ ဥင်္ခ ဝင်္ခූ’ခ ဂတျံ ဝခိ မခိ ကခိ ကင်္ခေ ခီ ခယေ ဥက္ခ သေကေ ခု ခုတဓနိသု (ဝုတ္တော) ခေ(’ထ) ခါဒေ သုပေ (စ.)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">နခ (nakha)၊ မခ (makha)၊ ရခ (rakha)၊ နင်္ခ (naṅkha)၊ မင်္ခ (maṅkha)၊ ရက္ခိ (rakkhi)၊ ဣခိ (ikhi)၊ လင်္ခ (laṅkha)၊ လခ (lakha)၊ ဝခ (vakha)၊ ဣခ (ikha)၊ ဣင်္ခ (iṅkha)၊ ဥင်္ခ (uṅkha)၊ ဝင်္ခ (vaṅkha)၊ ဥခ (ukha) ဓာတ်တို့သည် သွားခြင်းအနက်၌လည်းကောင်း၊ ဝခိ (vakhi)၊ မခိ (makhi)၊ ကခိ (kakhi) ဓာတ်တို့သည် ယုံမှားသံသယဖြစ်ခြင်းအနက်၌လည်းကောင်း၊ ခီ (khī) ဓာတ်သည် ကုန်ဆုံးခြင်းအနက်၌လည်းကောင်း၊ ဥက္ခ (ukkha) ဓာတ်သည် သွန်းဖျန်းခြင်းအနက်၌လည်းကောင်း၊ ခု (khu) ဓာတ်သည် ချောင်းဆိုးသံ၊ နှာချေအသံပြုခြင်းအနက်၌လည်းကောင်း၊ ခေ (khe) ဓာတ်သည် စားခြင်းနှင့် ခြောက်သွေ့ခြင်းအနက်တို့၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အဂ္ဂေါ (တု) ဂတိကောဋိလ္လေ လဂ သင်္ဂေ မဂေ’သနေ၊</p>
+<p rend="gathalast">အဂီ ဣဂီ ရိဂီ လိဂီ ဝဂီ ဂတျ’တ္ထဓာတဝေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အဂ္ဂ (agga) ဓာတ်သည် သွားခြင်းနှင့် ကောက်ကွေ့ခြင်းအနက်တို့၌၊ လဂ (laga) ဓာတ်သည် ငြိကပ်ခြင်းအနက်၌၊ မဂ (maga) ဓာတ်သည် ရှာဖွေခြင်းအနက်၌၊ အဂီ (agī)၊ ဣဂီ (igī)၊ ရိဂီ (rigī)၊ လိဂီ (ligī)၊ ဝဂီ (vagī) ဓာတ်တို့သည် သွားခြင်းအနက်ရှိသော ဓာတ်များ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သိလာဃ ကတ္ထနေ ဇဂ္ဃ ဟသနေ အဂ္ဃ အဂ္ဃနေ၊</p>
+<p rend="gathalast">သိဃီ အာဃာယနေ (ဟောတိ) လဃိ သောသဂတီသု (စ၊).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သိလာဃ (silāgha) ဓာတ်သည် ချီးမွမ်းခြင်းအနက်၌၊ ဇဂ္ဃ (jaggha) ဓာတ်သည် ရယ်မောခြင်းအနက်၌၊ အဂ္ဃ (aggha) ဓာတ်သည် အဖိုးထိုက်တန်ခြင်းအနက်၌၊ သိဃီ (sighī) ဓာတ်သည် နမ်းရှူခြင်းအနက်၌၊ လဃိ (laghi) ဓာတ်သည် ခြောက်သွေ့ခြင်းနှင့် သွားခြင်းအနက်တို့၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝစ ဗျတ္တဝစေ ယာစ ယာစနေ ရုစ ဒိတ္တိယံ၊</p>
+<p rend="gathalast">သုစ သောကေ ကုစ သဒ္ဒေ (အထော) ဝိစ ဝိဝေစနေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဝစ (vaca) ဓာတ်သည် ထင်ရှားစွာ ပြောဆိုခြင်းအနက်၌၊ ယာစ (yāca) ဓာတ်သည် တောင်းခံခြင်းအနက်၌၊ ရုစ (ruca) ဓာတ်သည် တောက်ပခြင်းအနက်၌၊ သုစ (suca) ဓာတ်သည် စိုးရိမ်ပူပန်ခြင်းအနက်၌၊ ကုစ (kuca) ဓာတ်သည် အသံပြုခြင်းအနက်၌၊ ဝိစ (vica) ဓာတ်သည် ခွဲခြားစိတ်ဖြာခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0005">[O 0.0005]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အဉ္စ ပූဇာဂတေ ဝဉ္စ ဂမနေ ကိဉ္စာ’ဝမဒ္ဒနေ၊</p>
+<p rend="gathalast">လုဉ္စာ’ပနယနေ နစ္စ နစ္စနေ မစ ရောစနေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အဉ္စ (añca) ဓာတ်သည် ပူဇော်ခြင်းနှင့် သွားခြင်းအနက်တို့၌၊ ဝဉ္စ (vañca) ဓာတ်သည် သွားခြင်းအနက်၌၊ ကိဉ္စ (kiñca) ဓာတ်သည် ညှဉ်းဆဲနှိပ်စက်ခြင်းအနက်၌၊ လုဉ္စ (luñca) ဓာတ်သည် နှုတ်ပယ်ခြင်းအနက်၌၊ နစ္စ (nacca) ဓာတ်သည် ကခုန်ခြင်းအနက်၌၊ မစ (maca) ဓာတ်သည် နှစ်သက်ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အစ္စာ’စ္စနေ စု ဝစနေ သစော (တု) သမဝါယနေ၊</p>
+<p rend="gathalast">ပစ ယာတေ ကစိ-ဝစ္စ ဒိတ္တိယံ မစိ ဓာရဏေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အစ္စ (acca) ဓာတ်သည် ပူဇော်ခြင်းအနက်၌၊ စု (cu) ဓာတ်သည် ပြောဆိုခြင်းအနက်၌၊ သစ (saca) ဓာတ်သည် ပေါင်းစည်းခြင်းအနက်၌၊ ပစ (paca) ဓာတ်သည် သွားခြင်းအနက်၌၊ ကစိ (kaci) နှင့် ဝစ္စ (vacca) ဓာတ်တို့သည် တောက်ပခြင်းအနက်၌၊ မစိ (maci) ဓာတ်သည် ဆောင်ထားခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပုစ္ဆ သမ္ပုစ္ဆနေ မုစ္ဆ မောဟသ္မိံ လဉ္ဆ လက္ခဏေ၊</p>
+<p rend="gathalast">အဉ္ဆာ’ယာမေ (ဘဝေ) ပုဉ္ဆ ပုဉ္ဆနေ ဥဉ္ဆ ဥဉ္ဆနေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပုစ္ဆ (puccha) ဓာတ်သည် မေးမြန်းခြင်းအနက်၌၊ မုစ္ဆ (muccha) ဓာတ်သည် တွေဝေခြင်းအနက်၌၊ လဉ္ဆ (lañcha) ဓာတ်သည် တံဆိပ်ခတ်ခြင်းအနက်၌၊ အဉ္ဆ (añcha) ဓာတ်သည် ဆွဲဆန့်ခြင်းအနက်၌၊ ပုဉ္ဆ (puñcha) ဓာတ်သည် သုတ်သင်ခြင်းအနက်၌၊ ဥဉ္ဆ (uñcha) ဓာတ်သည် ကောက်သင်းကောက်ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တစ္ဆော တနုကိရယေ ပိဉ္ဆ ပိဉ္ဆနေ ရာဇ ဒိတ္တိယံ၊</p>
+<p rend="gathalast">ဝဇာ’ဇဂမနေ ရဉ္ဇ ရာဂေ ဘဉ္ဇာ’ဝမဒ္ဒနေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တစ္ဆ (taccha) ဓာတ်သည် ပါးလွှာအောင်ပြုခြင်းအနက်၌၊ ပိဉ္ဆ (piñcha) ဓာတ်သည် ဆေးရောင်ခြယ်ခြင်းအနက်၌၊ ရာဇ (rāja) ဓာတ်သည် တောက်ပခြင်းအနက်၌၊ ဝဇ (vaja) နှင့် အဇ (aja) ဓာတ်တို့သည် သွားခြင်းအနက်၌၊ ရဉ္ဇ (rañja) ဓာတ်သည် တပ်မက်ခြင်းအနက်၌၊ ဘဉ္ဇ (bhañja) ဓာတ်သည် ဖျက်ဆီးနှိပ်စက်ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အဉ္ဇု ဗျတ္တိဂတီကန္တိ မက္ခဏေသွေ’ဇ ကမ္ပနေ၊</p>
+<p rend="gathalast">ဘဇ သံသေဝနေ သဉ္ဇ သင်္ဂေ (တု) ဣဉ္ဇ ကမ္ပနေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အဉ္ဇု (añju) ဓာတ်သည် ထင်ရှားစေခြင်း၊ သွားခြင်း၊ အဆင်းလှခြင်းနှင့် လိမ်းကျံခြင်းအနက်တို့၌၊ ဧဇ (eja) ဓာတ်သည် တုန်လှုပ်ခြင်းအနက်၌၊ ဘဇ (bhaja) ဓာတ်သည် မှီဝဲဆည်းကပ်ခြင်းအနက်၌၊ သဉ္ဇ (sañja) ဓာတ်သည် ငြိကပ်ခြင်းအနက်၌၊ ဣဉ္ဇ (iñja) ဓာတ်သည် တုန်လှုပ်ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0006">[O 0.0006]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယဇ ဒေဝစ္စနေ ဒါနသင်္ဂတီကရဏေသု (စ)၊</p>
+<p rend="gathalast">တိဇက္ခမနိသာနေသု ဒါနေ(’ပိ) စဇ ဟာနိယံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ယဇ (yaja) ဓာတ်သည် နတ်ပူဇော်ခြင်း၊ ပေးလှူခြင်းနှင့် အဆွေခင်ပွန်းဖွဲ့ခြင်းအနက်တို့၌၊ တိဇ (tija) ဓာတ်သည် သည်းခံခြင်း၊ ထက်မြက်ခြင်းနှင့် ပေးလှူခြင်းအနက်တို့၌၊ စဇ (caja) ဓာတ်သည် စွန့်လွှတ်ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သဇာ’လိင်္ဂန ဝိဿဇ္ဇ နိမ္မာဏေ မုဇ္ဇ မုဇ္ဇနေ၊</p>
+<p rend="gathalast">မဇ္ဇ သံသုဒ္ဓိယံ လဇ္ဇ လဇ္ဇနေ တဇ္ဇ တဇ္ဇနေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သဇ (saja) ဓာတ်သည် ဖက်ယမ်းခြင်းအနက်၌၊ ဝိဿဇ္ဇ (vissajja) ဓာတ်သည် ဖန်ဆင်းခြင်းအနက်၌၊ မုဇ္ဇ (mujja) ဓာတ်သည် ရေငုပ်ခြင်းအနက်၌၊ မဇ္ဇ (majja) ဓာတ်သည် စင်ကြယ်စေခြင်းအနက်၌၊ လဇ္ဇ (lajja) ဓာတ်သည် ရှက်နိုးခြင်းအနက်၌၊ တဇ္ဇ (tajja) ဓာတ်သည် ခြိမ်းခြောက်ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အဇ္ဇ-သဇ္ဇာ’ဇ္ဇနေ သဇ္ဇ နိမ္မာဏေ ဂဇ္ဇ သဒ္ဒနေ၊</p>
+<p rend="gathalast">ဂုဇ-ကုဇ ဒွယံ သဒ္ဒေ အချတ္တေ ခဇ္ဇ ဘက္ခဏေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အဇ္ဇ (ajja) နှင့် သဇ္ဇ (sajja) ဓာတ်တို့သည် ရှာဖွေဆည်းပူးခြင်းအနက်၌၊ သဇ္ဇ (sajja) ဓာတ်သည် ဖန်ဆင်းခြင်းအနက်၌၊ ဂဇ္ဇ (gajja) ဓာတ်သည် ဟိန်းဟောက်မြည်ဟီးခြင်းအနက်၌၊ ဂုဇ (guja) နှင့် ကုဇ (kuja) ဓာတ်နှစ်ခုတို့သည် မထင်ရှားသော အသံကို ပြုခြင်းအနက်၌၊ ခဇ္ဇ (khajja) ဓာတ်သည် စားသောက်ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဘဇ္ဇ ပါကေ ဝိဇိ ဘယစလနေ ဝီဇ ဝီဇနေ၊</p>
+<p rend="gathalast">ခဇီ ဂမနဝေကလ္လေ ဇီ ဇယေ ဇု ဇဝေ (သိယာ၊).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘဇ္ဇ (bhajja) ဓာတ်သည် ချက်ပြုတ်ခြင်းအနက်၌၊ ဝိဇိ (viji) ဓာတ်သည် ကြောက်ရွံ့တုန်လှုပ်ခြင်းအနက်၌၊ ဝီဇ (vīja) ဓာတ်သည် ယပ်ခတ်ခြင်းအနက်၌၊ ခဇီ (khajī) ဓာတ်သည် ခြေဆွံ့ခြင်းအနက်၌၊ ဇီ (jī) ဓာတ်သည် အောင်နိုင်ခြင်းအနက်၌၊ ဇု (ju) ဓာတ်သည် လျင်မြန်ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဈေ စိန္တာယုဇ္ဈ ဥဿဂ္ဂေ ဂမနေ အဋ-ပဋ ဒွယံ၊</p>
+<p rend="gathalast">နဋ နစ္စေ ရဋ ပရိဘာသနေ ဝဋ ဝေဌနေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဈေ (jhe) ဓာတ်သည် ကြံစည်ခြင်းအနက်၌၊ ဥဇ္ဈ (ujjha) ဓာတ်သည် စွန့်လွှတ်ခြင်းအနက်၌၊ အဋ (aṭa) နှင့် ပဋ (paṭa) နှစ်ခုတို့သည် လှည့်လည်သွားလာခြင်းအနက်၌၊ นဋ (naṭa) ဓာတ်သည် ကခုန်ခြင်းအနက်၌၊ ရဋ (raṭa) ဓာတ်သည် ဆဲရေးခြင်းအနက်၌၊ ဝဋ (vaṭa) ဓာတ်သည် ရစ်ပတ်ပတ်သန်းခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၉</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0007">[O 0.0007]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝဋ္ဋ အာဝတ္တနေ ဝဏ္ဋ ဝဏ္ဋတ္ထေ ကဋ မဒ္ဒနေ၊</p>
+<p rend="gathalast">ဖုဋော ဝိသရဏာဒီသု ကဋ သံဝရဏေ ဂတေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဝဋ္ဋ (vaṭṭa) ဓာတ်သည် လည်ပတ်ခြင်းအနက်၌၊ ဝဏ္ဋ (vaṇṭa) ဓာတ်သည် ပိုင်းခြားဝေဖန်ခြင်းအနက်၌၊ ကဋ (kaṭa) ဓာတ်သည် ညှဉ်းဆဲနှိပ်စက်ခြင်းအနက်၌၊ ဖုဋ (phuṭa) ဓာတ်သည် ပျံ့နှံ့ခြင်းအစရှိသောအနက်တို့၌၊ ကဋ (kaṭa) ဓာတ်သည် ဖုံးကွယ်ခြင်းနှင့် သွားခြင်းအနက်တို့၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဃုဋ ဃောသေ ပတိဃာတေ ဝိဋ’က္ကောသေ (စ) ပေသနေ၊</p>
+<p rend="gathalast">ဘဋ ဘတျံ ကုဋ-ကောဋ္ဋစ္ဆေဒနေ လုဋ လောဋနေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဃုဋ (ghuṭa) ဓာတ်သည် ကြွေးကြော်ခြင်းနှင့် ဆီးတားခြင်းအနက်တို့၌၊ ဝိဋ (viṭa) ဓာတ်သည် ဆဲရေးခြင်းနှင့် စေလွှတ်ခြင်းအနက်တို့၌၊ ဘဋ (bhaṭa) ဓာတ်သည် လုပ်ကျွေးခြင်းအနက်၌၊ ကုဋ (kuṭa) နှင့် ကောဋ္ဋ (koṭṭa) ဓာတ်တို့သည် ဖြတ်တောက်ခြင်းအနက်၌၊ လုဋ (luṭa) ဓာတ်သည် လူးလှိမ့်ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဇဋ-ဈဋ-ပိဋ သင်္ဃာတေ စိဋု’တ္တာသေ ဃဋီ’ဟနေ၊</p>
+<p rend="gathalast">ဃဋိ သင်္ဃဋ္ဋနေ တဋ္ဋ စ္ဆေဒနေ မုဋ မဒ္ဒနေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဇဋ (jaṭa)၊ ဈဋ (jhaṭa)၊ ပိဋ (piṭa) ဓာတ်တို့သည် စုပေါင်းခြင်းအနက်၌၊ စိဋု (ciṭu) ဓာတ်သည် ထိတ်လန့်စေခြင်းအနက်၌၊ ဃဋိ (ghaṭi) ဓာတ်သည် အားထုတ်ခြင်းအနက်၌၊ ဃဋိ (ghaṭi) ဓာတ်သည် တိုက်ခတ်ခြင်းအနက်၌၊ တဋ္ဋ (taṭṭa) ဓာတ်သည် ဖြတ်တောက်ခြင်းအနက်၌၊ မုဋ (muṭa) ဓာတ်သည် ညှဉ်းဆဲနှိပ်စက်ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပဌ ဗျတ္တဝစေ ဟေဌ ဗာဓာယံ ဝေဌ ဝေဌနေ၊</p>
+<p rend="gathalast">သုဌီ-ကုဌီ ဒွယံ သောသေ ပီဌ ဟိံသနဓာရဏေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပဌ (paṭha) ဓာတ်သည် ထင်ရှားစွာ ရွတ်ဆိုခြင်းအနက်၌၊ ဟေဌ (heṭha) ဓာတ်သည် ညှဉ်းဆဲနှိပ်စက်ခြင်းအနက်၌၊ ဝေဌ (veṭha) ဓာတ်သည် ရစ်ပတ်ခြင်းအနက်၌၊ သုဌီ (suṭhī) နှင့် ကုဌီ (kuṭhī) ဓာတ်နှစ်ခုတို့သည် ခြောက်သွေ့ခြင်းအနက်၌၊ ပီဌ (pīṭha) ဓာတ်သည် ညှဉ်းဲခြင်းနှင့် ဆောင်ထားခြင်းအနက်တို့၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကဌ သောသနပါကေသု ဝဌ ထုလတ္တနေ (ဘဝေ)၊</p>
+<p rend="gathalast">ကဌိ သောသေ ရုဌ-လုဌော’ပဃာတေ သဌ ကေတဝေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကဌ (kaṭha) ဓာတ်သည် ခြောက်သွေ့ခြင်းနှင့် ချက်ပြုတ်ခြင်းအနက်တို့၌၊ ဝဌ (vaṭha) ဓာတ်သည် ဆူဖြိုးခြင်းအနက်၌၊ ကဌိ (kaṭhi) ဓာတ်သည် ခြောက်သွေ့ခြင်းအနက်၌၊ ရုဌ (ruṭha) နှင့် လုဌ (luṭha) ဓာတ်တို့သည် ဖျက်ဆီးညှဉ်းဆဲခြင်းအနက်၌၊ သဌ (saṭha) ဓာတ်သည် လှည့်ပတ်စဉ်းလဲခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၄</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0008">[O 0.0008]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (သိယာ ဟဌ ဗလက္ကာရေ ကဍိဘေဒေ ကဍိစ္ဆိဒေ၊</p>
+<p rend="gathalast">မဏ္ဍ ဝိဘූသနေ စဏ္ဍ စဏ္ဍိက္ကေ ဘဍိ ဘင်္ဍနေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဟဌ (haṭha) ဓာတ်သည် နိုင်ထက်စီးနင်းပြုခြင်းအနက်၌၊ ကဍိ (kaḍi) ဓာတ်သည် ဖျက်ဆီးခြင်းနှင့် ဖြတ်တောက်ခြင်းအနက်တို့၌၊ မဏ္ဍ (maṇḍa) ဓာတ်သည် တန်ဆာဆင်ခြင်းအနက်၌၊ စဏ္ဍ (caṇḍa) ဓာတ်သည် ပြင်းထန်ခက်ထန်ခြင်းအနက်၌၊ ဘဍိ (bhaḍi) ဓာတ်သည် ရန်တွေ့ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပဍိ ဥပ္ပဏ္ဍနေ လိင်္ဂဝေကလ္လေ မုဍိ ခဏ္ဍနေ၊</p>
+<p rend="gathalast">ဂဍိ ဝတ္တေ’ကဒေသမှိ ဂဍိ သန္နိဝယေ(’ပိစ၊)၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပဍိ (paḍi) ဓာတ်သည် ပြက်ရယ်ပြုခြင်းနှင့် အင်္ဂါချို့တဲ့ခြင်းအနက်တို့၌၊ မုဍိ (muḍi) ဓာတ်သည် ဖြတ်တောက်ခြင်းအနက်၌၊ ဂဍိ (gaḍi) ဓာတ်သည် အင်္ဂါအစိတ်အပိုင်းတစ်ခုအနက်၌လည်းကောင်း၊ စုဝေးခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရဍိ-ဧရဍိ ဟိံသာယံ ပိဍိ သင်္ဃာတအာဒိသု၊</p>
+<p rend="gathalast">ကုဍိ ဒါဟေ ပဍိ ဂတေ ဟိဍိ အာဟိဏ္ဍနေ (သိယာ၊)၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရဍိ (raḍi) နှင့် ဧရဍိ (eraḍi) ဓာတ်တို့သည် ညှဉ်းဆဲခြင်းအနက်၌၊ ပိဍိ (piḍi) ဓာတ်သည် စုပေါင်းခြင်းအစရှိသောအနက်တို့၌၊ ကုဍိ (kuḍi) ဓာတ်သည် ပူလောင်ခြင်းအနက်၌၊ ပဍိ (paḍi) ဓာတ်သည် သွားခြင်းအနက်၌၊ ဟိဍိ (hiḍi) ဓာတ်သည် လှည့်လည်သွားလာခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကရဏ္ဍ ဘာဇန’တ္ထမှိ (အထော) လဍိ ဇိဂုစ္ဆနေ၊</p>
+<p rend="gathalast">(ဝတ္တတေ) မေဍိကောဋိလ္လေ သဍိ ဂုမ္ဗတ္ထမီရဏေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကရဏ္ဍ (karaṇḍa) ဓာတ်သည် အိုးခွက်အသုံးအဆောင်အနက်၌၊ လဍိ (laḍi) ဓာတ်သည် စက်ဆုပ်ခြင်းအနက်၌၊ မေဍိ (meḍi) ဓာတ်သည် ကောက်ကွေ့ခြင်းအနက်၌၊ သဍိ (saḍi) ဓာတ်သည် ချုံနွယ်ပိတ်ပေါင်းအနက်နှင့် လှုပ်ရှားခြင်းအနက်တို့၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (အထော’ပိ) အဍိ အဏ္ဍတ္ထေ (ဒိဿတေ) တုဍိ တောဍနေ၊</p>
+<p rend="gathalast">ဝဍ္ဎ သံဝဍ္ဎနေ ကဍ္ဎ ကဍ္ဎဏေ ဘဏ ဘာသနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အဍိ (aḍi) ဓာတ်သည် ဥအနက်၌၊ တုဍိ (tuḍi) ဓာတ်သည် ထိုးဆွခြင်းအနက်၌၊ ဝဍ္ḓ (vaḍḍha) ဓာတ်သည် ကြီးပွားပွားများခြင်းအနက်၌၊ ကဍ္ḓ (kaḍḍha) ဓာတ်သည် ဆွဲငင်ခြင်းအနက်၌၊ ဘဏ (bhaṇa) ဓာတ်သည် ပြောဆိုခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၉</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0009">[O 0.0009]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သောဏ ဝဏ္ဏေ ဂုဏ’ဘျာသေ ဣဏ-ဖေဏ ဒွယံ ဂတေ၊</p>
+<p rend="gathalast">ပဏ ဝေါဟာရထောမေသု (ဝတ္တတေ) ကဏ မိလနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သောဏ (soṇa) ဓာတ်သည် အဆင်းဆေးရောင်ခြယ်ခြင်းအနက်၌၊ ဂုဏ (guṇa) ဓာတ်သည် အဖန်တလဲလဲလေ့လာခြင်းအနက်၌၊ ဣဏ (iṇa) နှင့် ဖေဏ (pheṇa) ဓာတ်နှစ်ခုတို့သည် သွားခြင်းအနက်၌၊ ပဏ (paṇa) ဓာတ်သည် အရောင်းအဝယ်ပြုခြင်းနှင့် ချီးမွမ်းခြင်းအနက်တို့၌၊ ကဏ (kaṇa) ဓာတ်သည် မျက်စိမှိတ်ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အဏ-ရဏ-ကဏ-မုဏ-ကွဏ-ကုဏ သဒ္ဒေ၊</p>
+<p rend="gatha2">ယတ ပတိယတနေ ဇုတ ဒိတ္တိမှိ၊</p>
+<p rend="gatha3">အတ-ပတ ဂမနေ စိတ သညာဏေ၊</p>
+<p rend="gathalast">ကိတ ဝါသာ’ဒေါ ဝတု ဝတ္တုမှိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အဏ (aṇa)၊ ရဏ (raṇa)၊ ကဏ (kaṇa)၊ မုဏ (muṇa)၊ ကွဏ (kvaṇa)၊ ကုဏ (kuṇa) ဓာတ်တို့သည် အသံပြုခြင်းအနက်၌၊ ယတ (yata) ဓာတ်သည် စောင့်စည်းအားထုတ်ခြင်းအနက်၌၊ ဇုတ (juta) ဓာတ်သည် တောက်ပခြင်းအနက်၌၊ အတ (ata) နှင့် ပတ (pata) ဓာတ်တို့သည် သွားခြင်းအနက်၌၊ စိတ (cita) ဓာတ်သည် သိခြင်းအနက်၌၊ ကိတ (kita) ဓာတ်သည် နေထိုင်ခြင်းအစရှိသောအနက်တို့၌၊ ဝတု (vatu) ဓာတ်သည် ပြောဆိုခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (ဘဝေ) ကတ္ထ သိလာဃာယံ မထ-မတ္ထ ဝိလောဠနေ၊</p>
+<p rend="gathalast">နာထ ယာစနသန္တာပ ဣဿေရာ’သိံသနေသု (စ၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကတ္ထ (kattha) ဓာတ်သည် ချီးမွမ်းခြင်းအနက်၌၊ မထ (matha) နှင့် မတ္ထ (mattha) ဓာတ်တို့သည် မွှေနှောက်ခြင်းအနက်၌၊ နာထ (nātha) ဓာတ်သည် တောင်းပန်ခြင်း၊ ပူပန်ခြင်း၊ အစိုးရခြင်းနှင့် ဆုတောင်းခြင်းအနက်တို့၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပုထ (စေ) ပုထု ဝိတ္ထာရေ ဗျထ ဘီတိစလေသု (စ)၊</p>
+<p rend="gathalast">ဂေါတ္ထု ဝံသေ ပထ-ပန္ထ ဂတေ နန္ဒ သမိဒ္ဓိယံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပုထ (putha) နှင့် ပုထု (puthu) ဓာတ်တို့သည် ပြန့်ပြောကျယ်ဝန်းခြင်းအနက်၌၊ ဗျထ (byatha) ဓာတ်သည် ကြောက်ရွံ့တုန်လှုပ်ခြင်းအနက်၌၊ ဂေါတ္ထု (gotthu) ဓာတ်သည် အမျိုးအနွယ်ပြခြင်းအနက်၌၊ ပထ (patha) နှင့် ပန္ထ (pantha) ဓာတ်တို့သည် သွားခြင်းအနက်၌၊ နန္ဒ (nanda) ဓာတ်သည် ပြည့်စုံခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝန္ဒါ’ဘိဝါဒထောမေသု ဂဒ ဗျတ္တဝစေ’(ပိစ)၊</p>
+<p rend="gathalast">(အထော) နိန္ဒ ဂရဟာယံ ခဒိ ပက္ခန္ဒနာဒိသု၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဝန္ဒ (vanda) ဓာတ်သည် ရှိခိုးခြင်းနှင့် ချီးမွမ်းခြင်းအနက်တို့၌၊ ဂဒ (gada) ဓာတ်သည် ထင်ရှားစွာ ပြောဆိုခြင်းအနက်၌၊ နိန္ဒ (ninda) ဓာတ်သည် ကဲ့ရဲ့ခြင်းအနက်၌၊ ခဒိ (khadi) ဓာတ်သည် စီးဝင်ခြင်းအစရှိသောအနက်တို့၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၄</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0010">[O 0.0010]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဧဒီ (တု) ကိဉ္စိစလေန စဒိ ကန္တိဟိဠာဒနေ၊</p>
+<p rend="gathalast">ကိလိဒီ ပရိဒေဝါဒေါ ဥဒိဿဝကိလေဒနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဧဒီ (edī) ဓာတ်သည် အနည်းငယ်တုန်လှုပ်ခြင်းအနက်၌၊ စဒိ (cadi) ဓာတ်သည် နှစ်သက်ခြင်းနှင့် ဝမ်းမြောက်ခြင်းအနက်တို့၌၊ ကိလိဒီ (kilidī) ဓာတ်သည် ငိုကြွေးမြည်တမ်းခြင်းအစရှိသောအနက်၌၊ ဥဒိ (udi) ဓာတ်သည် စိုစွတ်စေခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဣဒီ (တု) ပရမိဿရိယေ အဒိအန္ဒု (စ) ဗန္ဓနေ၊</p>
+<p rend="gathalast">ဘဂန္ဒ သေဝနေ (ဟောတိ) ဘဒ္ဒ ကလျာဏကမ္မနိ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဣဒီဓာတ်သည် မြတ်သောအစိုးရခြင်း၌၎င်း၊ အဒိဓာတ်နှင့် အန္ဒုဓာတ်တို့သည် ချည်နှောင်ခြင်း၌၎င်း၊ ဘဂဓာတ်နှင့် အန္ဒဓာတ်တို့သည် မှီဝဲခြင်း၌၎င်း၊ ဘဒ္ဒဓာတ်သည် ကောင်းသောအမှု၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သိဒ သိင်္ဂါရပါကေသု သဒ္ဒုဟရိတသောသနေ၊</p>
+<p rend="gathalast">မဒိ ဗလျေ မုဒ-မဒါ သန္တောသေ မဒ္ဒ မဒ္ဒနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သိဒဓာတ်သည် တင့်တယ်ခြင်းနှင့် ချက်ခြင်းတို့၌၎င်း၊ သဒ္ဒုဓာတ်သည် စိုစွတ်သောအရာကို ခြောက်သွေ့စေခြင်း၌၎င်း၊ မဒိဓာတ်သည် မိုက်မဲနုနယ်ခြင်း၌၎င်း၊ မုဒဓာတ်နှင့် မဒဓာတ်တို့သည် နှစ်သက်ဝမ်းမြောက်ခြင်း၌၎င်း၊ မဒ္ဒဓာတ်သည် ညှဉ်းဆဲနှိပ်စက်ခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သန္ဒု ပဿဝနာဒီသု ကန္ဒ’ဝှာနေ (စ’) ရောဒနေ၊</p>
+<p rend="gathalast">ဝိဒ လာဘေ ဒဒ ဒါနေ ရုဒိ အဿုဝိမောစနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သန္ဒုဓာတ်သည် ယိုစီးခြင်းအစရှိသည်တို့၌၎င်း၊ ကန္ဒဓာတ်သည် ခေါ်ခြင်းနှင့် ငိုကြွေးခြင်းတို့၌၎င်း၊ ဝိဒဓာတ်သည် ရခြင်း၌၎င်း၊ ดဒဓာတ်သည် ပေးလှူခြင်း၌၎င်း၊ ရုဒိဓာတ်သည် မျက်ရည်ကျခြင်း (ငိုကြွေးခြင်း) ၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သဒေါ ဝိသရဏာ’ဒါနဂမနေ (စာ’)ဝသာဒနေ၊</p>
+<p rend="gathalast">ဟိဠာဒ (တု) သုခေ သූဒက္ခရဏေ ရဒ ဝိလေခဏေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သဒဓာတ်သည် ဖရိုဖရဲပျက်စီးခြင်း၊ ယူခြင်း၊ သွားခြင်းနှင့် ပင်ပန်းစိတ်ပျက်ခြင်းတို့၌၎င်း၊ ဟိဠာဒဓာတ်သည် ချမ်းသာခြင်း၌၎င်း၊ သူဒဓာတ်သည် ယိုစီးခြင်း၌၎င်း၊ ရဒဓာတ်သည် ရေးခြစ်ခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သာဒ အဿာဒနာဒီသု ဂဒ ဗျတ္တဝစေ’(ပိစ)၊</p>
+<p rend="gathalast">နဒ အဗျတ္တသဒ္ဒေ (တု) ရဒါ’ဒါ-ခါဒ-ဘက္ခဏေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သာဒဓာတ်သည် သာယာမြည်းစမ်းခြင်းအစရှိသည်တို့၌၎င်း၊ ဂဒဓာတ်သည် ထင်ရှားစွာ ပြောဆိုခြင်း၌၎င်း၊ နဒဓာတ်သည် မထင်ရှားသောအသံပြုခြင်း၌၎င်း၊ ရဒဓာတ်၊ အာဒဓာတ်နှင့် ခါဒဓာတ်တို့သည် စားခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၀</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0011">[O 0.0011]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အဒ္ဒ ယာစနယာတြာဒိသွ (ထော) မိဒ သိနေဟနေ၊</p>
+<p rend="gathalast">(သိယာ) ခုဒ ဇိဂစ္ဆာယံ ဒဠိဒ္ဒ ဒုဂ္ဂစ္စံ (ဟိ တု၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အဒ္ဒဓာတ်သည် တောင်းပန်ခြင်းနှင့် သွားခြင်းအစရှိသည်တို့၌၎င်း၊ မိဒဓာတ်သည် ချစ်ခင်စေးkပ်ခြင်း၌၎င်း၊ ခုဒဓာတ်သည် ဆာလောင်ခြင်း၌၎င်း၊ ဒဠိဒ္ဒဓာတ်သည် ဆင်းရဲနွမ်းပါးခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒါ ဒဝေ ဒု ဂတီဝုဒ္ဓယံ ဒါ ဒါနေ ဝိဒ ဇာနနေ၊</p>
+<p rend="gathalast">တဒိ အာလသိယေ ဗာဓ ဗာဓာယံ ဂုဓ ကီဠနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဒါဓာတ်သည် ပြေးခြင်း၌၎င်း၊ ဒုဓာတ်သည် သွားခြင်းနှင့် ကြီးပွားခြင်းတို့၌၎င်း၊ ဒါဓာတ်သည် ပေးလှူခြင်း၌၎င်း၊ ဝိဒဓာတ်သည် သိခြင်း၌၎င်း၊ တဒိဓာတ်သည် ပျင်းရိခြင်း၌၎င်း၊ ဗာဓဓာတ်သည် ညှဉ်းဆဲခြင်း၌၎င်း၊ ဂုဓဓာတ်သည် ကစားခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (အထော) ဂါဓ ပတိဋ္ဌာယံ ဝုဌု-ဧဓ (စ) ဝုဒ္ဓိယံ၊</p>
+<p rend="gathalast">ဓာ (ဟောတိ) ဓာရဏေ (စေဝ) စိန္တာယံ ဗုဓ ဗောဓနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဂါဓဓာတ်သည် တည်ကြည်ခြင်း၌၎င်း၊ ဝုဌုဓာတ်နှင့် ဧဓဓာတ်တို့သည် ကြီးပွားခြင်း၌၎င်း၊ ဓာဓာတ်သည် ဆောင်ခြင်းနှင့် ကြံစည်ခြင်းတို့၌၎င်း၊ ဗုဓဓာတ်သည် သိခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သိဓု ဂတိမှိ ယုဓ သမ္ပဟာရေ ဝိဓ ဝေဓနေ၊</p>
+<p rend="gathalast">ရာဓ ဟိံသာယသံရာဓေ ဗဓ-ဗန္ဓ (စ) ဗန္ဓနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သိဓုဓာတ်သည် သွားခြင်း၌၎င်း၊ ယုဓဓာတ်သည် တိုက်ခိုက်ခြင်း၌၎င်း၊ ဝိဓဓာတ်သည် ဖောက်ထွင်းခြင်း၌၎င်း၊ ရာဓဓာတ်သည် ညှဉ်းဆဲခြင်းနှင့် နှလုံးကိုနှစ်သက်စေခြင်းတို့၌၎င်း၊ ဗဓဓာတ်နှင့် ဗန္ဓဓာတ်တို့သည် ချည်နှောင်ခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သိဓ-သာဓ (စ) သိဒ္ဓိမှိ ဓေ ပါနေ ဣန္ဓ ဒိတ္တိယံ၊</p>
+<p rend="gatha2">မာန ပූဇာယ ဝန-သန သမ္ဘဝေ အန ပါဏနေ၊</p>
+<p rend="gathalast">ကန ဒိတ္တိဂတီကန္တယံ ခန-ခနွ’ဝဒါရဏေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သိဓဓာတ်နှင့် သာဓဓာတ်တို့သည် ပြီးမြောက်ခြင်း၌၎င်း၊ ဓေဓာတ်သည် သောက်ခြင်း၌၎င်း၊ ဣန္ဓဓာတ်သည် တောက်ပခြင်း၌၎င်း၊ မာနဓာတ်သည် ပူဇော်ခြင်း၌၎င်း၊ ဝနဓာတ်နှင့် သနဓာတ်တို့သည် ဖြစ်ပေါ်ခြင်း၌၎င်း၊ အနဓာတ်သည် အသက်ရှူခြင်း၌၎င်း၊ ကနဓာတ်သည် တောက်ပခြင်း၊ သွားခြင်းနှင့် နှစ်သက်ခြင်းတို့၌၎င်း၊ ခနဓာတ်နှင့် ခန္ဝုဓာတ်တို့သည် တူးဆွခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၅</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0012">[O 0.0012]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဂုပ ဂေါပနကေ ဂုပ သံဝရဏေ တပ သန္တာပေ တပ ဣဿရိယေ၊</p>
+<p rend="gathalast">စုပ မန္ဒဂတေ တပုဥဗ္ဗေဂေ ရပ-လပ ဝါကျေ သပ အက္ကောသေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဂုပဓာတ်သည် စောင့်ရှောက်ခြင်း၌၎င်း၊ ဂုပဓာတ်သည် စောင့်စည်းခြင်း၌၎င်း၊ တပဓာတ်သည် ပူပန်စေခြင်း၌၎င်း၊ တပဓာတ်သည် အစိုးရခြင်း၌၎င်း၊ စုပဓာတ်သည် နှေးကွေးစွာသွားခြင်း၌၎င်း၊ တပုဓာတ်သည် ထိတ်လန့်တုန်လှုပ်ခြင်း၌၎င်း၊ ရပဓာတ်နှင့် လပဓာတ်တို့သည် ပြောဆိုခြင်း၌၎င်း၊ သပဓာတ်သည် ဆဲရေးခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဇပ-ဇပ္ပ ဝစေ’ဗျတ္တေ တပ္ပ သန္တပ္ပနေ (သိယာ)၊</p>
+<p rend="gathalast">ကပိ ကိဉ္စိစလေ ကပ္ပ သာမတ္ထေ ဝေပု ကမ္ပနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဇပဓာတ်နှင့် ဇပ္ပဓာတ်တို့သည် မထင်ရှားသောစကားကို ပြောဆိုခြင်း၌၎င်း၊ တပ္ပဓာတ်သည် နှစ်သက်ရောင့်ရဲစေခြင်း၌၎င်း၊ ကပိဓာတ်သည် နည်းငယ်တုန်လှုပ်ခြင်း၌၎င်း၊ ကပ္ပဓာတ်သည် စွမ်းနိုင်ခြင်း၌၎င်း၊ ဝေပုဓာတ်သည် တုန်လှုပ်ခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တပ္ပ သန္တဂတေစ္ဆေဒေ တက္ကေ ဟိံသာဒိသု’(စ္စတေ)၊</p>
+<p rend="gathalast">ဝပ ဗီဇဝိနိက္ခေပေ ဓූပ သန္တပနေ’(ပိ စ)၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တပ္ပဓာတ်သည် ငြိမ်သက်စွာသွားခြင်း၊ ဖြတ်ခြင်း၊ ကြံစည်ခြင်းနှင့် ညှဉ်းဆဲခြင်းအစရှိသည်တို့၌၎င်း၊ ဝပဓာတ်သည် မျိုးစေ့ချခြင်း၌၎င်း၊ ဓူပဓာတ်သည် ပူပန်စေခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> စပ သာန္တဝေ ပု ပဝနေ ဈပ ဒါဟေ သုပေါ သယေ၊</p>
+<p rend="gathalast">ပုပ္ဖ ဝိကသနေ (ဟောတိ) ရမ္ဗ’လမ္ဗဝသံသနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">စပဓာတ်သည် စေ့စပ်ဖြားယောင်းခြင်း၌၎င်း၊ ပုဓာတ်သည် သန့်ရှင်းစင်ကြယ်စေခြင်း၌၎င်း၊ ဈပဓာတ်သည် ပူလောင်ခြင်း၌၎င်း၊ သုပဓာတ်သည် အိပ်စက်ခြင်း၌၎င်း၊ ပုပ္ဖဓာတ်သည် ပွင့်လန်းခြင်း၌၎င်း၊ ရမ္ဗဓာတ်နှင့် လမ္ဗဓာတ်တို့သည် လျှောကျခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> စုမ္ဗ ဝဒနသံယောဂေ ကမ္ဗ သံဝရဏေ (မတော)၊</p>
+<p rend="gathalast">အမ္ဗ သဒ္ဒေ (စ) အဿာဒေ တာယနေ သဗိ မဏ္ဍနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">စုမ္ဗဓာတ်သည် နှုတ်ခမ်းချင်းထိစပ်ခြင်း (နမ်းခြင်း) ၌၎င်း၊ ကမ္ဗဓာတ်သည် ပိတ်ပင်တားဆီးခြင်း၌၎င်း၊ အမ္ဗဓာတ်သည် အသံပြုခြင်းနှင့် မြည်းစမ်းခြင်းတို့၌၎င်း၊ တာယဓာတ်သည် ကာကွယ်ခြင်း၌၎င်း၊ သဗိဓာတ်သည် တန်ဆာဆင်ခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၀</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0013">[O 0.0013]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဂဗ္ဗ ဒပ္ပေ’ဗ္ဗ-သဗ္ဗာ’(ပိ) ဂမနေ ပုဗ္ဗ ပූရဏေ၊</p>
+<p rend="gathalast">ဂုမ္ဗ’ဗ္ဗဂုမ္ဗနေ စဗ္ဗ အဒနေ ဥဗ္ဗ ဓာရဏေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဂဗ္ဗဓာတ်သည် ထောင်လွှားခြင်း၌၎င်း၊ ဧဗ္ဗဓာတ်နှင့် သဗ္ဗဓာတ်တို့သည် သွားခြင်း၌၎င်း၊ ပုဗ္ဗဓာတ်သည် ပြည့်စေခြင်း၌၎င်း၊ ဂုမ္ဗဓာတ်သည် အုပ်စုဖွဲ့ဖုံးအုပ်ခြင်း၌၎င်း၊ စဗ္ဗဓာတ်သည် စားခြင်း၌၎င်း၊ ဥဗ္ဗဓာတ်သည် ဆောင်ခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> လဘ လာဘေ ဇမ္ဘ ဂတ္တဝိနာမေ သုဘ သောဘနေ၊</p>
+<p rend="gathalast">ဘီ ဘယေ ရဘ ရာဘဿေ (စာ)’ရမ္ဘေ ခုဘ သဉ္စလေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လဘဓာတ်သည် ရခြင်း၌၎င်း၊ ဇမ္ဘဓာတ်သည် ကိုယ်လက်ဆန့်ခြင်း (သမ်းခြင်း) ၌၎င်း၊ သုဘဓာတ်သည် တင့်တယ်ခြင်း၌၎င်း၊ ဘီဓာတ်သည် ကြောက်ရွံ့ခြင်း၌၎င်း၊ ရဘဓာတ်သည် ရဲတင်းခြင်းနှင့် အစပြုခြင်းတို့၌၎င်း၊ ခုဘဓာတ်သည် လှုပ်ရှားခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ထမ္ဘ-ခမ္ဘ ပတိဗန္ဓေ ဂဗ္ဘ ပါဂဗ္ဘိယေ ဝဓေ၊</p>
+<p rend="gathalast">သုမ္ဘ သံသုမ္ဘနေ သမ္ဘ ဝိဿာသေ ယဘ မေထုနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ထမ္ဘဓာတ်နှင့် ခမ္ဘဓာတ်တို့သည် ဆီးတားပိတ်ဆီးခြင်း၌၎င်း၊ ဂဗ္ဘဓာတ်သည် ရဲတင်းလွန်းခြင်းနှင့် သတ်ဖြတ်ခြင်းတို့၌၎င်း၊ သုမ္ဘဓာတ်သည် ညှဉ်းဆဲနှိပ်စက်ခြင်း၌၎င်း၊ သမ္ဘဓာတ်သည် ယုံကြည်ခြင်း၌၎င်း၊ ယဘဓာတ်သည် မေထုန်ပြုခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒုဘ ဇီဂိံသနေ ဒဗ္ဘ ဂန္ထနေ ဥဒြဘာ’ဒနေ၊</p>
+<p rend="gathalast">ကမූ (တု) ပဒဝိက္ခေပေ ခမූ (တု) သဟဏေ (သိယာ၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဒုဘဓာတ်သည် နိုင်လိုခြင်း၌၎င်း၊ ဒဗ္ဗဓာတ်သည် သီကုံးချည်နှောင်ခြင်း၌၎င်း၊ ဥဒြဘဓာတ်သည် ယူခြင်း၌၎င်း၊ ကမူဓာတ်သည် ခြေလှမ်းလှမ်းခြင်း၌၎င်း၊ ခမူဓာတ်သည် သည်းခံခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဘမု အနဝဋ္ဌာနေ (စ) ဝမု ဥဂ္ဂိရဏာဒိသု၊</p>
+<p rend="gathalast">ကိလမု-က္လမූ ဂေလညေ ရမု ကီဠာ’ယ (မီရိတော၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘမုဓာတ်သည် မတည်မကြည်လည်ပတ်ခြင်း၌၎င်း၊ ဝမုဓာတ်သည် အော့အန်ခြင်းအစရှိသည်တို့၌၎င်း၊ ကိလမုဓာတ်နှင့် က္လမူဓာတ်တို့သည် ပင်ပန်းနာကျင်ခြင်း၌၎င်း၊ ရမုဓာတ်သည် မွေ့လျော်ကစားခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒမော ဒမေ နမ နမေ (အထော) သမ ပရိဿမေ၊</p>
+<p rend="gathalast">ယမု ဥပရမေ နာသေ အမ ယာတေ မု ဗန္ဓနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဒမဓာတ်သည် ဆုံးမခြင်း၌၎င်း၊ နမဓာတ်သည် ညွတ်ခြင်း၌၎င်း၊ သမဓာတ်သည် မောပန်းခြင်း၌၎င်း၊ ယမုဓာတ်သည် ငြိမ်းခြင်းနှင့် ပျက်စီးခြင်းတို့၌၎င်း၊ အမဓာတ်သည် သွားခြင်း၌၎င်း၊ မုဓာတ်သည် ချည်နှောင်ခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၆</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0014">[O 0.0014]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဓမော ပုမော (စ) ဓမနေ တမ သင်္ကာဝိဘූသနေ၊</p>
+<p rend="gathalast">ဓုမ-ထီမ (စ) သင်္ဃာတေ တမ သာန္တဝ’ဝသာဒိယေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဓမဓာတ်နှင့် ပုမဓာတ်တို့သည် မှုတ်ခြင်း၌၎င်း၊ တမဓာတ်သည် သံသယဖြစ်ခြင်းနှင့် တန်ဆာဆင်ခြင်းတို့၌၎င်း၊ ဓုမဓာတ်နှင့် ထီမဓာတ်တို့သည် ပေါင်းစုခြင်း၌၎င်း၊ တမဓာတ်သည် စေ့စပ်ဖြားယောင်းခြင်းနှင့် စိတ်ပျက်ခြင်းတို့၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အယော ဝယော ပယ-မယော နယော ရယဂတိမှိ (စ)</p>
+<p rend="gathalast">ဒယ ဒါနဂတီရက္ခါ ဟိံသာဒိသု ယု မိဿနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အယဓာတ်၊ ဝယဓာတ်၊ ပယဓာတ်၊ မယဓာတ်၊ နယဓာတ်နှင့် ရယဓာတ်တို့သည် သွားခြင်း၌၎င်း၊ ဒယဓာတ်သည် ပေးလှူခြင်း၊ သွားခြင်း၊ စောင့်ရှောက်ခြင်းနှင့် ညှဉ်းဆဲခြင်းအစရှိသည်တို့၌၎င်း၊ ယုဓာတ်သည် ရောနှောခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="gatha1">စာယ သမ္ပූဇနေ တာယ သန္တာနေ ပါယ ဝုဒ္ဓိယံ၊</p>
+<p rend="gathalast">(အထော) ဥသූယ ဒေါသာ’ဝိကရဏေ သာယ သာယနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">စာယဓာတ်သည် ပူဇော်ခြင်း၌၎င်း၊ တာယဓာတ်သည် ပြန့်ပွားအစဉ်အတန်းဖြစ်ခြင်း၌၎င်း၊ ပါယဓာတ်သည် ကြီးပွားခြင်း၌၎င်း၊ ဥသူယဓာတ်သည် အပြစ်ကိုထင်ရှားပြခြင်း (မနာလိုခြင်း) ၌၎င်း၊ သာယဓာတ်သည် မြည်းစမ်းခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တရ တရဏသ္မိံ ထရ သန္ထရဏေ ဘရ ဘရဏသ္မိံ ဖရ သမ္ဖရဏေ၊</p>
+<p rend="gathalast">သရ ဂတိ စိန္တာ ဟိံသာ သဒ္ဒေ ဖုရ စလနာဒေါ ဟရ ဟရဏသ္မိံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တရဓာတ်သည် ကူးမြောက်ခြင်း၌၎င်း၊ ထရဓာတ်သည် ခင်းကျင်းခြင်း၌၎င်း၊ ဘရဓာတ်သည် မွေးမြူခြင်း၌၎င်း၊ ဖရဓာတ်သည် ပျံ့နှံ့ခြင်း၌၎င်း၊ သရဓာတ်သည် သွားခြင်း၊ ကြံစည်ခြင်း၊ ညှဉ်းဆဲခြင်းနှင့် အသံပြုခြင်းတို့၌၎င်း၊ ဖုရဓာတ်သည် တုန်လှုပ်ခြင်းအစရှိသည်တို့၌၎င်း၊ ဟရဓာတ်သည် ဆောင်ယူခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:123">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရိ သန္တတိသ္မိံ ရိ ဂတေ ရု သဒ္ဒေ ခုရစ္ဆိဒသ္မိံ ဓရ ဓာရဏမှိ၊</p>
+<p rend="gathalast">ဇရ ဇီရဏတ္ထေ မရပါဏစာဂေ ခရ သေကနာသေ ဃရ သေဝနမှိ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရိဓာတ်သည် အစဉ်အတန်းဖြစ်ခြင်း၌၎င်း၊ ရိဓာတ်သည် သွားခြင်း၌၎င်း၊ ရုဓာတ်သည် အသံပြုခြင်း၌၎င်း၊ ခုရဓာတ်သည် ဖြတ်တောက်ခြင်း၌၎င်း၊ ဓရဓာတ်သည် ဆောင်ခြင်း၌၎င်း၊ ဇရဓာတ်သည် အိုမင်းခြင်း၌၎င်း၊ မရဓာတ်သည် အသက်စွန့်ခြင်း၌၎င်း၊ ခရဓာတ်သည် သွန်းလောင်းခြင်းနှင့် ပျက်စီးခြင်းတို့၌၎င်း၊ ဃရဓာတ်သည် မှီဝဲခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:124">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၀</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0015">[O 0.0015]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:125">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဂရော နိဂရေဏ သေကေ ဒရ ဍာဟေ ဝိဒါရဏေ၊</p>
+<p rend="gathalast">စရ ဂတိဘက္ခဏေသု ဝရ သံဝရဏာဒိသု၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဂရဓာတ်သည် မြိုခြင်းနှင့် သွန်းလောင်းခြင်းတို့၌၎င်း၊ ดရဓာတ်သည် ပူလောင်ခြင်းနှင့် ခွဲခြမ်းခြင်းတို့၌၎င်း၊ စရဓာတ်သည် သွားခြင်းနှင့် စားခြင်းတို့၌၎င်း၊ ဝရဓာတ်သည် တားဆီးပိတ်ပင်ခြင်းအစရှိသည်တို့၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:126">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:127">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> စရစ္ဆေဒေ အရနာသေ ဂတေ (စ) ပූရ ပූရဏေ၊</p>
+<p rend="gathalast">ကုရ က္ကောသေ နရ နယေ ဇာဂရ သုပိနက္ခယေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">စရဓာတ်သည် ဖြတ်တောက်ခြင်း၌၎င်း၊ အရဓာတ်သည် ပျက်စီးခြင်းနှင့် သွားခြင်းတို့၌၎င်း၊ ပူရဓာတ်သည် ပြည့်စေခြင်း၌၎င်း၊ ကုရဓာတ်သည် ဆဲရေးခြင်း၌၎င်း၊ နရဓာတ်သည် ဆောင်ခြင်း၌၎င်း၊ ဇာဂရဓာတ်သည် နိုးကြားခြင်း (အိပ်စက်ခြင်းကုန်ခြင်း) ၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:128">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:129">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပီလု-ပလූ-သလ-ဟုလာ ဂတျ’တ္ထာ စလ ကမ္ပနေ၊</p>
+<p rend="gathalast">ခလ သဉ္စလနေ ဖုလ္လ ဝိကာသေ ဇလ ဒိတ္တိယံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပီလုဓာတ်၊ ပလူဓာတ်၊ သလဓာတ်နှင့် ဟုလဓာတ်တို့သည် သွားခြင်းအနက်၌၎င်း၊ စလဓာတ်သည် တုန်လှုပ်ခြင်း၌၎င်း၊ ခလဓာတ်သည် လှုပ်ရှားခြင်း၌၎င်း၊ ဖုလ္လဓာတ်သည် ပွင့်လန်းခြင်း၌၎င်း၊ ဇလဓာတ်သည် တောက်ပခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:130">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:131">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဖလ နိပ္ဖတ္တိယံ (ဟောတိ) ဒလ ဒိတ္တိဝိဒါရဏေ၊</p>
+<p rend="gathalast">ဒလ ဒုဂ္ဂတိယံ နီလ ဝဏ္ဏေ မီလ နိမီလနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဖလဓာတ်သည် အကျိုးပြီးမြောက်ခြင်း၌၎င်း၊ ဒလဓာတ်သည် တောက်ပခြင်းနှင့် ခွဲခြမ်းခြင်းတို့၌၎င်း၊ ဒလဓာတ်သည် ဆင်းရဲခြင်း၌၎င်း၊ နီလဓာတ်သည် အရောင်ဆိုးခြင်း၌၎င်း၊ မီလဓာတ်သည် မျက်စိမှိတ်ခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:132">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:133">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သိလ သမာဓိမှိ ကီလ ဗန္ဓေ ဂလ-ဂိလာ’ဒနေ၊</p>
+<p rend="gathalast">ကූလ အာဝရဏေ သූလ ရုဇာယံ ဗလပါဏနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သိလဓာတ်သည် တည်ကြည်ခြင်း၌၎င်း၊ ကီလဓာတ်သည် ချည်နှောင်ခြင်း၌၎င်း၊ ဂလဓာတ်နှင့် ဂိလဓာတ်တို့သည် စားမြိုခြင်း၌၎င်း၊ ကူလဓာတ်သည် ကာကွယ်ပိတ်ဆီးခြင်း၌၎င်း၊ သူလဓာတ်သည် နာကျင်ကိုက်ခဲခြင်း၌၎င်း၊ ဗလဓာတ်သည် အသက်ရှင်ခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:134">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:135">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တလ-မූလ ပတိဋ္ဌာယံ ဝလ-ဝလ္လ နိဝါရဏေ၊</p>
+<p rend="gathalast">ပလ္လ နိန္နေ (စ) ဂမနေ မလ-မလ္လ’ဝဓာရဏေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တလဓာတ်နှင့် မူလဓာတ်တို့သည် တည်တံ့ခြင်း၌၎င်း၊ ဝလဓာတ်နှင့် ဝလ္လဓာတ်တို့သည် တားမြစ်ခြင်း၌၎င်း၊ ပလ္လဓာတ်သည် နိမ့်ရာသို့သွားခြင်းနှင့် သွားခြင်းတို့၌၎င်း၊ မလဓာတ်နှင့် မလ္လဓာတ်တို့သည် ဆောင်ခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:136">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၆</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0016">[O 0.0016]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:137">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (ဝတ္တတေ) ခိလ ကာဌိန္နေ ကလိလေ အလ-ကလ ဒွယံ၊</p>
+<p rend="gathalast">ဝေလ္လ သဉ္စလနေ ကလ္လ သဇ္ဇနေ အလိဗန္ဓနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ခိလဓာတ်သည် ခက်ထန်ခြင်း၌၎င်း၊ အလဓာတ်နှင့် ကလဓာတ် နှစ်ပါးတို့သည် ရှုပ်ထွေးရောနှောခြင်း၌၎င်း၊ ဝေလ္လဓာတ်သည် လှုပ်ရှားခြင်း၌၎င်း၊ ကလ္လဓာတ်သည် အသင့်ပြင်ဆင်ခြင်း၌၎င်း၊ အလိဓာတ်သည် ချည်နှောင်ခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:138">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:139">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> စုလ္လ ဟာဝကိရယေ ထූလာ’ကဿနေ စූလ မဒ္ဒနေ၊</p>
+<p rend="gathalast">(ဝတ္တတေ) ခလ သောစေယျော ပလ ရက္ခဂတေသု(ပိ၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">စုလ္လဓာတ်သည် အမူအရာပြခြင်း၌၎င်း၊ ထူလဓာတ်သည် ဆွဲငင်ခြင်း၌၎င်း၊ စူလဓာတ်သည် ညှဉ်းဆဲခြင်း၌၎င်း၊ ခလဓာတ်သည် စင်ကြယ်ခြင်း၌၎င်း၊ ပလဓာတ်သည် စောင့်ရှောက်ခြင်းနှင့် သွားခြင်းတို့၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:140">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:141">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကေလ-ခေလ-စေလ-ပေလ-ဝေလ-သဉ္စလနာဒိသု၊</p>
+<p rend="gathalast">အဝ ရက္ခဏေ ဇီဝ ပါဏဓာရဏေ (တု) ပ္လဝေါ ဂတေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကေလဓာတ်၊ ခေလဓာတ်၊ စေလဓာတ်၊ ပေလဓာတ်နှင့် ဝေလဓာတ်တို့သည် လှုပ်ရှားခြင်းအစရှိသည်တို့၌၎င်း၊ အဝဓာတ်သည် စောင့်ရှောက်ခြင်း၌၎င်း၊ ဇီဝဓာတ်သည် အသက်တည်ခြင်း (အသက်ရှင်ခြင်း) ၌၎င်း၊ ပ္လဝုဓာတ်သည် သွားခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:142">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:143">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကဏ္ဍုဝနမှိ ကဏ္ဍုဝေါ သရဏေ ဆေဒနေ ဒဝေ၊</p>
+<p rend="gathalast">ဒဝေါ (တု) ဒဝနေ ဒေဝု ဒေဝနေ သေဝု သေဝနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကဏ္ဍုဝေါဓာတ်သည် ယားယံခြင်း (ကုတ်ခြစ်ခြင်း) ၌၎င်း၊ သွားခြင်း (ကိုးကွယ်ခြင်း)၊ ဖြတ်တောက်ခြင်း၊ ပြေးခြင်းတို့၌၎င်း၊ ဒဝေါဓာတ်သည် ပြေးခြင်း၌၎င်း၊ ဒေဝုဓာတ်သည် ကစားခြင်း၌၎င်း၊ သေဝုဓာတ်သည် မှီဝဲခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:144">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:145">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဓာဝ ဂမနဝုဒ္ဓိမှိ (ပဌိတော) ဓောဝု ဓောဝနေ၊</p>
+<p rend="gatha2">ဝေ-ဝီ ဒွေ တန္တုသန္တာနေ ဝေ-ဝု သံဝရဏေ (သိယာ)</p>
+<p rend="gathalast">ဟွေ အဝှာနေ ကေဝ သေကေ ဓုဝ ယာတြာ ထိရေသု (စ၊)၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဓာဝဓာတ်သည် သွားခြင်းနှင့် ကြီးပွားခြင်းတို့၌၎င်း၊ ဓေါဝုဓာတ်သည် ဆေးကြောခြင်း၌၎င်း၊ ဝေဓာတ်နှင့် ဝီဓာတ် နှစ်ပါးတို့သည် ရက်ကန်းရက်ခြင်း (ချည်ဆန့်ခြင်း) ၌၎င်း၊ ဝေဓာတ်နှင့် ဝုဓာတ်တို့သည် စောင့်စည်းခြင်း၌၎င်း၊ ဟွေဓာတ်သည် ခေါ်ခြင်း၌၎င်း၊ ကေဝဓာတ်သည် သွန်းလောင်းခြင်း၌၎င်း၊ ဓုဝဓာတ်သည် သွားခြင်းနှင့် မြဲမြံခြင်းတို့၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:146">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၁</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0017">[O 0.0017]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:147">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အသ ဂသ အဒနေ ဃသ အဒနသ္မိံ-ဣသ ပရိယေသေ ဣသုဣစ္ဆာယံ၊</p>
+<p rend="gathalast">သသု ပါဏနဂတိဟိံသာ’ဒျ’တ္ထေ-မသ အာမသနေ မုသ သမ္မောသေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အသဓာတ်၊ ဂသဓာတ်နှင့် ဃသဓာတ်တို့သည် စားခြင်း၌၎င်း၊ ဣသဓာတ်သည် ရှာဖွေခြင်း၌၎င်း၊ ဣသုဓာတ်သည် အလိုရှိခြင်း၌၎င်း၊ သသုဓာတ်သည် အသက်ရှူခြင်း၊ သွားခြင်းနှင့် ညှဉ်းဆဲခြင်းအစရှိသောအနက်တို့၌၎င်း၊ မသဓာတ်သည် သုံးသပ်ကိုင်တွယ်ခြင်း၌၎င်း၊ မုသဓာတ်သည် လိမ်လည်ခြင်း (မေ့လျော့ခြင်း) ၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:148">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:149">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကုသ အက္ကောသေ ဒုသ အပ္ပီတေ-တုသ သန္တောသေ ပုသ ပေါသမှိ၊</p>
+<p rend="gathalast">ရုသ အာလေပေ ရုသ ဟိံသာယံ-မသု မစ္ဆေရေ ဥသု ဒါဟေ (’ပိ၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကုသဓာတ်သည် ဆဲရေးခြင်း၌၎င်း၊ ဒုသဓာတ်သည် မနှစ်သက်ခြင်း၌၎င်း၊ တုသဓာတ်သည် ဝမ်းမြောက်ခြင်း၌၎င်း၊ ပုသဓာတ်သည် မွေးမြူခြင်း၌၎င်း၊ ရုသဓာတ်သည် လိမ်းကျံခြင်း၌၎င်း၊ ရုသဓာတ်သည် ညှဉ်းဆဲခြင်း၌၎င်း၊ မသုဓာတ်သည် ဝန်တိုခြင်း၌၎င်း၊ ဥသုဓာတ်သည် ပူလောင်ခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:150">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:151">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဟသ ဟသနသ္မိံ ဃုသ သဒ္ဒသ္မိံ-တသ ဥဗ္ဗေဂေ တြသ ဥဗ္ဗေဂေ၊</p>
+<p rend="gathalast">လသ ကန္တယ’တ္ထေ ရသ အဿာဒေ-(ပုန)ဘသ ဘသ္မိကရဏေ(စာ’ပိ၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဟသဓာတ်သည် ရယ်မောခြင်း၌၎င်း၊ ဃုသဓာတ်သည် အသံပြုခြင်း (ကြွေးကြော်ခြင်း) ၌၎င်း၊ တသဓာတ်နှင့် တြသဓာတ်တို့သည် ထိတ်လန့်တုန်လှုပ်ခြင်း၌၎င်း၊ ลသဓာတ်သည် နှစ်သက်တောက်ပခြင်း၌၎င်း၊ ရသဓာတ်သည် အရသာမြည်းစမ်းခြင်း၌၎င်း၊ ဘသဓာတ်သည် ပြာချခြင်း၌၎င်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:152">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:153">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဂဝေသ မဂ္ဂဏေ ပံသ နာသနေ ဒိသ ပေက္ခဏေ၊</p>
+<p rend="gathalast">သာသာ’နုသိဋ္ဌိယံ ဟံသ ပိတိယံ ပါသ ဗန္ဓနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဂဝေသ-ဓာတ်သည် ရှာဖွေခြင်း၌၊ ပံသ-ဓာတ်သည် ဖျက်ဆီးခြင်း၌၊ ဒိသ-ဓာတ်သည် ကြည့်ရှုခြင်း၌၊ သာသ-ဓာတ်သည် ဆုံးမခြင်း၌၊ ဟံသ-ဓာတ်သည် နှစ်သက်ခြင်း၌၊ ပါသ-ဓာတ်သည် ဖွဲ့နှောင်ခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:154">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:155">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သံသ ပသံသနေ ဣဿ ဣဿာယံ ကဿ ကဿနေ၊</p>
+<p rend="gathalast">ဓံသ ပဓံသနေ သိံသ ဣစ္ဆာယံ ဃံသ ဃံသနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သံသ-ဓာတ်သည် ချီးမွမ်းခြင်း၌၊ ဣဿ-ဓာတ်သည် ငြူစူခြင်း၌၊ ကဿ-ဓာတ်သည် ဆွဲငင်ခြင်း (သို့မဟုတ် ထွန်ယက်ခြင်း) ၌၊ ဓံသ-ဓာတ်သည် ဖျက်ဆီးခြင်း၌၊ သိံသ-ဓာတ်သည် အလိုရှိခြင်း၌၊ ဃံသ-ဓာတ်သည် ပွတ်တိုက်ခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:156">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၆</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0018">[O 0.0018]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:157">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သံသ-ဒံသာ (တု) ဍသနေ ဘာသ ဝါစာယ ဒိတ္တိယံ၊</p>
+<p rend="gathalast">(သိယာ) ဘုသ အလင်္ကာရေ (အထော) အာသූ’ပဝေသနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သံသ-ဓာတ်နှင့် ဒံသ-ဓာတ်တို့သည် ကိုက်ခဲခြင်း၌၊ ဘာသ-ဓာတ်သည် စကားပြောခြင်း၊ တောက်ပခြင်း၌၊ ဘုသ-ဓာတ်သည် တန်ဆာဆင်ခြင်း၌၊ အာသု-ဓာတ်သည် ဝင်ရောက်ခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:158">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:159">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝသ ကန္တိနိဝါသေသု ဝဿသေစနသဒ္ဒနေ၊</p>
+<p rend="gathalast">ကိသ သာဏေ ကသ ဂတေ ကသ ဟိံသာဝိလေခနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဝသ-ဓာတ်သည် နှစ်သက်ခြင်း၊ နေထိုင်ခြင်းတို့၌၊ ဝဿ-ဓာတ်သည် သွန်းလောင်းခြင်း၊ အသံပြုခြင်းတို့၌၊ ကိသ-ဓာတ်သည် သွေးခြင်း (ထက်မြက်အောင်ပြုခြင်း) ၌၊ ကသ-ဓာတ်သည် သွားခြင်း၌၊ ကသ-ဓာတ်သည် ညှဉ်းဆဲခြင်း၊ ခြစ်ခြင်းတို့၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:160">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:161">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒိသာ’တိသဇ္ဇနာ’ဒီသု ကာသ ဒိတ္တိမှိ သဇ္ဇနေ၊</p>
+<p rend="gathalast">(ဒုဝေ ဓာတု) ခသ-ဈသ ဟိံသာယံ မိသ မိလနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဒိသ-ဓာတ်သည် စွန့်ကြဲပေးကမ်းခြင်းစသည်တို့၌၊ ကာသ-ဓာတ်သည် တောက်ပခြင်း၊ စွန့်ကြဲခြင်းတို့၌၊ ခသ-ဓာတ်နှင့် ဈသ-ဓာတ်တို့သည် ညှဉ်းဆဲခြင်း၌၊ မိသ-ဓာတ်သည် မျက်စိမှိတ်ခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:162">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:163">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သု ဟိံသာကုလသန္ဓာနယာတြာ’ဒီသု သု ပဿဝေ၊</p>
+<p rend="gathalast">သု သဒ္ဒေ သု ပသဝနေ သိ သယေ (စ) သိ သေဝနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သု-ဓာတ်သည် ညှဉ်းဆဲခြင်း၊ အမျိုးအနွယ်ကို စပ်စပ်ခြင်း၊ သွားခြင်း စသည်တို့၌လည်းကောင်း၊ ယိုစီးခြင်း၌လည်းကောင်း၊ အသံပြုခြင်း၌လည်းကောင်း၊ ဖွားမြင်ခြင်း၌လည်းကောင်း ဖြစ်၏။ သိ-ဓာတ်သည် အိပ်ခြင်း၌လည်းကောင်း၊ မှီဝဲခြင်း၌လည်းကောင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:164">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:165">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မဟ ပූဇာယာ’ရဟပූဇာယံ-ဂုဟ သံဝရဏေ လိဟ အဿာဒေ၊</p>
+<p rend="gathalast">ရဟ စာဂသ္မိံ မုဟ မုစ္ဆာယံ-မဟ သတ္တာယံ ဗဟု သံချာနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မဟ-ဓာတ်သည် ပူဇော်ခြင်း၌၊ အရဟ-ဓာတ်သည် ပူဇော်ခြင်း၌၊ ဂုဟ-ဓာတ်သည် ဖုံးကွယ်ခြင်း၌၊ လိဟ-ဓာတ်သည် လျက်ခြင်း (သာယာခြင်း) ၌၊ ရဟ-ဓာတ်သည် စွန့်ခြင်း၌၊ မုဟ-ဓာတ်သည် တွေဝေမိန်းမောခြင်း၌၊ မဟ-ဓာတ်သည် ထင်ရှားရှိခြင်း၌၊ ဗဟု-ဓာတ်သည် ရေတွက်ခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:166">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၁</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0019">[O 0.0019]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:167">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သဟ ခမေ ဒဟ ဘသ္မိကရဏေ (စ) ပတိဋ္ဌာယံ၊</p>
+<p rend="gathalast">ရုဟ သဉ္ဇနနေ ဦဟ ဝိတက္ကေ ဝဟ ပါပဏေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သဟ-ဓာတ်သည် သည်းခံခြင်း၌၊ ဒဟ-ဓာတ်သည် ပြာချခြင်း၊ တည်တံ့ခြင်းတို့၌၊ ရုဟ-ဓာတ်သည် ဖြစ်ပွားခြင်း၌၊ ဦဟ-ဓာတ်သည် ကြံစည်ခြင်း၌၊ ဝဟ-ဓာတ်သည် ဆောင်ယူခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:168">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:169">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒုဟ’ပ္ပပූရဏေ နာသေ ဒိဟော ဥပစယေ (မတော)၊</p>
+<p rend="gathalast">နိန္ဒါယံ ဂရဟော ဤဟ ဃဋ္ဋနေ မိဟ သေဝနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဒုဟ-ဓာတ်သည် မပြည့်စုံခြင်း၊ ပျက်စီးခြင်းတို့၌ ဖြစ်၏။ ဒိဟ-ဓာတ်သည် တိုးပွားခြင်း၌ ဖြစ်၏ဟု မှတ်အပ်၏။ ဂရဟ-ဓာတ်သည် ကဲ့ရဲ့ခြင်း၌၊ ဤဟ-ဓာတ်သည် လုံ့လပြုခြင်း (ထိခိုက်တိုက်ခတ်ခြင်း) ၌၊ မိဟ-ဓာတ်သည် မှီဝဲခြင်း (ကျင်ငယ်စွန့်ခြင်း) ၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:170">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:171">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဂါဟ ဝိလောဠနေ ဗြූဟ-ဗဟ-ဗြဟ (စ) ဝုဒ္ဓိယံ၊</p>
+<p rend="gatha2">ဝှေ သဒ္ဒမှိ ဟသနေ ဟာ စာဂေ လုဠ မန္ထနေ</p>
+<p rend="gathalast">ကီဠဝိဟာရမှိ လဠ ဝိလာသေ’(မေသဝုဒ္ဓိကာ၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဂါဟ-ဓာတ်သည် မွှေနှောက်ခြင်း၌၊ ဗြူဟ-ဓာတ်၊ ဗဟ-ဓာတ်၊ ဗြဟ-ဓာတ်တို့သည် ကြီးပွားခြင်း၌၊ ဝှေ-ဓာတ်သည် အသံပြုခြင်း၌၊ ဟသ-ဓာတ်သည် ရယ်မောခြင်း၌၊ ဟာ-ဓာတ်သည် စွန့်ခြင်း၌၊ လုဠ-ဓာတ်သည် မွှေနှောက်ခြင်း၌၊ လဠ-ဓာတ်သည် ကစားပျော်ပါးခြင်း၊ တင့်တယ်စွာ ပြုမူခြင်း၌ ဖြစ်ကုန်၏။ (ဤဓာတ်တို့သည် ဝုဒ္ဓိရှိသော ဓာတ်တို့တည်း။)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:172">
+  <div class="pair-col col-pali">
+<p rend="chapter">တုဒါဒယော အဝုဒ္ဓိကာ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">တုဒအစရှိသော ဓာတ်တို့သည် ဝုဒ္ဓိမရှိသော ဓာတ်တို့ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:173">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:174">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တုဒ ဗျထာယံ (တု) နုဒ က္ခေပဏေ လိခ လေခဏေ၊</p>
+<p rend="gathalast">ကုစ သင်္ကောစနေ ရိစ က္ခရဏေ ခစ ဗန္ဓနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တုဒ-ဓာတ်သည် ကျင်နာစေခြင်း၌၊ နုဒ-ဓာတ်သည် ဖယ်ရှားခြင်း၌၊ လိခ-ဓာတ်သည် ရေးခြစ်ခြင်း၌၊ ကုစ-ဓာတ်သည် ကျုံ့ခြင်း၌၊ ရိစ-ဓာတ်သည် ယိုစီးခြင်း၌၊ ခစ-ဓာတ်သည် ဖွဲ့နှောင်ခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:175">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၅</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0020">[O 0.0020]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:176">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဥစ သဒ္ဒေ သမဝါယေ ဝိဇီ ဘယစလေသု (စ)၊</p>
+<p rend="gathalast">(ဝတ္တတေ) ဘုဇ ကောဋိလ္လေ ဝလဉ္ဇော (တု) ဝလဉ္ဇနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဥစ-ဓာတ်သည် အသံပြုခြင်း၊ စုပေါင်းခြင်းတို့၌၊ ဝိဇိ-ဓာတ်သည် ကြောက်ရွံ့ခြင်း၊ လှုပ်ရှားခြင်းတို့၌၊ ဘုဇ-ဓာတ်သည် ကောက်ကွေ့ခြင်း၌၊ ဝလဉ္ဇ-ဓာတ်သည် သုံးစွဲခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:177">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:178">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဘဇ သေဝါပုထက္ကာရေ ရုဇ ရောဂေ အဋာ’ဋနေ၊</p>
+<p rend="gathalast">ကုဋစ္ဆေဒေ (စ) ကောဋိလ္လေ အဂါ သဇ္ဈာယနာ’ဒိသု၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘဇ-ဓာတ်သည် မှီဝဲခြင်း၊ ခွဲခြားခြင်းတို့၌၊ ရုဇ-ဓာတ်သည် နာကျင်ခြင်း၌၊ အဋ-ဓာတ်သည် လှည့်လည်သွားလာခြင်း၌၊ ကုဋ-ဓာတ်သည် ဖြတ်တောက်ခြင်း၊ ကောက်ကွေ့ခြင်းတို့၌၊ အဂ-ဓာတ်သည် ရွတ်ဖတ်သရဇ္ဈာယ်ခြင်းစသည်တို့၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:179">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:180">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပုဏော သုဘ ကိရယေ ဝတ္တ ဝတ္တနေ စတ ယာစနေ၊</p>
+<p rend="gathalast">ပုထ ပါကေ ပූတိဘာဝေ ကုထသံက္လေသနေ’(ပိ စ၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပုဏ-ဓာတ်သည် ကောင်းမှုပြုခြင်း၌၊ ဝတ္တ-ဓာတ်သည် ဖြစ်ပွားခြင်း၌၊ စတ-ဓာတ်သည် တောင်းပန်ခြင်း၌၊ ပုထ-ဓာတ်သည် ချက်ပြုတ်ခြင်း၊ ပုပ်သိုးခြင်းတို့၌လည်းကောင်း၊ ကုထ-ဓာတ်သည် ညစ်နွမ်းခြင်း၌လည်းကောင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:181">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:182">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (ဥဘော ဓာတု) ပုထ-ပထ ဝိတ္ထာရေ ဝိဒ ဇာနနေ၊</p>
+<p rend="gathalast">ဟဒ ဥစ္စာရ ဥဿဂ္ဂေ-စိန္တာယံ မိဒ ဟိံသနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပုထ-ဓာတ်၊ ပထ-ဓာတ် နှစ်ခုတို့သည် ကျယ်ပြန့်ခြင်း၌၊ ဝိဒ-ဓာတ်သည် သိခြင်း၌၊ ဟဒ-ဓာတ်သည် ကျင်ကြီးစွန့်ခြင်း၌၊ မိဒ-ဓာတ်သည် ကြံစည်ခြင်း၊ ညှဉ်းဆဲခြင်းတို့၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:183">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:184">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> နန္ဓ ဝိနန္ဓနေ ထီန-ပုန သင်္ဃာတဝါစိနော၊</p>
+<p rend="gathalast">ကပ အစ္ဆာဒနေ ဝပ္ပ ဝါရဏေ ခိပ ပေရဏေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">နန္ဓ-ဓာတ်သည် ရစ်ပတ်ဖွဲ့နှောင်ခြင်း၌၊ ထီန-ဓာတ်၊ ပုန-ဓာတ်တို့သည် စုဝေးပေါင်းစပ်ခြင်းကို ဟောကုန်၏။ ကပ-ဓာတ်သည် ဖုံးလွှမ်းခြင်း၌၊ ဝပ္ပ-ဓာတ်သည် တားဆီးခြင်း၌၊ ခိပ-ဓာတ်သည် ပစ်လွှတ်ခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:185">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:186">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သုပေါ သယေ ဆုပေါ ဖဿေ (ဝတ္တတေ) စပ သာန္တဝနေ၊</p>
+<p rend="gathalast">နဘ (ဓာတု) ဝိဟိံသာယံ ရုမ္ဘ ဥပ္ပီဠနာဒိသု၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သုပ-ဓာတ်သည် အိပ်ခြင်း၌၊ ခုပ-ဓာတ်သည် တွေ့ထိခြင်း၌၊ စပ-ဓာတ်သည် ဖျောင်းဖျခြင်း၌၊ နဘ-ဓာတ်သည် ညှဉ်းဆဲခြင်း၌၊ ရုမ္ဘ-ဓာတ်သည် ညှစ်စက်ဖိနှိပ်ခြင်းစသည်တို့၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:187">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၁</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0021">[O 0.0021]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:188">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သုမ္ဘ သံသုမ္ဘနေ ဇမ္ဘ ဇမ္ဘနေ ဇုဘ နိစ္ဆုဘေ၊</p>
+<p rend="gathalast">ဌုဘ နိဋ္ဌုဘနေ စမု အဒနေ ဆမု ဟီဠနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သုမ္ဘ-ဓာတ်သည် သတ်ပုတ်ခြင်း၌၊ ဇမ္ဘ-ဓာတ်သည် သမ်းဝေခြင်း၌၊ ဇုဘ-ဓာတ်သည် နှင်ထုတ်ခြင်း၌၊ ဌုဘ-ဓာတ်သည် တံတွေးထွေးခြင်း၌၊ စမု-ဓာတ်သည် စားခြင်း၌၊ ဆမု-ဓာတ်သည် ကဲ့ရဲ့ခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:189">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:190">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဈမု ဒါဟေ ဆမု အဒနေ ဣရီယ ဝတ္တနေ’(ပိ စ)၊</p>
+<p rend="gathalast">ကိရ (ဓာတု) ဝိကိရဏေ ဂိရော နိဂိရဏာ’ဒိသု၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဈမု-ဓာတ်သည် ပူလောင်ခြင်း၌၊ ဆမု-ဓာတ်သည် စားခြင်း၌၊ ဣရီယ-ဓာတ်သည် အမူအရာပြုမူခြင်း၌လည်းကောင်း၊ ကိရ-ဓာတ်သည် ကြဲဖြန့်ခြင်း၌၊ ဂိရ-ဓာတ်သည် မျိုချခြင်းစသည်တို့၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:191">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:192">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဖုရ သဉ္စလနာဒီသု ကုရ သဒ္ဒါ’ဒနေသု (စ)၊</p>
+<p rend="gathalast">ခုရစ္ဆေဒေ ဝိလိခဏေ ဃုရ ဘီမေ ဂိလာ’ဒနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဖုရ-ဓာတ်သည် လှုပ်ရှားတုန်လှုပ်ခြင်းစသည်တို့၌၊ ကုရ-ဓာတ်သည် အသံပြုခြင်း၊ ယူခြင်းတို့၌၊ ခုရ-ဓာတ်သည် ဖြတ်တောက်ခြင်း၊ ခြစ်ခြင်းတို့၌၊ ဃုရ-ဓာတ်သည် ကြောက်မက်ဖွယ်ကောင်းခြင်း၌၊ ဂိလ-ဓာတ်သည် စားခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:193">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:194">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တိလ သ္နေဟေ စိလ ဝါသေ ဟိလ ဟာဝေ သိလု’ဉ္ဆနေ၊</p>
+<p rend="gathalast">ဗိလ ဘေဒေ ထූလ စယေ ကုသစ္ဆေဒန ပූရဏေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တိလ-ဓာတ်သည် ချစ်ခင်ခြင်း၌၊ စိလ-ဓာတ်သည် နေထိုင်ခြင်း၌၊ ဟိလ-ဓာတ်သည် အမူအရာပြခြင်း၌၊ သိလ-ဓာတ်သည် ကောက်သင်းကောက်ခြင်း၌၊ ဗိလ-ဓာတ်သည် ဖောက်ခွဲခြင်း၌၊ ထူလ-ဓာတ်သည် စုပုံခြင်း၌၊ ကုသ-ဓာတ်သည် ဖြတ်တောက်ခြင်း၊ ပြည့်စေခြင်းတို့၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:195">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:196">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝိသပ္ပဝေသေ ဖရဏေ ဒိသာ’တိသဇ္ဇနာ’ဒိသု</p>
+<p rend="gatha2">ဖုလ ဖဿေ မုသ ထေယျေ ထုသ အပ္ပိကိရယာယ (တု)</p>
+<p rend="gathalast">ဂုဠ မောက္ခေ ဂုဠ ပရိဝတ္တနမှိ (တုဒါဒယော၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဝိသ-ဓာတ်သည် ဝင်ရောက်ခြင်း၊ ပျံ့နှံ့ခြင်းတို့၌၊ ဒိသ-ဓာတ်သည် စွန့်လွှတ်ခြင်းစသည်တို့၌၊ ဖုလ-ဓာတ်သည် တွေ့ထိခြင်း၌၊ မုသ-ဓာတ်သည် ခိုးယူခြင်း၌၊ ထုသ-ဓာတ်သည် နည်းပါးစွာပြုခြင်း၌၊ ဂုဠ-ဓာတ်သည် လွတ်ခြင်း၊ လှည့်ပတ်ခြင်းတို့၌ ဖြစ်ကုန်၏။ (ဤသည်တို့ကား တုဒဝဂ်အကျဉ်းတည်း။)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:197">
+  <div class="pair-col col-pali">
+<p rend="bodytext">ဟූ <span class="pb hidden-meta" data-ed="O" data-n="0.0022">[O 0.0022]</span> ဘုဝါဒယော လုတ္တဝိကရဏာ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ဟူ-ဓာတ်၊ ဘူ-ဓာတ်အစရှိသော ဓာတ်တို့သည် ဝိကရဏပစ္စည်း ချန်လှပ်အပ်သော ဓာတ်တို့ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:198">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:199">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဟූ-ဘූ သတ္တာယ (မု’စ္စန္တိ) ဣ အဇ္ဈာနေ ဂတိမှိ (စ၊)</p>
+<p rend="gathalast">ခါ-ချာ (ဒွယံ) ပကထနေ ဇိ ဇယေ ဉာ’ဝဗောဓနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဟူ-ဓာတ်၊ ဘူ-ဓာတ်တို့သည် ထင်ရှားရှိခြင်း၌၊ ဣ-ဓာတ်သည် အောက်မေ့ခြင်း၊ သွားခြင်းတို့၌၊ ခါ-ဓာတ်၊ ချာ-ဓာတ် နှစ်ခုတို့သည် ပြောဆိုခြင်း၌၊ ဇိ-ဓာတ်သည် အောင်နိုင်ခြင်း၌၊ ညာ-ဓာတ်သည် သိမြင်ခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:200">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:201">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သီ-ဠီ ဝေဟာသဂမနေ ဌာ ဂတီဝိနိဝုတ္တိယံ၊</p>
+<p rend="gathalast">နီ ပါပဏေ မုန ဉာဏေ ဟန ဟိံသာဂတီသု (’ပိ)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သီ-ဓာတ်၊ ဠီ-ဓာတ်တို့သည် ကောင်းကင်၌ သွားခြင်း၌၊ ဌာ-ဓာတ်သည် သွားခြင်းမှ ဆုတ်နစ်ခြင်း (ရပ်တည်ခြင်း) ၌၊ နီ-ဓာတ်သည် ဆောင်ယူခြင်း၌၊ မုန-ဓာတ်သည် သိခြင်း၌၊ ဟန-ဓာတ်သည် ညှဉ်းဆဲခြင်း၊ သွားခြင်းတို့၌လည်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:202">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:203">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပါရက္ခဏမှိ ပါ ပါနေ ဗြූ ဝါစာယံ ဝိယတ္တိယံ၊</p>
+<p rend="gathalast">ဘာ ဒိတ္တိယံ မာ ပမာဏေ (အထော) ယာ ပါပုဏေ (သိယာ၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပါ-ဓာတ်သည် စောင့်ရှောက်ခြင်း၌၊ ပါ-ဓာတ်သည် သောက်ခြင်း၌၊ ဗြူ-ဓာတ်သည် ထင်ရှားစွာ ပြောဆိုခြင်း၌၊ ဘာ-ဓာတ်သည် တောက်ပခြင်း၌၊ မာ-ဓာတ်သည် တိုင်းတာခြင်း၌၊ ယာ-ဓာတ်သည် ရောက်ရှိခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:204">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:205">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (ဒုဝေပိ) ရာ-လာ အာဒါနေ ဝါ ဂတီဂန္ဓနေသု (ပိ၊)</p>
+<p rend="gathalast">အသ (ဓာတု) ဘုဝိ (ချာတော) သိ သယေ သာ သမတ္ထိယေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရာ-ဓာတ်၊ လာ-ဓာတ် နှစ်ခုတို့သည် ယူခြင်း၌၊ ဝါ-ဓာတ်သည် သွားခြင်း၊ သင်းပျံ့ခြင်းတို့၌လည်းကောင်း၊ အသ-ဓာတ်သည် ရှိခြင်း၌ ထင်ရှား၏။ သိ-ဓာတ်သည် အိပ်ခြင်း၌၊ သာ-ဓာတ်သည် စွမ်းနိုင်ခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:206">
+  <div class="pair-col col-pali">
+<p rend="chapter">ဇုဟောတျာ’ဒယော <span class="pb hidden-meta" data-ed="O" data-n="0.0023">[O 0.0023]</span> သဒွိဘာဝလုတ္တဝိကရဏာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">ဇုဟောတိအစရှိသော ဓာတ်တို့သည် ဒွေးဘော်ပြုခြင်းနှင့်အတူ ဝိကရဏပစ္စည်း ချန်လှပ်အပ်သော ဓာတ်တို့ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:207">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:208">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဟූ ဒါနေ’(ပိ စ) အာဒါနေ ဟဝျဒါနေ (စ ဝတ္တတေ၊)</p>
+<p rend="gathalast">ဟာ စာဂေ ကမု ယာတြာယံ ဒါ ဒါနေ ဓာ (စ) ဓာရဏေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဟူ-ဓာတ်သည် ပေးခြင်း၊ ယူခြင်း၊ ပူဇော်သက္ကာရကို လှူဒါန်းခြင်းတို့၌ ဖြစ်၏။ ဟာ-ဓာတ်သည် စွန့်ခြင်း၌၊ ကမု-ဓာတ်သည် သွားခြင်း၌၊ ဒါ-ဓာတ်သည် ပေးခြင်း၌၊ ဓာ-ဓာတ်သည် ဆောင်ခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:209">
+  <div class="pair-col col-pali">
+<p rend="centre">အဝိကရဏဘූဝါဒယော သမတ္တာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဝိကရဏပစ္စည်းမရှိသော ဘူဝါဒိဂိုဏ်းဝင် ဓာတ်တို့သည် ပြီးဆုံးကုန်ပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:210">
+  <div class="pair-col col-pali">
+<p rend="chapter">ရုဓာဒယော</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">ရုဓာဒိဂိုဏ်းဝင် ဓာတ်တို့ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:211">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:212">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရုဓိ အာဝရဏေ မုစ မောစနေ ရိစ ရေစနေ၊</p>
+<p rend="gathalast">သိစ သေကေ ယုဇ ယောဂေ ဘုဇ ပါလနဘောဇနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရုဓိ-ဓာတ်သည် ပိတ်ပင်တားဆီးခြင်း၌၊ မုစ-ဓာတ်သည် လွတ်စေခြင်း၌၊ ရိစ-ဓာတ်သည် သုတ်သင်ခြင်း၌၊ သိစ-ဓာတ်သည် သွန်းလောင်းခြင်း၌၊ ယုဇ-ဓာတ်သည် ယှဉ်စပ်ခြင်း၌၊ ဘုဇ-ဓာတ်သည် စောင့်ရှောက်ခြင်း၊ စားခြင်းတို့၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:213">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:214">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကတိစ္ဆေဒေ ဆိဒိ ဒွေဓာကရဏေ ဘိဒ ဝိဒါရဏေ</p>
+<p rend="gatha2">ဝိဒ လာဘေ လုပစ္ဆေဒေ ဝိနာသေ လိပလိမ္ပနေ</p>
+<p rend="gathalast">ပိသ သံစုဏ္ဏနေ ဟိသိ ဝိဟိံသာယံ (ရုဓာဒယော၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကတိ-ဓာတ်သည် ဖြတ်တောက်ခြင်း၌၊ ဆိဒိ-ဓာတ်သည် နှစ်ခြမ်းကွဲစေခြင်း၌၊ ဘိဒ-ဓာတ်သည် ဖောက်ခွဲဖျက်ဆီးခြင်း၌၊ ဝိဒ-ဓာတ်သည် ရရှိခြင်း၌၊ လုပ-ဓာတ်သည် ဖြတ်တောက်ခြင်း၊ ပျက်စီးခြင်းတို့၌၊ လိပ-ဓာတ်သည် လိမ်းကျံခြင်း၌၊ ပိသ-ဓာတ်သည် ညက်ညက်ခြေခြင်း၌၊ ဟိသိ-ဓာတ်သည် ညှဉ်းဆဲခြင်း၌ ဖြစ်ကုန်၏။ (ဤသည်တို့ကား ရုဓာဒိဂိုဏ်းဝင် ဓာတ်တို့တည်း။)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:215">
+  <div class="pair-col col-pali">
+<p rend="chapter">ဒိဝါဒယော <span class="pb hidden-meta" data-ed="O" data-n="0.0024">[O 0.0024]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">ဒိဝါဒိဂိုဏ်းဝင် ဓာတ်တို့ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:216">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:217">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒိဝု ကီလာ ဝိဇိဂိံသာ ဝေါဟာရဇ္ဇုတိ ထောမိတေ၊</p>
+<p rend="gathalast">သိဝု တန္တූနသန္တာနေ ခီ ခယေ ခါ ပကာသနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဒိဝု-ဓာတ်သည် ကစားခြင်း၊ အောင်နိုင်လိုခြင်း၊ ရောင်းဝယ်ခြင်း၊ အရောင်တောက်ခြင်း၊ ချီးမွမ်းခြင်းတို့၌၊ သိဝု-ဓာတ်သည် အပ်ချည်ဖြင့်ချုပ်စပ်ခြင်း၌၊ ခီ-ဓာတ်သည် ကုန်ဆုံးခြင်း၌၊ ခါ-ဓာတ်သည် ထင်ရှားစေခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:218">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:219">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကာ-ဂါ သဒ္ဒေ (ပိ) ဃာ ဂန္ဓော’ပါဒါနေ ရုစ ရောစနေ၊</p>
+<p rend="gathalast">ကစ ဒိတျံ မုစ မောစေ (အထော) ဝိစ ဝိဝေစနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကာ-ဓာတ်၊ ဂါ-ဓာတ်တို့သည် အသံပြုခြင်း၌လည်းကောင်း၊ ဃာ-ဓာတ်သည် အနံ့ကိုယူခြင်း၌၊ ရုစ-ဓာတ်သည် နှစ်သက်ခြင်း၌၊ ကစ-ဓာတ်သည် တောက်ပခြင်း၌၊ မုစ-ဓာတ်သည် လွတ်စေခြင်း၌၊ ဝိစ-ဓာတ်သည် ဆင်ခြင်ခွဲခြားခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:220">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:221">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရဉ္ဇ ရာဂေ သဉ္ဇ သင်္ဂေ ခလနေ မဇ္ဇ သုဒ္ဓိယံ၊</p>
+<p rend="gathalast">ယုဇော သမာဓိမှိ လုဇော ဝိနာသေ ဈာ ဝိစိန္တနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရဉ္ဇ-ဓာတ်သည် တပ်မက်ခြင်း၌၊ သဉ္ဇ-ဓာတ်သည် ကပ်ငြိခြင်း၊ ချော်လဲခြင်းတို့၌၊ မဇ္ဇ-ဓာတ်သည် သန့်ရှင်းစင်ကြယ်စေခြင်း၌၊ ယုဇ-ဓာတ်သည် တည်ကြည်ခြင်း၌၊ လုဇ-ဓာတ်သည် ပျက်စီးခြင်း၌၊ ဈာ-ဓာတ်သည် စူးစိုက်ကြံစည်ခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:222">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:223">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တာ ပါလနေ ဆိဒိ ဒွေဓာကာရေ မိဒ သိနေဟနေ၊</p>
+<p rend="gathalast">မဒု’မ္မာဒေ ခိဒ ဒီနဘာဝေ ဘိဒ ဝိဒါရဏေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တာ-ဓာတ်သည် စောင့်ရှောက်ခြင်း၌၊ ဆိဒိ-ဓာတ်သည် နှစ်ခြမ်းကွဲစေခြင်း၌၊ မိဒ-ဓာတ်သည် ချစ်ခင်စေးကပ်ခြင်း၌၊ မဒု-ဓာတ်သည် ရူးသွပ်မိန်းမောခြင်း၌၊ ခိဒ-ဓာတ်သည် ဆင်းရဲပင်ပန်းခြင်း၌၊ ဘိဒ-ဓာတ်သည် ဖောက်ခွဲဖျက်ဆီးခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:224">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:225">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သိဒ ပါကေ ပဒဂတေ ဝိဒ သတ္တာ ဝိစိန္တနေ၊</p>
+<p rend="gathalast">ဒီ ခယေ သုပနေ ဒါ (စ) ဒါနေ ဒါတွ’ဝခဏ္ဍနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သိဒ-ဓာတ်သည် ချက်ပြုတ်ခြင်း၌၊ ပဒ-ဓာတ်သည် သွားခြင်း၌၊ ဝိဒ-ဓာတ်သည် ထင်ရှားရှိခြင်း၊ ကြံစည်ခြင်းတို့၌၊ ဒီ-ဓာတ်သည် ကုန်ဆုံးခြင်း၊ အိပ်စက်ခြင်းတို့၌၊ ဒါ-ဓာတ်သည် ပေးလှူခြင်း၌လည်းကောင်း၊ ဒါ-ဓာတ်သည် ဖြတ်တောက်ခြင်း၌လည်းကောင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:226">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၈</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0025">[O 0.0025]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:227">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဗုဓာ’ဝဂမနာ’ဒီသု အတ္ထေသု ယုဓ ယုဇ္ဈနေ၊</p>
+<p rend="gathalast">ကုဓ ကောပေ သုဓ သောစေ ရာဓ ဟိံသာယ သိဒ္ဓိယံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဗုဓ်ဓာတ်သည် သိခြင်းစသောအနက်တို့၌လည်းကောင်း၊ ယုဓ်ဓာတ်သည် တိုက်ခိုက်ခြင်းအနက်၌လည်းကောင်း၊ ကုဓ်ဓာတ်သည် အမျက်ထွက်ခြင်းအနက်၌လည်းကောင်း၊ သုဓ်ဓာတ်သည် စင်ကြယ်ခြင်းအနက်၌လည်းကောင်း၊ ရာဓ်ဓာတ်သည် ညှဉ်းဆဲခြင်း၊ ပြီးမြောက်ခြင်းအနက်တို့၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:228">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:229">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဣဓ သံသိဒ္ဓိဝုဒ္ဓီသု သိဓ-သာဓ (စ) သိဒ္ဓိယံ၊</p>
+<p rend="gathalast">ဝိဓ ဝေဓေ ဂိဓ ဂေဓေ ရုဓိ အာဝရဏာ’ဒိသု၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဣဓ်ဓာတ်သည် ပြီးမြောက်ခြင်း၊ ကြီးပွားခြင်းအနက်တို့၌လည်းကောင်း၊ သိဓ်ဓာတ်နှင့် သာဓ်ဓာတ်တို့သည် ပြီးမြောက်ခြင်းအနက်၌လည်းကောင်း၊ ဝိဓ်ဓာတ်သည် ထိုးခြင်း (ဖောက်ထွင်းခြင်း) အနက်၌လည်းကောင်း၊ ဂိဓ်ဓာတ်သည် မက်မောခြင်းအနက်၌လည်းကောင်း၊ ရုဓ်ဓာတ်သည် ပိတ်ပင်ခြင်းစသောအနက်တို့၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:230">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:231">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မန ဉာဏေ ဇနု’ပ္ပါဒေ ဟန ဟိံသာဂတီသု (ပိ၊)</p>
+<p rend="gathalast">သိနာ သောစေ ကုပ ကောပေ တပ သန္တာပ ပီဏနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မန်ဓာတ်သည် သိခြင်းအနက်၌လည်းကောင်း၊ ဇန်ဓာတ်သည် ဖြစ်ခြင်းအနက်၌လည်းကောင်း၊ ဟန်ဓာတ်သည် ညှဉ်းဆဲခြင်း၊ သွားခြင်းအနက်တို့၌လည်းကောင်း၊ သိနာဓာတ်သည် ရေချိုးခြင်း (စင်ကြယ်ခြင်း) အနက်၌လည်းကောင်း၊ ကုပ်ဓာတ်သည် အမျက်ထွက်ခြင်းအနက်၌လည်းကောင်း၊ တပ်ဓာတ်သည် ပူပန်ခြင်း၊ နှစ်သက်ခြင်းအနက်တို့၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:232">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:233">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> လုပစ္ဆေဒေ ရုပ နာသေ ပကာသေ ဒိပ ဒိတ္တိယံ၊</p>
+<p rend="gathalast">ဒပ ဟာသေ လဘ လာဘေ လုဘ ဂေဓေ ခုဘော စလေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လုပ်ဓာတ်သည် ဖြတ်ခြင်းအနက်၌လည်းကောင်း၊ ရုပ်ဓာတ်သည် ဖျက်ဆီးခြင်းအနက်၌လည်းကောင်း၊ ဒိပ်ဓာတ်သည် ထင်ရှားစေခြင်း၊ တောက်ပခြင်းအနက်တို့၌လည်းကောင်း၊ ဒပ်ဓာတ်သည် ရွှင်လန်းခြင်းအနက်၌လည်းကောင်း၊ လဘ်ဓာတ်သည် ရခြင်းအနက်၌လည်းကောင်း၊ လုဘ်ဓာတ်သည် မက်မောခြင်းအနက်၌လည်းကောင်း၊ ခုဘ်ဓာတ်သည် လှုပ်ရှားခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:234">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:235">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သမූ’ပသမ ခေဒေသု ဟရ-ဟိရီ (စ) လဇ္ဇနေ၊</p>
+<p rend="gathalast">မိလာ ဂတ္တဝီနာမေ (စ) ဂိလာ ဟာသက္ခယေ (ပိ စ၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သမုဓာတ်သည် ငြိမ်းအေးခြင်း၊ ပင်ပန်းခြင်းအနက်တို့၌လည်းကောင်း၊ ဟရဓာတ်နှင့် ဟိရိဓာတ်တို့သည် ရှက်ခြင်းအနက်၌လည်းကောင်း၊ မိလာဓာတ်သည် ကိုယ်ညွှတ်ခြင်း (ညှိုးနွမ်းခြင်း) အနက်၌လည်းကောင်း၊ ဂိလာဓာတ်သည် ရွှင်လန်းမှုကုန်ခြင်း (နာဖျားခြင်း) အနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:236">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၃</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0026">[O 0.0026]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:237">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> လီ သိလေသေ ဒြဝီကာရေ ဝါ ဂတီ ဗန္ဓနေသု (စ၊)</p>
+<p rend="gathalast">လိသိ လေသေ တုသ တောသေ သိလိသာ’လိင်္ဂနာဒိသု၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လီဓာတ်သည် ကပ်ငြိခြင်း၊ အရည်ပြုခြင်းအနက်တို့၌လည်းကောင်း၊ ဝါဓာတ်သည် သွားခြင်း၊ ချည်နှောင်ခြင်းအနက်တို့၌လည်းကောင်း၊ လိသိဓာတ်သည် ကပ်ငြိခြင်းအနက်၌လည်းကောင်း၊ တုသ်ဓာတ်သည် နှစ်သက်ခြင်းအနက်၌လည်းကောင်း၊ သိလိသ်ဓာတ်သည် ဖက်ယမ်းခြင်းစသောအနက်တို့၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:238">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:239">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကိလိသ ကလိသော’ပတာပေ (အထော) တသ ပိပါသနေ၊</p>
+<p rend="gathalast">ရုသ ရောသေ ဒိသ-ဒုသ အပ္ပီတိမှိ (ဒုဝေ သိယုံ၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကိလိသ်ဓာတ်သည် ညစ်နွမ်းခြင်း၊ ပူပန်စေခြင်းအနက်တို့၌လည်းကောင်း၊ တသ်ဓာတ်သည် ဆာလောင်မွတ်သိပ်ခြင်း (ကြောက်ရွံ့ခြင်း) အနက်၌လည်းကောင်း၊ ရုသ်ဓာတ်သည် အမျက်ထွက်ခြင်းအနက်၌လည်းကောင်း၊ ဒိသ်ဓာတ်နှင့် ဒုသ်ဓာတ်နှစ်ခုတို့သည် မနှစ်သက်ခြင်းအနက်၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:240">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:241">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယသုပ္ပယတနေ အသု ခေပနေ (ပိ စ ဝတ္တတေ၊)</p>
+<p rend="gathalast">သုသ သောသေ ဘသ အဓောပါတေ နသ အဒဿနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ယသုဓာတ်သည် အားထုတ်ခြင်းအနက်၌လည်းကောင်း၊ အသုဓာတ်သည် ပစ်လွှတ်ခြင်းအနက်၌လည်းကောင်း၊ သုသ်ဓာတ်သည် ခြောက်သွေ့ခြင်းအနက်၌လည်းကောင်း၊ ဘသ်ဓာတ်သည် အောက်သို့ကျခြင်းအနက်၌လည်းကောင်း၊ นသ်ဓာတ်သည် မမြင်ရခြင်း (ပျက်စီးခြင်း) အနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:242">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၁၆</span>. သာ’ဿာဒေ သာ’ဝသာနေ (စ) သာ တနූကရဏေ (ပိ စ) ဟာ စာဂေ မုဟ ဝေစိတ္တေ နဟ သဇ္ဇနဗန္ဓနေ နဟ သောစေ ပိဟိစ္ဆာယံ သိနိဟ-သနိဟ ပီတိယံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၁၆.  သာဓာတ်သည် သာယာခြင်းအနက်၊ ပြီးဆုံးခြင်းအနက်၊ ပါးလွှာစေခြင်းအနက်တို့၌လည်းကောင်း၊ ဟာဓာတ်သည် စွန့်လွှတ်ခြင်းအနက်၌လည်းကောင်း၊ မုဟ်ဓာတ်သည် တွေဝေခြင်းအနက်၌လည်းကောင်း၊ နဟ်ဓာတ်သည် ချည်နှောင်ခြင်းအနက်၌လည်းကောင်း၊ နဟ် (နှာ) ဓာတ်သည် စင်ကြယ်ခြင်းအနက်၌လည်းကောင်း၊ ပိဟ်ဓာတ်သည် တောင့်တခြင်းအနက်၌လည်းကောင်း၊ သိနိဟ်ဓာတ်နှင့် သနိဟ်ဓာတ်တို့သည် ချစ်ခင်နှစ်သက်ခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:243">
+  <div class="pair-col col-pali">
+<p rend="chapter">သွာဒယော <span class="pb hidden-meta" data-ed="O" data-n="0.0027">[O 0.0027]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">သွာဒိဂိုဏ်း (သုအစရှိသော ဓာတ်တို့တည်း)။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:244">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">၁၁၇</span>. သု သဝဏေ သက သတ္တိမှိ ခီ ခယမှိ ဂိ သဒ္ဒနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">၁၁၇.  သုဓာတ်သည် ကြားရခြင်းအနက်၌လည်းကောင်း၊ သကဓာတ်သည် စွမ်းနိုင်ခြင်းအနက်၌လည်းကောင်း၊ ခီဓာတ်သည် ကုန်ခြင်းအနက်၌လည်းကောင်း၊ ဂိဓာတ်သည် အသံမြည်ခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:245">
+  <div class="pair-col col-pali">
+<p rend="gathalast">အပ-သမ္ဘූ (စ) ပါပုဏနေ ဟိ ဂတိမှိ ဝූ သံဝရေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အပဓာတ်နှင့် သမ္ဘုဓာတ်တို့သည် ရောက်ခြင်းအနက်၌လည်းကောင်း၊ ဟိဓာတ်သည် သွားခြင်းအနက်၌လည်းကောင်း၊ ဝူဓာတ်သည် စောင့်စည်းခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:246">
+  <div class="pair-col col-pali">
+<p rend="chapter">ကိယာဒယော</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">ကိယာဒိဂိုဏ်း (ကီအစရှိသော ဓာတ်တို့တည်း)။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:247">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:248">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကီ ဝိနိမယေ စိ စယေ ဇိ ဇယေ ဉာ’ဝဗောဓနေ၊</p>
+<p rend="gathalast">ထဝ’ဘိတ္ထဝေ ကမ္ပနေ ဓု (အထော) ပု ပဝနေ (သိယာ၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကီဓာတ်သည် လဲလှယ်ခြင်း (ဝယ်ယူခြင်း) အနက်၌လည်းကောင်း၊ စိဓာတ်သည် စုဆောင်းခြင်းအနက်၌လည်းကောင်း၊ ဇိဓာတ်သည် အောင်နိုင်ခြင်းအနက်၌လည်းကောင်း၊ ဉာဓာတ်သည် သိခြင်းအနက်၌လည်းကောင်း၊ ထဝဓာတ်သည် ချီးမွမ်းခြင်းအနက်၌လည်းကောင်း၊ ဓုဓာတ်သည် တုန်လှုပ်ခြင်းအနက်၌လည်းကောင်း၊ ပုဓာတ်သည် သုတ်သင်ခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:249">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:250">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ပီ တပ္ပဏေ မာ ပမာဏေ ခိပက္ခေပေ မိ ဟိံသနေ၊</p>
+<p rend="gatha2">မိ ပမာဏေ မု ဗန္ဓေ (စ) လု ပစ္ဆေဒေ သိ ဗန္ဓနေ</p>
+<p rend="gathalast">အသ ဘက္ခဏေ (အထော) ဂဟ ဥပါဒါနေ (ကိယာဒယော၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပီဓာတ်သည် ရောင့်ရဲစေခြင်းအနက်၌လည်းကောင်း၊ မာဓာတ်သည် တိုင်းတာခြင်းအနက်၌လည်းကောင်း၊ ခိပဓာတ်သည် ပစ်ခြင်းအနက်၌လည်းကောင်း၊ မိဓာတ်သည် ညှဉ်းဆဲခြင်းအနက်၌လည်းကောင်း၊ မိဓာတ်သည် တိုင်းတာခြင်းအနက်၌လည်းကောင်း၊ မုဓာတ်သည် ချည်နှောင်ခြင်းအနက်၌လည်းကောင်း၊ လုဓာတ်သည် ဖြတ်တောက်ခြင်းအနက်၌လည်းကောင်း၊ သိဓာတ်သည် ချည်နှောင်ခြင်းအနက်၌လည်းကောင်း၊ အသဓာတ်သည် စားခြင်းအနက်၌လည်းကောင်း၊ ဂဟဓာတ်သည် ယူခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:251">
+  <div class="pair-col col-pali">
+<p rend="chapter">တနာဒယော <span class="pb hidden-meta" data-ed="O" data-n="0.0028">[O 0.0028]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">တနာဒိဂိုဏ်း (တနုအစရှိသော ဓာတ်တို့တည်း)။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:252">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:253">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တနု ဝိတ္ထာရေ သက သတ္တိသ္မိံ-ဒု ပရိတာပေ သနု ဒါနသ္မိံ၊</p>
+<p rend="gatha2">ဝန ယာစာယံ မနု ဗောဓသ္မိံ-ဟိ ဂတေ အပ ပါပုဏနသ္မိံ (ဟိ၊)</p>
+<p rend="gathalast">ကရ ကရဏသ္မိံ(ဘဝတိ)သိ ဗန္ဓေ-သု အဘိဿဝနေ(တနု အာဒီနိ၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တနုဓာတ်သည် ပြန့်ပြောစေခြင်းအနက်၌လည်းကောင်း၊ သကဓာတ်သည် စွမ်းနိုင်ခြင်းအနက်၌လည်းကောင်း၊ ဒုဓာတ်သည် ပူပန်ခြင်းအနက်၌လည်းကောင်း၊ သနုဓာတ်သည် ပေးလှူခြင်းအနက်၌လည်းကောင်း၊ ဝနဓာတ်သည် တောင်းပန်ခြင်းအနက်၌လည်းကောင်း၊ မနုဓာတ်သည် သိခြင်းအနက်၌လည်းကောင်း၊ ဟိဓာတ်သည် သွားခြင်းအနက်၌လည်းကောင်း၊ အပဓာတ်သည် ရောက်ခြင်းအနက်၌လည်းကောင်း၊ ကရဓာတ်သည် ပြုခြင်းအနက်၌လည်းကောင်း၊ သိဓာတ်သည် ချည်နှောင်ခြင်းအနက်၌လည်းကောင်း၊ သုဓာတ်သည် ယိုစီးခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:254">
+  <div class="pair-col col-pali">
+<p rend="centre">နိစ္စံ ဏေဏယန္တာ စုရာဒယော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">စုရာဒိဂိုဏ်း (စုရအစရှိသော ဓာတ်တို့သည်) အမြဲတစေ ဏေ၊ ဏယပစ္စည်း အဆုံးရှိကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:255">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:256">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> စုရ ထေယျေ လောက (ဓာတု) ဒဿနေ အကိ လက္ခဏေ၊</p>
+<p rend="gathalast">သိယာ ထက ပတိဃာတေ (ပုန) တက္က ဝိတက္ကဏေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">စုရဓာတ်သည် ခိုးယူခြင်းအနက်၌လည်းကောင်း၊ လောကဓာတ်သည် ကြည့်ရှုခြင်းအနက်၌လည်းကောင်း၊ အကိဓာတ်သည် မှတ်သားခြင်းအနက်၌လည်းကောင်း၊ သကဓာတ်သည် ပိတ်ပင်တားဆီးခြင်းအနက်၌လည်းကောင်း၊ တက္ကဓာတ်သည် ကြံစည်ခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:257">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:258">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> လက္ခ ဒဿနအင်္ကေသု (ဝတ္တတေ) မက္ခ မက္ခဏေ၊</p>
+<p rend="gathalast">ဘက္ခါ’ဒနေ မောက္ခ မောစေ သုခ-ဒုက္ခ (စ) တကိရယေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လက္ခဓာတ်သည် ကြည့်ရှုခြင်း၊ မှတ်သားခြင်းအနက်တို့၌လည်းကောင်း၊ မက္ခဓာတ်သည် သုတ်လိမ်းခြင်းအနက်၌လည်းကောင်း၊ ဘက္ခဓာတ်သည် စားခြင်းအနက်၌လည်းကောင်း၊ မောက်ခဓာတ်သည် လွှတ်ခြင်းအနက်၌လည်းကောင်း၊ သုခဓာတ်နှင့် ဒုက္ခဓာတ်တို့သည် ထိုချမ်းသာခြင်း၊ ဆင်းရဲခြင်းကို ပြုခြင်းအနက်တို့၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:259">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂၃</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0029">[O 0.0029]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:260">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> လိင်္ဂ စိတ္တကိရယာ’ဒီသု မဂ-မဂ္ဂ ဂဝေသနေ၊</p>
+<p rend="gathalast">(ပုနာ’ပိ) ပစ ဝိတ္ထာရေ က္လေသေ ဝဉ္စ ပလမ္ဘနေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လိင်္ဂဓာတ်သည် ဆန်းကြယ်စွာပြုခြင်းစသောအနက်တို့၌လည်းကောင်း၊ မဂဓာတ်နှင့် မဂ္ဂဓာတ်တို့သည် ရှာဖွေခြင်းအနက်၌လည်းကောင်း၊ ပစဓာတ်သည် ပြန့်ပွားစေခြင်းအနက်၌လည်းကောင်း၊ ဝဉ္စဓာတ်သည် ပင်ပန်းစေခြင်း၊ လှည့်ပတ်ခြင်းအနက်တို့၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:261">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:262">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝစ္စ အဇ္ဈာယနေ အစ္စ ပූဇာယံ ဝစ ဘာသနေ၊</p>
+<p rend="gathalast">ရစ ပတိယတနေ သုစ ပေသုညေ ရုစ ရောစနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဝစ္စဓာတ်သည် ဖတ်ရွတ်သင်ကြားခြင်းအနက်၌လည်းကောင်း၊ အစ္စဓာတ်သည် ပူဇော်ခြင်းအနက်၌လည်းကောင်း၊ ဝစဓာတ်သည် ပြောဆိုခြင်းအနက်၌လည်းကောင်း၊ ရစဓာတ်သည် ပြင်ဆင်စီရင်ခြင်းအနက်၌လည်းကောင်း၊ သုစဓာတ်သည် ကုန်းတိုက်ခြင်းအနက်၌လည်းကောင်း၊ ရုစဓာတ်သည် နှစ်သက်ခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:263">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:264">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မုစပ္ပမောစနေ လောစ ဒဿနေ ကစ ဒိတ္တိယံ၊</p>
+<p rend="gathalast">သဇ္ဇာ’ဇ္ဇ အဇ္ဇနေ တဇ္ဇ တဇ္ဇနေ ဝဇ္ဇ ဝဇ္ဇနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မုစဓာတ်သည် လွှတ်ခြင်းအနက်၌လည်းကောင်း၊ လောစဓာတ်သည် ကြည့်ရှုခြင်းအနက်၌လည်းကောင်း၊ ကစဓာတ်သည် တောက်ပခြင်းအနက်၌လည်းကောင်း၊ သဇ္ဇဓာတ်နှင့် အဇ္ဇဓာတ်တို့သည် ရှာဖွေစုဆောင်းခြင်းအနက်၌လည်းကောင်း၊ တဇ္ဇဓာတ်သည် ခြိမ်းခြောက်ခြင်းအနက်၌လည်းကောင်း၊ ဝဇ္ဇဓာတ်သည် ရှောင်ကြဉ်ခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:265">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:266">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယုဇ သံယမနေ ပූဇ ပූဇာယံ တိဇ တေဇနေ၊</p>
+<p rend="gathalast">ပဇ မဂ္ဂ သံဝရဏေ ဂတေ ဘဇ ဝိဘာဇနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ယုဇဓာတ်သည် စောင့်စည်းချုပ်တည်းခြင်းအနက်၌လည်းကောင်း၊ ပူဇဓာတ်သည် ပူဇော်ခြင်းအနက်၌လည်းကောင်း၊ တိဇဓာတ်သည် ထက်မြက်စေခြင်းအနက်၌လည်းကောင်း၊ ပဇဓာတ်သည် လမ်းပိတ်ဆို့ခြင်း၊ သွားခြင်းအနက်တို့၌လည်းကောင်း၊ ဘဇဓာတ်သည် ခွဲခြားဝေဖန်ခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:267">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:268">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (အထော) ဘာဇ ပုထက္ကာရေ သဘာဇ ပီတိဒဿနေ၊</p>
+<p rend="gathalast">(အထော တု) ဃဋ သင်္ဃာတေ ဃဋ္ဋ သဉ္စလနာ’ဒိသု၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘာဇဓာတ်သည် တခြားစီပြုခြင်းအနက်၌လည်းကောင်း၊ သဘာဇဓာတ်သည် နှစ်သက်မှုကိုပြခြင်းအနက်၌လည်းကောင်း၊ ဃဋဓာတ်သည် ပေါင်းစည်းခြင်းအနက်၌လည်းကောင်း၊ ဃဋ္ဋဓာတ်သည် လှုပ်ရှားစေခြင်းစသောအနက်တို့၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:269">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂၈</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0030">[O 0.0030]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:270">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကုဋ-ကောဋ္ဋစ္ဆေဒနေ (ဒွေ) ကုဋ အာကောဋနာ’ဒိသု၊</p>
+<p rend="gathalast">နဋ နစ္စေ စဋ-ပုဋ ဘေဒေ ဝဏ္ဋ ဝိဘာဇနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကုဋဓာတ်နှင့် ကောဋ္ဋဓာတ်နှစ်ခုတို့သည် ဖြတ်တောက်ခြင်းအနက်၌လည်းကောင်း၊ ကုဋဓာတ်သည် ထုရိုက်ခေါက်ခြင်းစသောအနက်တို့၌လည်းကောင်း၊ นဋဓာတ်သည် ကခြင်းအနက်၌လည်းကောင်း၊ စဋဓာတ်နှင့် ပုဋဓာတ်တို့သည် ကွဲပြားခြင်း (ဖျက်ဆီးခြင်း) အနက်၌လည်းကောင်း၊ ဝဏ္ဋဓာတ်သည် ခွဲဝေခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:271">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:272">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တုဝဋ္ဋ ဧကသယနေ ဃဋော ဝိသရဏေ (သိယာ)၊</p>
+<p rend="gatha2">ဂုဏ္ဌ ဩဂုဏ္ဌနေ ဟေဌ ဗာဓာယံ ဝေဌ ဝေဌနေ</p>
+<p rend="gathalast">ဂုဍိ ဝေဌေ ကဍိ-ခဍိ ဘေဒနေ မဍိ ဘූသနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တုဝဋ္ဋဓာတ်သည် တကိုယ်တည်းအိပ်ခြင်းအနက်၌လည်းကောင်း၊ ဃဋဓာတ်သည် ပြန့်ပွားခြင်းအနက်၌လည်းကောင်း၊ ဂုဏ္ဌဓာတ်သည် ဖုံးလွှမ်းခြင်းအနက်၌လည်းကောင်း၊ ဟေဌဓာတ်သည် ညှဉ်းဆဲခြင်းအနက်၌လည်းကောင်း၊ ဝေဌဓာတ်သည် ရစ်ပတ်ခြင်းအနက်၌လည်းကောင်း၊ ဂုဍိဓာတ်သည် ရစ်ပတ်ခြင်းအနက်၌လည်းကောင်း၊ ကဍိဓာတ်နှင့် ခဍိဓာတ်တို့သည် ခွဲဖျက်ခြင်းအနက်၌လည်းကောင်း၊ မဍိဓာတ်သည် တန်ဆာဆင်ခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:273">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:274">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပဏ္ဍ-ဘဏ္ဍ ပရိဘာသေ ဒဍိ အာဏာယ (မီရိတော)၊</p>
+<p rend="gathalast">တဍိ သံတာဠနေ ပိဏ္ဍ သင်္ဃာတေ ဆဍ္ဍ ဆဍ္ဍနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပဏ္ဍဓာတ်နှင့် ဘဏ္ဍဓာတ်တို့သည် ကဲ့ရဲ့ခြင်းအနက်၌လည်းကောင်း၊ ဒဍိဓာတ်သည် အမိန့်ပေးခြင်းအနက်၌လည်းကောင်း၊ တဍိဓာတ်သည် ရိုက်နှက်ခြင်းအနက်၌လည်းကောင်း၊ ပိဏ္ဍဓာတ်သည် စုပေါင်းခြင်းအနက်၌လည်းကောင်း၊ ဆဍ္ဍဓာတ်သည် စွန့်ပစ်ခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:275">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:276">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝဏ္ဏ သံဝဏ္ဏနေ စုဏ္ဏ စုဏ္ဏနေ အာဏ ပေသနေ၊</p>
+<p rend="gathalast">ဂဏ သံကလနေ ကဏ္ဏ သဝဏေ စိန္တ စိန္တနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဝဏ္ဏဓာတ်သည် ချီးမွမ်းခြင်းအနက်၌လည်းကောင်း၊ စုဏ္ဏဓာတ်သည် မှုန့်မှုန့်ကြိတ်ခြင်းအနက်၌လည်းကောင်း၊ အာဏဓာတ်သည် စေခိုင်းခြင်းအနက်၌လည်းကောင်း၊ ဂဏဓာတ်သည် ရေတွက်ခြင်းအနက်၌လည်းကောင်း၊ ကဏ္ဏဓာတ်သည် ကြားရခြင်းအနက်၌လည်းကောင်း၊ စိန္တဓာတ်သည် ကြံစည်ခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:277">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:278">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သန္တ သင်္ကောစနေ မန္တ ဂုတ္တ ဘာသန ဇာနနေ၊</p>
+<p rend="gathalast">စိတ သံစေတနာ’ဒိသု ကိတ္တ သံသဒ္ဒနေ (ဘဝေ၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သန္တဓာတ်သည် ကျုံ့ခြင်းအနက်၌လည်းကောင်း၊ မန္တဓာတ်သည် လျှို့ဝှက်စွာပြောခြင်း၊ သိခြင်းအနက်တို့၌လည်းကောင်း၊ စိတဓာတ်သည် ဆင်ခြင်ခြင်းစသောအနက်တို့၌လည်းကောင်း၊ ကိတ္တဓာတ်သည် ကျော်စောစေခြင်း (ချီးမွမ်းခြင်း) အနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:279">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၃</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0031">[O 0.0031]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:280">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယတ နီယျာတနေ ဂန္ထ သန္ဒဗ္ဘေ အတ္ထ ယာစနေ၊</p>
+<p rend="gathalast">ကထ ဝါကျပ္ပဗန္ဓေ (စ) ဝိဒ ဉာဏေ နုဒေ စုဒ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ယတဓာတ်သည် ပေးအပ်ခြင်းအနက်၌လည်းကောင်း၊ ဂန္ထဓာတ်သည် သီကုံးစပ်ဆိုခြင်းအနက်၌လည်းကောင်း၊ အတ္ထဓာတ်သည် တောင်းပန်ခြင်းအနက်၌လည်းကောင်း၊ ကထဓာတ်သည် စကားအစဉ်ကို ပြောဆိုခြင်းအနက်၌လည်းကောင်း၊ ဝိဒဓာတ်သည် သိခြင်းအနက်၌လည်းကောင်း၊ နုဒဓာတ်သည် နှင်ထုတ်ခြင်းအနက်၌လည်းကောင်း၊ စုဒဓာတ်သည် စေခိုင်းတိုက်တွန်းခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:281">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:282">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဆဒါ’ပဝါရဏေ ဆဒ္ဒ ဝမနေ ဆန္ဒ ဣစ္ဆယံ၊</p>
+<p rend="gathalast">ဝဒီ’ဘိဝါဒ ထောမေသု ဘဒိကလျာဏကမ္မနိ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဆဒဓာတ်သည် ဖုံးလွှမ်းခြင်းအနက်၌လည်းကောင်း၊ ဆဒ္ဒဓာတ်သည် အန်ထုတ်ခြင်း (စွန့်ခြင်း) အနက်၌လည်းကောင်း၊ ဆန္ဒဓာတ်သည် အလိုရှိခြင်းအနက်၌လည်းကောင်း၊ ဝဒိဓာတ်သည် ရှိခိုးခြင်း၊ ချီးမွမ်းခြင်းအနက်တို့၌လည်းကောင်း၊ ဘဒိဓာတ်သည် ကောင်းမှုပြုခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:283">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:284">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဟိဠာဒ (တု) သုခေ ဂန္ဓ သූစနေ ဝိဓ ကမ္ပနေ၊</p>
+<p rend="gathalast">ရန္ဓ ပါကေ (အထော) မာန ပූဇာယံ နု တ္ထုတိမှိ (တု၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဟိဠာဒဓာတ်သည် ချမ်းသာခြင်းအနက်၌လည်းကောင်း၊ ဂန္ဓဓာတ်သည် ညွှန်ပြခြင်းအနက်၌လည်းကောင်း၊ ဝိဓဓာတ်သည် တုန်လှုပ်ခြင်းအနက်၌လည်းကောင်း၊ ရန္ဓဓာတ်သည် ချက်ပြုတ်ခြင်းအနက်၌လည်းကောင်း၊ မာနဓာတ်သည် ပူဇော်မြတ်နိုးခြင်းအနက်၌လည်းကောင်း၊ နုဓာတ်သည် ချီးမွမ်းခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:285">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:286">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ထန ဒေဝသဒ္ဒေ ဦန ပရိဟာနေ ထေန စောရိယေ၊</p>
+<p rend="gathalast">ဓန သဒ္ဒေ ဉပ တောသ နိသာန မာရဏာ’ဒိသု၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သနဓာတ်သည် မိုးချုန်းသံအနက်၌လည်းကောင်း၊ ဦနဓာတ်သည် ဆုတ်ယုတ်လျော့နည်းခြင်းအနက်၌လည်းကောင်း၊ ထေနဓာတ်သည် ခိုးယူခြင်းအနက်၌လည်းကောင်း၊ ဓနဓာတ်သည် အသံမြည်ခြင်းအနက်၌လည်းကောင်း၊ ညပဓာတ်သည် နှစ်သက်စေခြင်း၊ သွေးခြင်း၊ သတ်ခြင်းစသောအနက်တို့၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:287">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:288">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> လပ ဝါကျေ ဈပ ဒါဟေ ရုပ ရောပဏအာဒိသု၊</p>
+<p rend="gathalast">ပီ တပ္ပနေ (သိယာ) ကပ္ပ ဝိတက္ကေ လဘိ ဝဉ္စနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လပဓာတ်သည် ပြောဆိုခြင်းအနက်၌လည်းကောင်း၊ ဈပဓာတ်သည် ပူလောင်စေခြင်း (ရှို့မြှိုက်ခြင်း) အနက်၌လည်းကောင်း၊ ရုပ်ဓာတ်သည် စိုက်ပျိုးခြင်းစသောအနက်တို့၌လည်းကောင်း၊ ပီဓာတ်သည် ရောင့်ရဲစေခြင်းအနက်၌လည်းကောင်း၊ ကပ္ပဓာတ်သည် ကြံစည်ခြင်းအနက်၌လည်းကောင်း၊ လဘိဓာတ်သည် လှည့်ပတ်ခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:289">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၈</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0032">[O 0.0032]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:290">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (အထော) ဝဟိ ဂရဟာယံ သမု သာန္တဝန ဒဿနေ၊</p>
+<p rend="gathalast">ကမု ဣစ္ဆာယ ကန္တိမှိ (သိယာ) ထောမ သိလာဃနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဝဟိဓာတ်သည် ကဲ့ရဲ့ခြင်းအနက်၌လည်းကောင်း၊ သမုဓာတ်သည် ဖျောင်းဖျခြင်း၊ ပြခြင်းအနက်တို့၌လည်းကောင်း၊ ကမုဓာတ်သည် အလိုရှိခြင်း၊ နှစ်သက်ခြင်းအနက်တို့၌လည်းကောင်း၊ ထောမဓာတ်သည် ချီးမွမ်းခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:291">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:292">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တိမု တေမန သင်္ကာသု အမ ရောဂဂတာ’ဒိသု၊</p>
+<p rend="gathalast">သံဂါမ ယုဒ္ဓေ (ဝတ္တေယျ) ဤရ ဝါစာ ပကမ္ပနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တိမုဓာတ်သည် စိုစွတ်စေခြင်း၊ ယုံမှားခြင်းအနက်တို့၌လည်းကောင်း၊ အမဓာတ်သည် နာဖျားခြင်း၊ သွားခြင်းစသောအနက်တို့၌လည်းကောင်း၊ သင်္ဂါမဓာတ်သည် တိုက်ခိုက်ခြင်းအနက်၌လည်းကောင်း၊ ဤရဓာတ်သည် ပြောဆိုခြင်း၊ တုန်လှုပ်ခြင်းအနက်တို့၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:293">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:294">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝရ အာဝရဏိ’စ္ဆာသု ယာစာယံ ဓရ ဓာရဏေ၊</p>
+<p rend="gathalast">တီရ ကမ္မ သမတ္တိမှိ ပါရ သာမတ္ထိယာ’ဒိသု၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဝရဓာတ်သည် ပိတ်ပင်ခြင်း၊ အလိုရှိခြင်း၊ တောင်းပန်ခြင်းအနက်တို့၌လည်းကောင်း၊ ဓရဓာတ်သည် ဆောင်ခြင်းအနက်၌လည်းကောင်း၊ တီရဓာတ်သည် အမှုပြီးမြောက်ခြင်းအနက်၌လည်းကောင်း၊ ပါရဓာတ်သည် စွမ်းနိုင်ခြင်းစသောအနက်တို့၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:295">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:296">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တုလု’မ္မာနေ ခလ သောဝေ သဉ္စယေ ပါလရက္ခဏေ၊</p>
+<p rend="gathalast">ကလ သင်္ကလနာ’ဒီသု (ဘဝေ) မီလ နိမီလနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တုလုဓာတ်သည် ချိန်တွယ်ခြင်းအနက်၌လည်းကောင်း၊ ခလဓာတ်သည် သုတ်သင်ခြင်း၊ စုဆောင်းခြင်း၊ စောင့်ရှောက်ခြင်းအနက်တို့၌လည်းကောင်း၊ ကလဓာတ်သည် ရေတွက်စုစည်းခြင်းစသောအနက်တို့၌လည်းကောင်း၊ မိလဓာတ်သည် မျက်စိမှိတ်ခြင်းအနက်၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:297">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:298">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သီလූ’ပဓာရဏေ မූလ ရောဟဏေ လလ ဣစ္ဆနေ၊</p>
+<p rend="gathalast">ဒုလ ဥက္ခေပဏေ ပූလ မဟတ္တန သမုဿယေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သီလုဓာတ်သည် ဆင်ခြင်စူးစမ်းခြင်းအနက်၌လည်းကောင်း၊ မူလဓာတ်သည် ပေါက်ရောက်ကြီးပွားခြင်းအနက်၌လည်းကောင်း၊ လလဓာတ်သည် အလိုရှိခြင်းအနက်၌လည်းကောင်း၊ ဒုလဓာတ်သည် မြှောက်ပင့်ချီမခြင်းအနက်၌လည်းကောင်း၊ ပူလဓာတ်သည် ကြီးမြတ်ခြင်း၊ စုပုံခြင်းအနက်တို့၌လည်းကောင်း ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:299">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄၃</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0033">[O 0.0033]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:300">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဃုသ သဒ္ဒေ ပိသ ပေသေ ဘုသာ’လင်္ကရဏေ (သိယာ၊)</p>
+<p rend="gathalast">ရုသ ပါရုသိယေ ခုံသ အက္ကောသေ ပုသ ပေါသနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဃုသ်ဓာတ်သည် အသံပြုခြင်း၌၊ ပိသ်ဓာတ်သည် စေလွှတ်ခြင်း၌၊ ဘုသ်ဓာတ်သည် တန်ဆာဆင်ခြင်း၌ ဖြစ်၏။ ရုသ်ဓာတ်သည် ကြမ်းတမ်းခြင်း၌၊ ခုံသ်ဓာတ်သည် ဆဲရေးခြင်း၌၊ ပုသ်ဓာတ်သည် မွေးမြူခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:301">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:302">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒိသ ဥစ္စာရဏာ’ဒီသု ဝသ အစ္ဆာဒနေ (သိယာ၊)</p>
+<p rend="gathalast">ရသ’ဿာဒေ ရဝေ သ္နေဟေ (အထော) သိသ ဝိသေသနေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဒိသ်ဓာတ်သည် မြွက်ဆိုခြင်းအစရှိသည်တို့၌၊ ဝသ်ဓာတ်သည် ဖုံးလွှမ်းခြင်း (ဝတ်ရုံခြင်း) ၌ ဖြစ်၏။ ရသ်ဓာတ်သည် သာယာခြင်း (အရသာခံခြင်း)၊ အသံပြုခြင်း၊ ချစ်ခင်ခြင်း (စေးထန်းခြင်း) တို့၌ ဖြစ်၏။ သိသ်ဓာတ်သည် ထူးခြားစေခြင်း၌ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:303">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:304">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သိ ဗန္ဓေ မိဿ သမ္မိဿေ ကုဟ ဝိမ္ဘာပနေ သိယာ၊</p>
+<p rend="gathalast">ရဟ စာဂေ ဂတေ (စာ’ပိ) မဟ ပූဇာယ (မီရိတော၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သိဓာတ်သည် ဖွဲ့ချည်ခြင်း၌၊ မိဿ်ဓာတ်သည် ရောနှောခြင်း၌၊ ကုဟ်ဓာတ်သည် အံ့ဩစေခြင်း၌ ဖြစ်၏။ ရဟ်ဓာတ်သည် စွန့်လွှတ်ခြင်း၌လည်းကောင်း၊ သွားခြင်း၌လည်းကောင်း ဖြစ်၏။ မဟ်ဓာတ်သည် ပူဇော်ခြင်း၌ ဖြစ်၏ဟု ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:305">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:306">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပိဟိ’စ္ဆာယံ သိယာ ဝီဠ လဇ္ဇာယံ ဧဠ ဖာဠနေ</p>
+<p rend="gatha2">ဟီဠ ဂါရဟိယေ ပီဠ ဗာဓာယံ တဠ တာဠနေ</p>
+<p rend="gathalast">လဠ (ဓာတූ)’ပသေဝါ’ယံ (ဝတ္တတီ’မေစုရာဒယော၊)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပိဟိဓာတ်သည် အလိုရှိခြင်း၌ ဖြစ်၏။ ဝီဠဓာတ်သည် ရှက်ခြင်း၌၊ ဧဠဓာတ်သည် ခွဲစိတ်ခြင်း၌၊ ဟီဠဓာတ်သည် ကဲ့ရဲ့ခြင်း၌၊ ပီဠဓာတ်သည် နှိပ်စက်ခြင်း၌၊ တဠဓာတ်သည် ရိုက်ပုတ်ခြင်း၌၊ လဠဓာတ်သည် မှီဝဲခြင်း၌ ဖြစ်၏။ ဤဓာတ်တို့သည် စုရာဒိဂိုဏ်းဝင် ဓာတ်တို့ ဖြစ်ကြကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:307">
+  <div class="pair-col col-pali">
+<p rend="centre">သမတ္တာ သတ္တဂဏာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဂိုဏ်းခုနစ်ပါးတို့သည် ပြီးဆုံးကြပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:308">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄၇</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0034">[O 0.0034]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:309">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဘုဝါဒီ စ ရုဓာဒီ စ-ဒိဝါဒိ သွာ’ဒယော ဂဏာ၊</p>
+<p rend="gathalast">ကိယာဒီ စ တနာဒီ စ-စုရာဒီတီ’ဓ သတ္တဓာ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဤကျမ်း၌ ဘူဝါဒိဂိုဏ်း၊ ရုဓာဒိဂိုဏ်း၊ ဒိဝါဒိဂိုဏ်း၊ သွာဒိဂိုဏ်း၊ ကိယာဒိဂိုဏ်း၊ တနာဒိဂိုဏ်းနှင့် စုရာဒိဂိုဏ်းဟူ၍ ဂိုဏ်းတို့သည် ခုနစ်ပါးရှိကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:310">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:311">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကိရယာဝါစိတ္တမက္ခါတု-မေ’ကေကတ္ထော ဗဟූ’ဒိတော၊</p>
+<p rend="gathalast">ပယောဂတော’နုဂန္တဗ္ဗာ-အနေကတ္ထာ ဟိ ဓာတဝေါ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကိရိယာကို ဟောဆိုရန်အတွက် ဓာတ်တစ်ခုချင်း၌ အနက်တစ်ခုတည်းသာမက များစွာသော အနက်တို့ကို ဟော၏ဟု ဆိုအပ်၏။ စင်စစ်သော်ကား ဓာတ်တို့သည် အနက်များစွာ ရှိကြကုန်သောကြောင့် အသုံးပြုပုံ (ပယောဂ) အားလျော်စွာ သိရှိနားလည်အပ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:312">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:313">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဟိတာယ မန္ဒဗုဒ္ဓီနံ-ဝျတ္တံ ဝဏ္ဏက္ကမာ လဟုံ၊</p>
+<p rend="gathalast">ရစိတာ ဓာတုမဉ္ဇုသာ-သီလဝံသေန ဓီမတာ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဉာဏ်ပညာနည်းသော သူတို့၏ အကျိုးငှာ အက္ခရာစဉ်အတိုင်း လွယ်ကူထင်ရှားစေလျက် ဤဓာတုမဉ္ဇူသာကျမ်းကို ပညာရှိသော သီလဝံသ မထေရ်သည် ပြုစုစီရင်အပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:314">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၅၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၅၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:315">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သဒ္ဓမ္မပင်္ကေရုဟရာဇဟံသော၊</p>
+<p rend="gatha2">အာသိဋ္ဌဓမ္မဋ္ဌိတိ သီလဝံသော၊</p>
+<p rend="gatha3">ယက္ခဒ္ဒိလေနာချ နိဝါသဝါသီ၊</p>
+<p rend="gathalast">ယတိဿရော သောယမိဒံ အကာသိ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သူတော်ကောင်းတရားတည်းဟူသော ကြာပန်း၌ မင်းဟင်္သာကဲ့သို့ ဖြစ်တော်မူသော၊ မြဲမြံသော သီလနှင့် ပြည့်စုံတော်မူသော၊ ယက္ခဒိလ (ဘီလူးလိုဏ်ဂူ) ဟု သမုတ်အပ်သော ကျောင်း၌ သီတင်းသုံးတော်မူသော ရဟန်းတို့၏ အထွတ်အထိပ် ဖြစ်တော်မူသော ထိုသီလဝံသ မထေရ်သည် ဤကျမ်းကို ပြုစုတော်မူခဲ့ပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:316">
+  <div class="pair-col col-pali">
+<p rend="centre">ကစ္စာယန ဓာတုမဉ္ဇූသာ သမတ္တာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ကစ္စာယနဓာတုမဉ္ဇူသာကျမ်း ပြီးဆုံးပါပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:317">
+  <div class="pair-col col-pali">
+<p rend="subhead">သာစရိယာနုသိဋ္ဌာ <span class="pb hidden-meta" data-ed="O" data-n="0.0035">[O 0.0035]</span> ပရိသိဋ္ဌပရိဘာသာ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">ဆရာတို့ ညွှန်ကြားဆုံးမအပ်သော နောက်ဆက်တွဲ ပရိဘာသာ စည်းကမ်းချက်များ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:318">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:319">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဧကာ နေကဿ ရာနန္တූ-’ဘယေသံ အန္တိမာ သရာ၊</p>
+<p rend="gathalast">အင်္ဂါနုဗန္ဓာ ဓာတූနံ-ဝုစ္စန္တေ’ပိ ယထာက္ကမံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သရတစ်လုံးရှိသောဓာတ် (ဧကာစရ)၊ သရများစွာရှိသောဓာတ် (အနေကာစရ) နှစ်မျိုးလုံးတို့၏ အဆုံးသရများကိုလည်းကောင်း၊ ဓာတ်တို့၏ အင်္ဂါဖြစ်သော အနုဗန္ဓ (အမှတ်အသား) များကိုလည်းကောင်း အစဉ်အတိုင်း ဟောကြားအပ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:320">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:321">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဓာတုနော ဝျာဉ္ဇနာ ပုဗ္ဗေ-နိဂ္ဂဟီတံ သမ’န္တိမာ၊</p>
+<p rend="gathalast">ဣဝဏ္ဏေနာ’ရုဓာဒီန-မနုဗန္ဓေန စိဏှိတံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဓာတ်၏ အဆုံးဗျည်း၏ ရှေ့၌ နိဂ္ဂဟိတ်သက်ရောက်ခြင်းကို ရုဓာဒိဂိုဏ်းဝင် ဓာတ်တို့၌ ဣဝဏ္ဏ (ဣ၊ ဤ) ဟူသော အနုဗန္ဓ (အမှတ်အသား) ဖြင့် မှတ်သားအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:322">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:323">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သေသာ’နုဗန္ဓာ သဗ္ဗေသံ-ဟောန္တီ’ဓု’စ္စာရဏပ္ဖလာ၊</p>
+<p rend="gathalast">ဥစ္စာဝစပ္ဖလာ ဘာသ-န္တရမ္ပတွာ ဘ ဝန္တိ’ပိ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကြွင်းသော အနုဗန္ဓ (အမှတ်အသား) အားလုံးတို့သည် ဤကျမ်း၌ ရွတ်ဆိုရလွယ်ကူခြင်း အကျိုးရှိကုန်၏။ သို့သော် အခြားသော ဘာသာစကား (သက္ကတ စသည်) သို့ ရောက်သောအခါ ထူးခြားသော အကျိုးကျေးဇူး အမျိုးမျိုး ရှိကြကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:324">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0036">[O 0.0036]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:325">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> နာမဓာတုက ဘာဝေါ’ပိ-ကိရယာယ အဓိကာရတော၊</p>
+<p rend="gathalast">ဝိရုဒ္ဓန္တရာဘာဝါ-ကွစိဒေဝ ပယုဇ္ဇတေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကိရိယာ၏ အာဏာသက်ရောက်မှု (အဓိကာရ) ကြောင့်လည်းကောင်း၊ ဆန့်ကျင်ဘက် တစ်ပါးမရှိခြင်းကြောင့်လည်းကောင်း နာမ်ဓာတ် (နာမဓာတု) ဖြစ်ခြင်းကို အချို့သော နေရာတို့၌သာ သုံးစွဲအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:326">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:327">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒွန္ဒယုတ္တိဝသာ ကွာပိ-အာဒေသော ယောဝိဘတ္တိယာ၊</p>
+<p rend="gathalast">ဂုဏာဒိဘာဝ သဒ္ဒေါ’ပိ-တကိရယတ္ထေ ဝိဓီယတေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အချို့သော နေရာတို့၌ ဒွန္ဒသမတ်ဖြင့် ယှဉ်စပ်ခြင်း အစွမ်းကြောင့် ဝိဘတ်၏ အစားထိုးခြင်း (အာဒေသ) သည် ဖြစ်၏။ ဂုဏအစရှိသော သဒ္ဒါတို့သည်လည်း ထိုဓာတ်တို့၏ ကိရိယာအနက်၌ ပြုပြင်စီရင်အပ်ကုန်၏။</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

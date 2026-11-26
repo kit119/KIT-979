@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e0604n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Myanmar:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif Myanmar"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">ပါဠိ | မြန်မာ</button><button type="button" data-mode="view-stack">ပါဠိ — မြန်မာ</button><button type="button" data-mode="view-pali-only">ပါဠိ</button><button type="button" data-mode="view-trans-only">မြန်မာ</button><button type="button" id="toggle-meta-btn">မှတ်ချက်</button></div>
+<div class="pair-row" data-id="e0604n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre"> နမော တဿ ဘဂဝတော အရဟတော သမ္မာသမ္ဗုဒ္ဓဿ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ထိုဘုန်းတော်ခြောက်ပါးနှင့် ပြည့်စုံတော်မူသော၊ ပူဇော်အထူးကို ခံယူတော်မူထိုက်သော၊ သစ္စာလေးရပ် တရားမြတ်ကို ကိုယ်တိုင်မှန်စွာ သိတော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="chapter">သုတ္တဝန္ဒနာ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">သုတ္တဝန္ဒနာ (သုတ်တော်များ ရှိခိုးခြင်း)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဓမ္မတ္ထ <span class="pb hidden-meta" data-ed="M" data-n="0.0013">[M 0.0013]</span> ဒေသနာ ဝေဓ၊</p>
+<p rend="gatha2">စတုဂမ္ဘီရ ဒုဒ္ဒသံ၊</p>
+<p rend="gatha3">ဓမ္မံ လောကဿ ဒေသေန္တံ၊</p>
+<p rend="gathalast">ဓမ္မရာဇံ နမာမဟံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">နက်နဲခြင်းလေးပါးရှိ၍ မြင်နိုင်ခဲသော တရားအနက်ကို ထိုးထွင်း၍ သိမြင်တော်မူသော၊ လောကသားတို့အား တရားတော်ကို ဟောကြားတော်မူတတ်သော တရားမင်းဖြစ်တော်မူသော မြတ်စွာဘုရားအား ဘုရားတပည့်တော် ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဗုဒ္ဓေါ <span class="pb hidden-meta" data-ed="M" data-n="0.0014">[M 0.0014]</span> ပစ္စေကဗုဒ္ဓေါ စ၊</p>
+<p rend="gatha2">အရဟာ စက္ကဝတ္တီတိ၊</p>
+<p rend="gatha3">ထූပါထූပါရဟံ ဝန္ဒေ၊</p>
+<p rend="gathalast">စတုထූပါရဟေသု တံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သမ္မာသမ္ဗုဒ္ဓဘုရား၊ ပစ္စေကဗုဒ္ဓါ၊ ရဟန္တာနှင့် စကြာဝတေးမင်း ဟူသော စေတီထိုက်သော ပုဂ္ဂိုလ်လေးဦးတို့တွင် စေတီပူဇော်ထိုက်သော ထိုမြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပေတသေယျော <span class="pb hidden-meta" data-ed="M" data-n="0.0015">[M 0.0015]</span> ကာမဘောဂီ၊</p>
+<p rend="gatha2">သီဟသေယျော တထာဂတော၊</p>
+<p rend="gatha3">သယန္တံ စတုသေယျေသု၊</p>
+<p rend="gathalast">စတုတ္ထေန နမေ ဇိနံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပြိတ္တာအိပ်ခြင်း၊ ကာမစည်းစိမ်ခံစားသူတို့အိပ်ခြင်း၊ ခြင်္သေ့အိပ်ခြင်း၊ တထာဂတမြတ်စွာဘုရား အိပ်ခြင်းတည်းဟူသော အိပ်ခြင်းလေးမျိုးတို့တွင် စတုတ္ထမြောက် အိပ်ခြင်းဖြင့် အိပ်စက်တော်မူသော အောင်တော်မူမြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အဏ္ဍဇာ ဇလာဗုဇာ စ၊</p>
+<p rend="gatha2">သံသေဒဇော ပပါတိကာ၊</p>
+<p rend="gatha3">စတုယောနိ ပရိစ္ဆေဒ၊</p>
+<p rend="gathalast">ဉာဏဝန္တံ နမေ ဇိနံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဥမှပေါက်ဖွားသော အဏ္ဍဇ၊ အမိဝမ်းမှ ပေါက်ဖွားသော ဇလာဗုဇ၊ ညွန်ကပ်ညှိတွယ်ရာမှ ပေါက်ဖွားသော သံသေဒဇ၊ ကိုယ်ထင်ရှား ဖြစ်ပေါ်လာသော သြပပါတိက ဟူသော ပဋိသန္ဓေနေနည်း ယောနိလေးပါးတို့ကို ပိုင်းခြားသိမြင်တော်မူသော ဉာဏ်တော်ရှင် အောင်တော်မူမြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သုတဗုဒ္ဓေါနုဗုဒ္ဓေါ <span class="pb hidden-meta" data-ed="M" data-n="0.0016">[M 0.0016]</span> စ၊</p>
+<p rend="gatha2">ပစ္စေကော ဇိနဗုဒ္ဓေါတိ၊</p>
+<p rend="gatha3">စတုတ္ထံ စတုဗုဒ္ဓေသု၊</p>
+<p rend="gathalast">ဝန္ဒါမိ လောကနာယကံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သုတဗုဒ္ဓ၊ အနုဗုဒ္ဓ၊ ပစ္စေကဗုဒ္ဓ၊ ဇိနဗုဒ္ဓ ဟူသော ဗုဒ္ဓလေးမျိုးတို့တွင် စတုတ္ထမြောက် ဖြစ်တော်မူသော လောကလူနတ်တို့၏ ကိုးကွယ်ရာ လောကနာယက မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရာဟုဂ္ဂံ <span class="pb hidden-meta" data-ed="M" data-n="0.0017">[M 0.0017]</span> အတ္တဘာဂီနံ၊</p>
+<p rend="gatha2">မန္ဓာတာ ကာမဘောဂီနံ၊</p>
+<p rend="gatha3">မာရော အဓိပတေယျာနံ၊</p>
+<p rend="gatha2">ဗုဒ္ဓေါ လောကေ သဒေဝကေ၊</p>
+<p rend="gatha3">စတုအဂ္ဂ ပညတ္တီနံ၊</p>
+<p rend="gathalast">အဂ္ဂပတ္တံ နမေ ဇိနံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အတ္တဘော (ခန္ဓာကိုယ်) ကြီးမားသူတို့တွင် ရာဟုအသူရိန်သည်လည်းကောင်း၊ ကာမဂုဏ်ခံစားသူတို့တွင် မန္ဓာတ်မင်းသည်လည်းကောင်း၊ တန်ခိုးကြီးစိုးသူတို့တွင် မာရ်နတ်သည်လည်းကောင်း၊ လူနတ်နှင့်တကွသော လောက၌ မြတ်စွာဘုရားသည်လည်းကောင်း အမြတ်ဆုံး ဖြစ်တော်မူ၏။ ထိုသို့ အမြတ်ဆုံးဟု ပညတ်အပ်သော လေးဦးတို့တွင် အထွတ်အထိပ်သို့ ရောက်တော်မူသော အောင်တော်မူမြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒါနံ <span class="pb hidden-meta" data-ed="M" data-n="0.0018">[M 0.0018]</span> ပိယကထာ အတ္ထ၊</p>
+<p rend="gatha2">စရိယာ သဒိသတ္တတာ၊</p>
+<p rend="gatha3">စတုသင်္ဂဟ ဝတ္ထූဟိ၊</p>
+<p rend="gatha2">အသင်္ခိယေသု ဇာတိသု၊</p>
+<p rend="gatha3">လောကဿ သင်္ဂဟေတာရံ၊</p>
+<p rend="gathalast">ဝန္ဒါမိ လောကနာယကံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပေးကမ်းခြင်း ဒါန၊ ချိုသာစွာပြောဆိုခြင်း ပိယဝါစာ၊ အကျိုးရှိအောင်ကျင့်ခြင်း အတ္ထစရိယာ၊ ကိုယ်ချင်းစာတရားထားခြင်း သမာနတ္တတာ ဟူသော သင်္ဂဟဝတ္ထုလေးပါးတို့ဖြင့် ရေတွက်၍မရနိုင်သော ဘဝများစွာပတ်လုံး လောကသားတို့ကို ချီးမြှောက်တော်မူခဲ့သော လောကနာယက မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> လောဘော ဒေါသော စ မောဟောတိ၊</p>
+<p rend="gatha2">အန္တော ပစ္စတ္ထိကေ တယော၊</p>
+<p rend="gatha3">ဒုဇ္ဇယေ <span class="pb hidden-meta" data-ed="M" data-n="0.0019">[M 0.0019]</span> သဗ္ဗဝေရီဟိ၊</p>
+<p rend="gathalast">သဉ္ဇိတံပိ သုဓိံ နမေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လောဘ၊ ဒေါသ၊ မောဟတည်းဟူသော အတွင်းရန်သူ သုံးပါးတို့သည် ရန်သူအားလုံးတို့ထက် အောင်နိုင်ရန် ခဲယဉ်းလှသော်လည်း ထိုရန်သူတို့ကို အောင်တော်မူပြီးသော ပညာရှိတော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဇာတိ ပုည မဟတ္တာနိ၊</p>
+<p rend="gatha2">ဂုဏမဟတ္တမုတ္တမံ၊</p>
+<p rend="gatha3">တိမဟတ္ထေဟိ သမ္ပန္နံ၊</p>
+<p rend="gathalast">ဝန္ဒါမိ လောကနာယကံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဇာတ်သန္ဓေ၏ ကြီးမြတ်ခြင်း၊ ကောင်းမှုကုသိုလ်၏ ကြီးမြတ်ခြင်း၊ အတုမဲ့ဂုဏ်တော်တို့၏ ကြီးမြတ်ခြင်း ဟူသော ကြီးမြတ်ခြင်းသုံးပါးနှင့် ပြည့်စုံတော်မူသော လောကနာယက မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဟေတု <span class="pb hidden-meta" data-ed="M" data-n="0.0020">[M 0.0020]</span> ဖလ သမ္ပဒါယော၊</p>
+<p rend="gatha2">သတ္တုပကာရသမ္ပဒါ၊</p>
+<p rend="gatha3">တိသမ္ပဒါဟိ သမ္ပန္နံ၊</p>
+<p rend="gathalast">ဝန္ဒါမိ လောကနာယကံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြောင်းပြည့်စုံခြင်း (ဟေတုသမ္ပဒါ)၊ အကျိုးပြည့်စုံခြင်း (ဖလသမ္ပဒါ)၊ သတ္တဝါတို့အား အကျိုးပြုခြင်း (သတ္တူပကာရသမ္ပဒါ) ဟူသော သမ္ပဒါတရား သုံးပါးနှင့် ပြည့်စုံတော်မူသော လောကနာယက မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဉာဏပ္ပဟာနာနုဘာဝ၊</p>
+<p rend="gatha2">သုရූပကာရသမ္ပဒါ၊</p>
+<p rend="gatha3">စတုဖလ သမ္ပဒါဟိ၊</p>
+<p rend="gathalast">တံ သမ္ပန္နံ နမေ ဇိနံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဉာဏ်တော်၏ ပြည့်စုံခြင်း၊ ကိလေသာပယ်စွန့်ခြင်း၏ ပြည့်စုံခြင်း၊ တန်ခိုးအာနုဘော်တော်၏ ပြည့်စုံခြင်း၊ သပ္ပာယ်သော ရူပကာယ ရှိခြင်း၏ ပြည့်စုံခြင်းတည်းဟူသော ဖလသမ္ပဒါလေးပါးနှင့် ပြည့်စုံတော်မူသော ထိုအောင်တော်မူမြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အာသယော <span class="pb hidden-meta" data-ed="M" data-n="0.0021">[M 0.0021]</span> စ ပယောဂေါတိ၊</p>
+<p rend="gatha2">သတ္တုပကာရ သမ္ပဒါ၊</p>
+<p rend="gatha3">ဒုဝိဓာ ယဿ သမ္ပန္နာ၊</p>
+<p rend="gathalast">သမ္မာ မံ ပါတု သော ဇိနော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သတ္တဝါတို့အား အကျိုးပြုခြင်းတည်းဟူသော သတ္တူပကာရသမ္ပဒါသည် လိုလားတော်မူခြင်း (အာသယ)၊ လုံ့လပြုတော်မူခြင်း (ပယောဂ) ဟု နှစ်ပါးရှိ၏။ ထိုနှစ်ပါးသော သမ္ပဒါတရားတို့နှင့် ပြည့်စုံတော်မူသော ထိုအောင်တော်မူမြတ်စွာဘုရားသည် အကျွန်ုပ်ကို ကောင်းစွာ စောင့်ရှောက်တော်မူပါစေသတည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မဟောသဓေ ဝေဿန္တရေ၊</p>
+<p rend="gatha2">ပစ္ဆိမဘဝိကေ တထာ၊</p>
+<p rend="gatha3">တိဇာတီသု နမေ ဝါစံ၊</p>
+<p rend="gathalast">ဘာသေန္တံ ဇာယနက္ခဏေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မဟောသဓာဖြစ်သောဘဝ၊ ဝေဿန္တရာဖြစ်သောဘဝနှင့် နောက်ဆုံးဖြစ်သောဘဝ ဟူသော ဖွားမြင်သောခဏ၌ စကားမြွက်ဟတော်မူရာ ဘဝသုံးပါးတို့၌ ရှိတော်မူခဲ့သော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> နေမိမှိ <span class="pb hidden-meta" data-ed="M" data-n="0.0022">[M 0.0022]</span> သာဓိနေ စေဝ၊</p>
+<p rend="gatha2">မန္ဓာတရိ စ ဂုတ္တိလေ၊</p>
+<p rend="gatha3">စတූသု မနုဇတ္တေန၊</p>
+<p rend="gathalast">ဒေဝလောကံ ဂတံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">နေမိမင်းဖြစ်သောဘဝ၊ သာဓိနမင်းဖြစ်သောဘဝ၊ မန္ဓာတ်မင်းဖြစ်သောဘဝနှင့် ဂုတ္တိလစောင်းဆရာဖြစ်သောဘဝ ဟူသော လူ့ဘဝဖြင့် နတ်ပြည်သို့ ကြွရောက်တော်မူဖူးသော ဘဝလေးပါး၌ ရှိတော်မူခဲ့သော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သင်္ခါရော ရූပဝိကာရော၊</p>
+<p rend="gatha2">လက္ခဏံ ဝါနနိဿဋံ၊</p>
+<p rend="gatha3">နိဗ္ဗာနံ <span class="pb hidden-meta" data-ed="M" data-n="0.0023">[M 0.0023]</span> ပညတ္တိစေတိ၊</p>
+<p rend="gathalast">ပဉ္စ ဉေယျန္တဂုံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သင်္ခါရတရား၊ ရူပဝိကာရတရား၊ လက္ခဏာတရား၊ တဏှာအနှောင်အဖွဲ့မှ ကင်းလွတ်သော နိဗ္ဗာန်နှင့် ပညတ်တရားတည်းဟူသော သိဖွယ်ဉေယျဓမ္မတရား ငါးပါးတို့၏ အဆုံးသို့ ရောက်တော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပုတ္တ ဒါရ ပရိစ္စာဂါ၊</p>
+<p rend="gatha2">ရဇ္ဇင်္ဂံ ဇီဝ စာဂီတိ၊</p>
+<p rend="gatha3">ပဉ္စ မဟာပရိစ္စာဂေ၊</p>
+<p rend="gathalast">ကရံ သုဒုက္ကရေ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သားတော်ကို စွန့်ခြင်း၊ ဇနီးကို စွန့်ခြင်း၊ ထီးနန်းကို စွန့်ခြင်း၊ အင်္ဂါကြီးငယ်ကို စွန့်ခြင်းနှင့် အသက်ကို စွန့်ခြင်းတည်းဟူသော ပြုနိုင်ခဲလှစွာသော မဟာပရိစ္စာဂ အလှူကြီးငါးပါးတို့ကို ပေးလှူတော်မူခဲ့သော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရූပဉ္စ <span class="pb hidden-meta" data-ed="M" data-n="0.0024">[M 0.0024]</span> ဝေဒနာ သညာ၊</p>
+<p rend="gatha2">သင်္ခါရာ ဝိညာဏန္တိမေ၊</p>
+<p rend="gatha3">ပဉ္စက္ခန္ဓေ ပရိဇာနံ၊</p>
+<p rend="gathalast">တိပရိညာဟိ တံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရုပ်၊ ဝေဒနာ၊ သညာ၊ သင်္ခါရ၊ ဝိညာဉ် ဟူသော ဤခန္ဓာငါးပါးတို့ကို ပရိညာသုံးပါးဖြင့် ပိုင်းခြားထင်ထင် သိမြင်တော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မနုဿ ဒေဝ ဂတိယော၊</p>
+<p rend="gatha2">ပေတော စ နိရယော တထာ၊</p>
+<p rend="gatha3">တိရစ္ဆာနောတိ ပဉ္စေတာ၊</p>
+<p rend="gathalast">ဆိန္ဒန္တံ ဂတိယော နမေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လူ့ဘဝ၊ နတ်ဘဝ၊ ပြိတ္တာဘဝ၊ ငရဲဘဝနှင့် တိရစ္ဆာန်ဘဝတည်းဟူသော ထိုလားရာဂတိ ငါးပါးတို့ကို ဖြတ်တောက်တော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒေဝပုတ္တော <span class="pb hidden-meta" data-ed="M" data-n="0.0025">[M 0.0025]</span> ကိလေသော စ၊</p>
+<p rend="gatha2">အဘိသင်္ခါရ မာရကော၊</p>
+<p rend="gatha3">ခန္ဓော မစ္စූတိ ပဉ္စေတေ၊</p>
+<p rend="gathalast">မာရေ ဝိဇိတဝံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဒေဝပုတ္တမာရ်၊ ကိလေသမာရ်၊ အဘိသင်္ခါရမာရ်၊ ခန္ဓမာရ်နှင့် မစ္စုမာရ်တည်းဟူသော မာရ်ငါးပါးတို့ကို အောင်မြင်တော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပုရေဘတ္တံ ပစ္ဆာဘတ္တံ၊</p>
+<p rend="gatha2">ပုရိမဉ္စေဝ မဇ္ဈိမံ၊</p>
+<p rend="gatha3">ပစ္ဆိမန္တိ သဒါ ပဉ္စ၊</p>
+<p rend="gathalast">ဗုဒ္ဓကိစ္စံ ကရံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဆွမ်းမစားမီကိစ္စ၊ ဆွမ်းစားပြီးကိစ္စ၊ ပထမယာမ်ကိစ္စ၊ မဇ္ဈိမယာမ်ကိစ္စနှင့် ပစ္ဆိမယာမ်ကိစ္စတည်းဟူသော နေ့စဉ် ဗုဒ္ဓကိစ္စငါးပါးတို့ကို ဆောင်ရွက်တော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရූပါ <span class="pb hidden-meta" data-ed="M" data-n="0.0026">[M 0.0026]</span> သဒ္ဒါ ဂန္ဓာ ရသာ၊</p>
+<p rend="gatha2">ဖောဋ္ဌဗ္ဗာ စ မနောရမာ၊</p>
+<p rend="gatha3">ပဉ္စ ကာမဂုဏေ ဟိတွာ၊</p>
+<p rend="gathalast">ခေဠံဝ နိဂ္ဂတံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သာယာဖွယ်ရှိသော ရူပါရုံ၊ သဒ္ဒါရုံ၊ ဂန္ဓာရုံ၊ ရသာရုံ၊ ဖောဋ္ဌဗ္ဗာရုံ ဟူသော ကာမဂုဏ်ငါးပါးတို့ကို ထွေးအန်အပ်သော တံတွေးကဲ့သို့ စွန့်ပယ်တော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရာဂသလ္လံ <span class="pb hidden-meta" data-ed="M" data-n="0.0027">[M 0.0027]</span> ဒေါသသလ္လံ၊</p>
+<p rend="gatha2">မောဟာ မာနော စ ဒိဋ္ဌီတိ၊</p>
+<p rend="gatha3">ဝန္ဒေ ဝဇ္ဇာတိဝဇ္ဇန္တံ၊</p>
+<p rend="gathalast">ပဉ္စသလ္လပနූဒနံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရာဂငြောင့်၊ ဒေါသငြောင့်၊ မောဟငြောင့်၊ မာနငြောင့်နှင့် ဒိဋ္ဌိငြောင့်တည်းဟူသော ငြောင့်ငါးပါးတို့ကို ပယ်ဖျောက်တော်မူသော၊ ရှောင်ကြဉ်ထိုက်သောအပြစ်ကို ရှောင်ကြဉ်တော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒီဃော မဇ္ဈိမ သံယုတ္တာ၊</p>
+<p rend="gatha2">အင်္ဂုတ္တရော စ ခုဒ္ဒကော၊</p>
+<p rend="gatha3">ဣတိ ပဉ္စ နိကာယေဟိ၊</p>
+<p rend="gathalast">သုဝိနေန္တံ ပဇံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဒီဃနိကာယ်၊ မဇ္ဈိမနိကာယ်၊ သံယုတ္တနိကာယ်၊ အင်္ဂုတ္တရနိကာယ်နှင့် ခုဒ္ဒကနိကာယ်တည်းဟူသော နိကာယ်ငါးရပ်တို့ဖြင့် သတ္တဝါအပေါင်းကို ကောင်းစွာ ယဉ်ကျေးစေတော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဣဿရိယံ <span class="pb hidden-meta" data-ed="M" data-n="0.0028">[M 0.0028]</span> ယသော ဓမ္မော၊</p>
+<p rend="gatha2">ကာမော သိရီ ပယတ္တီတိ၊</p>
+<p rend="gatha3">ဘဂျေဟိ ဆဟိ သမ္ပန္နံ၊</p>
+<p rend="gathalast">ဝန္ဒါမိ လောကနာယကံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဣဿရိယ (အစိုးရခြင်း)၊ ယသ (အခြံအရံရှိခြင်း)၊ ဓမ္မ (တရားကျင့်ကြံခြင်း)၊ ကာမ (အလိုရှိတိုင်းပြီးစီးခြင်း)၊ သိရီ (ကျက်သရေရှိခြင်း)နှင့် ပယတ္တ (လုံ့လရှိခြင်း)တည်းဟူသော ဘုန်းတော်ခြောက်ပါးနှင့် ပြည့်စုံတော်မူသော လောကနာယက မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပိယာပိယံ <span class="pb hidden-meta" data-ed="M" data-n="0.0029">[M 0.0029]</span> ဘූတာဘූတံ၊</p>
+<p rend="gatha2">အတ္ထာနတ္ထံ ယထာရဟံ၊</p>
+<p rend="gatha3">မိဿာ ဆသု သုဝါစံဝ၊</p>
+<p rend="gathalast">ဘာသန္တံ အတ္ထကံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ချစ်ခင်အပ်သည်ဖြစ်စေ၊ မချစ်ခင်အပ်သည်ဖြစ်စေ၊ ဟုတ်မှန်သည်ဖြစ်စေ၊ မဟုတ်မမှန်သည်ဖြစ်စေ၊ အကျိုးရှိသည်ဖြစ်စေ၊ အကျိုးမရှိသည်ဖြစ်စေ ခြောက်ပါးသော စကားလမ်းတို့တွင် အကျိုးရှိသော စကားကိုသာ သင့်လျော်သလို ဟောကြားတော်မူတတ်သော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အလသော စ ပမာဒေါ စ၊</p>
+<p rend="gatha2">အနုဋ္ဌာနံ အသံယမော၊</p>
+<p rend="gatha3">နိဒ္ဒါ တန္တီတိ ဆိဒ္ဒေဟိ၊</p>
+<p rend="gathalast">ဆဟိ မုတ္တံ သဒါ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပျင်းရိခြင်း၊ မေ့လျော့ခြင်း၊ ထကြွလုံ့လမရှိခြင်း၊ စောင့်စည်းမှုမရှိခြင်း၊ အိပ်ကြူးခြင်းနှင့် ပျင်းရိငိုက်မြည်းခြင်းတည်းဟူသော အပေါက်အပြဲ ချို့ယွင်းချက် ခြောက်ပါးတို့မှ အစဉ်လွတ်ကင်းတော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မဟာကရုဏာသမာပတ္တိ<span class="pb hidden-meta" data-ed="M" data-n="0.0030">[M 0.0030]</span>၊</p>
+<p rend="gatha2">ယမကပ္ပါဋိဟာရိယံ၊</p>
+<p rend="gatha3">အာသယာနုသယေ ဉာဏံ၊</p>
+<p rend="gatha2">ဣန္ဒရိယာန ပရောပရေ၊</p>
+<p rend="gatha3">သဗ္ဗညုတာ နာဝရဏံ၊</p>
+<p rend="gathalast">ဆာ သာဓာရဏိကံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မဟာကရုဏာ သမာပတ်ကို ဝင်စားနိုင်သောဉာဏ်၊ ရေမီးအစုံစုံ တန်ခိုးပြာဋိဟာပြနိုင်သောဉာဏ်၊ သတ္တဝါတို့၏ နှလုံးသွင်း ဓာတ်ခံ အလိုအလားကို သိသောဉာဏ်၊ သတ္တဝါတို့၏ သဒ္ဓါစသော အိန္ဒြေရင့်ကျက်မှု အနုအရင့်ကို သိသောဉာဏ်၊ သဗ္ဗညုတဉာဏ်နှင့် အဆီးအတားမရှိသော အနာဝရဏဉာဏ်တည်းဟူသော အသာဓာရဏ ဉာဏ်တော်ခြောက်ပါးတို့နှင့် ပြည့်စုံတော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကာမစ္ဆန္ဒေါ <span class="pb hidden-meta" data-ed="M" data-n="0.0031">[M 0.0031]</span> စ ဗျာပါဒေါ၊</p>
+<p rend="gatha2">ထိနမိဒ္ဓဉ္စ သံသယော၊</p>
+<p rend="gatha3">အဝိဇ္ဇုဒ္ဓစ္စ ကုက္ကုစ္စံ၊</p>
+<p rend="gathalast">ဆဝိနီဝရဏံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကာမစ္ဆန္ဒ၊ ဗျာပါဒ၊ ထိနမိဒ္ဓ၊ ဝိစိကိစ္ဆာ၊ ဥဒ္ဓစ္စကုက္ကုစ္စနှင့် အဝိဇ္ဇာ ဟူသော နီဝရဏတရား ခြောက်ပါးတို့ကို ပယ်သတ်တော်မူပြီးသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဣဒ္ဓိဝိဓံ ဒိဗ္ဗသောတံ၊</p>
+<p rend="gatha2">ပရစိတ္တ ဝိဇာနနာ၊</p>
+<p rend="gatha3">ပုဗ္ဗေနိဝါသာနုဿတိ<span class="pb hidden-meta" data-ed="M" data-n="0.0032">[M 0.0032]</span>၊</p>
+<p rend="gatha2">ဒိဗ္ဗစက္ခါသဝက္ခယော၊</p>
+<p rend="gatha3">ဆဠဘိညာဟိ သမ္ပန္နံ၊</p>
+<p rend="gathalast">ဝန္ဒါမိ ပုရိသုတ္တမံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တန်ခိုးဖန်ဆင်းနိုင်သော ဣဒ္ဓိဝိဓဉာဏ်၊ နတ်မျက်စိကဲ့သို့ မြင်နိုင်သော ဒိဗ္ဗစက္ခုဉာဏ်၊ နတ်နားကဲ့သို့ ကြားနိုင်သော ဒိဗ္ဗသောတဉာဏ်၊ သူတစ်ပါးစိတ်ကို သိနိုင်သော ပရစိတ္တဝိဇာနနဉာဏ်၊ ရှေးဖြစ်ဖူးသော ဘဝများကို ပြန်လည်အောက်မေ့နိုင်သော ပုဗ္ဗေနိဝါသာနုဿတိဉာဏ်နှင့် အာသဝေါတရားကုန်ခန်းစေတတ်သော အာသဝက္ခယဉာဏ်တည်းဟူသော အဘိညာဉ်ခြောက်ပါးနှင့် ပြည့်စုံတော်မူသော ယောက်ျားမြတ်ဖြစ်တော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> နီလ ပီတာ စ ဩဒါတာ၊</p>
+<p rend="gatha2">မဉ္ဇိဋ္ဌာ စ ပဘဿရာ၊</p>
+<p rend="gatha3">လောဟိတာတိ ဆ ရံသီဟီ၊</p>
+<p rend="gathalast">ဝိဇ္ဇောတန္တံ သဒါ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ညိုသောရောင်ခြည်၊ ဝါသောရောင်ခြည်၊ နီသောရောင်ခြည်၊ ဖြူသောရောင်ခြည်၊ မောင်းသောရောင်ခြည်နှင့် ပြိုးပြိုးပြက်ပြက် ထွက်သောရောင်ခြည်တည်းဟူသော ခြောက်သွယ်သော ရောင်ခြည်တော်တို့ဖြင့် အစဉ်တောက်ပတော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အဿာဒါဒီနဝေါ <span class="pb hidden-meta" data-ed="M" data-n="0.0033">[M 0.0033]</span> စေဝ၊</p>
+<p rend="gatha2">နိဿရဏဖလံ တထာ၊</p>
+<p rend="gatha3">ဥပါယာဏတ္တီတိ ဆဓာ၊</p>
+<p rend="gathalast">သဒ္ဓမ္မဒေသကံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သာယာဖွယ် (အဿာဒ)၊ အပြစ် (အာဒီနဝ)၊ ထွက်မြောက်ရာ (နိဿရဏ)၊ အကျိုးကျေးဇူး (ဖလ)၊ နည်းလမ်း (ဥပါယ)နှင့် ညွှန်ကြားချက် (အာဏတ္တိ)တည်းဟူသော ခြောက်ပါးသော နည်းလမ်းတို့ဖြင့် သူတော်ကောင်းတရားကို ဟောကြားတော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရာဂေါ <span class="pb hidden-meta" data-ed="M" data-n="0.0034">[M 0.0034]</span> ဒေါသော စ မောဟော စ၊</p>
+<p rend="gatha2">ဝိတက္ကစရိယာ တထာ၊</p>
+<p rend="gatha3">သဒ္ဓါ ဗုဒ္ဓီတိ ဘာဇေန္တံ၊</p>
+<p rend="gathalast">တာ ဆဠေစရိယာ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရာဂစရိုက်၊ ดေါသစရိုက်၊ မောဟစရိုက်၊ ဝိတက်စရိုက်၊ သဒ္ဓါစရိုက်နှင့် ဗုဒ္ဓိစရိုက် ဟူသော စရိုက်ခြောက်ပါးတို့ကို ပိုင်းခြား၍ သတ္တဝါတို့အား တရားဟောကြားတော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရဇတံ ကနကံ မုတ္တာ၊</p>
+<p rend="gatha2">မဏိ ဝေဠုရိယာနိ စ၊</p>
+<p rend="gatha3">ဝဇိရဉ္စ ပဝါဠန္တိ၊</p>
+<p rend="gathalast">သေဋ္ဌိ သတ္တဓနော ဝိယ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ငွေ၊ ရွှေ၊ ပုလဲ၊ ပတ္တမြား၊ ကြောင်မျက်ရွဲ၊ စိန်နှင့် သန္တာ ဟူသော ရတနာခုနစ်ပါးရှိသော သူဌေးကြီးကဲ့သို့။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သဒ္ဓါသီလံ သုတံစာဂေါ၊</p>
+<p rend="gatha2">ဟိရီ ဩတ္တပ္ပိယံ ဓနံ၊</p>
+<p rend="gatha3">ပညာဓနန္တိ သမ္ဗုဒ္ဓံ၊</p>
+<p rend="gathalast">ဝန္ဒေ သတ္တမဟာဓနံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သဒ္ဓါ၊ သီလ၊ သုတ၊ စာဂ၊ ဟိရီ၊ ဩတ္တပ္ပနှင့် ပညာတည်းဟူသော သူတော်ကောင်းဥစ္စာ ခုနစ်ပါးနှင့် ပြည့်စုံတော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> စက္ကံ <span class="pb hidden-meta" data-ed="M" data-n="0.0035">[M 0.0035]</span> ဟတ္ထိ အဿော မဏိ၊</p>
+<p rend="gatha2">ဂဟပတိတ္ထိယော တထာ၊</p>
+<p rend="gatha3">သုပရိဏာယကောစာတိ၊</p>
+<p rend="gathalast">သတ္တရတနော စက္ကဝတ္တီဝ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">စကြာရတနာ၊ ဆင်ရတနာ၊ မြင်းရတနာ၊ ပတ္တမြားရတနာ၊ မိဖုရားရတနာ၊ သူဌေးရတနာနှင့် သားကြီးရတနာ ဟူသော ရတနာခုနစ်ပါးနှင့် ပြည့်စုံသော စကြာဝတေးမင်းကဲ့သို့။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သတိ ဓမ္မဝိစယော စ၊</p>
+<p rend="gatha2">တထေဝ ဝီရိယံ ပီတိ၊</p>
+<p rend="gatha3">ပဿဒ္ဓိ <span class="pb hidden-meta" data-ed="M" data-n="0.0036">[M 0.0036]</span> သမာဓုပေက္ခါ၊</p>
+<p rend="gatha2">သဒ္ဓမ္မ စက္ကဝတ္တိကံ၊</p>
+<p rend="gatha3">သတ္တ ဗောဇ္ဈင်္ဂရတနံ၊</p>
+<p rend="gathalast">နမာမိ ပုရိသုတ္တမံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သတိသမ္ဗောဇ္ဈင်၊ ဓမ္မဝိစယသမ္ဗောဇ္ဈင်၊ ဝီရိယသမ္ဗောဇ္ဈင်၊ ပီတိသမ္ဗောဇ္ဈင်၊ ပဿဒ္ဓိသမ္ဗောဇ္ဈင်၊ သမာဓိသမ္ဗောဇ္ဈင်နှင့် ဥပက္ခာသမ္ဗောဇ္ဈင်တည်းဟူသော ဗောဇ္ဈင်ရတနာ ခုနစ်ပါးတည်းဟူသော သူတော်ကောင်းတရား စကြာကို လည်စေတော်မူသော ယောက်ျားမြတ်ဖြစ်တော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယုဂန္ဓရော <span class="pb hidden-meta" data-ed="M" data-n="0.0037">[M 0.0037]</span> ဤသဓရော၊</p>
+<p rend="gatha2">ကရဝီကော သုဒဿနော၊</p>
+<p rend="gatha3">နေမိန္ဓရော ဝိနတကော၊</p>
+<p rend="gatha2">အဿကဏ္ဏော မဟာနဂေ၊</p>
+<p rend="gatha3">သတ္တေတေ ဟတ္ထရූပံဝ၊</p>
+<p rend="gathalast">သမ္ပဿန္တံ ဇိနံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ယုဂန္ဓိုရ်တောင်၊ ဤသဓိုရ်တောင်၊ ကရဝိကတောင်၊ သုဒဿနတောင်၊ နေမိန္ဓရတောင်၊ ဝိနတကတောင်နှင့် အဿကဏ္ဏတောင် တည်းဟူသော မဟာတောင်ကြီး ခုနစ်လုံးတို့ကို လက်ဖဝါးပေါ်ရှိ အရာဝတ္ထုကဲ့သို့ ကောင်းစွာ သိမြင်တော်မူသော အောင်တော်မူမြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကဏ္ဏမုဏ္ဍော အနောတတ္တော၊</p>
+<p rend="gatha2">ကုဏာလော ရထကာရကော၊</p>
+<p rend="gatha3">သီဟပ္ပပါတ ဆဒ္ဒန္တာ၊</p>
+<p rend="gatha2">မန္ဒါကိနီ မဟာသရေ၊</p>
+<p rend="gatha3">သတ္တေတေ <span class="pb hidden-meta" data-ed="M" data-n="0.0038">[M 0.0038]</span> သဗ္ဗထာ ပဿံ၊</p>
+<p rend="gathalast">ဒိဋ္ဌေဝ ပါတိကံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကဏ္ဏမုဏ္ဍအိုင်၊ အနောတတ်အိုင်၊ ကုဏာလအိုင်၊ ရထကာရအိုင်၊ သီဟပ္ပပါတအိုင်၊ ဆဒ္ဒန်အိုင်နှင့် မန္ဒာကိနီအိုင် တည်းဟူသော အိုင်ကြီးခုနစ်ခုတို့ကို မျက်မှောက်၌ မြင်ရသကဲ့သို့ အလုံးစုံ ကောင်းစွာ သိမြင်တော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မနုဿတ္တံ လိင်္ဂသမ္ပတ္တိ၊</p>
+<p rend="gatha2">ဟေတု သတ္ထာရဒဿနံ၊</p>
+<p rend="gatha3">ပဗ္ဗဇ္ဇာ ဂုဏသမ္ပတ္တိ၊</p>
+<p rend="gatha2">အဓိကာရော စ ဆန္ဒတာ၊</p>
+<p rend="gatha3">အဋ္ဌဓမ္မ သမောဓာနာ၊</p>
+<p rend="gathalast">ဘိနီဟာရန္တဂုံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လူဖြစ်ခြင်း၊ ယောက်ျားစင်စစ်ဖြစ်ခြင်း၊ ရဟန္တာဖြစ်ထိုက်သော အကြောင်းထူးရှိခြင်း၊ မြတ်စွာဘုရားကို ဖူးတွေ့ရခြင်း၊ ရဟန်းဖြစ်ခြင်း၊ ဈာန်အဘိညာဉ်နှင့် ပြည့်စုံခြင်း၊ အသက်လှူသည်အထိဖြစ်သော အဓိကာရကုသိုလ်ရှိခြင်း၊ ဘုရားဖြစ်လိုသော ပြင်းပြသည့် ဆန္ဒရှိခြင်း ဟူသော တရားရှစ်ပါး ပေါင်းဆုံညီညွတ်သဖြင့် ဘုရားဖြစ်ရန် အဘိနီဟာရ (အဓိဋ္ဌာန်) အထွတ်အထိပ်သို့ ရောက်တော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝိသဋ္ဌံ <span class="pb hidden-meta" data-ed="M" data-n="0.0039">[M 0.0039]</span> မဉ္ဇု ဝိညေယျံ၊</p>
+<p rend="gatha2">သဝနီယာဝိသာရိဏာ၊</p>
+<p rend="gatha3">ဂမ္ဘီရော ဗိန္ဒုနိန္နာဒေါ၊</p>
+<p rend="gathalast">အဋ္ဌင်္ဂိကသရံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပြတ်သားခြင်း၊ သာယာခြင်း၊ နားလည်လွယ်ခြင်း၊ နာပျော်ဖွယ်ရှိခြင်း၊ ပျံ့လွင့်မှုမရှိခြင်း၊ နက်နဲခြင်း၊ သံပြည့်ခြင်း၊ ပဲ့တင်ထပ်ခြင်း ဟူသော အင်္ဂါရှစ်ပါးနှင့် ပြည့်စုံသော ဗြဟ္မစိုရ်သံတော်ရှိတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> စတ္တာရိ <span class="pb hidden-meta" data-ed="M" data-n="0.0040">[M 0.0040]</span> ရූပဈာနာနိ၊</p>
+<p rend="gatha2">တထေဝါရූပဈာနာနိ၊</p>
+<p rend="gatha3">တာ သမာပတ္တိယော အဋ္ဌ၊</p>
+<p rend="gathalast">သေဝန္တံ ရုစိယာ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရူပဈာန်လေးပါးနှင့် ထို့အတူ အရူပဈာန်လေးပါးတည်းဟူသော အဋ္ဌသမာပတ် (ရှစ်ပါးသော သမာပတ်) တို့ကို အလိုရှိတိုင်း အစဉ်သဖြင့် ဝင်စားတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အဏိမာ လင်္ဃိမာ ကမ္မံ၊</p>
+<p rend="gatha2">မဟိမာ ပတ္တိမာ တထာ၊</p>
+<p rend="gatha3">ဤသိတာ <span class="pb hidden-meta" data-ed="M" data-n="0.0041">[M 0.0041]</span> ဝသိတာ စေဝ၊</p>
+<p rend="gatha2">ယတ္ထကာမာဝသာယိတာ၊</p>
+<p rend="gatha3">အဋ္ဌိဿရိယ ပုဏ္ဏတ္တာ၊</p>
+<p rend="gathalast">ဣဿရာတိဿရံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အဏိမာ (ကိုယ်ကို အလွန်သေးငယ်အောင် ဖန်ဆင်းနိုင်ခြင်း)၊ လဃိမာ (ကိုယ်ကို အလွန်ပေါ့ပါးအောင် ဖန်ဆင်းနိုင်ခြင်း)၊ မဟိမာ (ကိုယ်ကို အလွန်ကြီးမားအောင် ဖန်ဆင်းနိုင်ခြင်း)၊ ပတ္တိ (အလိုရှိရာအရပ်သို့ ရောက်နိုင်ခြင်း)၊ ပါကမ္မ (အလိုရှိရာကို ဖန်ဆင်းနိုင်ခြင်း)၊ ဤသိတာ (အလုံးစုံအပေါ် စိုးပိုင်ခြင်း)၊ ဝသိတာ (မိမိစိတ်ကို နိုင်နင်းခြင်း)၊ ယထာကာမာဝသာယိတာ (အလိုရှိတိုင်း ပြီးမြောက်ခြင်း) တည်းဟူသော ရှစ်ပါးသော တန်ခိုးအစိုးရခြင်းနှင့် ပြည့်စုံတော်မူသောကြောင့် အရှင်သခင်တို့၏ အထွတ်အထိပ်ဖြစ်တော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မနောမယိဒ္ဓိဉာဏဉ္စ<span class="pb hidden-meta" data-ed="M" data-n="0.0042">[M 0.0042]</span>၊</p>
+<p rend="gatha2">ဆဠဘိညာ ဝိပဿနာ၊</p>
+<p rend="gatha3">အဋ္ဌဝိဇ္ဇာဟိ သမ္ပန္နံ၊</p>
+<p rend="gathalast">ဝန္ဒေ တိလောကကေတုကံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မနောမယိဒ္ဓိဉာဏ်၊ ခြောက်ပါးသော အဘိညာဉ်၊ ဝိပဿနာဉာဏ်တည်းဟူသော ဝိဇ္ဇာရှစ်ပါးနှင့် ပြည့်စုံတော်မူသော၊ သုံးလောက၏ အထွတ်အထိပ် ဗိမာန်သဖွယ်ဖြစ်တော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဇာတိ ဇရာ ရုဇာ ကာလော၊</p>
+<p rend="gatha2">စတုရာပါယဒုက္ခါတိ၊</p>
+<p rend="gatha3">အဋ္ဌ သံဝေဂဝတ္ထූနိ၊</p>
+<p rend="gathalast">ဘာသန္တံ ဝိဝိဓံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပဋိသန္ဓေနေရခြင်း၊ အိုရခြင်း၊ နာရခြင်း၊ သေရခြင်းနှင့် အပါယ်လေးပါး ဆင်းရဲခြင်းတည်းဟူသော ရှစ်ပါးသော သံဝေဂဝတ္ထုတို့ကို အထူးထူးအပြားပြား ဟောကြားတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သုတ္တင်္ဂံ <span class="pb hidden-meta" data-ed="M" data-n="0.0043">[M 0.0043]</span> ဝေယျာကရဏံ၊</p>
+<p rend="gatha2">ဂေယျံ ဂါထာ စ ဇာတကံ၊</p>
+<p rend="gatha3">အဗ္ဘූတဓမ္မ ဝေဒလ္လာ၊</p>
+<p rend="gatha2">ဥဒါနမိတိ ဝုတ္တကံ၊</p>
+<p rend="gatha3">နဝင်္ဂံ သဗ္ဗလောကဿ၊</p>
+<p rend="gathalast">ဒဒန္တံ သာသနံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သုတ္တ၊ ဝေယျာကရဏ၊ ဂေယျ၊ ဂါထာ၊ ဇာတက၊ အဗ္ဘုတဓမ္မ၊ ဝေဒလ္လ၊ ဥဒါန်း၊ ဣတိဝုတ္တက ဟူသော ကိုးပါးသော သင်္ဂါယနာတင် အင်္ဂါရှိသော သာသနာတော်ကို လောကသားအားလုံးအား ပေးသနားတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယာ <span class="pb hidden-meta" data-ed="M" data-n="0.0044">[M 0.0044]</span> သမာပတ္တိယော အဋ္ဌ၊</p>
+<p rend="gatha2">နိရောဓော စာတိ တေ နဝ၊</p>
+<p rend="gatha3">အနုပုဗ္ဗဝိဟာရေ တံ၊</p>
+<p rend="gathalast">သေဝန္တံ ရုစိယာ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အဋ္ဌသမာပတ် ရှစ်ပါးနှင့် နိရောဓသမာပတ် တစ်ပါး ပေါင်း ကိုးပါးသော အနုပုဗ္ဗဝိဟာရ သမာပတ်တို့ကို အလိုရှိတိုင်း အစဉ်အတိုင်း ဝင်စားတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဧကတ္တဉ္စေဝ နာနတ္တံ၊</p>
+<p rend="gatha2">ကာယသညီဟိ ယောဂတော၊</p>
+<p rend="gatha3">စတ္တာရော တထာရုပ္ပါ စ၊</p>
+<p rend="gatha2">အသညီစာတိ တေ နဝ၊</p>
+<p rend="gatha3">သတ္တဝါသေ ဝိဘဇိတွာ၊</p>
+<p rend="gathalast">ပကာသေန္တံ နမေ ဇိနံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကိုယ်လည်းထူး သညာလည်းထူးသောဘုံ၊ ကိုယ်ထူးသညာတူသောဘုံ၊ ကိုယ်တူသညာထူးသောဘုံ၊ ကိုယ်လည်းတူ သညာလည်းတူသောဘုံတည်းဟူသော ရူပဘုံလေးဘုံ၊ အရူပဘုံလေးဘုံနှင့် အသညသတ်ဘုံတည်းဟူသော ကိုးပါးသော သတ္တဝါတို့၏ နေအိမ် (သတ္တဝါသကိုးပါး) ကို ခွဲခြားစိတ်ဖြာ၍ ဟောကြားတော်မူသော အောင်တော်မူ မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သေယျဿ <span class="pb hidden-meta" data-ed="M" data-n="0.0045">[M 0.0045]</span> သဒိသော သေယျော၊</p>
+<p rend="gatha2">ဟီနောတိ တိဝိဓော ဝိဓော၊</p>
+<p rend="gatha3">တထာ သဒိသဟီနာနံ၊</p>
+<p rend="gathalast">နဝဝိဓေ နုဒံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မြတ်သူ၊ တူသူ၊ ယုတ်သူ ဖြစ်လျက် "ငါသည် မြတ်၏၊ တူ၏၊ ယုတ်၏" ဟု သုံးမျိုးစီဖြင့် ဖြစ်ပေါ်တတ်သော ကိုးပါးသော မာနတရားတို့ကို ပယ်သတ်တော်မူပြီးသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အနတ္ထံ <span class="pb hidden-meta" data-ed="M" data-n="0.0046">[M 0.0046]</span> မေ စရတိ စ၊</p>
+<p rend="gatha2">တထာ စရိ စရိဿတိ၊</p>
+<p rend="gatha3">မိတ္တဿ အရိနောတွတ္ထံ၊</p>
+<p rend="gathalast">နဝါဃာတေ ဇဟံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">"ဤသူသည် ငါ့အား ပျက်စီးရာပျက်စီးကြောင်းကို ပြုခဲ့ပြီ၊ ပြုဆဲဖြစ်သည်၊ ပြုလတ္တံ့" ဟုလည်းကောင်း၊ "ငါချစ်သောသူအား ပျက်စီးရာပျက်စီးကြောင်းကို ပြုခဲ့ပြီ၊ ပြုဆဲဖြစ်သည်၊ ပြုလတ္တံ့" ဟုလည်းကောင်း၊ "ငါမုန်းသောရန်သူအား အကျိုးရှိအောင် ပြုခဲ့ပြီ၊ ပြုဆဲဖြစ်သည်၊ ပြုလတ္တံ့" ဟုလည်းကောင်း ဖြစ်ပေါ်တတ်သော ကိုးပါးသော ရန်ငြိုးဖွဲ့ခြင်း (အာဃာတဝတ္ထု) တို့ကို ပယ်စွန့်တော်မူပြီးသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒါနံ သီလဉ္စ နိက္ခမံ၊</p>
+<p rend="gatha2">ပညာ ဝီရိယပဉ္စမံ၊</p>
+<p rend="gatha3">ခန္တီ <span class="pb hidden-meta" data-ed="M" data-n="0.0047">[M 0.0047]</span> သစ္စမဓိဋ္ဌာနံ၊</p>
+<p rend="gatha2">မေတ္တုပေက္ခါတိ တာဒသ၊</p>
+<p rend="gatha3">ပූရေတွာ ပါရမီ ဝန္ဒေ၊</p>
+<p rend="gathalast">သမ္မာသမ္ဗောဓိမဇ္ဈဝံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဒါန၊ သီလ၊ နေက္ခမ္မ၊ ပညာ၊ ပဉ္စမမြောက် ဝီရိယ၊ ခန္တီ၊ သစ္စာ၊ အဓိဋ္ဌာန်၊ မေတ္တာ၊ ဥပေက္ခာ တည်းဟူသော ဆယ်ပါးသော ပါရမီတော်တို့ကို ဖြည့်ကျင့်တော်မူ၍ သမ္မာသမ္ဗောဓိဉာဏ်ကို ရရှိတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပူဇော်ပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကာဠာဝကဉ္စ ဂင်္ဂေယျံ၊</p>
+<p rend="gatha2">ပဏ္ဍရံ တမ္ဗ ပိင်္ဂလံ၊</p>
+<p rend="gatha3">ဂန္ဓ မင်္ဂလ ဟေမဉ္စ၊</p>
+<p rend="gathalast">ဥပေါသထ ဆဒ္ဒန္တိမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကာဠာဝက၊ ဂင်္ဂေယျ၊ ပဏ္ဍရ၊ တမ္ဗ၊ ပိင်္ဂလ၊ ဂန္ဓ၊ မင်္ဂလ၊ ဟေမ၊ ဥပေါသထနှင့် ဆဒ္ဒန် တည်းဟူသော ဆယ်ပါးသော ဆင်မျိုးတို့ ဖြစ်ကြသည်။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဓာရေတိ ဒသပေါသာနံ၊</p>
+<p rend="gatha2">နာဂေါ ကာဠာဝကော ဗလံ၊</p>
+<p rend="gatha3">သဟဿကောဋိပေါသာနံ<span class="pb hidden-meta" data-ed="M" data-n="0.0048">[M 0.0048]</span>၊</p>
+<p rend="gathalast">ဆဒ္ဒန္တောဝါရနုတ္တမော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကာဠာဝကဆင်ပြောင်သည် ယောက်ျားဆယ်ယောက်၏ အားကို ဆောင်နိုင်၏။ မြတ်လှစွာသော ဆဒ္ဒန်ဆင်မင်းသည်ကား ကုဋေတစ်ထောင်သော ယောက်ျားတို့၏ အားကို ဆောင်နိုင်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒသ သဟဿကောဋီနံ၊</p>
+<p rend="gatha2">ပေါသာနံ ဗလဓာရဏံ၊</p>
+<p rend="gatha3">ဆဒ္ဒန္တာနံ ဒသန္နဉ္စ၊</p>
+<p rend="gathalast">ဒသကာယဗလံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကုဋေတစ်သောင်းသော ယောက်ျားတို့၏ အားကို ဆောင်နိုင်သော၊ ဆဒ္ဒန်ဆင်မင်း ဆယ်ကောင်၏ အားနှင့် ညီမျှသော မြတ်စွာဘုရား၏ ဆယ်ပါးသော ကာယဗလတော်ကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဌာနာဌာနေ <span class="pb hidden-meta" data-ed="M" data-n="0.0049">[M 0.0049]</span> ဝိပါကေ စ၊</p>
+<p rend="gatha2">မဂ္ဂေ သဗ္ဗတ္ထဂါမိနံ၊</p>
+<p rend="gatha3">နာနာဓာတූသု လောကေသု၊</p>
+<p rend="gathalast">အဓိမုတ္တိမှိ ပါဏိနံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြောင်းဟုတ်သည် မဟုတ်သည်ကို သိသောဉာဏ် (ဌာနာဌာနဉာဏ်)၊ ကံနှင့် ကံ၏အကျိုးကို သိသောဉာဏ် (ကမ္မဝိပါကဉာဏ်)၊ အလုံးစုံသော ဘုံဘဝသို့ ရောက်ကြောင်းအကျင့်ကို သိသောဉာဏ် (သဗ္ဗတ္ထဂါမိနီပဋိပဒါဉာဏ်)၊ များစွာသော ဓာတ်အမျိုးမျိုးကို သိသောဉာဏ် (နာနာဓာတုဉာဏ်)၊ သတ္တဝါတို့၏ အလိုဆန္ဒနှလုံးသွင်း ခြားနားခြင်းကို သိသောဉာဏ် (နာနာဓိမုတ္တိကဉာဏ်)၊</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပရောပရိယတ္တေ ဉာဏံ၊</p>
+<p rend="gatha2">ဣန္ဒရိယာနဉ္စ ပါဏိနံ၊</p>
+<p rend="gatha3">ဈာနာဒီသု ဉာဏံ ပုဗ္ဗေ၊</p>
+<p rend="gatha2">နိဝါသေ ဒိဗ္ဗစက္ခု စ၊</p>
+<p rend="gatha3">အာသဝက္ခယဉာဏန္တိ၊</p>
+<p rend="gathalast">ဒသဗလဉာဏံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သတ္တဝါတို့၏ ဣန္ဒြေနုရင့်မှုကို သိသောဉာဏ် (ဣန္ဒြိယပရောပရိယတ္တဉာဏ်)၊ ဈာန် ဝိမောက္ခ သမာဓိ သမာပတ်တို့၏ ညစ်နွမ်းခြင်း၊ ဖြူစင်ခြင်း၊ ထမြောက်ခြင်းကို သိသောဉာဏ် (ဈာနာဒိသံကိလေသာဒိဉာဏ်)၊ ရှေးဖြစ်ဖူးသော ဘဝများကို ပြန်လည်အောက်မေ့နိုင်သောဉာဏ် (ပုဗ္ဗေနိဝါသာနုဿတိဉာဏ်)၊ စုတေခါနီး၊ ပဋိသန္ဓေနေခါနီး သတ္တဝါတို့ကို မြင်နိုင်သောဉာဏ် (ဒိဗ္ဗစက္ခုဉာဏ်)၊ အာသဝေါတရားကုန်ခန်းစေသော ဉာဏ် (အာသဝက္ခယဉာဏ်) တည်းဟူသော ဆယ်ပါးသော ဒသဗလဉာဏ်တော်တို့ကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မූလဂန္ဓော <span class="pb hidden-meta" data-ed="M" data-n="0.0050">[M 0.0050]</span> သာရော ဖေဂ္ဂု၊</p>
+<p rend="gatha2">တစော ပပဋိကော ရသော၊</p>
+<p rend="gatha3">ပတ္တံ ပုပ္ဖံ ဖလဉ္စေဝ၊</p>
+<p rend="gatha2">ဂန္ဓဂန္ဓောတိ သံဝရံ၊</p>
+<p rend="gatha3">သုဂန္ဓံ ဒသဂန္ဓေဟိ၊</p>
+<p rend="gathalast">ဝိလိမ္ပန္တံ သဒါ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အမြစ်နံ့သာ၊ အနှစ်နံ့သာ၊ အကာနံ့သာ၊ အခေါက်နံ့သာ၊ အကွဲအဖတ်နံ့သာ၊ အစေးနံ့သာ၊ အရွက်နံ့သာ၊ အပွင့်နံ့သာ၊ အသီးနံ့သာ၊ အနံ့သာအမျိုးမျိုးတို့၏ အမွှေးနံ့တည်းဟူသော ဆယ်ပါးသော သီလရနံ့တို့ဖြင့် အစဉ်မပြတ် လိမ်းကျံအပ်သော၊ မွှေးကြိုင်လှသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သမာဓိ <span class="pb hidden-meta" data-ed="M" data-n="0.0051">[M 0.0051]</span> ဉာဏဝိပ္ဖါရာ၊</p>
+<p rend="gatha2">အဓိဋ္ဌာနံ ဝိကုဗ္ဗနာ၊</p>
+<p rend="gatha3">မနောမယာရိယာ ဣဒ္ဓိ၊</p>
+<p rend="gathalast">တထာ ကမ္မဝိပါကဇာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သမာဓိကြောင့် ဖြစ်သောတန်ခိုး၊ ဉာဏ်တော်ပြန့်ပွားခြင်းကြောင့် ဖြစ်သောတန်ခိုး၊ အဓိဋ္ဌာန်တန်ခိုး၊ ဖန်ဆင်းခြင်းတန်ခိုး၊ စိတ်ဖြင့် ပြီးစေသောတန်ခိုး၊ အရိယာတို့၏တန်ခိုး၊ ကံ၏အကျိုးကြောင့် ဖြစ်သောတန်ခိုး၊</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝိဇ္ဇာမယာ ပုညဝတော၊</p>
+<p rend="gatha2">ပယောဂ ပစ္စယိဒ္ဓိတိ၊</p>
+<p rend="gatha3">အဂ္ဂပတ္တ ဒသိဒ္ဓီနံ၊</p>
+<p rend="gathalast">ပါဋိဟေရံ ကရံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အတတ်ပညာကြောင့် ဖြစ်သောတန်ခိုး၊ ကောင်းမှုကုသိုလ်ရှင်တို့၏တန်ခိုး၊ လုံ့လပယောဂကြောင့် ဖြစ်သောတန်ခိုး တည်းဟူသော အထွတ်အထိပ်သို့ ရောက်တော်မူသော ဆယ်ပါးသော တန်ခိုးဖန်ဆင်းခြင်း ပြာဋိဟာရိယတို့ကို ပြုတော်မူနိုင်သော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မုတ္တာ <span class="pb hidden-meta" data-ed="M" data-n="0.0052">[M 0.0052]</span> မဏိ ဝေဠုရိယံ၊</p>
+<p rend="gatha2">သင်္ခေါ သလ္လော ပဝါဠကံ၊</p>
+<p rend="gatha3">သုဝဏ္ဏံ ရဇတံ လောဟိ၊</p>
+<p rend="gatha2">တင်္ကော မသာရဂလ္လန္တိ၊</p>
+<p rend="gatha3">ဒသဓာ <span class="pb hidden-meta" data-ed="M" data-n="0.0053">[M 0.0053]</span> ရတနေဟိဂ္ဂံ၊</p>
+<p rend="gathalast">ဘောဂိံ ပညာမဏိံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပုလဲ၊ ပတ္တမြား၊ ကြောင်မျက်ရွဲ၊ ခရုသင်း၊ ကျောက်မျက်၊ သန္တာ၊ ရွှေ၊ ငွေ၊ နီလာ၊ ဖလ်ကျောက် တည်းဟူသော ဆယ်ပါးသော ရတနာတို့ထက် မြတ်လှစွာသော ပညာရတနာကို ပိုင်ဆိုင်တော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သိထိလံ ဓနိတံ ဒီဃံ၊</p>
+<p rend="gatha2">ရဿဉ္စ ဂရုကံ လဟု၊</p>
+<p rend="gatha3">နိဂ္ဂဟိတံ ဝိမုတ္တဉ္စ၊</p>
+<p rend="gatha2">သမ္ဗန္ဓဉ္စ ဝဝတ္ထိတံ၊</p>
+<p rend="gatha3">ဝိဝရန္တံ နမေ ဓမ္မံ၊</p>
+<p rend="gathalast">ဒသဗျဉ္ဇနဘေဒိတံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သိထိလ (အသံပေ့ါ)၊ ဓနိတ (အသံလေး)၊ ဒီဃ (အသံရှည်)၊ Rဿ (အသံတို)၊ ဂရုက (အသံလေး)၊ လဟုက (အသံပေါ့)၊ နิဂ္ဂဟိတ (နှာသံ)၊ ဝိမုတ္တ (လွတ်လပ်သောအသံ)၊ သမ္ဗန္ဓ (ဆက်စပ်သောအသံ)၊ ဝဝတ္ထိတ (ပိုင်းခြားသောအသံ) တည်းဟူသော ဆယ်ပါးသော ဗျည်းသံတို့ဖြင့် ဝေဖန်ဖွင့်ဆို၍ ဟောကြားအပ်သော တရားတော်ကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:123">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:124">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပသာဒေါဇော <span class="pb hidden-meta" data-ed="M" data-n="0.0054">[M 0.0054]</span> မဓုရတာ၊</p>
+<p rend="gatha2">သမတာ သုခုမာလတာ၊</p>
+<p rend="gatha3">သိလေသောဒါရတာ ကန္တိ၊</p>
+<p rend="gatha2">အတ္ထဗျတ္တိ သမာဓယော၊</p>
+<p rend="gatha3">ဒသ သဒ္ဒဂုဏောပေတံ၊</p>
+<p rend="gathalast">ဓမ္မံ ပါတု ကရံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပသာဒ၊ ဩဇ၊ မဓုရတာ၊ သမတာ၊ သုခုမာလတာ၊ သိလေသ၊ ဥဒါရတာ၊ ကန္တိ၊ အတ္ထဗျတ္တိ၊ သမာဓိ တည်းဟူသော ဆယ်ပါးသော သဒ္ဒဂုဏ်တို့နှင့် ပြည့်စုံတော်မူသော၊ သတ္တဝါတို့ကို စောင့်ရှောက်တော်မူသော တရားတော်ကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:125">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:126">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> လောဘော <span class="pb hidden-meta" data-ed="M" data-n="0.0055">[M 0.0055]</span> ဒေါသော မောဟော မာနော၊</p>
+<p rend="gatha2">ဥဒ္ဓစ္စံ ဒိဋ္ဌိ သံသယော၊</p>
+<p rend="gatha3">အဟိရိကမနောတ္တပ္ပံ၊</p>
+<p rend="gatha2">ထိနန္တိ သဗ္ဗ ဒါဟကေ၊</p>
+<p rend="gatha3">ကိလေသေ ဒသ တေ သဒ္ဓိံ၊</p>
+<p rend="gathalast">ဝါသနာယ ဇဟံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လောဘ၊ ဒေါသ၊ မောဟ၊ မာန၊ ဒိဋ္ဌိ၊ ဝိစိကိစ္ဆာ၊ ထိန၊ ဥဒ္ဓစ္စ၊ အဟိရိက၊ အနောတ္တပပ တည်းဟူသော ပူပန်စေတတ်သော ကိလေသာဆယ်ပါးတို့ကို ဝါသနာနှင့်တကွ အကြွင်းမဲ့ ပယ်သတ်တော်မူပြီးသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:127">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:128">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သတေရာ <span class="pb hidden-meta" data-ed="M" data-n="0.0056">[M 0.0056]</span> ဒဏ္ဍမဏိကာ၊</p>
+<p rend="gatha2">မစ္ဆဝိလောလဂဂ္ဂရာ၊</p>
+<p rend="gatha3">သုက္ခါသနိ ကပိသိသာ၊</p>
+<p rend="gatha2">ဝိစက္ကာ သည ကုက္ကုဋာ၊</p>
+<p rend="gatha3">နဝါသနီဟိ ဖာလေန္တံ၊</p>
+<p rend="gathalast">တိဗ္ဗံ ပညာသနိံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လျှပ်စီး၊ မိုးကြိုးလှံ၊ လှုပ်ရှားနေသော ငါးကဲ့သို့သော မိုးကြိုး၊ ဟိန်းဟောက်သံရှိသော မိုးကြိုး၊ အသံမရှိသော မိုးကြိုး၊ မျောက်ခေါင်းကဲ့သို့သော မိုးကြိုး၊ ချာချာလည်သော မိုးကြိုး၊ အမှတ်အသားရှိသော မိုးကြိုး၊ ကြက်ဖကဲ့သို့ အော်သော မိုးကြိုး တည်းဟူသော ကိုးပါးသော မိုးကြိုးတို့ထက် ထက်မြက်လှသော ဉာဏ်တော်မိုးကြိုးဖြင့် (အဝိဇ္ဇာအမှောင်ကို) ဖြိုခွဲတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:129">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:130">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရောဒနာ <span class="pb hidden-meta" data-ed="M" data-n="0.0057">[M 0.0057]</span> ကောဓာဝုဓော စ၊</p>
+<p rend="gatha2">ဥဇ္ဈန္တိဿရိယံ တထာ၊</p>
+<p rend="gatha3">ပဋိသင်္ခါနံ၊</p>
+<p rend="gatha2">ခန္တိ အဋ္ဌဗလေသု တံ၊</p>
+<p rend="gatha3">ပထဝီသဒိသံ ဝန္ဒေ၊</p>
+<p rend="gathalast">အဋ္ဌမေန ဝိနာယကံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကလေးသူငယ်တို့၏ အားကိုးရာဖြစ်သော ငိုကြွေးခြင်း၊ မိန်းမတို့၏ အားဖြစ်သော အမျက်ထွက်ခြင်း၊ ခိုးသူတို့၏ အားဖြစ်သော လက်နက်၊ မင်းတို့၏ အားဖြစ်သော အစိုးရခြင်း၊ လူမိုက်တို့၏ အားဖြစ်သော ကဲ့ရဲ့ခြင်း၊ ပညာရှိတို့၏ အားဖြစ်သော ဆင်ခြင်ဉာဏ်၊ ရဟန်းတို့၏ အားဖြစ်သော သည်းခံခြင်းတည်းဟူသော အစွမ်း (ခန္တီဗလ) ရှိတော်မူသော၊ မြေကြီးနှင့်တူသော သည်းခံခြင်းတရားရှိတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:131">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:132">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကာမရောဂေါ <span class="pb hidden-meta" data-ed="M" data-n="0.0058">[M 0.0058]</span> စ ပဋိဃော၊</p>
+<p rend="gatha2">မာနော ဒိဋ္ဌိ စ သံသယော၊</p>
+<p rend="gatha3">ဘဝရာဂေါ အဝိဇ္ဇာတိ၊</p>
+<p rend="gathalast">သတ္တာနုသယိနံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကာမရာဂ၊ ပဋိဃ၊ မာန၊ ဒိဋ္ဌိ၊ ဝိစိကိစ္ဆာ၊ ဘဝရာဂ၊ အဝိဇ္ဇာ တည်းဟူသော ခုနစ်ပါးသော ကိလေသာအနုသယတို့ကို ပယ်သတ်တော်မူပြီးသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:133">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:134">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တိတ္ထိယာပကတိမဟာသာဝကာ၊</p>
+<p rend="gatha2">အဂ္ဂသာဝကာ ပစ္စေကဗုဒ္ဓသမ္ဗုဒ္ဓါ၊</p>
+<p rend="gatha3">ဝိသိဋ္ဌံ <span class="pb hidden-meta" data-ed="M" data-n="0.0059">[M 0.0059]</span> သဗ္ဗထာ ဆသု၊</p>
+<p rend="gatha2">ပုဗ္ဗေ နိဝါသ ဝိညූသု၊</p>
+<p rend="gathalast">တိလောကမကုဋံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တိတ္ထိတို့၏ ရှေးဘဝကို အောက်မေ့နိုင်သောဉာဏ်၊ ပကတိသာဝကတို့၏ဉာဏ်၊ မဟာသာဝကတို့၏ဉာဏ်၊ အဂ္ဂသာဝကတို့၏ဉာဏ်၊ ပစ္စေကဗုဒ္ဓါတို့၏ဉာဏ်၊ သဗ္ဗညုဘုရားရှင်တို့၏ဉာဏ် ဟူသော ရှေးဘဝကို သိမြင်နိုင်သူ ခြောက်မျိုးတို့တွင် အလုံးစုံသော အရာတို့၌ အထူးချွန်ဆုံး အမြတ်ဆုံး ဖြစ်တော်မူသော၊ သုံးလောက၏ အထွတ်အထိပ်ဖြစ်တော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:135">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:136">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဗုဒ္ဓစက္ခု သမန္တာ စ၊</p>
+<p rend="gatha2">ဉာဏံ ယံ ဒိဗ္ဗစက္ခု စ၊</p>
+<p rend="gatha3">ဓမ္မောတိ ပဉ္စ စက္ခූဟိ၊</p>
+<p rend="gathalast">ဒဿာဝိံ မာရဇိံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဗုဒ္ဓစက္ခု၊ သမန္တစက္ခု၊ ဉာဏစက္ခု၊ ဒိဗ္ဗစက္ခု၊ ဓမ္မစက္ခု တည်းဟူသော မျက်စိငါးပါးဖြင့် အလုံးစုံကို မြင်တော်မူသော၊ မာရ်ငါးပါးကို အောင်တော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:137">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:138">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ခုဒ္ဒကာ <span class="pb hidden-meta" data-ed="M" data-n="0.0060">[M 0.0060]</span> ခဏိကာ ဩက္ကန္တိကာ စ၊</p>
+<p rend="gatha2">ဖရဏာ တထာ ဥဗ္ဗေဂါ၊</p>
+<p rend="gatha3">ပဉ္စ ပီတီဟိ ပိနေန္တံ၊</p>
+<p rend="gathalast">ရုစိယာ စ နမာမဟံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ခုဒ္ဒကာပီတိ၊ ခဏိကာပီတိ၊ ဩက္ကန္တိကာပီတိ၊ ဥဗ္ဗေဂါပီတိ၊ ဖရဏာပီတိ တည်းဟူသော ပီတိငါးပါးတို့ဖြင့် တင့်တယ်တော်မူသော မြတ်စွာဘုရားကို ကြည်ညိုမြတ်နိုးစွာ ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:139">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:140">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒုက္ခံ သမုဒယသစ္စံ၊</p>
+<p rend="gatha2">နိရောဓော မဂ္ဂသစ္စကံ၊</p>
+<p rend="gatha3">စတုသစ္စမဘိဇာနံ<span class="pb hidden-meta" data-ed="M" data-n="0.0061">[M 0.0061]</span>၊</p>
+<p rend="gathalast">စတုကိစ္စေဟိ တံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဒုက္ခသစ္စာ၊ သမုဒယသစ္စာ၊ နိရောဓသစ္စာ၊ မဂ္ဂသစ္စာ တည်းဟူသော သစ္စာလေးပါးတို့ကို ပိုင်းခြား၍သိခြင်း စသော ကိစ္စလေးပါးတို့ဖြင့် ထိုးထွင်းသိမြင်တော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:141">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:142">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပီဠနာ သင်္ခတတ္ထော စ၊</p>
+<p rend="gatha2">တပေါ ဝိပရိဏာမနာ၊</p>
+<p rend="gatha3">ဒုက္ခသစ္စံ စတုက္ကေဟိ၊</p>
+<p rend="gathalast">ဝိဘတ္တာဝိံ မုနိံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ညှဉ်းဆဲခြင်းသဘော (ပီဠန)၊ အကြောင်းတရားတို့ ပြုပြင်အပ်သောသဘော (သင်္ခတ)၊ ပူပန်စေတတ်သောသဘော (သန္တာပ)၊ ဖောက်ပြန်ပျက်စီးတတ်သောသဘော (ဝိပရိဏာမ) တည်းဟူသော လက္ခဏာလေးပါးတို့ဖြင့် ဒုက္ခသစ္စာကို ခွဲခြမ်းစိတ်ဖြာ၍ ဟောကြားတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:143">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:144">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အာယූဟနံ <span class="pb hidden-meta" data-ed="M" data-n="0.0062">[M 0.0062]</span> နိဒါနဉ္စ၊</p>
+<p rend="gatha2">သံယောဂေါ ပလိဗောဓနံ၊</p>
+<p rend="gatha3">စတုက္ကေဟိ သမုဒယံ၊</p>
+<p rend="gathalast">ဝိဘတ္တာဝိံ မုနိံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဆွဲဆောင်စုဆောင်းတတ်သောသဘော (အာယူဟန)၊ အကြောင်းရင်းဖြစ်သောသဘော (နိဒါန)၊ ယှဉ်စပ်နှောင်ဖွဲ့တတ်သောသဘော (သံယောဂ)၊ ပိတ်ပင်တားဆီးတတ်သောသဘော (ပလိဗောဓ) တည်းဟူသော လက္ခဏာလေးပါးတို့ဖြင့် သမုဒယသစ္စာကို ခွဲခြမ်းစိတ်ဖြာ၍ ဟောကြားတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:145">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:146">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> နိဿရဏဉ္စ ဝိဝေကော၊</p>
+<p rend="gatha2">အသင်္ခတာမတံ တထာ၊</p>
+<p rend="gatha3">နိရောဓဉ္စ စတုက္ကေဟိ၊</p>
+<p rend="gathalast">ဝိဘတ္တာဝိံ မုနိံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ထွက်မြောက်ရာဖြစ်သောသဘော (နိဿရဏ)၊ ကိလေသာမှ ဆိတ်ငြိမ်သောသဘော (ဝိဝေက)၊ အကြောင်းတရားတို့ မပြုပြင်အပ်သောသဘော (အသင်္ခတ)၊ သေခြင်းမရှိသောသဘော (အမတ) တည်းဟူသော လက္ခဏာလေးပါးတို့ဖြင့် နိရောဓသစ္စာကို ခွဲခြမ်းစိတ်ဖြာ၍ ဟောကြားတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:147">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:148">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> နိယျာနိကော <span class="pb hidden-meta" data-ed="M" data-n="0.0063">[M 0.0063]</span> စ ဟေတွတ္ထော၊</p>
+<p rend="gatha2">ဒဿနာဓိပတေယျကံ၊</p>
+<p rend="gatha3">မဂ္ဂသစ္စံ စတုက္ကေဟိ၊</p>
+<p rend="gathalast">ဝိဘတ္တာဝိံ မုနိံ နမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သံသရာမှ ထွက်မြောက်စေတတ်သောသဘော (နိယျာနိက)၊ အကြောင်းရင်းဖြစ်သောသဘော (ဟေတု)၊ သစ္စာလေးပါးကို မြင်တတ်သောသဘော (ဒဿန)၊ အစိုးရသောသဘော (အဓိပတေယျ) တည်းဟူသော လက္ခဏာလေးပါးတို့ဖြင့် မဂ္ဂသစ္စာကို ခွဲခြမ်းစိတ်ဖြာ၍ ဟောကြားတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:149">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:150">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သတ္ထကော <span class="pb hidden-meta" data-ed="M" data-n="0.0064">[M 0.0064]</span> စ အသမ္မောဟော၊</p>
+<p rend="gatha2">သပ္ပါယော စေဝ ဂေါစရော၊</p>
+<p rend="gatha3">စတုသမ္ပဇညာ ဝိနာ၊</p>
+<p rend="gathalast">ဘာဝိံ နမေ တထာဂတံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သာတ္ထကသမ္ပဇည၊ သပ္ပာယသမ္ပဇည၊ ဂေါစရသမ္ပဇည၊ အသမ္မောဟသမ္ပဇည တည်းဟူသော လေးပါးသော သမ္ပဇညတရားတို့ကို ဟောကြားတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:151">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:152">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပဟိနာခိလ ဒုက္ခါဟံ၊</p>
+<p rend="gatha2">ဘဝသာဂရ ပါရဂုံ၊</p>
+<p rend="gatha3">ဝန္ဒေ သာရဂုဏောပေတံ၊</p>
+<p rend="gathalast">တေနမှိ ဘဝပါရဂေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အလုံးစုံသော ဆင်းရဲဒုက္ခတို့ကို ပယ်သတ်တော်မူပြီးသော၊ သံသရာပင်လယ်ကို ဖြတ်ကူးတော်မူပြီးသော၊ အနှစ်သာရရှိသော သီလစသည့် ဂုဏ်တို့နှင့် ပြည့်စုံတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပူဇော်ပါ၏။ ထိုသို့ရှိခိုးရသော ကောင်းမှုကြောင့် အကျွန်ုပ်သည်လည်း သံသရာပင်လယ် တစ်ဖက်ကမ်းသို့ ရောက်ရပါစေသတည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:153">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:154">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရූပါရූပဝိလာသဂ္ဂ<span class="pb hidden-meta" data-ed="M" data-n="0.0065">[M 0.0065]</span>၊</p>
+<p rend="gatha2">ရූပါစိန္တေယျ သံယုတ္တံ၊</p>
+<p rend="gatha3">ဝန္ဒေ သာရဂုဏောပေတံ၊</p>
+<p rend="gathalast">တေနမှာတုလရූပဝါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရုပ်က္ခန္ဓာ၊ နာမ်က္ခန္ဓာတို့၏ အတုမရှိ တင့်တယ်ခြင်း၊ ကြံဆ၍မရနိုင်သော ရူပကာယ အသရေတော်နှင့် ပြည့်စုံတော်မူသော၊ အနှစ်သာရရှိသော ဂုဏ်တို့နှင့် ပြည့်စုံတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပူဇော်ပါ၏။ ထိုသို့ရှိခိုးရသော ကောင်းမှုကြောင့် အကျွန်ုပ်သည်လည်း အတုမရှိသော ရူပအသရေနှင့် ပြည့်စုံရပါစေသတည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:155">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:156">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဣဒ္ဓိ <span class="pb hidden-meta" data-ed="M" data-n="0.0066">[M 0.0066]</span> ဣဒ္ဓိ ဝိလာသဂ္ဂ၊</p>
+<p rend="gatha2">ဣဒ္ဓိ စိန္တေယျ သံယုတ္တံ၊</p>
+<p rend="gatha3">ဝန္ဒေ သာရဂုဏေပေတံ၊</p>
+<p rend="gathalast">တေနမှာ တုလဣဒ္ဓိမာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အထွတ်အထိပ်သို့ ရောက်သော တန်ခိုးပြာဋိဟာရတို့၏ တင့်တယ်ခြင်း၊ ကြံဆ၍မရနိုင်သော တန်ခိုးတော်တို့နှင့် ပြည့်စုံတော်မူသော၊ အနှစ်သာရရှိသော ဂုဏ်တို့နှင့် ပြည့်စုံတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပူဇော်ပါ၏။ ထိုသို့ရှိခိုးရသော ကောင်းမှုကြောင့် အကျွန်ုပ်သည်လည်း အတုမရှိသော တန်ခိုးနှင့် ပြည့်စုံရပါစေသတည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:157">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:158">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝါစာ ဝါစာ ဝိလာသဂ္ဂ၊</p>
+<p rend="gatha2">ဝါစာ စိန္တေယျ သံယုတ္တံ၊</p>
+<p rend="gatha3">ဝန္ဒေ သာရဂုဏောပေတံ၊</p>
+<p rend="gathalast">တေနမှာ တုလဝါစကော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">စကားတော်မြွက်ကြားမှုတို့၏ အထွတ်အထိပ် တင့်တယ်ခြင်း၊ ကြံဆ၍မရနိုင်သော နှုတ်ကပတ်တော် အင်္ဂါတို့နှင့် ပြည့်စုံတော်မူသော၊ အနှစ်သာရရှိသော ဂုဏ်တို့နှင့် ပြည့်စုံတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပူဇော်ပါ၏။ ထိုသို့ရှိခိုးရသော ကောင်းမှုကြောင့် အကျွန်ုပ်သည်လည်း အတုမရှိသော နှုတ်မှုစွမ်းရည် (စကားပြောစွမ်းရည်) နှင့် ပြည့်စုံရပါစေသတည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:159">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:160">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဉာဏ <span class="pb hidden-meta" data-ed="M" data-n="0.0067">[M 0.0067]</span> ဉာဏ ဝိလာသဂ္ဂ၊</p>
+<p rend="gatha2">ဉာဏာစိန္တေယျ သံယုတ္တံ၊</p>
+<p rend="gatha3">ဝန္ဒေ သာရဂုဏောပေတံ၊</p>
+<p rend="gathalast">တေနမှာ တုလဉာဏဝါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဉာဏ်တော်အမျိုးမျိုးတို့၏ တင့်တယ်ခြင်း၌ အထွတ်အထိပ်ဖြစ်တော်မူသော၊ မကြံစည်နိုင်သော ဉာဏ်တော်နှင့် ပြည့်စုံတော်မူသော၊ အနှစ်သာရရှိသော ဂုဏ်တော်တို့နှင့် ပြည့်စုံတော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပူဇော်ပါ၏။ ထိုသို့ ရှိခိုးရသော ကုသိုလ်ကြောင့် အကျွန်ုပ်သည် အတုမရှိသော ဉာဏ်ပညာရှိသူ ဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:161">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:162">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သဇ္ဈံ ဟေမဉ္စ ရတနံ၊</p>
+<p rend="gatha2">ဂေဟံ ဝတ္ထဉ္စ ဘောဇနံ၊</p>
+<p rend="gatha3">တဒညေပိ <span class="pb hidden-meta" data-ed="M" data-n="0.0068">[M 0.0068]</span> ယထာစိတ္တံ၊</p>
+<p rend="gathalast">မာပေယျာဟံ နမေ ဇိနံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ငွေ၊ ရွှေ၊ ရတနာ၊ အိမ်၊ အဝတ်အထည်၊ အစားအစာနှင့် ထိုမှတပါး အခြားသော အရာများကိုလည်း မိမိစိတ်တိုင်းကျ ဖန်ဆင်းနိုင်ပါရစေ။ အောင်တော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပူဇော်ပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:163">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:164">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သဇ္ဈံ ဟေမဉ္စ ရတနံ၊</p>
+<p rend="gatha2">ဂေဟံ ဝတ္ထဉ္စ ဘောဇနံ၊</p>
+<p rend="gatha3">တဒညေပိ ယထာစိတ္တံ၊</p>
+<p rend="gathalast">မာပေယျံ ကမ္မဇိဒ္ဓိယာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ငွေ၊ ရွှေ၊ ရတနာ၊ အိမ်၊ အဝတ်အထည်၊ အစားအစာနှင့် ထိုမှတပါး အခြားသော အရာများကိုလည်း ကံ၏တန်ခိုး (ကမ္မဇိဒ္ဓိ) ဖြင့် စိတ်တိုင်းကျ ဖန်ဆင်းနိုင်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:165">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:166">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သတ္တဗောဇ္ဈင်္ဂ <span class="pb hidden-meta" data-ed="M" data-n="0.0069">[M 0.0069]</span> ရတနော၊</p>
+<p rend="gatha2">သဒ္ဓါဒိရတနော မုနိ၊</p>
+<p rend="gatha3">သတိပ္ပဘုတိရတနော၊</p>
+<p rend="gathalast">ဝန္ဒေ တံ ပုရိသုတ္တမံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဗောဇ္ဈင်ခုနစ်ပါးတည်းဟူသော ရတနာ၊ သဒ္ဓါအစရှိသော ရတနာ၊ သတိအစရှိသော ရတနာတို့နှင့် ပြည့်စုံတော်မူသော၊ ယောက်ျားမြတ် ဖြစ်တော်မူသော ထိုမြတ်စွာဘုရားကို ရှိခိုးပူဇော်ပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:167">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:168">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> စက္ကာဒိသတ္တရတနံ၊</p>
+<p rend="gatha2">မုတ္တာဒိရတနံ သုဘံ၊</p>
+<p rend="gatha3">ဝတ္ထပ္ပဘုတိရတနံ၊</p>
+<p rend="gathalast">ဆန္ဒက္ခဏေ လဘာမဟံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">စကြာရတနာအစရှိသော ရတနာခုနစ်ပါး၊ ပုလဲအစရှိသော တင့်တယ်လှပသော ရတနာ၊ အဝတ်အထည်အစရှိသော ရတနာတို့ကို အလိုရှိသည့် ခဏ၌ပင် အကျွန်ုပ် ရရှိပါရစေ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:169">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:170">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သမ္ပုဏ္ဏစိတ္တသင်္ကပ္ပေါ<span class="pb hidden-meta" data-ed="M" data-n="0.0070">[M 0.0070]</span>၊</p>
+<p rend="gatha2">ယထာကင်္ခိတမာပကော၊</p>
+<p rend="gatha3">ကေနစိနဘိဘූတော ယော၊</p>
+<p rend="gathalast">သဗ္ဗာဘိဘූ နမေ ဇိနံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြံအစည်အလုံးစုံ စိတ်တိုင်းကျ ပြည့်စုံတော်မူသော၊ အလိုရှိသမျှကို ပြီးစီးစေတော်မူသော၊ တစ်စုံတစ်ယောက်သောသူကမျှ မလွှမ်းမိုးနိုင်ဘဲ ခပ်သိမ်းသောသူတို့ကို လွှမ်းမိုးတော်မူသော ထိုအောင်တော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပူဇော်ပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:171">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:172">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သမ္ပုဏ္ဏစိတ္တသင်္ကပ္ပေါ<span class="pb hidden-meta" data-ed="M" data-n="0.0071">[M 0.0071]</span>၊</p>
+<p rend="gatha2">ယထာကင်္ခိတမာပကော၊</p>
+<p rend="gatha3">ကေနစိနဘိဘූတမှိ၊</p>
+<p rend="gathalast">သဗ္ဗာဘိဘූ ဘဝေ ဘဝေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘဝတိုင်း ဘဝတိုင်း၌ အကြံအစည်အလုံးစုံ စိတ်တိုင်းကျ ပြည့်စုံသူ၊ အလိုရှိသမျှကို ပြီးစီးစေနိုင်သူ၊ တစ်စုံတစ်ဦးမျှ မလွှမ်းမိုးနိုင်ဘဲ ခပ်သိမ်းသောသူတို့ကို လွှမ်းမိုးနိုင်သူ ဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:173">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:174">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒသ ဆဒ္ဒန္တရာဇာဝ၊</p>
+<p rend="gatha2">ဒသ ကာယဗလော မုနိ၊</p>
+<p rend="gatha3">ဒသ ဉာဏဗ္ဗလောတုလျော၊</p>
+<p rend="gathalast">ဝန္ဒေ တံ သမဏုတ္တမံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဆဒ္ဒန်ဆင်မင်းဆယ်ကောင်၏ အားနှင့်ညီသော ကိုယ်တော်၏အားဆယ်ပါး၊ အတုမရှိသော ဉာဏ်တော်အားဆယ်ပါးတို့နှင့် ပြည့်စုံတော်မူသော ထိုရဟန်းမြတ်ဖြစ်တော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပူဇော်ပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:175">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:176">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အတိကာယဇဝေါ <span class="pb hidden-meta" data-ed="M" data-n="0.0072">[M 0.0072]</span> ဗုဒ္ဓေါ၊</p>
+<p rend="gatha2">ရညာဇဝနဟံသတော၊</p>
+<p rend="gatha3">ကာ ကထာ ဉာဏဝေဂဿ၊</p>
+<p rend="gathalast">ဝန္ဒေ တံ သမဏုတ္တမံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကိုယ်တော်၏ လျင်မြန်ခြင်းအဟုန်သည် ဇဝနဟင်္သာမင်းထက်ပင် လွန်ကဲလှစွာသော မြတ်စွာဘုရား၏ ဉာဏ်တော်၏ အရှိန်အဟုန်ကား ပြောဖွယ်ရာမရှိပြီ။ ထိုရဟန်းမြတ်ဖြစ်တော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပူဇော်ပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:177">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:178">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဆဒ္ဒန္တနာဂရာဇာဝ၊</p>
+<p rend="gatha2">ဘဝေ ဘဝေ မဟဗ္ဗလော၊</p>
+<p rend="gatha3">ရာဇာဇဝနဟံသောဝ၊</p>
+<p rend="gathalast">ပရမဂ္ဂဇဝေါ ဘဝေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘဝတိုင်း ဘဝတိုင်း၌ ဆဒ္ဒန်ဆင်မင်းကဲ့သို့ ကြီးစွာသော ခွန်အားရှိသူ၊ ဇဝနဟင်္သာမင်းကဲ့သို့ အလွန်လျင်မြန်သော အဟုန်ရှိသူ ဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:179">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:180">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဥဒကာ <span class="pb hidden-meta" data-ed="M" data-n="0.0073">[M 0.0073]</span> ကာသစာရီ စ၊</p>
+<p rend="gatha2">မဟိနိမုဇ္ဇကော ဇိနော၊</p>
+<p rend="gatha3">မာပကော စ ယထာ စိတ္တံ၊</p>
+<p rend="gathalast">ဝန္ဒေ တံ ဉေယျပါရဂုံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရေပြင်၌လည်းကောင်း၊ ကောင်းကင်၌လည်းကောင်း သွားလာတော်မူနိုင်သော၊ မြေကြီး၌ ငုပ်လျှိုးဝင်ရောက်တော်မူနိုင်သော၊ စိတ်တိုင်းကျ ဖန်ဆင်းတော်မူနိုင်သော၊ သိဖွယ်ခပ်သိမ်းတို့၏ ကမ်းတစ်ဖက်သို့ ရောက်တော်မူသော ထိုအောင်တော်မူသော မြတ်စွာဘုရားကို ရှိခိုးပူဇော်ပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:181">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:182">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဥဒကာ ကာသစာရီ စ၊</p>
+<p rend="gatha2">မဟိနိမုဇ္ဇကော ဘဝေ၊</p>
+<p rend="gatha3">မာပကော စ ယထာစိတ္တံ၊</p>
+<p rend="gathalast">ဘဝသော ကမ္မဇိဒ္ဓိယာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘဝတိုင်း ဘဝတိုင်း၌ ကမ္မဇိဒ္ဓိ (ကံ၏တန်ခိုး) ဖြင့် ရေ၌လည်းကောင်း၊ ကောင်းကင်၌လည်းကောင်း သွားလာနိုင်သူ၊ မြေ၌ ငုပ်လျှိုးနိုင်သူ၊ စိတ်တိုင်းကျ ဖန်ဆင်းနိုင်သူ ဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:183">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:184">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဂါမေ <span class="pb hidden-meta" data-ed="M" data-n="0.0074">[M 0.0074]</span> ဝနေ စ သဗ္ဗတ္ထ၊</p>
+<p rend="gatha2">ဒေဝေဟိ မနုဿေဟိ စ၊</p>
+<p rend="gatha3">အာဘတာနန္တလာဘဿ၊</p>
+<p rend="gatha2">သဒါ ယဿ မဟေသိနော၊</p>
+<p rend="gatha3">ပတ္တလာဘဂ္ဂတံ လောကံ၊</p>
+<p rend="gathalast">တံ ဝန္ဒေ မုနိပုင်္ဂဝံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရွာ၌ဖြစ်စေ၊ တော၌ဖြစ်စေ၊ ခပ်သိမ်းသောအရပ်တို့၌ နတ်၊ လူတို့သည် အမြဲမပြတ် ဆောင်ယူအပ်သော အတိုင်းမရှိသော လာဘ်သပ္ပကာရှိတော်မူသော၊ လောက၌ လာဘ်အရာ၌ အထွတ်အထိပ်သို့ ရောက်တော်မူသော ထိုမုနိမြတ်ကို ရှိခိုးပူဇော်ပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:185">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:186">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဂါမေ <span class="pb hidden-meta" data-ed="M" data-n="0.0075">[M 0.0075]</span> ဝနေ စ သဗ္ဗတ္ထ၊</p>
+<p rend="gatha2">ဒေဝေဟိ မနုဿေဟိ စ၊</p>
+<p rend="gatha3">အာဘတာ နန္တလာဘော မေ၊</p>
+<p rend="gathalast">သဒါ ဟောတု ဘဝါဘဝေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရွာ၌ဖြစ်စေ၊ တော၌ဖြစ်စေ၊ ခပ်သိမ်းသောအရပ်တို့၌ နတ်၊ လူတို့သည် ဆောင်ယူအပ်သော အတိုင်းမရှိသော လာဘ်သပ္ပကာသည် ဘဝတိုင်း ဘဝတိုင်း၌ အကျွန်ုပ်အား အမြဲမပြတ် ဖြစ်ပါစေသတည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:187">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:188">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပုညဿိမဿ တေဇေန၊</p>
+<p rend="gatha2">ယထာ စိတ္တံ သမိဇ္ဈတု၊</p>
+<p rend="gatha3">သဗ္ဗိစ္ဆာ <span class="pb hidden-meta" data-ed="M" data-n="0.0076">[M 0.0076]</span> သဗ္ဗစိန္တာ စ၊</p>
+<p rend="gathalast">ခိပ္ပံ မေ ဇာတိဇာတိယံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဤကောင်းမှုကုသိုလ်၏ တန်ခိုးကြောင့် ဘဝတိုင်း ဘဝတိုင်း၌ အကျွန်ုပ်၏ တောင့်တမှုအလုံးစုံနှင့် အကြံအစည်အလုံးစုံတို့သည် စိတ်တိုင်းကျ လျင်မြန်စွာ ပြီးပြည့်စုံပါစေသတည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:189">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:190">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> နတ္ထီတိ ဝစနံ ဒုက္ခံ၊</p>
+<p rend="gatha2">ဒေဟီတိ ဝစနံ တထာ၊</p>
+<p rend="gatha3">တသ္မာ နတ္ထီတိ ဒေဟီတိ၊</p>
+<p rend="gathalast">မာ မေ ဟောတု ဘဝါဘဝေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">‘မရှိပါ’ ဟူသော စကားသည် ဆင်းရဲလှ၏၊ ‘ပေးပါ’ ဟူသော စကားသည်လည်း ထို့အတူ ဆင်းရဲလှ၏။ ထို့ကြောင့် ဘဝတိုင်း ဘဝတိုင်း၌ ‘မရှိပါ’ ဟူသော စကားနှင့် ‘ပေးပါ’ ဟူသော စကားတို့သည် အကျွန်ုပ်အား မဖြစ်ပါစေနှင့်။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:191">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:192">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သဗ္ဗံ <span class="pb hidden-meta" data-ed="M" data-n="0.0077">[M 0.0077]</span> ပရဝသံ ဒုက္ခံ၊</p>
+<p rend="gatha2">သဗ္ဗမိဿရိယံ သုခံ၊</p>
+<p rend="gatha3">သဗ္ဗံ ပရဝသမတ္ထု၊</p>
+<p rend="gathalast">သဗ္ဗမိဿရိယံ ဘဝေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သူတစ်ပါးအလိုသို့ လိုက်ရခြင်းအားလုံးသည် ဆင်းရဲ၏၊ ကိုယ်ပိုင်အစိုးရခြင်းအားလုံးသည် ချမ်းသာ၏။ ထို့ကြောင့် ဘဝတိုင်း၌ သူတစ်ပါးအလိုသို့ လိုက်ရခြင်း လုံးဝမရှိဘဲ ကိုယ်ပိုင်အစိုးရခြင်းသာ ဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:193">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:194">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝိတက္ကေန္တော ဘဇ္ဇကာယော၊</p>
+<p rend="gatha2">သဗ္ဗာဝုဓ ဝါရဏော စ၊</p>
+<p rend="gatha3">ဆဒ္ဒန္တ ဝါရဏဗလော၊</p>
+<p rend="gathalast">ဘဝေယျံ ဇာတိဇာ တိယံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘဝတိုင်း ဘဝတိုင်း၌ ကြံစည်ကာမျှဖြင့် ရန်သူ၏ကိုယ်ကို ကွဲကြေပျက်စီးစေနိုင်သူ၊ လက်နက်ခပ်သိမ်းကို တားဆီးနိုင်သူ၊ ဆဒ္ဒန်ဆင်မင်းကဲ့သို့ ခွန်အားရှိသူ ဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:195">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:196">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သုဘလက္ခဏသမ္ပန္နော<span class="pb hidden-meta" data-ed="M" data-n="0.0078">[M 0.0078]</span>၊</p>
+<p rend="gatha2">သုဝဏ္ဏဝဏ္ဏဝါ ဘဝေ၊</p>
+<p rend="gatha3">ဗြဟ္မဿရော ကရဝိက၊</p>
+<p rend="gathalast">ဘာဏီ စ ဇာတိဇာတိယံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘဝတိုင်း ဘဝတိုင်း၌ ကောင်းသောလက္ခဏာတို့နှင့် ပြည့်စုံသူ၊ ရွှေအဆင်းကဲ့သို့ အသားအရေရှိသူ၊ ဗြဟ္မာမင်း၏ အသံကဲ့သို့သော အသံရှိ၍ ကရဝိက်ငှက်ကဲ့သို့ သာယာစွာ ပြောဆိုနိုင်သူ ဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:197">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:198">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဘූရိမပညော သိပ္ပါနံ၊</p>
+<p rend="gatha2">သဗ္ဗေသံ ကုသလော ဘဝေ၊</p>
+<p rend="gatha3">ဝိသဇ္ဇေတုံ သမတ္ထောဝ၊</p>
+<p rend="gathalast">သဗ္ဗပုစ္ဆာနံ ဌာနသော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မြေကြီးနှင့်တူသော ကြီးမြတ်သော ပညာရှိ၍ ခပ်သိမ်းသော အတတ်ပညာတို့၌ လိမ္မာကျွမ်းကျင်သူ၊ ခပ်သိမ်းသော အမေးပုစ္ဆာတို့ကို ချက်ချင်းပင် ဖြေဆိုနိုင်စွမ်းရှိသူ ဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:199">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:200">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝေရာဓံသီယ <span class="pb hidden-meta" data-ed="M" data-n="0.0079">[M 0.0079]</span> ဘောဂါ စ၊</p>
+<p rend="gatha2">အနန္တာခီဏ ဘောဂဝါ၊</p>
+<p rend="gatha3">အနန္တာဘဇ္ဇ ပရိသော၊</p>
+<p rend="gathalast">ဘဝသော ပါပုဏေ သိဝံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရန်သူငါးပါးတို့ မဖျက်ဆီးနိုင်သော စည်းစိမ်၊ မကုန်ခမ်းနိုင်သော အတိုင်းမသိ များပြားလှသော စည်းစိမ်၊ မပြိုကွဲနိုင်သော အတိုင်းမသိသော အခြံအရံ ရှိသူဖြစ်၍ ဘဝအဆက်ဆက်၌ အေးငြိမ်းရာ နိဗ္ဗာန်သို့ ရောက်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:201">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:202">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မာ <span class="pb hidden-meta" data-ed="M" data-n="0.0080">[M 0.0080]</span> နဿေယျံ ပသယှေယျံ၊</p>
+<p rend="gatha2">ဥဿုက္ကေဟိ ပျဟံ သဟ၊</p>
+<p rend="gatha3">ပဉ္စဝေရေဟိ ကောဋီဟိ၊</p>
+<p rend="gathalast">ဘဏ္ဍံ ဝါ အကာတုကာမိတံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကုဋေပေါင်းများစွာသော ရန်သူငါးပါးတို့သည် အကျွန်ုပ်နှင့်တကွ အားထုတ်သူတို့၏ ပစ္စည်းဥစ္စာများကို မဖျက်ဆီးနိုင်ပါစေနှင့်၊ အနိုင်အထက် မယူနိုင်ပါစေနှင့်၊ အကျွန်ုပ်သည်လည်း ပျက်စီးခြင်း၊ နှိပ်စက်ခံရခြင်း မရှိပါရစေနှင့်။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:203">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:204">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မေဃံ ဝါတဉ္စ ရတနံ၊</p>
+<p rend="gatha2">ဓညံ ဝတ္ထဉ္စ ဘောဇနံ၊</p>
+<p rend="gatha3">သဗ္ဗိစ္ဆိတံ တဒညမ္ပိ၊</p>
+<p rend="gathalast">မာပေယျံ ကမ္မဇိဒ္ဓိယာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မိုး၊ လေ၊ ရတနာ၊ ဆန်ရေစပါး၊ အဝတ်အထည်၊ အစားအစာနှင့် အလိုရှိအပ်သော အခြားသော အရာအားလုံးတို့ကိုလည်း ကံ၏တန်ခိုး (ကမ္မဇိဒ္ဓိ) ဖြင့် ဖန်ဆင်းနိုင်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:205">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:206">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပုညေနေတေန <span class="pb hidden-meta" data-ed="M" data-n="0.0081">[M 0.0081]</span> နိဗ္ဗာနံ၊</p>
+<p rend="gatha2">သန္တံ ပပ္ပေါမိ တာဝတာ၊</p>
+<p rend="gatha3">ဘဝေယျံ သဗ္ဗဇာတီသု၊</p>
+<p rend="gatha2">စတုသမ္ပတ္တိယာ သဒါ၊</p>
+<p rend="gatha3">စတုစက္ကေန သမ္ပန္နော၊</p>
+<p rend="gathalast">သဒ္ဓမ္မေဟိ စ သတ္တဟိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဤကောင်းမှုကုသိုလ်ကြောင့် ငြိမ်းအေးသော နိဗ္ဗာန်သို့ ရောက်ရပါလို၏။ နိဗ္ဗာန်သို့ မရောက်သေးသမျှ ကာလပတ်လုံး ဘဝတိုင်း၌ သမ္ပတ္တိလေးပါး၊ စက်လေးပါး၊ သူတော်ကောင်းတရားခုနစ်ပါးတို့နှင့် အမြဲမပြတ် ပြည့်စုံသူ ဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:207">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:208">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သမ္မာဒိဋ္ဌိ <span class="pb hidden-meta" data-ed="M" data-n="0.0082">[M 0.0082]</span> ဝသုပေတေ၊</p>
+<p rend="gatha2">ကုလမှိ သေဋ္ဌသမ္မတေ၊</p>
+<p rend="gatha3">သဗ္ဗသက္ကတ သံသုဒ္ဓေ၊</p>
+<p rend="gathalast">ဘဝေ တိဟေတုသန္ဓိကော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သမ္မာဒိဋ္ဌိရတနာနှင့် ပြည့်စုံ၍ အထွတ်အထိပ်ဟု သမုတ်အပ်သော၊ ခပ်သိမ်းသောသူတို့ ပူဇော်အပ်သော စင်ကြယ်သော အမျိုး၌ တိဟိတ်ပဋိသန္ဓေဖြင့် လူဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:209">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:210">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဃာသစ္ဆာဒနံ ဘောဂဉ္စ၊</p>
+<p rend="gatha2">နေဝ ဟတ္ထေန ကာတုန၊</p>
+<p rend="gatha3">ဘုဉ္ဇေယျမိဒ္ဓိယာတွေဝ၊</p>
+<p rend="gathalast">မာပေတွာ ယာဝဒတ္ထကံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">စားဝတ်နေရေးနှင့် စည်းစိမ်ဥစ္စာတို့အတွက် ကိုယ်တိုင် လက်ဖြင့် ပင်ပန်းစွာ လုပ်ကိုင်ရခြင်း မရှိဘဲ အလိုရှိသမျှကို တန်ခိုးဖြင့်သာ ဖန်ဆင်း၍ သုံးဆောင်ခံစားရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:211">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:212">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မနုဿာနံ <span class="pb hidden-meta" data-ed="M" data-n="0.0083">[M 0.0083]</span> အတိက္ကမ္မ၊</p>
+<p rend="gatha2">ဒေဝါနံ ဝိယ ဘောဇနံ၊</p>
+<p rend="gatha3">ဝတ္ထံ ဘောဂေါ စ မေ ဟောန္တု၊</p>
+<p rend="gathalast">ပရိဝါရာတိသုန္ဒရာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လူတို့၏ အသုံးအဆောင်ထက် သာလွန်ထူးကဲသော နတ်တို့၏ အစားအစာ၊ အဝတ်အထည်၊ စည်းစိမ်ဥစ္စာများနှင့် အလွန်တင့်တယ်လှပသော အခြံအရံတို့သည် အကျွန်ုပ်အား ဖြစ်ပေါ်ပါစေသတည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:213">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:214">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဒသာသုတ္တံပိ မေ ဘောဂံ၊</p>
+<p rend="gatha2">ပဉ္စဝေရာ ဘဝေ ဘဝေ၊</p>
+<p rend="gatha3">မာဂဏှေယျုဉ္စ နဿေယျုံ၊</p>
+<p rend="gathalast">အသောကော ဘောဂဟေတုမေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘဝတိုင်း ဘဝတိုင်း၌ အကျွန်ုပ်၏ စည်းစိမ်ဥစ္စာကို အပ်တစ်ချည်မျှပင် ရန်သူငါးပါးတို့သည် အနိုင်အထက် မယူနိုင်ပါစေနှင့်၊ မဖျက်ဆီးနိုင်ပါစေနှင့်၊ စည်းစိမ်ဥစ္စာကြောင့်လည်း အကျွန်ုပ်အား စိုးရိမ်ပူပန်မှု လုံးဝမရှိရပါစေနှင့်။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:215">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:216">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သဗ္ဗင်္ဂသုဘ <span class="pb hidden-meta" data-ed="M" data-n="0.0084">[M 0.0084]</span> သမ္ပန္နော၊</p>
+<p rend="gatha2">သိင်္ဂီနိက္ခ သဝဏ္ဏ ဝါ၊</p>
+<p rend="gatha3">ဗာတ္တိံသ လက္ခဏූပေတော၊</p>
+<p rend="gathalast">အတပ္ပန ရූပ ဝါ ဘဝေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘဝတိုင်း၌ ကိုယ်အင်္ဂါအစိတ်အပိုင်းအားလုံး တင့်တယ်လှပ၍ ရွှေစင်ရွှေသားကဲ့သို့ အဆင်းရှိသူ၊ လက္ခဏာတော်ကြီး သုံးဆယ့်နှစ်ပါးနှင့် ပြည့်စုံ၍ ကြည့်မဝနိုင်သော ရုပ်အဆင်းရှိသူ ဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:217">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:218">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကာယော စန္ဒနဂန္ဓော စ၊</p>
+<p rend="gatha2">မုခံ ဥပ္ပလဂန္ဓိကံ၊</p>
+<p rend="gatha3">အဋ္ဌင်္ဂိကော <span class="pb hidden-meta" data-ed="M" data-n="0.0085">[M 0.0085]</span> ကရဝိက၊</p>
+<p rend="gathalast">မဉ္ဇූဃောသော စ မေ ဟောတု.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကျွန်ုပ်၏ ကိုယ်ခန္ဓာမှ စန္ဒကူးနံ့ သင်းပျံ့၍ ခံတွင်းမှ ကြာညိုပန်းနံ့ သင်းပျံ့ပါစေ၊ အင်္ဂါရှစ်ပါးနှင့် ပြည့်စုံသော ကရဝိက်ငှက်သံကဲ့သို့ သာယာနာပျော်ဖွယ်သော အသံရှိသူ ဖြစ်ရပါစေသတည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:219">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:220">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တိက္ခ ဂမ္ဘီရ ပညော စ၊</p>
+<p rend="gatha2">ဟာသာတိဇဝပညဝါ၊</p>
+<p rend="gatha3">ဘූရိ နိဗ္ဗေဓ ပညော စ၊</p>
+<p rend="gathalast">သဗ္ဗပဉှဝိသဇ္ဇနော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ထက်မြက်သောပညာ၊ နက်နဲသောပညာ၊ ရွှင်လန်းသောပညာ၊ လျင်မြန်သောပညာ၊ မြေကြီးနှင့်တူသော ကျယ်ပြန့်သောပညာ၊ ကိလေသာကို ဖောက်ထွင်းနိုင်သော ပညာတို့နှင့် ပြည့်စုံ၍ ခပ်သိမ်းသော အမေးပုစ္ဆာတို့ကို ဖြေဆိုနိုင်သူ ဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:221">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0604n_nrf:222">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အန္တော <span class="pb hidden-meta" data-ed="M" data-n="0.0086">[M 0.0086]</span> သောဠသဝဿဿ၊</p>
+<p rend="gatha2">တိပေဋကဓရော ဘဝေ၊</p>
+<p rend="gatha3">သဗ္ဗကမ္မေသု သိပ္ပေသု၊</p>
+<p rend="gathalast">ဝိဇ္ဇာဌာနေသု ပါရဂූ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အသက်တစ်ဆယ့်ခြောက်နှစ်အတွင်း၌ပင် ပိဋကတ်သုံးပုံကို ဆောင်နိုင်သူ ဖြစ်ရပါလို၏။ ခပ်သိမ်းသော အမှုကိစ္စ၊ အတတ်ပညာနှင့် ပညာရပ်အားလုံးတို့၌ အထွတ်အထိပ်သို့ ရောက်ရှိသူ ဖြစ်ရပါလို၏။</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

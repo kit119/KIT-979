@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1006n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Myanmar:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif Myanmar"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">ပါဠိ | မြန်မာ</button><button type="button" data-mode="view-stack">ပါဠိ — မြန်မာ</button><button type="button" data-mode="view-pali-only">ပါဠိ</button><button type="button" data-mode="view-trans-only">မြန်မာ</button><button type="button" id="toggle-meta-btn">မှတ်ချက်</button></div>
+<div class="pair-row" data-id="e1006n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre"> နမော တဿ ဘဂဝတော အရဟတော သမ္မာသမ္ဗုဒ္ဓဿ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ထိုဘုန်းတော်ကြီးတော်မူသော၊ ပူဇော်အထူးကို ခံတော်မူထိုက်သော၊ သမ္မာသမ္ဗုဒ္ဓ ဖြစ်တော်မူသော မြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="chapter">သုတ္တန္တနီတိ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">သုတ္တန္တနီတိ</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပရာ <span class="pb hidden-meta" data-ed="M" data-n="0.0003">[M 0.0003]</span> ဘဝန္တံ ပုရိသံ၊</p>
+<p rend="gatha2">မယံ ပုစ္ဆာမ ဂေါတမံ၊</p>
+<p rend="gatha3">ဘဝန္တံ ပုဋ္ဌု မာဂမ္မ၊</p>
+<p rend="gathalast">ကိံ ပရာဘဝတော မုခံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အရှင်ဂေါတမ၊ အကျွန်ုပ်တို့သည် ဆုတ်ယုတ်ပျက်စီးတတ်သော ယောက်ျားကို (အကြောင်းပြု၍) မေးမြန်းပါအံ့။ မေးမြန်းရန် အရှင်မြတ်ထံသို့ ဆည်းကပ်ပါ၏။ ဆုတ်ယုတ်ပျက်စီးခြင်း၏ အကြောင်းရင်း (ဝါ) တံခါးဝသည် အဘယ်နည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သုဝိဇာနော <span class="pb hidden-meta" data-ed="M" data-n="0.0004">[M 0.0004]</span> ဘဝံဟောတိ၊</p>
+<p rend="gatha2">ဒုဝိဇာနော ပရာဘဝေါ၊</p>
+<p rend="gatha3">ဓမ္မကာမော ဘဝံ ဟောတိ၊</p>
+<p rend="gathalast">ဓမ္မဒေဿီ ပရာဘဝေါ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကြီးပွားတိုးတက်သောသူကို သိလွယ်၏။ ဆုတ်ယုတ်ပျက်စီးသောသူကို သိခဲ၏။ တရားကို လိုလားနှစ်သက်သောသူသည် ကြီးပွားတိုးတက်၏။ တရားကို မုန်းတီးသောသူသည် ဆုတ်ယုတ်ပျက်စီး၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဣတိဟေ <span class="pb hidden-meta" data-ed="M" data-n="0.0008">[M 0.0008]</span> တံ ဝိဇာနာမ၊</p>
+<p rend="gatha2">ပထမော သော ပရာဘဝေါ၊</p>
+<p rend="gatha3">ဒုတီယံ ဘဂဝါ ဗြූဟိ၊</p>
+<p rend="gathalast">ကိံ ပရာဘဝတော မုခံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဤသို့လျှင် ထိုအချက်ကို အကျွန်ုပ်တို့ သိကြရပါပြီ၊ ထိုအချက်သည် ပထမဦးစွာသော ဆုတ်ယုတ်ပျက်စီးကြောင်း ဖြစ်ပါ၏။ မြတ်စွာဘုရား၊ ဒုတိယမြောက် ဆုတ်ယုတ်ပျက်စီးခြင်း၏ အကြောင်းရင်းကို မိန့်ကြားတော်မူပါဦးလော့။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အသန္တဿ <span class="pb hidden-meta" data-ed="M" data-n="0.0009">[M 0.0009]</span> ပိယော ဟောတိ၊</p>
+<p rend="gatha2">သန္တေ န ကုရုတေ ပိယံ၊</p>
+<p rend="gatha3">အသတံ ဓမ္မံ ရောစေတိ၊</p>
+<p rend="gathalast">တံ ပရာဘဝတော မုခံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သူတော်မဟုတ်သူ (လူယုတ်မာ) တို့ကို ချစ်မြတ်နိုးတတ်၏။ သူတော်ကောင်းတို့အား ချစ်မြတ်နိုးခြင်းကို မပြုတတ်။ လူယုတ်မာတို့၏ တရား (အယူဝါဒ) ကို နှစ်သက်သဘောကျတတ်၏။ ထိုအချက်သည် ဆုတ်ယုတ်ပျက်စီးခြင်း၏ အကြောင်းရင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ကမ္မာပရာဓသတ္တာနံ<span class="pb hidden-meta" data-ed="M" data-n="0.0012">[M 0.0012]</span>၊</p>
+<p rend="gatha2">ဝိနာသေ ပစ္စုပဋ္ဌိတေ၊</p>
+<p rend="gatha3">အနယော နယရූပေန၊</p>
+<p rend="gathalast">ဗုဒ္ဓိမာကမျ တိဋ္ဌတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကံအပြစ်ရှိသော သတ္တဝါတို့အား ပျက်စီးခြင်းသည် ဆိုက်ရောက်လတ်သော်၊ အကျိုးမဲ့သည် အကျိုးရှိသကဲ့သို့ ဉာဏ်ပညာကို လွှမ်းမိုး၍ တည်ရှိတတ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> နိဒ္ဒါသီလီ <span class="pb hidden-meta" data-ed="M" data-n="0.0013">[M 0.0013]</span> သဘာသီလီ၊</p>
+<p rend="gatha2">အနုဋ္ဌာတာ စ ယော နရော၊</p>
+<p rend="gatha3">အလသော ကောဓပညာဏော၊</p>
+<p rend="gathalast">တံ ပရာဘဝတော မုခံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အအိပ်ကြူးတတ်သော အလေ့ရှိခြင်း၊ အပေါင်းအသင်း စုဝေးခြင်း၌ မွေ့လျော်သော အလေ့ရှိခြင်း၊ လုံ့လဝီရိယ မရှိခြင်း၊ ပျင်းရိခြင်း၊ အမျက်ဒေါသကြီးခြင်းဟူသော လက္ခဏာရှိသောသူ ဖြစ်ခြင်း၊ ထိုအချက်သည် ဆုတ်ယုတ်ပျက်စီးခြင်း၏ အကြောင်းရင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0025">[M 0.0025]</span> မာတရံ ပိတရံ ဝါ၊</p>
+<p rend="gatha2">ဇိဏ္ဏကံ ဂတယောဗ္ဗနံ၊</p>
+<p rend="gatha3">ပဟုသန္တော န ဘရတိ၊</p>
+<p rend="gathalast">တံ ပရာဘဝတော မုခံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မိမိ၌ (လုပ်ကျွေးနိုင်လောက်အောင်) ပစ္စည်းဥစ္စာ အမြောက်အမြား ရှိပါလျက်၊ အိုမင်းရင့်ရော်၍ အရွယ်လွန်ပြီးသော မိခင် သို့မဟုတ် ဖခင်ကို မလုပ်ကျွေး မမွေးမြူသောသူ၊ ထိုအချက်သည် ဆုတ်ယုတ်ပျက်စီးခြင်း၏ အကြောင်းရင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0030">[M 0.0030]</span> ဗြာဟ္မဏံ သမဏံ ဝါ၊</p>
+<p rend="gatha2">အညံ ဝါပိ ဝဏိဗ္ဗကံ၊</p>
+<p rend="gatha3">မုသာဝါဒေန ဝဉ္စေတိ၊</p>
+<p rend="gathalast">တံ ပရာဘဝတော မုခံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပုဏ္ဏားကိုသော်လည်းကောင်း၊ ရဟန်းသံဃာကိုသော်လည်းကောင်း၊ အခြားသော ဖုန်းတောင်းယာစကတို့ကိုသော်လည်းကောင်း မုသားစကားဖြင့် လှည့်ပတ်ဖြားယောင်းသောသူ၊ ထိုအချက်သည် ဆုတ်ယုတ်ပျက်စီးခြင်း၏ အကြောင်းရင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပဟုတဝိတ္တော <span class="pb hidden-meta" data-ed="M" data-n="0.0033">[M 0.0033]</span> ပုရိသော၊</p>
+<p rend="gatha2">သဟိရညော သဘောဇနော၊</p>
+<p rend="gatha3">ဧကော ဘုဉ္ဇတိ သာဒූနိ၊</p>
+<p rend="gathalast">တံ ပရာဘဝတော မုခံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">များစွာသော ပိုင်ဆိုင်မှု ဥစ္စာရှိသော၊ ရွှေငွေနှင့်တကွ စားနပ်ရိက္ခာ ပြည့်စုံသော ယောက်ျားသည် မြိန်ရှက်လှစွာသော ခဲဖွယ်ဘောဇဉ်တို့ကို တစ်ဦးတည်းသာ စားသုံးတတ်၏။ ထိုအချက်သည် ဆုတ်ယုတ်ပျက်စီးခြင်း၏ အကြောင်းရင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဇာတိထဒ္ဓေါ <span class="pb hidden-meta" data-ed="M" data-n="0.0036">[M 0.0036]</span> ဓနထဒ္ဓေါ၊</p>
+<p rend="gatha2">ဂေါတ္တထဒ္ဓေါ စ ယော နရော၊</p>
+<p rend="gatha3">သဉာတိံ အတိမညေတိ၊</p>
+<p rend="gathalast">တံ ပရာဘဝတော မုခံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဇာတ်မြင့်သည်ဟု ထောင်လွှားတတ်သောသူ၊ ဥစ္စာရတနာ ရှိသည်ဟု ထောင်လွှားတတ်သောသူ၊ အမျိုးနွယ် မြင့်မြတ်သည်ဟု ထောင်လွှားတတ်သောသူသည် မိမိ၏ ဆွေမျိုးသားချင်းတို့ကို နိမ့်ချအထင်သေးတတ်၏။ ထိုအချက်သည် ဆုတ်ယုတ်ပျက်စီးခြင်း၏ အကြောင်းရင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဣတ္ထိဓုတ္တော <span class="pb hidden-meta" data-ed="M" data-n="0.0040">[M 0.0040]</span> သုရာဓုတ္တော၊</p>
+<p rend="gatha2">အက္ခဓုတ္တော စ ယော နရော၊</p>
+<p rend="gatha3">လဒ္ဓံလဒ္ဓံ ဝိနာသေတိ၊</p>
+<p rend="gathalast">တံ ပရာဘဝတော မုခံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မိန်းမလိုက်စားသောသူ၊ သေစာသောက်စားသောသူ၊ လောင်းကစားသောသူသည် ရသမျှသော ပစ္စည်းဥစ္စာတို့ကို ပျက်စီးစေတတ်၏။ ထိုအချက်သည် ဆုတ်ယုတ်ပျက်စီးခြင်း၏ အကြောင်းရင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1">န <span class="pb hidden-meta" data-ed="M" data-n="0.0044">[M 0.0044]</span> ဗာဠှံ ဣတ္ထိံ ဂစ္ဆေယျ၊</p>
+<p rend="gatha2">သမ္ပဿံ တေဇသင်္ခယံ၊</p>
+<p rend="gatha3">ကာသံ သာသံ ဒရံ ဗာလျံ၊</p>
+<p rend="gathalast">ခီဏမေဒေါ နိဂစ္ဆတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ခွန်အားဗလ ဆုတ်ယုတ်ခြင်းကို ရှုမြင်လျက် မိန်းမတို့၌ အလွန်အကျွံ မပျော်မွေ့ရာ။ သုတ်ရည် ဆုတ်ယုတ်ကုန်ခမ်းသောသူသည် ချောင်းဆိုးခြင်း၊ ပန်းနာရင်ကျပ်ခြင်း၊ ကိုယ်လက်နာကျင်ခြင်းနှင့် မိုက်မဲတွေဝေခြင်းသို့ ရောက်ရတတ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(က)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(က)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1">မာယာစေတာ <span class="pb hidden-meta" data-ed="M" data-n="0.0045">[M 0.0045]</span> မရီစီ စ၊</p>
+<p rend="gatha2">သောကော ရောဂေါ ဥပဒ္ဒဝေါ၊</p>
+<p rend="gatha3">ခရာ စ ဗန္ဓနာစေတာ၊</p>
+<p rend="gathalast">မစ္စုပါသော ဂုဟာသယော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဤမိန်းမတို့သည် လှည့်စားခြင်း (မာယာ) လည်းဖြစ်၏၊ တံလျှပ်လည်း ဖြစ်၏၊ စိုးရိမ်ခြင်း၊ ရောဂါဝေဒနာ၊ ဘေးဥပဒ်လည်း ဖြစ်၏။ ပြင်းထန်သော နှောင်ကြိုးလည်း ဖြစ်၏၊ သေမင်း၏ ထောင်ချောက်လည်း ဖြစ်၏၊ ကိလေသာဂူ၌ အောင်းနေသူလည်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(ခ)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(ခ)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ဗလဝန္တော ဒုဗ္ဗလာ ဟောန္တိ၊</p>
+<p rend="gatha2">ထာမဝန္တောပိ ဟာယရေ၊</p>
+<p rend="gatha3">စက္ခုမာ အန္ဓကာ ဟောန္တိ၊</p>
+<p rend="gathalast">မာတုဂါမဝသံဂတာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မိန်းမတို့၏ အလိုသို့ လိုက်ပါသွားကြသောသူတို့သည် အားအင်ကြီးမားသူဖြစ်သော်လည်း အားနည်းသူ ဖြစ်ရကြ၏၊ ခွန်အားဗလနှင့် ပြည့်စုံသူတို့သည်လည်း ဆုတ်ယုတ်ကြရ၏၊ မျက်စိအလင်း ရှိသူတို့သည်လည်း မျက်မမြင်ကဲ့သို့ ဖြစ်ကြရ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(ဂ)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(ဂ)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ဂုဏဝန္တော <span class="pb hidden-meta" data-ed="M" data-n="0.0046">[M 0.0046]</span> နိဂ္ဂုဏာ ဟောန္တိ၊</p>
+<p rend="gatha2">ပညဝန္တောပိ ဟာယရေ၊</p>
+<p rend="gatha3">ပမုတ္တာ ဗန္ဓနာ သေန္တိ၊</p>
+<p rend="gathalast">မာတုဂါမဝသံဂတာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မိန်းမတို့၏ အလိုသို့ လိုက်ပါသွားကြသောသူတို့သည် သီလဂုဏ်နှင့် ပြည့်စုံသူဖြစ်သော်လည်း ဂုဏ်မဲ့သူ ဖြစ်ရကြ၏၊ ပညာရှိသူတို့သည်လည်း ဆုတ်ယုတ်ကြရ၏၊ နှောင်ကြိုးမှ လွတ်မြောက်ပြီးသူတို့သည်လည်း ပြန်လည်နှောင်ဖွဲ့ခြင်း ခံရလျက် အိပ်စက်ကြရကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(ဃ)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(ဃ)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ယသံ <span class="pb hidden-meta" data-ed="M" data-n="0.0047">[M 0.0047]</span> ကိတ္တိံ ဓိတိံ သූရံ၊</p>
+<p rend="gatha2">ဗာဟုဿစ္စံ ပဇာနနံ၊</p>
+<p rend="gatha3">ဟာပယန္တိ ပမတ္တဿ၊</p>
+<p rend="gathalast">ကဋ္ဌပုဉ္စံဝ ပါဝကော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မီးသည် ထင်းပုံကို လောင်ကျွမ်းဖျက်ဆီးသကဲ့သို့၊ မေ့လျော့သောသူ၏ အခြံအရံ ကျော်စောခြင်း၊ သတင်းကျော်ကြားခြင်း၊ တည်ကြည်ခြင်း၊ ရဲရင့်ခြင်း၊ အကြားအမြင်များခြင်းနှင့် အသိဉာဏ်ရှိခြင်းတို့ကို ဆုတ်ယုတ်ပျက်စီးစေတတ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သေဟိ <span class="pb hidden-meta" data-ed="M" data-n="0.0051">[M 0.0051]</span> ဒါရေဟိ သန္တုဋ္ဌော၊</p>
+<p rend="gatha2">ဝေသိယာသု ပဒုဿတိ၊</p>
+<p rend="gatha3">ဒုဿတိ ပရဒါရေသု၊</p>
+<p rend="gathalast">တံ ပရာဘဝတော မုခံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မိမိ၏ ဇနီးမယားဖြင့် မရောင့်ရဲနိုင်ဘဲ ပြည့်တန်ဆာမတို့နှင့် ပျော်ပါးကျူးလွန်တတ်၏။ သူတပါး မယားတို့၌လည်း ပြစ်မှားကျူးလွန်တတ်၏။ ထိုအချက်သည် ဆုတ်ယုတ်ပျက်စီးခြင်း၏ အကြောင်းရင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(က)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(က)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1">မယဉ္စ <span class="pb hidden-meta" data-ed="M" data-n="0.0060">[M 0.0060]</span> ဘရိယံ နာတိက္ကမာမ၊</p>
+<p rend="gatha2">အမှေစ ဘရိယာ နာတိက္ကမန္တိ၊</p>
+<p rend="gatha3">အညတြ တာဟိ ဗြဟ္မစရိယံ စရာမ၊</p>
+<p rend="gathalast">တသ္မာ ဟိ အမှံ ဒဟရာ န မိယျရေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကျွန်ုပ်တို့သည်လည်း မိမိ၏ ဇနီးမယားတို့ကို မလွန်ဆန်ကြပါ၊ အကျွန်ုပ်တို့၏ ဇနီးမယားတို့သည်လည်း အကျွန်ုပ်တို့ကို မလွန်ဆန်ကြပါ။ ထိုဇနီးမယားတို့မှတစ်ပါးသော အခါ၌ မြတ်သော အကျင့် (ဗြဟ္မစရိယ) ကို ကျင့်ကြပါကုန်၏။ ထိုအကြောင်းကြောင့် အကျွန်ုပ်တို့၏ ပျိုရွယ်သူကလေးသူငယ်တို့သည် ငယ်ငယ်ရွယ်ရွယ်နှင့် မသေကြရပါ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(ခ)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(ခ)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ဧတာသု <span class="pb hidden-meta" data-ed="M" data-n="0.0063">[M 0.0063]</span> ဇာယရေ သုတ္တမာသု၊</p>
+<p rend="gatha2">မေဓာဝိနော ဟောန္တိ ပဟုတပညာ၊</p>
+<p rend="gatha3">ဗဟုဿုတာ ထေရဂုဏာ စ ဟောန္တိ၊</p>
+<p rend="gathalast">တသ္မာ ဟိ အမှံ ဒဟရာ န မိယျရေ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ထိုသို့သော မွန်မြတ်လှစွာသော ဇနီးမယားတို့၌ မွေးဖွားလာကြသော သားသမီးတို့သည် ပညာရှိကြ၏၊ ဉာဏ်ပညာ ကြီးမားကြ၏၊ အကြားအမြင် ဗဟုသုတများလျက် မထေရ်တို့၏ ဂုဏ်အင်္ဂါနှင့် ပြည့်စုံကြကုန်၏။ ထိုအကြောင်းကြောင့် အကျွန်ုပ်တို့၏ ပျိုရွယ်သူကလေးသူငယ်တို့သည် ငယ်ငယ်ရွယ်ရွယ်နှင့် မသေကြရပါ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အတီတယောဗ္ဗနော <span class="pb hidden-meta" data-ed="M" data-n="0.0065">[M 0.0065]</span> ပေါသော၊</p>
+<p rend="gatha2">အာနေတိ တိမ္ဗရုတ္ထနိံ၊</p>
+<p rend="gatha3">တဿ ဣဿာ န သုပတိ၊</p>
+<p rend="gathalast">တံ ပရာဘဝတော မုခံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အရွယ်လွန်ပြီးသော ယောက်ျားသည် စို့သီးသီးစ အရွယ်ရှိသော ပျိုမျစ်နုနယ်သော မိန်းကလေးကို မယားအဖြစ် ဆောင်ယူခဲ့၏။ ထိုမိန်းမငယ်အပေါ် မနာလိုဝန်တို စိုးရိမ်စိတ်ကြောင့် အိပ်မပျော်နိုင် ဖြစ်ရ၏။ ထိုအချက်သည် ဆုတ်ယုတ်ပျက်စီးခြင်း၏ အကြောင်းရင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(က)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(က)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1">န <span class="pb hidden-meta" data-ed="M" data-n="0.0069">[M 0.0069]</span> ဒုက္ခံ အဟိနာ ဒဋ္ဌံ၊</p>
+<p rend="gatha2">န ဒုက္ခံ သတ္တိယာ ဟတံ၊</p>
+<p rend="gatha3">တဉ္စ ဒုက္ခဉ္စ တိဗ္ဗဉ္စ၊</p>
+<p rend="gathalast">ယံ ပဿေ ဇိဏ္ဏကံ ပတိံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မြွေကိုက်ခံရခြင်းသည် ဆင်းရဲဒုက္ခမဟုတ်၊ လှံဖြင့် အထိုးခံရခြင်းသည်လည်း ဆင်းရဲဒုက္ခမဟုတ်။ အိုမင်းရင့်ရော်သော လင်ယောက်ျားကို မြင်တွေ့နေရခြင်းသည်သာ ပြင်းထန်ထက်မြက်သော ဆင်းရဲဒုက္ခ ဖြစ်ပေ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(ခ)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(ခ)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1">နတ္ထိ <span class="pb hidden-meta" data-ed="M" data-n="0.0070">[M 0.0070]</span> ခိဋ္ဋာ နတ္ထိ ရတိ၊</p>
+<p rend="gatha2">ဇိဏ္ဏေန ပတိနာ သဟ၊</p>
+<p rend="gatha3">နတ္ထိ အလ္လာပသလ္လာပေါ၊</p>
+<p rend="gathalast">ဇဂ္ဃိတုံပိ န သောဘတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အိုမင်းရင့်ရော်သော လင်ယောက်ျားနှင့်အတူ ဆော့ကစားခြင်း မရှိ၊ မွေ့လျော်ပျော်ပါးခြင်း မရှိ၊ ချိုသာစွာ နှုတ်ဆက် ပြောဆိုခြင်း မရှိ၊ ရယ်မောခြင်းသည်ပင် တင့်တယ်ခြင်း မရှိပေ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(ဂ)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(ဂ)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ယဒါ စ ဒဟရော ဒဟရီ၊</p>
+<p rend="gatha2">မန္တယိံသု ရဟောဂတာ၊</p>
+<p rend="gatha3">သဗ္ဗေ သောကာ ဝိနဿန္တိ၊</p>
+<p rend="gathalast">ယေကေစိ ဟဒယဿိတာ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပျိုရွယ်သော လင်နှင့်မယားတို့သည် ဆိတ်ငြိမ်ရာအရပ်၌ တိုင်ပင်နှီးနှောကြကုန်သော်၊ နှလုံးသား၌ တည်ရှိသမျှသော စိုးရိမ်ပူပန်ခြင်း အလုံးစုံတို့သည် ကင်းပျောက်ကုန်ကြ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဣတ္ထိံ <span class="pb hidden-meta" data-ed="M" data-n="0.0075">[M 0.0075]</span> သောဏ္ဍိံ ဝိကိရဏိံ၊</p>
+<p rend="gatha2">ပုရိသံ ဝါပိ တာဒိသံ၊</p>
+<p rend="gatha3">ဣဿရိယသ္မိံ ထပေတိ၊</p>
+<p rend="gathalast">တံ ပရာဘဝတော မုခံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သောက်စားမူးယစ်တတ်သော၊ ပစ္စည်းဥစ္စာကို ဖြုန်းတီးတတ်သော မိန်းမကိုသော်လည်းကောင်း၊ ထိုသို့သော သဘောရှိသော ယောက်ျားကိုသော်လည်းကောင်း အကြီးအမှူး အုပ်ချုပ်သူအရာ၌ ထားရှိတတ်၏။ ထိုအချက်သည် ဆုတ်ယုတ်ပျက်စီးခြင်း၏ အကြောင်းရင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အပ္ပဘောဂေါ <span class="pb hidden-meta" data-ed="M" data-n="0.0076">[M 0.0076]</span> မဟာတဏှော၊</p>
+<p rend="gatha2">ခတ္တိယေ ဇာယတေ ကုလေ၊</p>
+<p rend="gatha3">သော စ ရဇ္ဇံ ပတ္ထယတိ၊</p>
+<p rend="gathalast">တံ ပရာဘဝတော မုခံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ခံစားစရာ ပစ္စည်းဥစ္စာ နည်းပါးပါလျက် အလိုဆန္ဒ (တဏှာ) ကြီးမားသောသူသည် မင်းမျိုး၌ မွေးဖွားလာသော်လည်း မင်းအဖြစ် (သို့မဟုတ်) တိုင်းပြည်အာဏာကို တောင့်တတတ်၏။ ထိုအချက်သည် ဆုတ်ယုတ်ပျက်စီးခြင်း၏ အကြောင်းရင်း ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="gatha1">“သုဝိဇာနော <span class="pb hidden-meta" data-ed="M" data-n="0.0081">[M 0.0081]</span> ဘဝံဟောတိ၊</p>
+<p rend="gatha2">ဒုဝိဇာနော ပရာဘဝေါ”၊</p>
+<p rend="gathalast">အပ္ပဘောဂေါ မဟာတဏှော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">‘‘ကြီးပွားတိုးတက်သောသူကို သိလွယ်၏။ ဆုတ်ယုတ်ပျက်စီးသောသူကို သိခဲ၏။’’ ပစ္စည်းဥစ္စာ နည်းပါးသော်လည်း အလိုရမ္မက် ကြီးမားခြင်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဧတေ <span class="pb hidden-meta" data-ed="M" data-n="0.0082">[M 0.0082]</span> ပရာဘဝေ လောကေ၊</p>
+<p rend="gatha2">ပဏ္ဍိတော သမဝေက္ခိယ၊</p>
+<p rend="gatha3">အရိယော ဒဿနသမ္ပန္နော၊</p>
+<p rend="gathalast">သ လောကံ ဘဇတေ သိဝံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပညာရှိသောသူသည် လောက၌ ဤသို့သော ဆုတ်ယုတ်ပျက်စီးကြောင်းတို့ကို ကောင်းစွာဆင်ခြင်၍၊ သောတာပတ္တိမဂ်ဉာဏ်အမြင်နှင့် ပြည့်စုံသော အရိယာဖြစ်လျက် ဘေးကင်းရာ နိဗ္ဗာန်ချမ်းသာကို ခံစားရလေ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="chapter">ဝသလသုတ္တ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">ဝသလသုတ်</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကောဓနော <span class="pb hidden-meta" data-ed="M" data-n="0.0087">[M 0.0087]</span> ဥပနာဟီစ၊</p>
+<p rend="gatha2">ပါပမက္ခီ စ ယော နရော၊</p>
+<p rend="gatha3">ဝိပန္နဒိဋ္ဌီ မာယာဝီ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အမျက်ဒေါသကြီးသောသူ၊ ရန်ငြိုးဖွဲ့တတ်သောသူ၊ ယုတ်မာသောသူ၊ သူတစ်ပါးဂုဏ်ကို ဖျက်ဆီးတတ်သောသူ၊ မှားယွင်းသော အယူအမြင်ရှိသောသူ၊ စဉ်းလဲကောက်ကျစ်သောသူ၊ ထိုသူကို ‘သူယုတ် (ဝသလ)’ ဟူ၍ သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဧကဇံ <span class="pb hidden-meta" data-ed="M" data-n="0.0089">[M 0.0089]</span> ဝါ ဒွိဇံ ဝါပိ၊</p>
+<p rend="gatha2">ယောဓ ပါဏံ ဝိဟိံသတိ၊</p>
+<p rend="gatha3">ယဿ ပါဏေ ဒယာ နတ္ထိ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဤလောက၌ တစ်ကြိမ်မွေးသော သတ္တဝါကိုဖြစ်စေ၊ နှစ်ကြိမ်မွေးသော သတ္တဝါကိုဖြစ်စေ ညှဉ်းဆဲသတ်ဖြတ်တတ်သော၊ သတ္တဝါတို့အပေါ်၌ သနားကရုဏာ ကင်းမဲ့သောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0091">[M 0.0091]</span> ဟန္တိ ဥပရုန္ဓတိ၊</p>
+<p rend="gatha2">ဂါမာနိ နိဂမာနိ စ၊</p>
+<p rend="gatha3">နိဂ္ဂါဟကော သမညာတော၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရွာများကို လည်းကောင်း၊ မြို့များကို လည်းကောင်း ဖျက်ဆီးတတ်၊ ဝန်းရံပိတ်ဆို့တတ်သော၊ လုယက်ဖျက်ဆီးသူဟု ထင်ရှားကျော်စောသောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဂါမေ <span class="pb hidden-meta" data-ed="M" data-n="0.0092">[M 0.0092]</span> ဝါ ယဒိ ဝါ ရညေ၊</p>
+<p rend="gatha2">ယံ ပရေသံ မမာယိတံ၊</p>
+<p rend="gatha3">ထေယျာ အဒိန္နံ အာဒေတိ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရွာ၌ဖြစ်စေ၊ တော၌ဖြစ်စေ သူတစ်ပါးတို့ မြတ်နိုးစွာ သိမ်းဆည်းထားသော မပေးအပ်သည့် ပစ္စည်းဥစ္စာကို ခိုးယူတတ်သောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0094">[M 0.0094]</span> ဟဝေ ဣဏမာဒါယ၊</p>
+<p rend="gatha2">ဝုစ္စမာနော ပလာယတိ၊</p>
+<p rend="gatha3">န ဟိ တေ ဣဏမတ္ထီတိ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကြွေးမြီကို ယူပြီးနောက် ပြန်လည်တောင်းဆိုအပ်သည်ရှိသော် 'သင့်အား ပေးရန် ကြွေးမြီမရှိပါ' ဟု ဆိုကာ ထွက်ပြေးတိမ်းရှောင်တတ်သောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယောဓ ကိဉ္စိက္ခကမျတာ၊</p>
+<p rend="gatha2">ပထသ္မိံ ဝဇတံ ဇနံ၊</p>
+<p rend="gatha3">ဟန္တဝါ ကိဉ္စိက္ခ မာဒေတိ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဤလောက၌ အနည်းငယ်မျှသော ပစ္စည်းဥစ္စာကို လိုချင်သဖြင့် လမ်းသွားလမ်းလာ လူတို့ကို သတ်ဖြတ်၍ ထိုပစ္စည်းကို လုယူတတ်သောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0098">[M 0.0098]</span> အတ္တဟေတု ပရဟေတု၊</p>
+<p rend="gatha2">ဓနဟေတု စ ယော နရော၊</p>
+<p rend="gatha3">သက္ခိပုဋ္ဌော မုသာဗြූတိ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မိမိအတွက်ကြောင့် လည်းကောင်း၊ သူတစ်ပါးအတွက်ကြောင့် လည်းကောင်း၊ စည်းစိမ်ဥစ္စာအတွက်ကြောင့် လည်းကောင်း သက်သေအဖြစ် မေးမြန်းအပ်သည်ရှိသော် မဟုတ်မမှန် လိမ်လည်ပြောဆိုတတ်သောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0102">[M 0.0102]</span> ဉာတီနံ သခီနံ ဝါ၊</p>
+<p rend="gatha2">ဒါရေသု ပဋိဒိဿတိ၊</p>
+<p rend="gatha3">သဟသာ သမ္ပိယေန ဝါ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဆွေမျိုးတို့၏ ဇနီးမယားတို့၌ ဖြစ်စေ၊ အဆွေခင်ပွန်းတို့၏ ဇနီးမယားတို့၌ ဖြစ်စေ အတင်းအဓမ္မသော်လည်းကောင်း၊ နှစ်ဦးသဘောတူသော်လည်းကောင်း ဖောက်ပြန်ကျူးလွန်တတ်သောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0010">[M 0.0010]</span>၄ မာတရံ ပိတရံ ဝါ၊</p>
+<p rend="gatha2">ဇိဏ္ဏကံ ဂတယောဗ္ဗနံ၊</p>
+<p rend="gatha3">ပဟုသန္တော န ဘရတိ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မိမိ၌ တတ်နိုင်စွမ်းရှိပါလျက် အိုမင်းရင့်ရော်၍ အရွယ်လွန်ပြီးဖြစ်သော မိဘနှစ်ပါးကို မလုပ်ကျွေးမွေးမြူသောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0105">[M 0.0105]</span> မာတရံ ပိတရံ ဝါ၊</p>
+<p rend="gatha2">ဘာတရံ ဘဂိနိံ သဿုံ၊</p>
+<p rend="gatha3">ဟန္တိ ရောသေတိ ဝါစာယ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မိခင်ကိုဖြစ်စေ၊ ဖခင်ကိုဖြစ်စေ၊ ညီအစ်ကို မောင်နှမကိုဖြစ်စေ၊ ယောက္ခမကိုဖြစ်စေ ရိုက်နှက်ပုတ်ခတ်တတ်သော၊ နှုတ်ဖြင့် ဆဲရေးရေရွတ်တတ်သောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0107">[M 0.0107]</span> အတ္ထံ ပုစ္ဆိတော သန္တော၊</p>
+<p rend="gatha2">အနတ္ထ မနုသာသတိ၊</p>
+<p rend="gatha3">ပဋိစ္ဆန္နေန မန္တေတိ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကျိုးရှိရာရှိကြောင်းကို မေးမြန်းအပ်ပါလျက် အကျိုးမရှိသောစကားကို လမ်းညွှန်တတ်သော၊ လျှို့ဝှက်စွာဖြင့် လှည့်ပတ်အကြံပေးတတ်သောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0111">[M 0.0111]</span> ကတွာ ပါပကံ ကမ္မံ၊</p>
+<p rend="gatha2">မာမံ ဇညာတိ ဣစ္ဆတိ၊</p>
+<p rend="gatha3">ယော ပဋိစ္ဆန္နကမ္မန္တော၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ယုတ်မာဆိုးသွမ်းသော အမှုကို ပြုလုပ်ပြီးနောက် 'ငါ့ကို သူတစ်ပါးတို့ မသိပါစေနှင့်' ဟု အလိုရှိတတ်သော၊ လျှို့ဝှက်ဖုံးကွယ်အပ်သော အမှုရှိသောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0114">[M 0.0114]</span> ဝေ ပရကုလံ ဂန္တဝါ၊</p>
+<p rend="gatha2">ဘုတွာန သုစိဘောဇနံ၊</p>
+<p rend="gatha3">အာဂတံ နပ္ပဋိပූဇေတိ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သူတစ်ပါးအိမ်သို့ သွား၍ ကောင်းမြတ်သော ခဲဖွယ်ဘောဇဉ်ကို စားသုံးခဲ့ပြီးနောက် ထိုသူမိမိအိမ်သို့ ရောက်ရှိလာသောအခါ တုံ့ပြန်၍ ဧည့်မခံသောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0117">[M 0.0117]</span> သမဏံ ဝါ ဗြာဟ္မဏံ၊</p>
+<p rend="gatha2">အညံ ဝါပိ ဝဏိဗ္ဗကံ၊</p>
+<p rend="gatha3">မုသာဝါဒေန ဝဉ္စေတိ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သမဏကို ဖြစ်စေ၊ ဗြာဟ္မဏကို ဖြစ်စေ၊ အခြားသော ဖုန်းတောင်းယာစကတို့ကို ဖြစ်စေ မဟုတ်မမှန်သော စကားဖြင့် လှည့်ပတ်ဖြားယောင်းတတ်သောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော သမဏံ ဝါ ဗြာဟ္မဏံ၊</p>
+<p rend="gatha2">ဘတ္တကာလေ ဥပဋ္ဌိတံ၊</p>
+<p rend="gatha3">ရောသေတိ ဝါ န စ ဒေတိ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဆွမ်းခံချိန်/စားသောက်ချိန်၌ ရောက်ရှိလာသော သမဏကို ဖြစ်စေ၊ ဗြာဟ္မဏကို ဖြစ်စေ နှုတ်ဖြင့် နှောင့်ယှက်ဆဲရေး၍ ဆွမ်း/အစာကိုလည်း မလှူဒါန်းသောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အသန္တံ <span class="pb hidden-meta" data-ed="M" data-n="0.0120">[M 0.0120]</span> ယောဓ ပဗြූတိ၊</p>
+<p rend="gatha2">မောဟေန ပလိဂုဏ္ဌိတော၊</p>
+<p rend="gatha3">ကိဉ္စနံ နိဇိဂီသာနော၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဤလောက၌ မိုက်မဲတွေဝေမှုဖြင့် ဖုံးလွှမ်းလျက် အနည်းငယ်မျှသော ပစ္စည်းလာဘ်သပ်ပကာကို ရယူလိုသဖြင့် မဟုတ်မမှန်သော စကားကို ပြောဆိုတတ်သောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယောစတ္တာနံ <span class="pb hidden-meta" data-ed="M" data-n="0.0122">[M 0.0122]</span> သမုက္ကံသေ၊</p>
+<p rend="gatha2">ပရေစ မဝဇာနာတိ၊</p>
+<p rend="gatha3">နိဟီနော သေန မာနေန၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မိမိကိုယ်ကို မြှောက်တင်တတ်၍ သူတစ်ပါးကိုမူ နှိမ့်ချတတ်သော၊ မိမိ၏ ထောင်လွှားမှု 'မာန' ကြောင့် ယုတ်ညံ့နေသောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရောသကော <span class="pb hidden-meta" data-ed="M" data-n="0.0124">[M 0.0124]</span> ကဒရီယော စ၊</p>
+<p rend="gatha2">ပါပိစ္ဆော မစ္ဆရီ သဌော၊</p>
+<p rend="gatha3">အဟိရီကော အနောတ္တပ္ပီ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အမျက်ဒေါသကြီးသူ၊ ဝန်တိုနှမြှောက်တတ်သူ၊ ယုတ်ညံ့သော အလိုဆန္ဒရှိသူ၊ မနာလိုဝန်တိုတတ်သူ၊ လှည့်ပတ်တတ်သူ၊ အရှက်မရှိသူ၊ အကြောက်မရှိသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0127">[M 0.0127]</span> ဗုဒ္ဓံ ပရိဘာသတိ၊</p>
+<p rend="gatha2">အထဝါ တဿ သာဝကံ၊</p>
+<p rend="gatha3">ပရိဗ္ဗဇံ ဂဟဋ္ဌံ ဝါ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မြတ်စွာဘုရားကို ဖြစ်စေ၊ ထိုမြတ်စွာဘုရား၏ တပည့်သာဝကဖြစ်သော ရဟန်း သို့မဟုတ် လူဝတ်ကြောင်ကို ဖြစ်စေ ကဲ့ရဲ့ရှုတ်ချတတ်သောသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="bodytext">အဋ္ဌဟိ <span class="pb hidden-meta" data-ed="M" data-n="0.0129">[M 0.0129]</span> ဘိက္ခဝေ အင်္ဂေဟိ သမ္ပန္နာဂတဿ ဥပါသကဿ ပတ္တော နိကုဇ္ဇိတဗ္ဗော. ဘိက္ခූနံ အလာဘာယ ပရိသက္ကတိ၊ ဘိက္ခූနံ အနတ္ထာယ ပရိသက္ကတိ၊ ဘိက္ခූနံ အနာဝါသာယ ပရိသက္ကတိ၊ ဘိက္ခූနံ အက္ကောသတိ ပရိဘာသတိ၊ ဘိက္ခූဘိက္ခූဟိ ဘေဒေတိ၊ ဗုဒ္ဓဿ အဝဏ္ဏံ ဘာသတိ၊ ဓမ္မဿ အဝဏ္ဏံ ဘာသတိ၊ သင်္ဃဿ အဝဏ္ဏံ ဘာသတိ၊ အနုဇာနာမိ ဘိက္ခဝေ ဣမေဟိ အဋ္ဌဟိ အင်္ဂေဟိ သမ္ပန္နာဂတဿ ဥပါသကဿ ပတ္တံ နိကုဇ္ဇိတုံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">ရဟန်းတို့၊ အင်္ဂါရှစ်ပါးတို့နှင့် ပြည့်စုံသော ဥပါသကာအား သပိတ်မှောက်အပ်၏။ (အဘယ်ရှစ်ပါးတို့နည်းဟူမူ-) ရဟန်းတို့၏ လာဘ်သပ်ပကာ ကင်းဆိတ်အောင် အားထုတ်ခြင်း၊ ရဟန်းတို့၏ အကျိုးမဲ့ဖြစ်အောင် အားထုတ်ခြင်း၊ ရဟန်းတို့၏ နေထိုင်ရာ ကျောင်းကန် ကင်းဆိတ်အောင် အားထုတ်ခြင်း၊ ရဟန်းတို့ကို ဆဲရေးကဲ့ရဲ့ခြင်း၊ ရဟန်းအချင်းချင်း ကွဲပြားအောင် လုပ်ဆောင်ခြင်း၊ ဘုရားရှင်၏ အပြစ်ကို ပြောဆိုခြင်း၊ တရားတော်၏ အပြစ်ကို ပြောဆိုခြင်း၊ သံဃာတော်၏ အပြစ်ကို ပြောဆိုခြင်းတို့တည်း။ ရဟန်းတို့၊ ဤအင်္ဂါရှစ်ပါးတို့နှင့် ပြည့်စုံသော ဥပါသကာအား သပိတ်မှောက်ခြင်းကို ငါဘုရား ခွင့်ပြုတော်မူ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော <span class="pb hidden-meta" data-ed="M" data-n="0.0132">[M 0.0132]</span> အနရဟံ သန္တော၊</p>
+<p rend="gatha2">အရဟာတိ ပဋိဇာနာတိ၊</p>
+<p rend="gatha3">စောရော သဗြဟ္မကေ လောကေ၊</p>
+<p rend="gathalast">တံ ဇညာ ဝသလော ဣတိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရဟန္တာမဟုတ်ဘဲလျက် မိမိကိုယ်ကို 'ရဟန္တာဖြစ်၏' ဟု ဝန်ခံပြောဆိုသောသူသည် ဗြဟ္မာပြည်နှင့်တကွသော လောက၌ အကြီးဆုံးသော သူခိုးကြီးဖြစ်၏၊ ထိုသူကို 'သူယုတ်' ဟု သိအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဧတေ <span class="pb hidden-meta" data-ed="M" data-n="0.0135">[M 0.0135]</span> ခေါ ဝသလာ ဝုတ္တာ၊</p>
+<p rend="gatha2">မယာ ယေ တေ ပကာသိတာ၊</p>
+<p rend="gatha3">န ဇစ္စာ ဝသလော ဟောတိ၊</p>
+<p rend="gathalast">န ဇစ္စာ ဟောတိ ဗြာဟ္မဏော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ငါဘုရား ကောင်းစွာပြသ ဟောကြားအပ်သော ဤသူတို့သည်သာ စင်စစ် 'သူယုတ်' များ ဖြစ်ကြကုန်၏။ အမျိုးဇာတ်ကြောင့် သူယုတ်ဖြစ်သည် မဟုတ်၊ အမျိုးဇာတ်ကြောင့် ဗြာဟ္မဏဖြစ်သည်လည်း မဟုတ်။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကမ္မုနာ ဝသလော ဟောတိ၊</p>
+<p rend="gathalast">ကမ္မုနာ ဟောတိ ဗြာဟ္မဏော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကံ (လုပ်ရပ်) ကြောင့်သာလျှင် သူယုတ် ဖြစ်ရ၏၊ ကံ (လုပ်ရပ်) ကြောင့်သာလျှင် ဗြာဟ္မဏ ဖြစ်ရ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တဒမိနာပိ <span class="pb hidden-meta" data-ed="M" data-n="0.0136">[M 0.0136]</span> ဇာနာထ၊</p>
+<p rend="gatha2">ယထာဟေတံ နိဒဿနံ၊</p>
+<p rend="gatha3">စဏ္ဍာလပုတ္တော သောပါကော၊</p>
+<p rend="gathalast">မာတင်္ဂေါ ဣတိ ဝိဿုတော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ငါပြသမည့် ဤသာဓက ဥပမာအားဖြင့်လည်း ထိုအချက်ကို သိကြကုန်လော့။ စဏ္ဍာလမျိုးမှ မွေးဖွား၍ ခွေးသားချက်စားသူ (သောပါက) ဖြစ်သော 'မာတင်္ဂ' ဟု ကျော်စောထင်ရှားသောသူတစ်ယောက် ရှိခဲ့ဖူး၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သော <span class="pb hidden-meta" data-ed="M" data-n="0.0137">[M 0.0137]</span> ယသံ ပရမံ ပတ္တော၊</p>
+<p rend="gatha2">မာတင်္ဂေါ ယံ သုဒုလ္လဘံ၊</p>
+<p rend="gatha3">အာဂစ္ဆုံ တဿုပဋ္ဌာနံ၊</p>
+<p rend="gathalast">ခတ္တိယာ ဗြာဟ္မဏာ ဗဟූ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ထိုမာတင်္ဂသည် ရခဲလှစွာသော အလွန်မြတ်သော အခြံအရံ ကျော်စောမှုကို ရရှိခဲ့လေသည်။ မင်းမျိုးတို့နှင့် ဗြာဟ္မဏမျိုး မြောက်မြားစွာတို့သည် ထိုမာတင်္ဂထံသို့ လာရောက်၍ လုပ်ကျွေးပြုစုကြရကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သော <span class="pb hidden-meta" data-ed="M" data-n="0.0138">[M 0.0138]</span> ဒေဝယာနံ အဘိရုယှ၊</p>
+<p rend="gatha2">ဝိရဇံ သော မဟာပထံ၊</p>
+<p rend="gatha3">ကာမရာဂံ ဝိရာဇေတွာ၊</p>
+<p rend="gathalast">ဗြဟ္မလောကූပဂေါ အဟု.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ထိုမာတင်္ဂသည် ကိလေသာမြူကင်းသော မဟာအဋ္ဌင်္ဂိကမဂ်တည်းဟူသော နတ်ရထား (ဒေဝယာဉ်) သို့ တက်စီးလျက်၊ ကာမရာဂကို ကင်းပျောက်စေပြီးလျှင် ဗြဟ္မာ့ပြည်သို့ ရောက်ရသူ ဖြစ်ခဲ့လေပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ဂိရိံ <span class="pb hidden-meta" data-ed="M" data-n="0.0166">[M 0.0166]</span> နခေန ခဏသိ၊</p>
+<p rend="gatha2">အယော ဒန္တေဘိ ခါဒသိ၊</p>
+<p rend="gatha3">ဇာတဝေဒံ ပဒဟသိ၊</p>
+<p rend="gatha3">ယော ဣသိံ ပရိဘာသတိ.</p>
+<p rend="gatha1">အာဝေလိတံ <span class="pb hidden-meta" data-ed="M" data-n="0.0167">[M 0.0167]</span> ပိဋ္ဌိတော ဥတ္တမင်္ဂံ၊</p>
+<p rend="gatha2">ဗာဟုံ ပသာရေတိ အကမ္ပဏေယျံ၊</p>
+<p rend="gatha3">သေတာနိ အက္ခီနိ ယထာ မတဿ၊</p>
+<p rend="gathalast">ကော မေ ဣမံ ပုတ္တမကာသိ ဧဝံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရသေ့ကို ကဲ့ရဲ့ရှုတ်ချသောသူသည် ခြေသည်းလက်သည်းဖြင့် တောင်ကို တူးဖော်သကဲ့သို့လည်းကောင်း၊ သံခဲကို သွားဖြင့် ကိုက်ခဲသကဲ့သို့လည်းကောင်း၊ တောက်လောင်နေသောမီးကို မျိုချသကဲ့သို့လည်းကောင်း (မိမိကိုယ်ကို အန္တရာယ်ပြုရာ ရောက်၏)။ (ငါ့သား၏) ဦးခေါင်းသည် နောက်သို့ လည်လျက်ရှိ၏၊ လက်မောင်းသည်လည်း မလှုပ်မယှက် ဆန့်တန်းလျက်ရှိ၏၊ မျက်လုံးတို့သည်လည်း သေပြီးသောသူကဲ့သို့ ဖြူဆွတ်လျက်ရှိ၏။ အဘယ်သူသည် ငါ၏သားကို ဤသို့ဖြစ်အောင် ပြုလုပ်ခဲ့သနည်း။</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

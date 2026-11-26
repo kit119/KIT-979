@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1204n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Myanmar:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif Myanmar"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">ပါဠိ | မြန်မာ</button><button type="button" data-mode="view-stack">ပါဠိ — မြန်မာ</button><button type="button" data-mode="view-pali-only">ပါဠိ</button><button type="button" data-mode="view-trans-only">မြန်မာ</button><button type="button" id="toggle-meta-btn">မှတ်ချက်</button></div>
+<div class="pair-row" data-id="e1204n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="chapter">ဓာတုပါဌ <span class="pb hidden-meta" data-ed="O" data-n="0.0001">[O 0.0001]</span> ဝိလာသိနိယာ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">ဓာတုပါဌဝိလာသိနီကျမ်း</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="centre">နမော တဿ ဘဂဝတော အရဟတော သမ္မာသမ္ဗုဒ္ဓဿ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ထိုမြတ်စွာဘုရား၊ ပူဇော်အထူးကို ခံတော်မူထိုက်သော ဘုရား၊ သမ္မာသမ္ဗုဒ္ဓ ဖြစ်တော်မူသော ဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သမ္မာသမ္ဗုဒ္ဓ သූရိယော ယော သမ္ဗောဓော ဒယော ဒိတော၊</p>
+<p rend="gathalast">ဇဂု ပင်္ကဇ သင်္ဃာတေ ဗောဓယီ ပဏမာမိ တံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြင် သမ္မာသမ္ဗုဒ္ဓတည်းဟူသော နေမင်းသည် သမ္ဗောဓိဉာဏ်တည်းဟူသော ဥဒယတောင်ထိပ်မှ ထွက်ပေါ်လာပြီးလျှင် သတ္တဝါတည်းဟူသော ကြာအပေါင်းတို့ကို ပွင့်ထွန်းစေတော်မူ၏၊ ထိုသမ္မာသမ္ဗုဒ္ဓ နေမင်းကို ဦးညွတ်ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သဒ္ဓမ္မဘာနု ယော လောကာ လောကံ ကတွာန ဓီ တမံ၊</p>
+<p rend="gathalast">ဓံသယီ မုနိနာ သမ္မာ ပါတုဘූတော နမာမိ တံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မြတ်စွာဘုရားရှင် ကောင်းစွာ ထင်ရှားပြတော်မူအပ်သော၊ လောကကို အလင်းဆောင်လျက် ပညာမဲ့တည်းဟူသော အမိုက်မှောင်ကို ဖျက်ဆီးတတ်သော အကြင် သူတော်ကောင်းတရားတည်းဟူသော နေရောင်ခြည်ကို ဦးညွတ်ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သိလဂန္ဓသမာကိဏ္ဏော ဗုဒ္ဓေါ သဒ္ဓမ္မဟာယ ယော၊</p>
+<p rend="gathalast">သင်္ဃတောယရုဟော ပါဏ လီ တောသေသိ နမာမိ တံ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သီလရနံ့တို့ဖြင့် ပျံ့လှိုင်အပ်သော၊ သူတော်ကောင်းတရားတည်းဟူသော ရေမှ ပေါက်ဖွားလာသော၊ သတ္တဝါတည်းဟူသော ပျားပိတုန်းတို့ကို နှစ်သက်စေတတ်သော အကြင် သံဃာတော်တည်းဟူသော ကြာပန်းကို ဦးညွတ်ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> နတွာ မမ ဂရုံဝါသိ ပဒုမာရာမ နာမကံ၊</p>
+<p rend="gathalast">ပါဠိံ နိဿာယ ကဿာ ဟံ ဓာတုပါဌဝိလာသိနိ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပဒုမာရာမဟု အမည်ရှိသော အကျွန်ုပ်၏ ဆရာသမားကို ဦးညွတ်ရှိခိုး၍ ပါဠိတော်ကို အမှီပြုလျက် အကျွန်ုပ်သည် ဓာတုပါဌဝိလာသိနီကျမ်းကို ပြုစုပါအံ့။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဣမဉှိ ဂန္ထကရဏံ သတ္ထာဂမနယေ ရတော၊</p>
+<p rend="gathalast">မූကလံဂမု သင်္ခါတေ ဂါမေ သဇ္ဇနကာရိတေ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကျမ်းဂန်လာ နည်းနာတို့၌ မွေ့လျော်သော၊ သူတော်ကောင်းတို့ တည်ဆောက်အပ်သော မူကလင်ဂမုဟု အမည်ရသော ရွာ၌...</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သုဝိသုဒ္ဓါရာမနာမ ဝိဟာရမှိ နိဝါသကော၊</p>
+<p rend="gathalast">တသ္မိံ ပဓာန ထေရော သိ ကတညූ သန္တဝုတ္တိ ယော-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သုဝိသုဒ္ဓါရာမ အမည်ရှိသော ကျောင်းတိုက်၌ သီတင်းသုံးတော်မူသော၊ ထိုကျောင်းတိုက်၏ ပဓာနနာယကမထေရ် ဖြစ်တော်မူသော၊ ကျေးဇူးသိတတ်ပြီး ငြိမ်သက်သော အလေ့ရှိတော်မူသော...</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဂုဏာလင်္ကာရနာမော သော ထေရော ထေရနွယေ ရတော၊</p>
+<p rend="gathalast">ယာစိ မံ အဘိဂန္တဝါန မိတ္တော မေ ဝင်္ကမာနသော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မထေရ်အဆက်ဆက်တို့၏ အလေ့အကျင့်၌ မွေ့လျော်တော်မူသော၊ အကျွန်ုပ်၏ မိတ်ဆွေဖြစ်သော၊ ဖြောင့်မတ်သော စိတ်ရှိသော ထို ဂုဏာလင်္ကာရ အမည်ရှိသော မထေရ်သည် အကျွန်ုပ်ထံသို့ ချဉ်းကပ်၍ (ဤကျမ်းကို ပြုစုရန်) တောင်းပန်အပ်သဖြင့်...</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဗုဒ္ဓေါ ဟေဿံ ယဒါ လောကေ နိဒ္ဒေသော ဟံ တဒါ ဣတိ၊</p>
+<p rend="gathalast">ပါပုဏိဿ မဟင်္ကာရံ ကော ဝါဒေါ ပနိ ဟန္တရေ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ငါသည် လောက၌ ဘုရားဖြစ်လတ္တံ့၊ ထိုအခါ ငါသည် နိဒ္ဒေသ (ကိလေသာ ကင်းငြိမ်းသူ) ဖြစ်လတ္တံ့ဟု ကြီးမြတ်သော ငါဟူသောအစွဲ (မဟင်္ကာရ) သို့ ရောက်ပေလိမ့်မည်။ ဤသို့ ဖြစ်ပါက ယခု စပ်ကြားကာလ၌ အဘယ်ဆိုဖွယ် ရာရှိအံ့နည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="gatha1">အပ္ပစ္စယော <span class="pb hidden-meta" data-ed="O" data-n="0.0003">[O 0.0003]</span> ပရော ဟောတိ ဘූဝါဒိ ဂဏတော သတိ၊</p>
+<p rend="gathalast">သုဒ္ဓကတ္တု ကိရယာချာနေ သဗ္ဗဓာတုက နိဿိတံ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘူဝါဒိဂိုဏ်း၌ ရှိစဉ် ကတ္တားသက်သက်ကို ပြဆိုသော အာခယာတ်ကိရိယာ၌ သဗ္ဗဓာတုကဝိဘတ်ကို မှီ၍ ပရသပုဒ်သည် ပစ္စည်းမရှိဘဲ ဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ပယုတ္တော <span class="pb hidden-meta" data-ed="O" data-n="0.0005">[O 0.0005]</span> ကတ္တုနာ ယောဂေ ဌိတော ယေဝါ ပ္ပဓာနိယေ၊</p>
+<p rend="gathalast">ကိရယံ သာဓေတိ ဧတဿ ဒီပကံ သာသနေ ပဒံ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အပဓာနဖြစ်သော ကတ္တားနှင့် ယှဉ်ခြင်း၌ တည်လျက်သာလျှင် ကိရိယာကို ပြီးစေတတ်၏၊ ဤအနက်ကို ပြဆိုသော စကားလုံးသည် သာသနာတော်၌ တည်ရှိ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ကရဏ ဝစနံယေဝ ယေဘုယျေန ပဒိဿတိ၊</p>
+<p rend="gatha2">အာချာတေ ကာရိတဋ္ဌာနံ သန္ဓာယ ကထိတံ ဣဒံ၊</p>
+<p rend="gathalast">န နာမေ ကာရတဋ္ဌာနံ ဗောဓေတာ ဣတိအာဒိကံ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">များသောအားဖြင့် ကရဏဝုစ် (တတိယဝိဘတ်) သာ ထင်ရှား၏။ ဤစကားကို အာခယာတ်၌ ကာရိတအနက်ကို ရည်ရွယ်၍ ဆိုအပ်၏။ 'ဗောဓေတာ' စသည်ဖြင့် နာမ်၌ ရှိသော ကာရိတအနက်ကို ဆိုလိုသည်မဟုတ်။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="gatha1">သုနခေဟိပိ ခါဒါပေန္တိ ဣစ္စာဒိနိ ပဒါနိတု၊</p>
+<p rend="gathalast">အာဟရိတွာန ဒီပေယျ ပယောဂ ကုသလော ဗုဓော-ယီ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဝါကျဖွဲ့ထုံး၌ ကျွမ်းကျင်သော ပညာရှိသည် 'သုနခေဟိပိ ခါဒါပေန္တိ' စသော ပုဒ်တို့ကို ဆောင်ယူ၍ ပြသရာ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ကထိတော <span class="pb hidden-meta" data-ed="O" data-n="0.0007">[O 0.0007]</span> သစ္စ သင်္ခေပေ ပစ္စန္တ ဝစနေန ဝေ၊</p>
+<p rend="gathalast">ဘုယျတေ ဣတိ သဒ္ဒဿ သမ္ဗန္ဓော ဘာဝဒီပနော-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သစ္စသံခေပကျမ်း၌ ပစ္စတ္တဝုစ် (ပထမဝိဘတ်) ဖြင့် ဧကန်ဆိုအပ်၏။ 'ဘူယျတေ' ဟူသော စကားလုံး၏ စပ်ယှဉ်မှုသည် ဘာဝအနက်ကို ပြခြင်းဖြစ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1">နိဒ္ဒေသပါဠိယံ ရූပံ ဝိဟောတိ ဝိဟဝီယတိ၊</p>
+<p rend="gathalast">ဣတိ ဒဿနတောဝါပိ ပစ္စတ္တဝစနံ ထိရံ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">နိဒ္ဒေသပါဠိတော်၌ 'ဝိဟောတိ'၊ 'ဝိဟဝီယတိ' ဟူသော ရုပ်ကို တွေ့မြင်ရခြင်းဖြင့်လည်း ပစ္စတ္တဝုစ်သည် ခိုင်မြဲတည်တံ့၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="gatha1">တထာ ဓဇဂ္ဂသုတ္တန္တေ မုနိနာ ဟစ္စ ဘာသိတေ၊</p>
+<p rend="gathalast">သော ပဟီယိဿတိ ဣတိ ပါဠိဒဿနတောပိစ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ထို့အတူ မြတ်စွာဘုရား ကောင်းစွာ ဟောကြားတော်မူအပ်သော ဓဇဂ္ဂသုတ်၌ 'သော ပဟီယိဿတိ' ဟူသော ပါဠိတော်ကို တွေ့မြင်ရခြင်းကြောင့်လည်းကောင်း...</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ပါရမိတာနု ဘာဝေန မဟေသီနံဝ ဒေဟတော၊</p>
+<p rend="gathalast">သန္နိ နိပ္ဖါဒနာ နေဝ သက္ကဋာဒိ ဝစော ဝိယ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပါရမီတော်တို့၏ အာနုဘော်ကြောင့် မြတ်စွာဘုရားတို့၏ ကိုယ်တော်မှ သက္ကတဘာသာစကားကဲ့သို့ ကောင်းစွာ ပြီးမြောက်ခြင်းကား မဟုတ်ပေ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ပစ္စတ္တ ဒဿနေနေဝ ပုရိသတ္တယ ယောဇနံ၊</p>
+<p rend="gatha2">ဧကဝစနိကဉ္စာပိ ဗဟုဝစနိကမ္ပိစ၊</p>
+<p rend="gathalast">ကာတဗ္ဗ မိတိ နော ခန္တီ ပရဿပဒအာဒိကေ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပစ္စတ္တဝုစ်ကို မြင်ရရုံမျှဖြင့် ပုရိသသုံးပါး ယှဉ်စပ်ခြင်းကိုလည်းကောင်း၊ ဧကဝုစ် ဗဟုဝုစ်တို့ကိုလည်းကောင်း ပရဿပုဒ် စသည်တို့၌ ပြုလုပ်အပ်၏ဟု အကျွန်ုပ်တို့ ယူဆအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ဘာဝေ ကိရယာပဒံ နာမ ပါဠိယာ အတိဒုဒ္ဒသံ၊</p>
+<p rend="gathalast">တသ္မာ တဂ္ဂဟဏූပါယော ဝုတ္တော ဧတ္တာဝတာ မယာ-ယီ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပါဠိတော်၌ ဘာဝအာခယာတ် ကိရိယာပုဒ်သည် အလွန်ခဲယဉ်းလှ၏။ ထို့ကြောင့် ယင်းကို ဖမ်းယူခြင်း (နားလည်ခြင်း) အင်္ဂါကို အကျွန်ုပ်သည် ဤမျှဖြင့် ဆိုခဲ့ပေပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ယံ <span class="pb hidden-meta" data-ed="O" data-n="0.0008">[O 0.0008]</span> တိကာလံ တိပုရိသံ ကိရယာဝါစိ တိကာရကံ၊</p>
+<p rend="gathalast">အတ္တိလိင်္ဂံ ဒွိဝစနံ တ ဒါချာတန္တိ ဝုစ္စတိ-ယီ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြင် ပုဒ်သည် ကာလသုံးပါး၊ ပုရိသသုံးပါး ရှိပြီး ကိရိယာကို ဟောတတ်ကာ ကာရကသုံးပါးရှိလျက်၊ လိင်မရှိ၊ ဝုစ်နှစ်ပါးရှိ၏၊ ထိုပုဒ်ကို အာခယာတ်ပုဒ်ဟု ခေါ်ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1">အာချာတ <span class="pb hidden-meta" data-ed="O" data-n="0.0009">[O 0.0009]</span> သာဂရ မထ ဇ္ဇတနိ တရင်္ဂံ၊</p>
+<p rend="gatha2">ဓာတုဇ္ဇလံ ဝိကရဏ ဂမ ကာလမီနံ၊</p>
+<p rend="gatha3">လောပါ နုဗန္ဓ ရယ မတ္ထ ဝိဘာဂတီရံ၊</p>
+<p rend="gathalast">ဓီရာ တရန္တိ ကဝိနော ပုထု ဗုဒ္ဓိ နာဝါ-ယီ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လှိုင်းတံပိုးတည်းဟူသော အဇ္ဇတနီဝိဘတ်ရှိသော၊ ဓာတ်တည်းဟူသော ရေပြင်ရှိသော၊ ဝိကရုဏ်း အာဂမ ကာလတည်းဟူသော ငါးတို့ရှိသော၊ လောပနှင့် အနုဗန္ဓတည်းဟူသော ရေစီးသန်ခြင်းရှိသော၊ အနက်အဓိပ္ပာယ် ခွဲခြားခြင်းတည်းဟူသော ကမ်းပါးရှိသော အာခယာတ်တည်းဟူသော သမုဒ္ဒရာကို ပညာရှိ ကဗျာဆရာတို့သည် ကျယ်ဝန်းသော ဉာဏ်ပညာတည်းဟူသော လှေဖြင့် ဖြတ်ကူးကြကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="gatha1">စက္ခက္ခီ <span class="pb hidden-meta" data-ed="O" data-n="0.0011">[O 0.0011]</span> နယနံ နေတ္တံ လောစနံ ဒိဋ္ဌိ ဒဿနံ၊</p>
+<p rend="gathalast">ပေက္ခနံ အစ္ဆိ ပမှန္တု ပခုမန္တိ ပဝုစ္စတိ-ယိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">စက္ခု၊ အက္ခိ၊ နယန၊ နေတ္တ၊ လောစန၊ ဒိဋ္ဌိ၊ ဒဿန၊ ပေက္ခန၊ အစ္ဆိ တို့ကို မျက်စိဟု ခေါ်ဆိုအပ်၏။ ပမှ နှင့် ပခုမ တို့ကို မျက်တောင်ဟု ခေါ်ဆိုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1">“ပဗ္ဗာဇိတော <span class="pb hidden-meta" data-ed="O" data-n="0.0017">[O 0.0017]</span> သကာ ရဋ္ဌာ၊ အညံ ဇနပဒံ ဂတော၊</p>
+<p rend="gathalast">မဟန္တံ ကောဋ္ဌံ ကယိရာထ၊ ဒုရုတ္တာနံ နိဝေတဝေ”-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မိမိတိုင်းပြည်မှ နှင်ထုတ်အပ်၍ အခြားတိုင်းနိုင်ငံသို့ ရောက်သွားသောသူသည် သူတစ်ပါးတို့ ပြောဆိုသော မကောင်းသောစကားတို့ကို သည်းခံမြိုသိပ်ရန် (သိုလှောင်ရန်) ကြီးစွာသော စပါးကျီကို ပြုလုပ်ရာ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ပေါရာဏ <span class="pb hidden-meta" data-ed="O" data-n="0.0022">[O 0.0022]</span> မေတံ အတုလ နေတံ အဇ္ဇတနာမိဝ၊</p>
+<p rend="gatha2">နိန္ဒန္တိ တုဏှိ မာသီနံ နိန္ဒန္တိ ဗဟုဘာဏိနံ၊</p>
+<p rend="gathalast">မိတဘာဏိနမ္ပိ နိန္ဒန္တိ နတ္ထိ လောကေ အနိန္ဒိတော-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အို အတုလ... ဤသို့ ကဲ့ရဲ့ခြင်းသည် ရှေးပဝေသဏီကပင် ဖြစ်ခဲ့၏၊ ယခုမှ ဖြစ်သည်မဟုတ်။ ဆိတ်ဆိတ်နေသူကိုလည်း ကဲ့ရဲ့ကြ၏၊ စကားများသူကိုလည်း ကဲ့ရဲ့ကြ၏၊ ချင့်ချိန်၍ ပြောဆိုသူကိုလည်း ကဲ့ရဲ့ကြ၏။ လောက၌ အကဲ့ရဲ့မခံရဖူးသူ မရှိပေ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1">နဂရံ <span class="pb hidden-meta" data-ed="O" data-n="0.0025">[O 0.0025]</span> ယထာ ပစ္စန္တံ “ဂုတ္တံ” သန္တရဗာဟိယံ၊</p>
+<p rend="gathalast">ဧဝံ ‘ဂေါပေထ’ အတ္တာနံ၊ ခဏေ ဝေ မာ ဥပစ္စဂါ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အတွင်းအပြင် ကောင်းစွာ လုံခြုံအောင် စောင့်ရှောက်အပ်သော နယ်စပ်မြို့ကဲ့သို့၊ ထို့အတူ မိမိကိုယ်ကို စောင့်ရှောက်ကြကုန်လော့။ သင့်အား အခွင့်ကောင်း ခဏသည် မလွန်ပါစေလင့်။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ဓိရတ္ထု <span class="pb hidden-meta" data-ed="O" data-n="0.0028">[O 0.0028]</span> တံ ဝိသဝန္တံ၊ ယမဟံ ဇီဝိတ ကာရဏာ၊</p>
+<p rend="gathalast">ဝန္တံ ပစ္ဆာ ဝမိဿာမိ၊ မတံ မေ ဇိဝိတံ ဝရံ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">အကြင် အဆိပ်ကို ငါသည် အသက်ရှင်ရန်အတွက် ထွေးအန်အပ်ပြီးမှ တစ်ဖန် ပြန်မျိုအံ့၊ ထိုသို့ အန်ဖတ်ကို ပြန်မျိုခြင်းကို ကဲ့ရဲ့အပ်စွ၊ ငါ့အား သေရခြင်းသည်သာ မြတ်လှ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ဝိလုပ္ပတေဝ <span class="pb hidden-meta" data-ed="O" data-n="0.0041">[O 0.0041]</span> ပုရိသော၊ ယာဝဿ ဥပကပ္ပတိ၊</p>
+<p rend="gathalast">ယဒါ စညေ ဝိလုမ္ပန္တီ၊ သော ဝိလုတ္တော ဝိလုမ္ပတီ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လူတစ်ယောက်သည် မိမိအား အခွင့်သာသရွေ့ အခြားသူကို လုယက်ဖျက်ဆီးတတ်၏။ အခြားသူတို့က မိမိအား လုယက်ဖျက်ဆီးသောအခါတွင်မူကား လုယက်ဖျက်ဆီးခံရသူသည်ပင် သူတစ်ပါးကို ဖျက်ဆီးပြန်တတ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="gatha1">“အပ္ပမာဒေါ <span class="pb hidden-meta" data-ed="O" data-n="0.0044">[O 0.0044]</span> အမတပဒံ၊ ပမာဒေါ မစ္စုနော ပဒံ၊</p>
+<p rend="gathalast">အပ္ပမတ္တာ န မီယန္တိ၊ ယေ ပမတ္တာ ယထာမတာ”.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မမေ့မလျော့ခြင်း (အပ္ပမာဒ) သည် သေခြင်းကင်းရာ (နိဗ္ဗာန်) သို့ ရောက်ကြောင်း ဖြစ်၏။ မေ့လျော့ခြင်း (ပမာဒ) သည် သေခြင်း၏ အကြောင်းလမ်းဖြစ်၏။ မမေ့မလျော့သောသူတို့သည် မသေကြကုန်။ မေ့လျော့သောသူတို့သည် သေပြီးသောသူတို့နှင့် တူကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0062">[O 0.0062]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဉာဏဝိမလ တိဿာချော၊ ယော မဟာသင်္ဃ နာယကော၊</p>
+<p rend="gathalast">မရမ္မဝံသံ အာဒေါစ၊ ဒီပေ သဏ္ဌာပယီ ဣဓ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဉာဏဝိမလတိဿ အမည်ရှိတော်မူသော အကြင် သံဃာ့နာယက ဆရာတော်ကြီးသည် မြန်မာသံဃာ့အနွယ်ကို ဤကျွန်း၌ ရှေးဦးစွာ တည်ထောင်တော်မူခဲ့၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တဿ ပဓာန သိဿောသိ၊ ပါဠိ ယဋ္ဌကထာ ဝိဒූ၊</p>
+<p rend="gathalast">ဓမ္မဓာရ သမညာတော၊ ယော မဟာ သင်္ဃသာမိကော-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပါဠိအဋ္ဌကထာတို့ကို တတ်သိကျွမ်းကျင်တော်မူသော၊ ဓမ္မဓာရ ဟု ကျော်စောထင်ရှားသော အကြင် သံဃာ့သခင် မထေရ်မြတ်သည် ထိုဆရာတော်၏ ပဓာနတပည့် ဖြစ်တော်မူ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယော တဿ မုချသိံဿာ သိ၊ ဓမ္မေ သတ္ထေဝ ကောဝိဒေါ၊</p>
+<p rend="gathalast">ဉာဏာနန္ဒ မဟာထေရော၊ ခေ မာ ဝိယ သုပါကဋော-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တရားဓမ္မနှင့် ကျမ်းဂန်တို့၌ ကျွမ်းကျင်တော်မူသော၊ ခေမာထေရီကဲ့သို့ အလွန်ထင်ရှားတော်မူသော အကြင် ဉာဏာနန္ဒ မဟာထေရ်မြတ်သည် ထိုဆရာတော်၏ အဓိကတပည့် ဖြစ်တော်မူ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဝိမလသာရ တိဿာချော၊ မဟာသံသာဓိပေါ ကဝိ၊</p>
+<p rend="gathalast">သိဿောသိ ဒုတိယော တဿ၊ ပရိယတ္တိ ဝိသာရဒေါ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပရိယတ္တိစာပေ၌ ရဲရင့်ကျွမ်းကျင်တော်မူသော၊ သံဃာ့ဦးစီးချုပ်ဖြစ်တော်မူသော၊ ကဗျာပညာရှိ ဝိမလသာရတိဿ အမည်ရှိသော ဆရာတော်သည် ထိုဆရာတော်၏ ဒုတိယမြောက် တပည့်ဖြစ်တော်မူ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ပဒုမာရာမ နာမော မေ၊ အာစေရော ထေရပုင်္ဂဝေါ၊</p>
+<p rend="gathalast">တတိယော တဿ သိဿော သိ သိက္ခါဂါရဝ သညုတော-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သိက္ခာကို ရိုသေသောစိတ်ရှိတော်မူသော၊ အကျွန်ုပ်၏ဆရာဖြစ်တော်မူသော၊ ပဒုမာရာမ အမည်ရှိသော မြတ်သောမထေရ်သည် ထိုဆရာတော်၏ တတိယမြောက် တပည့်ဖြစ်တော်မူ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သင်္ဃာဓိပေါစ ဝိမလ၊ သာရာချော ထေရကုဉ္ဇရော၊</p>
+<p rend="gathalast">ပဒုမာရာမ ဝိချာတ၊ မဟာထေရော စိမေ ဒုဝေ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သံဃာ့အကြီးအမှူးဖြစ်သော ဝိမလသာရ အမည်ရှိသော ဆင်ပြောင်သဖွယ် မြတ်သောမထေရ်နှင့် ကျော်စောထင်ရှားသော ပဒုမာရာမ မဟာထေရ် ဤနှစ်ပါးသော မထေရ်မြတ်တို့သည်...</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဓမ္မာဓာရ မဟာသင်္ဃ၊ သာမိနောစ ဥပန္တိကေ၊</p>
+<p rend="gathalast">ဉာဏာနန္ဒ မဟာထေရ၊ ဿန္တိကေဝ သမုဂ္ဂဟုံ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဓမ္မဓာရ မဟာသံဃာ့သခင် ဆရာတော်ကြီး၏ ထံပါး၌လည်းကောင်း၊ ဉာဏာနန္ဒ မဟာထေရ်မြတ်၏ ထံပါး၌လည်းကောင်း ကောင်းစွာ သင်ယူတော်မူခဲ့ကြ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0063">[O 0.0063]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တေသု ခေါ ပဒုမာရာမ မဟာထေရော အဝံ မမံ၊</p>
+<p rend="gathalast">သိက္ခယိ သဒ္ဒ သတ္ထေစ၊ ပါဠိယဋ္ဌကထာသု စ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ထိုမထေရ်တို့တွင် ပဒုမာရာမ မဟာထေရ်မြတ်သည် အကျွန်ုပ်အား သဒ္ဒါကျမ်း၌လည်းကောင်း၊ ပါဠိတော်နှင့် အဋ္ဌကထာတို့၌လည်းကောင်း သင်ကြားပြသပေးတော်မူခဲ့၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တသ္မိံ ဒိဝင်္ဂတေ ပစ္ဆာ၊ ဆန္ဒေါ ဝျာကရဏာဒိကံ၊</p>
+<p rend="gathalast">ဝိမလသာရ မဟာထေရ၊ ဿန္တိကေစ သမုဂ္ဂဟိံ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ထိုဆရာတော် ပျံလွန်တော်မူပြီးနောက် ဆန်း၊ သဒ္ဒါစသည်တို့ကို ဝိမလသာရ မဟာထေရ်မြတ်၏ ထံပါး၌ သင်ယူခဲ့၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တဿ ခေါ ပဒုမာရာမ မဟာထေရဿ ဓီမတော၊</p>
+<p rend="gathalast">သိဿေန ဉာဏတိလက ထေရေန သံသသာမိနာ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပညာရှိတော်မူသော ထိုပဒုမာရာမ မဟာထေရ်မြတ်၏ တပည့်ဖြစ်တော်မူသော၊ သာသနာပိုင်ဖြစ်တော်မူသော ဉာဏတိလက မထေရ်သည်...</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဗုဒ္ဓဿ ပရိနိဗ္ဗာဏ ဝီသဟဿေ စတုဿတေ၊</p>
+<p rend="gathalast">သ သတ္တတျာဓိကေ ဝဿေ ဇေဋ္ဌမာသေ မနောရမေ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">မြတ်စွာဘုရား ပရိနိဗ္ဗာန်စံတော်မူပြီးနောက် နှစ်ပေါင်း နှစ်ထောင့်လေးရာ ခုနစ်ဆယ့်ခုနစ် (၂၄၇၇) ခုနှစ်၊ မွေ့လျော်ဖွယ်ကောင်းသော နယုန်လတွင်...</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အဋ္ဌမိယံ ကာဠပက္ခေ၊ ကတာယံ မတိသූဒနီ၊</p>
+<p rend="gathalast">ဓာတုပါဌတ္ထ ဗောဓာယ ဓာတုပါဌ ဝိလာသိနီ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">လပြည့်ကျော် ရှစ်ရက်နေ့၌၊ ဉာဏ်ကို သုတ်သင်တတ်သော၊ ဓာတုပါဌကျမ်း၏ အနက်အဓိပ္ပာယ်ကို သိရှိနားလည်စေရန် ဤဓာတုပါဌဝိလာသိနီကျမ်းကို ပြုစုအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အာဒိ မုဒ္ဒါပနံ အဿာ၊ ဂုဏာလင်္ကာရ နာမိနော၊</p>
+<p rend="gathalast">ဩနောဇိတံ၊ မမာယတ္တံ တတောပရိ တပဿိနော-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဤကျမ်း၏ ရှေးဦးစွာ ပုံနှိပ်ခြင်းကို ဂုဏာလင်္ကာရအမည်ရှိသူအား လှူဒါန်းအပ်၏။ ထိုမှတစ်ပါးသော အပိုင်းကိုမူ တရားကျင့်ကြံသူ ရဟန်းဖြစ်သော ငါက တာဝန်ယူဆောင်ရွက်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သိဿော မယှံ ဂုနာနန္ဒေါ ဥနာကုရုဝ ဂါမဇော၊</p>
+<p rend="gatha2">မမု ပတ္ထမှိတော အာသိ၊ ဂဏ္ဌိဋ္ဌာနေသနာဒိတော၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဥနာကုရုဝရွာဇာတိ ဖြစ်သော ငါ၏တပည့် ဂုဏာနန္ဒသည် ခက်ခဲသော အရာဌာနတို့ကို ရှာဖွေစူးစမ်းခြင်း အစရှိသည်တို့ဖြင့် ငါ့အား ကူညီပံ့ပိုးပေးခဲ့၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဗသ္တယံ သမညကော ရာဇာ၊ မစ္စော မမ ပိတာ အဟု၊</p>
+<p rend="gathalast">ဩန္တီနျာ ဝီ သနာမာ မေ မာတာ သေနာပတာနျနု–</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဘက်စတီယံ (Bastian) အမည်ရှိသော မင်းတိုင်ပင်အမတ်သည် ငါ၏ဖခင်ဖြစ်ခဲ့၍၊ အွန်တီးနီးယား (Antonia) အမည်ရှိသော သေနာပတိသမီးသည် ငါ၏မိခင် ဖြစ်ခဲ့၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အာစေရာ စေဝ ပါစေရာ၊ ဇနကော ဇနနီဝ မေ၊</p>
+<p rend="gathalast">ဒေဝါ စေတျင်္ဂိနော သဗ္ဗေ၊ နေနပပ္ပေါန္တု နိဗ္ဗုတိန္တိ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ငါ၏ ဆရာသမားများနှင့် အဆက်ဆက်သော ဆရာသမားတို့သည်လည်းကောင်း၊ ငါ၏ မိဘနှစ်ပါးတို့သည်လည်းကောင်း၊ နတ်ဗြဟ္မာများနှင့် သတ္တဝါအားလုံးတို့သည်လည်းကောင်း ဤကောင်းမှုကြောင့် ငြိမ်းချမ်းရာနိဗ္ဗာန်သို့ ရောက်ကြပါစေကုန်သတည်း။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="centre">ဓာတုပါဌဝိလာသိနိယာ သမာပ္တယိ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဓာတုပါဌဝိလာသိနီကျမ်း ပြီးဆုံးပါပြီ။</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

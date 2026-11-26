@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1213n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Myanmar:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif Myanmar"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">ပါဠိ | မြန်မာ</button><button type="button" data-mode="view-stack">ပါဠိ — မြန်မာ</button><button type="button" data-mode="view-pali-only">ပါဠိ</button><button type="button" data-mode="view-trans-only">မြန်မာ</button><button type="button" id="toggle-meta-btn">မှတ်ချက်</button></div>
+<div class="pair-row" data-id="e1213n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="chapter">သဒ္ဒဗိန္ဒု <span class="pb hidden-meta" data-ed="O" data-n="0.0001">[O 0.0001]</span> ပကရဏံ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">သဒ္ဒဗိန္ဒုကျမ်း</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="centre">နမော တဿ ဘဂဝတော အရဟတော သမ္မာသမ္ဗုဒ္ဓဿ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ပူဇော်အထူးကို ခံတော်မူထိုက်သော၊ တရားအားလုံးကို ကိုယ်တော်တိုင် မှန်ကန်စွာ သိတော်မူသော ထိုမြတ်စွာဘုရားအား ရှိခိုးပါ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ယဿဉေယျေသု ဓမ္မေသု၊ နာဏုမတ္တမ္ပဝေဒိတံ၊</p>
+<p rend="gathalast">နတွာသဒ္ဓမ္မသင်္ဃံတံ၊ သဒ္ဒဗိန္ဒုံသမာရဘေ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သိအပ်သော တရားတို့၌ မြူမှုန်ခန့်မျှပင် သိတော်မမူသည်မရှိသော ထိုမြတ်စွာဘုရားနှင့်တကွ တရားတော်၊ သံဃာတော်မြတ်ကို ရှိခိုးပူဇော်၍ သဒ္ဒဗိန္ဒုကျမ်းကို စတင်ရေးသားပါအံ့။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0002">[O 0.0002]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကာဒိရိတာ နဝသင်္ခယာ၊ ကမေနဋာ ဒိ ယာဒိစ၊</p>
+<p rend="gathalast">ပါဒယောပဉ္စ သင်္ခယာတာ၊ သုညနာမာ သရညနာ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">က-အက္ခရာ အစရှိသော ကိုးလုံးသော အက္ခရာတို့သည်လည်းကောင်း၊ အစဉ်အတိုင်း ဋ-အက္ခရာ အစရှိသည်တို့သည်လည်းကောင်း၊ ယ-အက္ခရာ အစရှိသည်တို့သည်လည်းကောင်း၊ ပ-အက္ခရာ အစရှိသော ငါးလုံးသော အက္ခရာတို့သည်လည်းကောင်း အရေအတွက်အားဖြင့် သတ်မှတ်အပ်ကုန်၏။ သရနှင့် နိဂ္ဂဟိတ်တို့ကို သုညအမည်ရှိကုန်၏ဟု ဆိုအပ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၃</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သရေဟေဝသရာပုဗ္ဗေ လုတ္တာဝါဝီပရေရမာ၊</p>
+<p rend="gathalast">ဗျဉ္ဇနာစာဂမာဝါဝီ ဒီဃရဿာဒိသမ္ဘဝါ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရှေ့သရကြောင့် နောက်သရကို သော်လည်းကောင်း၊ နောက်သရကြောင့် ရှေ့သရကို သော်လည်းကောင်း ချေအပ်ကုန်၏။ ဗျည်းအက္ခရာနှင့် အာဂမအက္ခရာတို့သည်လည်းကောင်း၊ ဒီဃ၊ ရဿ အစရှိသည်တို့သည်လည်းကောင်း သင့်လျော်သလို ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၄</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0003">[O 0.0003]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကာကာသေနာဂတောသိသ ကေနိဒ္ဓိမစ္စဒဿယိ၊</p>
+<p rend="gathalast">အရာဇခွဂ္ဂိမေသီနံ သောတုကမ္မေဃယိတ္ထိယော၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကျီးသည် ကောင်းကင်မှ လာသလော၊ အဘယ်တန်ခိုးဖြင့် ပြသနည်း၊ မင်းမဟုတ်သော ရသေ့တို့၏ မီးသည် ငါ့အား ဖြစ်၏၊ မိုးတိမ်ကို နားထောင်လိုသော မိန်းမတို့သည် ရောက်လာကြကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ သန္ဓိကပ္ပေါ သမတ္တော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့ဖြင့် သန္ဓိအပိုင်း ပြီးဆုံးပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၅</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0004">[O 0.0004]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဗုဒ္ဓပုမယုဝသန္တ ရာဇဗြဟ္မသခါစသာ၊</p>
+<p rend="gathalast">ယတာဒိဒေဟီဇန္တုစ သတ္ထုပိတာဘိဘූဝိဒූ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဗုဒ္ဓ၊ ပုမ၊ ယုဝ၊ သန္တ၊ ရာဇ၊ ဗြဟ္မ၊ သခါ၊ သာ၊ ယတ အစရှိသော ပုဒ်တို့နှင့်တကွ ဒေဟီ၊ ဇန္တု၊ သတ္ထု၊ ပိတု၊ အဘိဘူ၊ ဝိဒူ အစရှိသော ပုဒ်တို့သည်လည်းကောင်း (ပုလ္လိင်နာမ်များ ဖြစ်ကြကုန်၏။)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၆</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကညာမ္မာရတ္တိထိပေါ၊ က္ခရဏီနဒိရုမာတုဘූ၊</p>
+<p rend="gathalast">နပုံသကေတိယန္တာစ၊ ပဒကမ္မဒဓာယုနော၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကညာ၊ အမ္မာ၊ ရတ္တိ၊ ဣတ္ထိ၊ ပေါက္ခရဏီ၊ နဒီ၊ ဝဓူ၊ မာတု၊ ဘူ ဟူသော ဣတ္ထိလိင်ပုဒ်တို့သည်လည်းကောင်း၊ နပုံသကလိင်၌ အိ-သရ၊ ဥ-သရ အဆုံးရှိသော ပဒ၊ ကမ္မ၊ ဒဓိ၊ အာယု အစရှိသော ပုဒ်တို့သည်လည်းကောင်း၊</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၇</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0005">[O 0.0005]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဂဟိတာဂဟဏေနေတ္ထ သုဒ္ဓေါသျာဒျန္တကာပုမေ၊</p>
+<p rend="gathalast">ဝိမလာဟောန္တိဇာန္တေဟိ ထျံပဉ္စန္တေဟိဒါဓိကာ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဤနေရာ၌ ထိုသို့ယူခြင်းဖြင့် ပုလ္လိင်၌ အစနှင့် အဆုံးရှိသော စင်ကြယ်သော ပုဒ်တို့သည် ဖြစ်ကုန်၏။ ဣတ္ထိလိင်၌လည်း ဇ-အက္ခရာ အဆုံးရှိသော ပုဒ်တို့မှလည်းကောင်း၊ ပဉ္စမ အက္ခရာ အဆုံးရှိသော ပုဒ်တို့ထက် သာလွန်သော ပုဒ်တို့မှလည်းကောင်း စင်ကြယ်စွာ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> နပုံသကေပယောဂါတု ဇနကာဟောန္တိတျန္တတော၊</p>
+<p rend="gathalast">ပဓာနာနုဂတာသဗ္ဗ နာမသမာသတဒ္ဓိတာ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">နပုံသကလိင်၌လည်း တိ-သရ၊ ဥ-သရ အဆုံးရှိသောပုဒ်တို့မှ အသုံးအနှုန်းတို့သည် ဖြစ်ကုန်၏။ သဗ္ဗနာမ်၊ သမတ်၊ တဒ္ဓိတ်တို့သည် ကတ္တား၊ ကံ အစရှိသော အဓိကပုဒ်တို့၏ နောက်သို့ အစဉ်လိုက်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၉</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0006">[O 0.0006]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> အတ္တိလိင်္ဂါနိပါတာဒိ တတောလုတ္တာဝသျာဒယော၊</p>
+<p rend="gathalast">သုတ္တာနုရූပတောသိဒ္ဓါ ဟောန္တိဝတ္တာမနာဒယော၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">နိပါတ်အစရှိသော ပုဒ်တို့သည် လိင်ကို လွန်ကုန်၏။ ထိုနိပါတ်တို့မှ သိ-ဝိဘတ် အစရှိသည်တို့ကို ချေအပ်ကုန်၏။ ဝတ္တမာနဝိဘတ် အစရှိသည်တို့သည် သုတ်နှင့် လျော်စွာ ပြီးကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ နာမကပ္ပေါ သမတ္တော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့ဖြင့် နာမ်အပိုင်း ပြီးဆုံးပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဆကာရကေသသာမိသ္မိံ သမာသောဟောတိသမ္ဘဝါ၊</p>
+<p rend="gathalast">တဒ္ဓီတာကတ္တုကမ္မသ၊ မ္ပဒါနောကာသသာမိသု၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကာရက ခြောက်ပါးတို့၌လည်းကောင်း၊ သာမိသမ္ဗန်၌လည်းကောင်း ဖြစ်ထိုက်သဖြင့် သမတ် ဖြစ်၏။ တဒ္ဓိတ်တို့သည် ကတ္တား၊ ကံ၊ သမ္ပဒါန်၊ ဩကာသ၊ သာမိသမ္ဗန်တို့၌ ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၁</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0007">[O 0.0007]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> သာဓတ္တယမှိအာချာတော ကိတကောသတ္တသာဓနေ၊</p>
+<p rend="gathalast">သဗ္ဗတ္ထပဌမာဝုတ္တေ အဝုတ္တေဒုတိယာဒယော၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကာရက သုံးပါးတို့၌ အာချာတ်သည် ဖြစ်၏။ ကိတ်သည် ခုနစ်ပါးသော သာဓနတို့၌ ဖြစ်၏။ ဟောအပ်ပြီးသော အနက်အရပ်ရပ်၌ ပထမာဝိဘတ်သည် ဖြစ်၍၊ မဟောအပ်သေးသော အနက်၌ ဒုတိယာ အစရှိသော ဝိဘတ်တို့သည် ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၂</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၂။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> မနသာမုနိနောဝုတျာ ဝနေဗုဒ္ဓေနဝဏ္ဏိတေ၊</p>
+<p rend="gathalast">ဝဋ္ဋာဟိတောဝိဝဋ္ဋတ္ထံ ဘိက္ခုဘာဝေတိဘာဝနံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ရဟန်းသည် သံသရာဝဋ်ဆင်းရဲမှ ကင်းလွတ်၍ နိဗ္ဗာန်အကျိုးငှာ၊ မြတ်စွာဘုရားသည် တော၌ ချီးမွမ်းတော်မူအပ်သော တရားတော်ကို မုနိမြတ်စွာဘုရား၏ နှုတ်တော်ထွက်စကားတော်ဖြင့်လည်းကောင်း၊ မိမိ၏ စိတ်ဖြင့်လည်းကောင်း ဘာဝနာကို ပွားများ၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ ကာရကကပ္ပေါ သမတ္တော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့ဖြင့် ကာရကအပိုင်း ပြီးဆုံးပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၃</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0008">[O 0.0008]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၃။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရာသီဒွိပဒိကာဒွန္ဒါ လိင်္ဂေနဝစနေနစ၊</p>
+<p rend="gathalast">လုတ္တာတုလျာဓိကရဏာ ဗဟုဗ္ဗီဟီတုခေမရූ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဒွန္ဒသမတ်တို့သည် လိင်အားဖြင့်လည်းကောင်း၊ ဝစနအားဖြင့်လည်းကောင်း နှစ်ပုဒ်ရှိသော အစုတို့ ဖြစ်ကုန်၏။ ဗဟုဗ္ဗီဟိသမတ်တို့သည်ကား ဝိဘတ်ချေအပ်ကုန်လျက် တူညီသော အနက်ရှိကုန်၏၊ ဘေးကင်းရာ ကဲ့သို့သော သဘောရှိကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၄</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၄။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တပ္ပုရိသာစခေမောရာ ဒယာစကမ္မဓာရယာ၊</p>
+<p rend="gathalast">ဒိဂဝေါစာဝျယာဟာရာ ဧတေသဗ္ဗေပိဟာရိတာ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">တပ္ပုရိသသမတ်တို့သည်လည်းကောင်း၊ ကမ္မဓာရည်းသမတ်တို့သည်လည်းကောင်း၊ ဒိဂုသမတ်တို့သည်လည်းကောင်း၊ အဗျယီဘာဝသမတ်တို့သည်လည်းကောင်း၊ ဤသမတ်အားလုံးတို့ကိုလည်း သိမ်းယူအပ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ သမာသကပ္ပေါ သမတ္တော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့ဖြင့် သမတ်အပိုင်း ပြီးဆုံးပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၅</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၅။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကစ္စာဒိတောပိဧကမှာ သဒ္ဒတောနိယမံဝိနာ၊</p>
+<p rend="gathalast">နေကတ္ထေသတိဘောန္တေဝ သဗ္ဗေတဒ္ဓိတပစ္စယာ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကစ္စာယန အစရှိသော သဒ္ဒါကျမ်းတို့မှလည်းကောင်း၊ တစ်ခုတည်းသော သဒ္ဒါမှလည်းကောင်း အထူးသတ်မှတ်ချက်မရှိဘဲ အနက်အမျိုးမျိုးရှိလတ်သော် တဒ္ဓိတ်ပစ္စယအားလုံးတို့သည် ဖြစ်ကြကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ တဒ္ဓိတကပ္ပေါ သမတ္တော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့ဖြင့် တဒ္ဓိတ်အပိုင်း ပြီးဆုံးပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၆</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0009">[O 0.0009]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၆။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကတ္တရိနာညထာကမ္မေ တထာဘာဝေတုမေရယာ၊</p>
+<p rend="gathalast">သဗ္ဗေတေပစဓာတုမှိ သင်္ခေပေနမရූမယာ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကတ္တား၊ ကံ၊ ဘာဝတို့၌ 'ပေစ' အစရှိသော ဓာတ်တို့၌ နယ၊ ဏယ၊ ဏာပေ၊ ဏာပယ အစရှိသော ပစ္စည်းအားလုံးတို့ကို ငါသည် အကျဉ်းချုပ်အားဖြင့် ပြသအပ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၇</span>.<span class="pb hidden-meta" data-ed="O" data-n="0.0010">[O 0.0010]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၇။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဂမီမှာတိဂုဏာဖတ္တော သမ္ဘဝါအညဓာတုသု၊</p>
+<p rend="gathalast">အနန္တာဝပယောဂါတေ အာဒေသပစ္စယာဒိဟိ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ဂမုဓာတ်မှ သုံးပါးသော ဂုဏ်တို့သည် ဖြစ်ကုန်၏၊ အခြားသော ဓာတ်တို့၌လည်း ထိုနည်းတူ ဖြစ်ထိုက်၏။ အာဒေသ (အက္ခရာပြောင်းလဲခြင်း)၊ ပစ္စည်း အစရှိသည်တို့ဖြင့် ထိုအသုံးအနှုန်းတို့သည် အဆုံးမရှိ ပြားပြားထင်ထင် ရှိကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ အာချာတကပ္ပေါ သမတ္တော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့ဖြင့် အာချာတ်အပိုင်း ပြီးဆုံးပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၈</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၈။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ကိတာဒိပစ္စယာသဗ္ဗေ၊ ဧကမှာအပိဓာတုတော၊</p>
+<p rend="gathalast">သိယုံနုရූပတောသတ္တ၊ သာဓနေသတိပါယတော၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ကိတ်အစရှိသော ပစ္စည်းအားလုံးတို့သည် တစ်ခုတည်းသော ဓာတ်မှသော်လည်း ဖြစ်ကုန်၏။ သင့်လျော်သလို ခုနစ်ပါးသော သာဓနတို့၌ အများအားဖြင့် ဖြစ်ကုန်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ ကိတကပ္ပေါ သမတ္တော.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့ဖြင့် ကိတ်အပိုင်း ပြီးဆုံးပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၁၉</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0011">[O 0.0011]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၁၉။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ဣမိနာကိဉ္စိလေသေန၊ သက္ကာဉာတုံဇိနာဂမေ၊</p>
+<p rend="gathalast">ပယောဂါဉာဏိနာသိန္ဓု၊ ရသောဝေကေနဗိန္ဒုနာ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပညာရှိသောသူသည် ရေတစ်ပေါက်မျှဖြင့် သမုဒ္ဒရာရေ၏ အရသာကို သိနိုင်သကဲ့သို့၊ ဤအနည်းငယ်မျှသော အကျဉ်းချုပ်ဖြင့် မြတ်စွာဘုရား၏ သာသနာတော်၌ အသုံးအနှုန်းတို့ကို သိခြင်းငှာ စွမ်းနိုင်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၀</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၀။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> ရမ္မံသီဃပ္ပဝေသာယ၊ ပုရံပိဋကသညိတံ၊</p>
+<p rend="gathalast">မဂ္ဂေါဇုမဂ္ဂတံမဂ္ဂံ၊ သဒ္ဒါရညေဝိသောဓိတော၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ပိဋကတ်အမည်ရှိသော မွေ့လျော်ဖွယ်ကောင်းသော ပြည်မြို့သို့ လျင်မြန်စွာ ဝင်ရောက်နိုင်ခြင်းငှာ၊ ဖြောင့်မတ်သော လမ်းခရီးဖြစ်သော ဤသဒ္ဒါတည်းဟူသော တောအုပ်အတွင်းရှိ လမ်းခရီးကို ရှင်းလင်းအပ်ပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">၂၁</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0012">[O 0.0012]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">၂၁။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> တေနေဝ ကိဉ္စိ ဇလိတော ဇလိတော ပဒီပေါ</p>
+<p rend="gatha2">ကစ္စာယနုတ္တိရတနော စိတဂဗ္ဘကောဏေ၊</p>
+<p rend="gatha3">ဓမ္မာဒိရာဇဂုရုနာ ဂရုမာမကေန</p>
+<p rend="gathalast">ဓမ္မေန ယောဗ္ဗိပတိနာ သဂရုတ္တနီတော၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">ထို့ကြောင့်ပင်လျှင် ကစ္စာယနတည်းဟူသော မြတ်သောရတနာတိုက်၏ ထောင့်အရပ်၌ ထွန်းညှိအပ်သော ဆီမီးငယ်ကဲ့သို့ အနည်းငယ်မျှ ထွန်းလင်းအပ်သော ဤကျမ်းကို၊ ငါတို့၏ ရိုသေလေးမြတ်အပ်သော ဆရာသခင် ဓမ္မာဒိရာဇဂုရု ဆရာတော်သည် ဓမ္မမင်းကြီးအား ချီးမြှောက်တော်မူအပ်၏။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="centre">ဣတိ သဒ္ဒဗိန္ဒု ပကရဏံ ပရိသမတ္တံ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">ဤသို့ဖြင့် သဒ္ဒဗိန္ဒုပကရဏကျမ်း ပြီးဆုံးပါပြီ။</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="gatha1">ယောသညမော ဂုဏဓနော နယနံ နိဇံဝ</p>
+<p rend="gatha2">သိက္ခါပယီ မမ မဝံ သုဂတာဂမာဒေါ၊</p>
+<p rend="gatha3">သလ္လောက ပုဉ္ဇ သုဟဒေါ ပဒုမာဒိ ရာမ</p>
+<p rend="gathalast">နာမော မဟာ ယတိဝရာ စရိယော သမယှံ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သီလစောင့်ထိန်းခြင်းတည်းဟူသော ဂုဏ်ကျေးဇူးဥစ္စာ ရှိတော်မူသော၊ မိမိမျက်စိကဲ့သို့ ငါ့ကို စောင့်ရှောက်၍ မြတ်စွာဘုရား၏ သာသနာတော်၌ သွန်သင်ဆုံးမတော်မူသော၊ သတ္တဝါအပေါင်းတို့အား အကျိုးစီးပွားကို လိုလားတော်မူသော၊ ပဒုမာဘိရာမ အမည်ရှိတော်မူသော ငါ၏ ဆရာမြတ်ဖြစ်သော မထေရ်မြတ်သည်...</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="gatha1">သဒ္ဓါဓနေန ဝသတာ ဝိဒိတမှိ ပုပ္ဖါ</p>
+<p rend="gatha2">ရာမေဓုနာ အရိယဝံသ ဓဇဝှယေန၊</p>
+<p rend="gatha3">သန္တေန ဉာဏတိလကော တျပရာချကေန</p>
+<p rend="gathalast">ဗာလာနမေတမဝိဓီယိ မယာဟိတာယ၊</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">သဒ္ဓါတည်းဟူသော ရတနာဥစ္စာရှိလျက်၊ ထင်ရှားကျော်စောသော ပုပ္ဖါရာမကျောင်းတိုက်၌ သီတင်းသုံးတော်မူသော၊ အရိယဝံသဓဇ ဟု အမည်သမုတ်အပ်သော၊ ငြိမ်သက်ခြင်းရှိသော၊ ဉာဏတိလက ဟုလည်း ခေါ်အပ်သော ငါသည် လူမိုက်တို့၏ အကျိုးစီးပွားအလို့ငှာ ဤကျမ်းကို ပြုစုအပ်ပြီ။</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>
