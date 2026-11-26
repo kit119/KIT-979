@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1209n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">Pali | Trans.</button><button type="button" data-mode="view-stack">Pali — Trans.</button><button type="button" data-mode="view-pali-only">Pali Only</button><button type="button" data-mode="view-trans-only">Trans. Only</button><button type="button" id="toggle-meta-btn">Note</button></div>
+<div class="pair-row" data-id="e1209n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="chapter">Telakaṭāhagāthā <span class="pb hidden-meta" data-ed="O" data-n="0.0001">[O 0.0001]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Telakaṭāha Verses</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="centre">Namo tassa bhagavato arahato sammāsambuddhassa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Homage to the Blessed One, the Arahant, the Perfectly Self-Enlightened One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Laṃkissaro jayatu vāraṇarājagāmī</p>
+<p rend="gatha2">Bhogindabhoga rucirāyata pīṇa bāhu,</p>
+<p rend="gatha3">Sādhupacāranirato guṇasannivāso</p>
+<p rend="gathalast">Dhamme ṭhito vīgatakodhamadāvalepo;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Victorious is Laṃkissaro, who goes like an elephant king, whose arms, like a serpent king's coils, are beautiful, broad, and strong; devoted to good conduct, a dwelling place of virtues, established in the Dhamma, devoid of anger, conceit, and stain.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo sabbalokamahito karuṇādhivāso</p>
+<p rend="gatha2">Mokkhākaro ravikulambara puṇṇa cando,</p>
+<p rend="gatha3">Ñeyyodadhiṃ suvipulaṃ sakalaṃ vibuddho</p>
+<p rend="gathalast">Lokuttamaṃ namatha taṃ sirasā munindaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who is honored by all the world, an abode of compassion, the maker of liberation, the full moon in the sky of the solar dynasty; having fully awakened to the vast and extensive ocean of the knowable, the supreme one in the world—bow your head to that lord of sages.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sopānamālamamalaṃ tidasālayassa</p>
+<p rend="gatha2">Saṃsāra sāgarasamuttaraṇāya setuṃ,</p>
+<p rend="gatha3">Sabbāgatībhaya vivajjita khema maggaṃ</p>
+<p rend="gathalast">Dhammaṃ namassatha sadā muninā paṇītaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The staircase, pure and stainless, to the abode of the gods, the bridge for crossing the ocean of saṃsāra, the safe path, devoid of the fear of all destinations—always pay homage to the Dhamma, well-proclaimed by the Sage.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">4</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0002">[O 0.0002]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">4.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Deyyaṃ tadappamapi yattha pasanna cittā</p>
+<p rend="gatha2">Datvā narā phalamuḷārataraṃ labhante,</p>
+<p rend="gatha3">Taṃ sabbadā dasabalenapi suppasatthaṃ</p>
+<p rend="gathalast">Saṅghaṃ namassatha sadāmitapuññakhettaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Wherein people, having given even a small gift with a serene heart, obtain a most abundant fruit; always pay homage to that Saṅgha, ever praised even by the Ten-Powered One, the boundless field of merit.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tejo balena mahatā ratanattayassa</p>
+<p rend="gatha2">Lokattayaṃ samadhigacchati yena mokkhaṃ,</p>
+<p rend="gatha3">Rakkhā na catthi ca samā ratanattayassa</p>
+<p rend="gathalast">Tasmā sadā bhajatha taṃ ratanattayaṃ bho;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By the great power of the Triple Gem, through which one attains liberation from the three worlds, there is no protection equal to the Triple Gem. Therefore, O friends, always revere that Triple Gem.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Laṃkissaro parahitekarato nirāso</p>
+<p rend="gatha2">Rattimpi jāgararato karuṇādhivāso,</p>
+<p rend="gatha3">Lokaṃ vibodhayati lokahitāya kāmaṃ</p>
+<p rend="gathalast">Dhammaṃ samācaratha jāgariyānuyuttā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Laṃkissaro, devoted to the welfare of others, without longing, awake even at night, an abode of compassion, awakens the world for the world's welfare. Practice the Dhamma, constantly devoted to wakefulness.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0003">[O 0.0003]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sattopakāra niratā kusale sahāyā</p>
+<p rend="gatha2">Bho dullabhā bhuvi narā vihatappamādā,</p>
+<p rend="gatha3">Laṃkādhipaṃ guṇadhanaṃ kusale sahāyaṃ</p>
+<p rend="gathalast">Āgamma saṃcaratha dhammamalaṃ pamādaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">O friends, rare in the world are people free from negligence, devoted to the welfare of beings, companions in the wholesome. Having approached the lord of Laṅkā, a treasure of virtues, a companion in good, go about practicing the immaculate Dhamma; have done with negligence.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dhammo tiloka saraṇo paramo rasānaṃ</p>
+<p rend="gatha2">Dhammo mahaggharatano ratanesu loke,</p>
+<p rend="gatha3">Dhammo bhave tibhavadukkha vināsahetu</p>
+<p rend="gathalast">Dhammaṃ samācaratha jāgariyānuyuttā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Dhamma is the refuge of the three worlds, supreme among essences; the Dhamma is the most precious jewel among jewels in the world; the Dhamma is the cause for the destruction of suffering in the three realms of existence. Practice the Dhamma, devoted to wakefulness.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">9</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">9.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Niddaṃ vinodayatha bhāvayathappameyyaṃ</p>
+<p rend="gatha2">Dukkhaṃ aniccampi ceha anattatañca,</p>
+<p rend="gatha3">Dehe ratiṃ jahatha ja jajjarabhājanābho</p>
+<p rend="gathalast">Dhammaṃ samācaratha jāgariyānuyuttā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Dispel sleepiness; cultivate the immeasurable: suffering, impermanence, and also non-self. Abandon delight in the body, which is like a decaying vessel. Practice the Dhamma, devoted to wakefulness.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">10</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0004">[O 0.0004]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">10.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Okāsa majja mama natthi suve karissaṃ</p>
+<p rend="gatha2">Dhammaṃ itīhalasatā kusalappayoge,</p>
+<p rend="gatha3">Nā’laṃ tiyaddhasu tathā bhuvanattaye ca</p>
+<p rend="gathalast">Kāmaṃ na catthi manujo maraṇā pamutto;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">“Today I have no opportunity; tomorrow I will practice the Dhamma.” Thus, due to idleness in applying wholesome effort, [they neglect]. The three stages of life do not suffice, nor similarly the span of the three worlds. Truly, there is no human being who is freed from death.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">11</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">11.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Khitto yathā nabhasi kenacideva leḍḍu</p>
+<p rend="gatha2">Bhūmiṃ samāpatti bhāratayā khaṇena,</p>
+<p rend="gatha3">Jātattameva khalu kāraṇamekamatra</p>
+<p rend="gathalast">Lokaṃ sadā nanu dhuvaṃ maraṇāya gantuṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">As a clod of earth thrown into the sky by someone quickly falls to the ground due to its weight, so birth itself is indeed the single cause here for the world to always, surely, and certainly go to death.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">12</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">12.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kāmaṃ narassa patato girimuddhanāto</p>
+<p rend="gatha2">Majjhe na kiñci bhayanissaraṇāya hetu,</p>
+<p rend="gatha3">Kāmaṃ vajanti maraṇaṃ tibhavesu sattā</p>
+<p rend="gathalast">Bhoge ratiṃ pajahathāpi ca jīvite ca;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For a person falling from a mountain peak, there is indeed nothing in between to cause an escape from fear. Likewise, beings in the three realms go to death. Forsake delight in pleasures and also in life!</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">13</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0005">[O 0.0005]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">13.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kāmaṃ patanti mahiyā khalu vassadhārā</p>
+<p rend="gatha2">Vijjullatā vitatamegha mukhā pamuttā,</p>
+<p rend="gatha3">Evaṃ narā maraṇabhīma papātamajjhe</p>
+<p rend="gathalast">Kāmaṃ patanti nahi koci bhavesu nicco;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Indeed, streams of rain and flashes of lightning, released from the mouths of spreading clouds, fall upon the earth. So too do people fall into the dreadful precipice of death—for no one in all existences is permanent.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">14</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">14.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Velātaṭe paṭutaroru taraṃgamālā</p>
+<p rend="gatha2">Nāsaṃ vajanti satataṃ salilālayassa,</p>
+<p rend="gatha3">Nāsaṃ tathā samupayanti narāmarānaṃ</p>
+<p rend="gathalast">Pāṇāni dāruṇatare maraṇodadhimhi;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">On the ocean shore, a succession of great and powerful waves constantly goes to destruction. Likewise, the lives of humans and gods reach destruction in the more terrible ocean of death.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">15</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">15.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ruddhopi so rathavarassagajādhipehi</p>
+<p rend="gatha2">Yodhehi cāpi sabalehi ca sāyudhehi,</p>
+<p rend="gatha3">Lokaṃ vivaṃciya sadā maraṇūsabho so</p>
+<p rend="gathalast">Kāmaṃ nihanti bhuvanattaya sāli daṇḍaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Even though obstructed by the best of chariots, by lords of horses and elephants, and by warriors with their forces and their weapons, that bull of Death, ever deceiving the world, indeed strikes down the rice-stalks of the three worlds.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">16</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0006">[O 0.0006]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">16.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bho mārutena mahatā vihato padīpo</p>
+<p rend="gatha2">Khippaṃ vināsa mukhameti mahappabhopi,</p>
+<p rend="gatha3">Loke tathā maraṇacaṇḍa samīraṇena</p>
+<p rend="gathalast">Khippaṃ vinassati narāyumahā padīpo;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">O friends, a lamp struck by a mighty wind, though of great radiance, quickly meets its end. Even so, in this world, by death's fierce wind, the great lamp of human life is swiftly extinguished.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">17</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">17</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Rāmajjunappabhūti bhūpati puṃgavā ca</p>
+<p rend="gatha2">Sūrā pure raṇamukhe vijitāri saṅghā,</p>
+<p rend="gatha3">Tepīha caṇḍa maraṇogha nimuggadehā</p>
+<p rend="gathalast">Nāsaṃ gatā jagati ke maraṇā pamuttā?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Rāma, Arjuna, and other foremost kings, heroes of old who conquered hosts of enemies in the face of battle—even they, with bodies submerged in the fierce flood of death, have gone to destruction. Who in the world is freed from death?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">18</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">18.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Lakkhī ca sāgarapaṭā sadharādharā ca</p>
+<p rend="gatha2">Sampattiyo ca vividhā api rūpasobhā,</p>
+<p rend="gatha3">Sabbā ca tā api ca mittasutā ca dārā</p>
+<p rend="gathalast">Ke cāpi kaṃ anugatā maraṇaṃ vajantaṃ?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Fortune, the ocean-girdled earth with its mountains, various riches and beauty of form, all these, as well as friends, children, and wives—who among them follows one who is going to death?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">19</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0007">[O 0.0007]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">19.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Brahmāsurāsuragaṇā ca mahānubhāvā</p>
+<p rend="gatha2">Gandhabbakinnaramahoragarakkhasā ca,</p>
+<p rend="gatha3">Te cā pare ca maraṇaggisikhāya sabbe</p>
+<p rend="gathalast">Ante patanti salabhā iva khīṇapuññā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The mighty Brahmās, Suras, and hosts of Asuras, the Gandharvas, Kinnaras, Mahoragas, and Rākṣasas, they and others too—all fall at the end into the flame of death, like moths with their merit exhausted.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">20</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">20.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ye sāriputtapamukhā munisāvakā ca</p>
+<p rend="gatha2">Suddhā sadāsavanudā paramiddhipattā,</p>
+<p rend="gatha3">Te cāpi maccuvaḷabhā mukha sannimuggā</p>
+<p rend="gathalast">Dīpānivānalahatā khayataṃ upetā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Those disciples of the Sage headed by Sāriputta, who were pure, ever dispelling the cankers, and had attained supreme psychic power—they too, plunged into the jaws of death, have come to dissolution, like lamps struck by a flame.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">21</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">21.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Buddhāpi buddhakamalāmalacārunettā</p>
+<p rend="gatha2">Battiṃsalakkhaṇa virājita rūpasobhā,</p>
+<p rend="gatha3">Sabbāsacakkhayakarāpi ca lokanāthā</p>
+<p rend="gathalast">Sammadditā maraṇamattamahāgajena;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Even the Buddhas, with eyes like a blossomed, pure, and lovely lotus, with the beauty of their forms resplendent with the thirty-two marks, though they were lords of the world capable of destroying all cankers, were crushed by Death, the great, intoxicated elephant.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">22</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0008">[O 0.0008]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">22.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Rogāturesu karuṇā na jarāturesu</p>
+<p rend="gatha2">Khiḍḍāparesu sukumārakumārakesu,</p>
+<p rend="gatha3">Lokaṃ sadā hanati maccu mahāgajindo</p>
+<p rend="gathalast">Davānalo vanamivāvarataṃ asesaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">There is no compassion for the sick or for the aging, nor for playful, tender youths. Death, the king of elephants, always strikes down the world, just as a forest fire incessantly consumes the entire forest without remainder.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">23</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">23.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Āpuṇṇatā na salile na jalāsayassa</p>
+<p rend="gatha2">Kaṭṭhassa cāpi bahutā na hutāsanassa,</p>
+<p rend="gatha3">Bhutvāna so tibhūvanampi tathā asesaṃ</p>
+<p rend="gathalast">Bho niddayo na khalu pītimupeti maccu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Just as a reservoir is never full with water, nor a fire with an abundance of wood, so too, O friends, even having consumed the entire triple world, merciless Death truly finds no satisfaction.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">24</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">24.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bho moha mohitatayā vivaso adhañño</p>
+<p rend="gatha2">Loko patatyapipi maccumukhe subhīme,</p>
+<p rend="gatha3">Bhoge ratiṃ samupayāti nihīnapañño</p>
+<p rend="gathalast">Dolā taraṅgacapale supinopameyye;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">O friends, deluded by delusion, helpless and unfortunate, the world falls into the very dreadful mouth of death. The one of inferior wisdom finds delight in pleasures that are as fickle as a swing or a wave, and comparable to a dream.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">25</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0009">[O 0.0009]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">25.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ekopi maccurabhihantumalaṃ tilokaṃ</p>
+<p rend="gatha2">Kiṃ niddayā api jarāmaraṇānuyāyī,</p>
+<p rend="gatha3">Ko vā kareyya vibhasuvesu ca jīvitāsaṃ</p>
+<p rend="gathalast">Jāto naro supina saṃgama sannibhesu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One death alone is enough to overwhelm the triple world. Why are you heedless, pursued as you are by old age and death? What person, once born, would place their hope in life and in possessions, which are like a meeting in a dream?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">26</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">26.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Niccāturaṃ jagadidaṃ sabhayaṃ sasokaṃ</p>
+<p rend="gatha2">Disvā ca kodhamadamohajarābhibhūtaṃ,</p>
+<p rend="gatha3">Ubbegamattamapi yassa na vijjatī ce</p>
+<p rend="gatha2">So dāruṇona maraṇaṃ vata taṃ dhiratthu!</p>
+<p rend="gatha3">Bho bho na passatha jarāsidharañhi maccu</p>
+<p rend="gatha2">Māhaññamānamakhilaṃ satataṃ tilokaṃ,</p>
+<p rend="gatha3">Kiṃ niddayā nayatha vītabhayā tiyāmaṃ</p>
+<p rend="gathalast">Dhammaṃ sadā’savanudaṃ caratha’ppamattā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having seen this world to be ever afflicted, full of fear and sorrow, and overwhelmed by anger, pride, delusion, and old age—if for someone not even a trace of agitation arises, indeed, he is the cruel one, not Death! Shame on him! Ho! Ho! Do you not see Death, wielding the sword of old age, constantly striking down the entire threefold world? Why do you pass the three watches of the night heedlessly, without fear? Practice the Dhamma that removes the cankers, ever diligent!</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">28</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0010">[O 0.0010]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">28.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhāvetha bho maraṇamāravivajjanāya</p>
+<p rend="gatha2">Loke sadā maraṇa saññamimaṃ yatattā,</p>
+<p rend="gatha3">Evañhi bhāvanaratassa narassa tassa</p>
+<p rend="gathalast">Taṇhā pahīyati sarīragatā asesā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Cultivate, O friends, this mindfulness of death in the world, always, with a controlled mind, for the sake of avoiding Māra, who is death. Indeed, for that person who delights in such cultivation, all bodily craving is utterly abandoned.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">29</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">29.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Rūpaṃ jarā piyataraṃ malinīkaroti</p>
+<p rend="gatha2">Sabbaṃ balaṃ harati attani ghorarogo,</p>
+<p rend="gatha3">Nānūpabhoga parirakkhita mattabhāvaṃ</p>
+<p rend="gathalast">Bho maccu saṃharati kiṃ phalamattabhāve?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Old age blemishes even the most cherished beauty; a dreadful disease in the body steals all strength. O friends, Death carries away this very self, though protected by various enjoyments. What then is the use of this existence?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">30</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">30.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kammānilāpahatarogataraṃgabhaṃge</p>
+<p rend="gatha2">Saṃsāra sāgara mukhe vitate vipannā,</p>
+<p rend="gatha3">Mā māpamādamakarittha karotha mokkhaṃ</p>
+<p rend="gathalast">Dukkhodayo nanu pamādamayaṃ narānaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the wide and perilous mouth of the ocean of saṃsāra, where waves of disease, struck by the wind of karma, break, do not be heedless; strive for liberation. For indeed, the arising of suffering for men is due to heedlessness.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">31</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0011">[O 0.0011]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">31.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhogā ca mittasutaporisa bandhavā ca</p>
+<p rend="gatha2">Nārī ca jīvitasamā api khettavatthu,</p>
+<p rend="gatha3">Sabbāni tāni paralokamito vajantaṃ</p>
+<p rend="gathalast">Nānubbajanti kusalākusalaṃva loke;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Wealth, friends, sons, servants, and relatives, and a wife dear as life itself, fields and property—all these do not follow one who departs from here to the next world; only one's good and evil deeds follow in this world.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">32</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">32.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bho vijjucaṃcalatare bhavasāgaramhi</p>
+<p rend="gatha2">Khittā purā katamahāpavanena tena,</p>
+<p rend="gatha3">Kāmaṃ vibhijjati khaṇena sarīranāvā</p>
+<p rend="gathalast">Hatthe karotha paramaṃ guṇahatthasāraṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">O friends, in the ocean of becoming, more fickle than lightning, tossed by the great wind of past deeds, the boat of the body indeed shatters in an instant. Take into your hand the supreme essence of virtue.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">33</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">33.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Niccaṃ vibhijjatiha āmaka bhājanaṃva</p>
+<p rend="gatha2">Saṃrakkhitopi bahudhā iha attabhāvo,</p>
+<p rend="gatha3">Dhammaṃ samācaratha saggapatippatiṭṭhaṃ</p>
+<p rend="gathalast">Dhammo suciṇṇamihameva phalaṃ dadāti;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Just as a raw earthen pot constantly breaks, so too this body, though guarded in many ways, breaks here. Practice the Dhamma, the foundation for heaven; Dhamma well-practiced yields its fruit right here in this world.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">34</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0012">[O 0.0012]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">34.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Rantvā sadā piyatare divi devarajje</p>
+<p rend="gatha2">Namhā cavanti vibudhā api khīṇapuññā,</p>
+<p rend="gatha3">Sabbaṃ sukhaṃ divi bhuvīha viyoganiṭṭhaṃ</p>
+<p rend="gathalast">Ko paññavā bhavasukhesu ratiṃ kareyya?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having always enjoyed the very dear divine kingdom in heaven, even the gods fall from there when their merit is exhausted. All happiness, whether in heaven or here on earth, culminates in separation; what wise person, then, would take delight in the pleasures of existence?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">35</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">35.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Buddho sasāvakagaṇo jagadekanātho</p>
+<p rend="gatha2">Tārāvalīparivutopi ca puṇṇacando,</p>
+<p rend="gatha3">Indopi devamakuṭaṃkita pādakañjo</p>
+<p rend="gathalast">Ko pheṇapiṇḍa-na-samo tibhavesu jāto?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Buddha with his assembly of disciples, the sole lord of the world; the full moon surrounded by a garland of stars; and even Indra, whose lotus feet are marked by the crowns of the gods—who, born in the three realms, is not like a lump of foam?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">36</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">36.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Līlāvataṃsamapi yobbana rūpasobhaṃ</p>
+<p rend="gatha2">Attūpamaṃ piyajanena ca sampayogaṃ,</p>
+<p rend="gatha3">Disvāpi vijjucapalaṃ kurute pamādaṃ</p>
+<p rend="gathalast">Bho mohamohitajano bhavarāgaratto;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The beauty of youthful form, like a playful ornament, and union with a beloved person, comparable to oneself—seeing these to be as fickle as lightning, yet one is heedless. O, the person deluded by delusion, impassioned with the lust for existence!</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">37</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0013">[O 0.0013]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">37.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Putto pitā bhavati mātu patīha putto</p>
+<p rend="gatha2">Nārī kadāci jananī ca pitā ca putto,</p>
+<p rend="gatha3">Evaṃ sadā viparivattati jīvaloko</p>
+<p rend="gathalast">Citte sadāticapale khalu jātiraṅge;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A son becomes a father; a son here becomes his mother's husband. A woman sometimes becomes a mother, a father, or a son. Thus the world of living beings ever revolves, indeed, in the arena of birth, which is as fickle as thought.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">38</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">38.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Rantvā pure vividhaphullalatākulehi</p>
+<p rend="gatha2">Devāpi nandanavane surasundarīhi,</p>
+<p rend="gatha3">Te ve’kadā vitatakaṇṭakasaṃkaṭesu</p>
+<p rend="gathalast">Bho koṭisimbalivanesu phusanti dukkhaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">O friends, even the gods, having formerly enjoyed themselves in the Nandana grove with celestial beauties, amidst various blossoming creepers, at another time indeed experience suffering in the Koṭisimbali forests, which are perilous and overgrown with thorns.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">39</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">39.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhutvā sudhannamapi kañcanabhājanesu</p>
+<p rend="gatha2">Sagge pure suravarā paramiddhipattā,</p>
+<p rend="gatha3">Te cāpi pajjalitalohagulaṃ gilanti</p>
+<p rend="gathalast">Kāmaṃ kadāci narakālaya vāsabhūtā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Chiefs of the gods, having attained supreme power and having formerly feasted on exquisite food from golden vessels in celestial cities, even they, at other times, when they have become inhabitants of the abodes of hell, must indeed swallow blazing balls of iron.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">40</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0014">[O 0.0014]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">40.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhutvā narissaravarā ca mahiṃ asesaṃ</p>
+<p rend="gatha2">Devādhipā ca divi dibbasukhaṃ surammaṃ,</p>
+<p rend="gatha3">Vāsaṃ kadāci khurasañcitabhūtalesu</p>
+<p rend="gathalast">Te vā mahārathagaṇānugatā divīha;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Supreme kings of men who ruled the entire earth, and lords of gods followed by hosts of great chariots here in heaven enjoying delightful divine bliss, may at times come to dwell on ground strewn with razors.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">41</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">41.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Devaṅganā lalitabhinnataraṅgamāle</p>
+<p rend="gatha2">Raṅge mahissarajaṭāmakuṭānuyāte,</p>
+<p rend="gatha3">Rantvā pure suravarā pamadāsahāyā</p>
+<p rend="gathalast">Te cāpi ghorataravetaraṇiṃ patanti;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Chiefs of the gods, having formerly reveled with their female companions in celestial cities, on a stage graced by divine maidens with playful, wave-like movements, a stage associated with the matted locks and crown of the Great Lord—they too fall into the most terrifying Vetaraṇī river.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">42</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">42.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Phullāni pallavalatāphalasaṃkulāni</p>
+<p rend="gatha2">Rammāni nandanavanāni manoramāni,</p>
+<p rend="gatha3">Dibbaccharālalitapuṇṇadarīmukhāni</p>
+<p rend="gathalast">Kelāsamerusikharāni ca yanti nāsaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The delightful and charming Nandana forests, filled with blossoms, sprouts, creepers, and fruits; and the peaks of Kelāsa and Meru, whose cave mouths are full of playful divine nymphs—these too go to destruction.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">43</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0015">[O 0.0015]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">43.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dolā’nilā’nalataraṃgasamā hi bhogā</p>
+<p rend="gatha2">Vijjuppabhāticapalāni ca jīvitāni,</p>
+<p rend="gatha3">Māyāmarīcijalasomasamaṃ sarīraṃ</p>
+<p rend="gathalast">Ko jīvite ca vibhave ca kareyya rāgaṃ?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For enjoyments are like a swing, wind, fire, and waves; and lives are as exceedingly fickle as a flash of lightning. The body is like an illusion, a mirage, a water bubble, or the moon—who would create a passion for life and wealth?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">44</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">44.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kiṃ dukkhamatthi na bhavesu ca dāruṇesu</p>
+<p rend="gatha2">Sattopi tassa vividhassa na bhājano ko,</p>
+<p rend="gatha3">Jāto yathā maraṇarogajarābhibhūto</p>
+<p rend="gathalast">Ko sajjano bhavaratiṃ pihayeyya’bālo?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">What suffering is not found in dreadful existences? What being is not a partaker of its varied forms? Since one who is born is overcome by death, disease, and old age, what good person, not being a fool, would long for delight in existence?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">45</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">45.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ke vāpi pajjalitalohagulaṃ gilanti</p>
+<p rend="gatha2">Sakkā kathañcidapi pāṇitalena bhīmaṃ,</p>
+<p rend="gatha3">Dukkhodayaṃ asucinissavanaṃ anantaṃ</p>
+<p rend="gathalast">Ko kāmayetha khalu dehamimaṃ abālo?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Who indeed would swallow a blazing ball of iron? Who could possibly hold that dreadful thing in the palm of their hand? Similarly, what person who is not a fool would desire this body—the origin of suffering, endlessly oozing impurity?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">46</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0016">[O 0.0016]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">46.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Loke na maccusamamatthi bhayaṃ narānaṃ</p>
+<p rend="gatha2">Na vyādhidukkhasamamatthi ca kiṃci dukkhaṃ,</p>
+<p rend="gatha3">Evaṃ virūpakaraṇaṃ na jarāsamānaṃ</p>
+<p rend="gathalast">Mohena bho ratimupeti tathāpi dehe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the world, for humans, there is no fear equal to death; and no suffering whatsoever is equal to the pain of disease. Similarly, there is no disfigurement equal to old age. Yet, O friends, through delusion one finds delight in the body.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">47</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">47.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nissārato nalakalīkadalīsamānaṃ</p>
+<p rend="gatha2">Attānameva parihaññati attahetu,</p>
+<p rend="gatha3">Sampositopi kusahāya ivākataññū</p>
+<p rend="gathalast">Kāyo na yassa anugacchati kālakerā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For the sake of this self, which is essenceless like a reed stalk or a plantain tree, one harms oneself. Though nourished, the body, like an ungrateful, bad companion, does not follow one at the time of death.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">48</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">48.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Taṃ pheṇapiṇḍasadisaṃ visasūlakappaṃ</p>
+<p rend="gatha2">Toyā’nilā’nalamahīuragādhivāsaṃ,</p>
+<p rend="gatha3">Jiṇṇālayaṃva paridubbalamattabhāvaṃ</p>
+<p rend="gathalast">Disvā naro kathamupeti ratiṃ sapañño?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">That body, like a lump of foam, like a poisoned stake, an abode of water, wind, fire, earth, and snakes, like a dilapidated house, an exceedingly frail existence—seeing this, how could a wise person find delight?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">49</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0017">[O 0.0017]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">49.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Āyukkhayaṃ samupayāti khaṇe khaṇepi</p>
+<p rend="gatha2">Anveti maccu hananāya jarāsipāṇī,</p>
+<p rend="gatha3">Kālaṃ tathā na parivattati taṃ atītaṃ</p>
+<p rend="gathalast">Dukkhaṃ idaṃ nanu bhavesu acintanīyaṃ?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The lifespan wastes away moment by moment; Death follows, with the sword of old age in hand, in order to strike. Time that has passed does not turn back. Is this suffering in these existences not indeed inconceivable?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">50</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">50.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Appāyukassa maraṇaṃ sulabhaṃ bhavesu</p>
+<p rend="gatha2">Dīghāyukassa ca jarā vyasanaṃ ca’nekaṃ,</p>
+<p rend="gatha3">Evaṃ bhave ubhayatopi ca dukkhameva</p>
+<p rend="gathalast">Dhammaṃ samācaratha dukkhavināsanāya;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For the short-lived, death is easily obtained in these existences; and for the long-lived, old age and many misfortunes. Thus, in existence, in both cases, there is only suffering. Practice the Dhamma for the destruction of suffering.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">51</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">51.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dukkhagginā sumahatā paripīḷitesu</p>
+<p rend="gatha2">Lokattayassa vasato bhavavārakesu,</p>
+<p rend="gatha3">Sabbattatā sucaritassa pamādakālo</p>
+<p rend="gathalast">Bho bho na hoti paramaṃ kusalaṃ ciṇātha;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For those dwelling in the cycles of existence within the triple world, afflicted by the great fire of suffering, O friends, this is no time for negligence in good conduct. Accumulate supreme merit!</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">52</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0018">[O 0.0018]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">52.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Appaṃ sukhaṃ jalalavaṃ viya bho tiṇagge</p>
+<p rend="gatha2">Dukkhantu sāgarajalaṃ viya sabbaloke,</p>
+<p rend="gatha3">Saṃkappanā tadapi hoti sabhāvato hi</p>
+<p rend="gathalast">Sabbaṃ tilokamapi kevaladukkhameva;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">O friends, happiness is small, like a drop of water on a blade of grass; but suffering is like the water of the ocean throughout the world. Indeed, even that happiness is by its nature a mere fabrication. The entire triple world is nothing but suffering.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">53</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">53.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kāyo na yassa anugacchati kāyahetu</p>
+<p rend="gatha2">Bālo anekavidhamācaratīha dukkhaṃ,</p>
+<p rend="gatha3">Kāyo sadā kali malākalilañhi loke</p>
+<p rend="gathalast">Kāye rato’navarataṃ vyasanaṃ pareti</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For the sake of the body, which does not follow his will, the fool performs various evil deeds in this world. The body is indeed always mired in strife and stain; one who delights in the body constantly goes to misfortune.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">54</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">54.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mīḷhākaraṃ kalimalākaramāmagandhaṃ</p>
+<p rend="gatha2">Sūḷāsisallavisapannagarogabhūtaṃ,</p>
+<p rend="gatha3">Dehaṃ vipassatha jarāmaraṇādhivāsaṃ</p>
+<p rend="gathalast">Tucchaṃ sadā vigatasāramimaṃ vinindyaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Contemplate this despicable body: a mine of excrement, a mine of strife and stain, of foul odor; a ground for stakes, swords, darts, poison, snakes, and disease; a dwelling for old age and death; always empty and devoid of essence.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">55</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0019">[O 0.0019]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">55.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dukkhaṃ aniccamasubhaṃ vata attabhāvaṃ</p>
+<p rend="gatha2">Mā saṃkilesaya na vijjati jātu nicco,</p>
+<p rend="gatha3">Ambho na vijjati hi appamapīha sāraṃ</p>
+<p rend="gathalast">Sāraṃ samācaratha dhammamalaṃ pamādaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">This existence is indeed suffering, impermanent, and impure. Do not defile it; nothing permanent is ever found. Alas, not even a little essence is found here. Practice the essence, the Dhamma! Enough of heedlessness!</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">56</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">56.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Māyāmarīcikadalīnalapheṇapuñja-</p>
+<p rend="gatha2">Gaṃgātaraṅgajalabubbulasannibhesu,</p>
+<p rend="gatha3">Khandhesu pañcasu chaḷāyatanesu tesu</p>
+<p rend="gathalast">Attā na vijjati hi ko na vadeyya’bālo?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In these five aggregates and six sense-spheres, which are like an illusion, a mirage, a plantain trunk, a reed, a mass of foam, a wave on the Ganges, or a water bubble—indeed, no self is found. What wise person would not say so?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">57</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">57.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vañjhāsuto sasavisāṇamaye rathe tu,</p>
+<p rend="gatha2">Dhāveyya ce cirataraṃ sadhuraṃ gahetvā,</p>
+<p rend="gatha3">Dīpaccimālamiva taṃ khaṇabhaṅgabhūtaṃ</p>
+<p rend="gathalast">Attāti dubbalatarantu vadeyya dehaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If a barren woman's son, holding the yoke of a chariot made of a hare's horn, were to run for a very long time—who then would call this exceedingly weak body, which is as momentary as the flame of a lamp, 'self'?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">58</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0020">[O 0.0020]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">58.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bālo yathā salilabubbulabhājanena</p>
+<p rend="gatha2">Ākaṇṭhato vata pibeyya marīcitoyaṃ,</p>
+<p rend="gatha3">Attāni sārarahitaṃ kadalīsamānaṃ</p>
+<p rend="gathalast">Mohā bhaṇeyya khalu dehamimaṃ anattaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Just as a fool, with a vessel made of a water bubble, might drink mirage-water up to his throat, so too, through delusion, one might indeed call 'self' this body, which is not-self, devoid of essence, and like a plantain tree.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">59</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">59.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo’dumbarassa kusumena marīcitoyaṃ</p>
+<p rend="gatha2">Vāsaṃ yadicchati sa khedamupeti bālo,</p>
+<p rend="gatha3">Attānameva parihaññati attahetu</p>
+<p rend="gathalast">Attā na vijjati kadācidapīha dehe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever desires a dwelling in the flower of an udumbara tree or in mirage water, that fool only courts weariness. He harms himself for his own sake; no self is ever found here in the body.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">60</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">60.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Poso yathā hi kadalī suvinibbhujanto</p>
+<p rend="gatha2">Sāraṃ tadappampi nopalabheyya kāmaṃ,</p>
+<p rend="gatha3">Khandhesu paṃcasu chaḷāyatanesu tesu</p>
+<p rend="gathalast">Suññesu kiñcidapi nopalabheyya sāraṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">As a person, while thoroughly peeling a banana tree, would not find even a little essence, as he might wish, so too in these five aggregates and these six sense bases—all empty—one would not find any essence whatsoever.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">61</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0021">[O 0.0021]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">61.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Suttaṃ vinā na paṭabhāvamihatthi kiṃci</p>
+<p rend="gatha2">Dehaṃ vinā na khalu koci mihatthi satto,</p>
+<p rend="gatha3">Deho sabhāvarahito khaṇabhaṃgayutto,</p>
+<p rend="gathalast">Ko attahetu aparo bhuvi vijjatīha?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Without a thread, there is nothing whatsoever here that exists as a fabric. Without a body, no being whatsoever exists here indeed. The body is devoid of inherent nature, endowed with momentariness. What other self is to be found here on earth?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:123">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">62</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">62.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:124">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Disvā marīcisalilañhi sudūrato bho</p>
+<p rend="gatha2">Bālo migo samupadhāvati toyasaññī,</p>
+<p rend="gatha3">Evaṃ sabhāvarahite viparītasiddhe</p>
+<p rend="gathalast">Dehe pareti parikappanayā hi rāgaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Seeing a mirage of water from afar, O good people, a foolish deer runs towards it, perceiving it as water. Thus, towards a body devoid of inherent nature and established through perversion, one is drawn to passion through conceptualization.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:125">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">63</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">63.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:126">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dehe sabhāvarahite parikappasiddhe</p>
+<p rend="gatha2">Attā na vijjati hi vijjumivantalikkhe,</p>
+<p rend="gatha3">Bhāvetha bhāvanaratā vigatappamādā</p>
+<p rend="gathalast">Sabbāsavappahananāya anattasaññaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the body, devoid of inherent nature and established by conceptualization, no self is found, just as lightning is not found in the sky. Those delighting in development, free from negligence, should develop the perception of not-self for the destruction of all taints.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:127">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">64</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0022">[O 0.0022]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">64.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:128">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Lālākarīsarudhirassuvasānulittaṃ</p>
+<p rend="gatha2">Dehaṃ imaṃ kalimalākalilaṃ asāraṃ,</p>
+<p rend="gatha3">Sattā sadā pariharanti jigucchanīyaṃ</p>
+<p rend="gathalast">Nānāsucīhi paripuṇṇaghaṭaṃ yatheva;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">This body, smeared with saliva, excrement, blood, tears, and fat, mired in defilement and stain, without essence—beings always carry this repulsive thing, just like a pot filled with various impurities.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:129">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">65</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">65.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:130">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ṇahātvā jalañhi sakalaṃ catusāgarassa</p>
+<p rend="gatha2">Meruppamāṇamapi gandhamanuttarañca,</p>
+<p rend="gatha3">Pappoti neva manujo hi suciṃ kadāci</p>
+<p rend="gathalast">Kiṃ bho vipassatha guṇaṃ kimu attabhāve?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having bathed in all the water of the four oceans, and applied even supreme fragrance as great as Mount Meru, a person never attains purity. What virtue, O good people, do you see in this existence?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:131">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">66</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">66.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:132">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Deho sa eva vividhāsucisannidhāno</p>
+<p rend="gatha2">Deho sa eva vadhabandhanarogabhūto,</p>
+<p rend="gatha3">Deho sa eva navadhā paribhinnagaṇḍo</p>
+<p rend="gathalast">Dehaṃ vinā bhayakaraṃ na susānamatthi;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">This very body is a repository of various impurities; this very body is the ground for execution, imprisonment, and disease; this very body is a festering wound with nine openings. Apart from the body, there is no terrible charnel ground.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:133">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">67</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0023">[O 0.0023]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">67.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:134">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Antogataṃ yadiva muttakarīsabhāgo</p>
+<p rend="gatha2">Dehā bahiṃ aticareyya vinikkhamitvā,</p>
+<p rend="gatha3">Mātā pitā vikaruṇā ca vinaṭṭhapemā</p>
+<p rend="gathalast">Kāmaṃ bhaveyyu kimu bandhusutā ca dārā?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If the internal portion of urine and excrement, having come out from the body, were to overflow, mother and father would indeed become pitiless and bereft of love. What then of relatives, sons, and wives?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:135">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">68</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">68.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:136">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dehaṃ yathā navamukhaṃ kimisaṅghagehaṃ</p>
+<p rend="gatha2">Maṃsaṭṭhisedarudhirākalilaṃ vigandhaṃ,</p>
+<p rend="gatha3">Posenti ye vividhapāpamihācaritvā</p>
+<p rend="gathalast">Te mohitā maraṇadhammamaho vatevaṃ!</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">This body with its nine openings, a house for a host of worms, mired in flesh, bone, sweat, and blood, and foul-smelling—those who nourish it, having committed various evils here, are deluded and subject to death. Alas, it is so!</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:137">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">69</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">69.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:138">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Gaṇḍūpame vividharoga nivāsabhūte</p>
+<p rend="gatha2">Kāye sadā rudhiramuttakarīsapuṇṇe,</p>
+<p rend="gatha3">Yo ettha nandati naro sasigālabhakkhe</p>
+<p rend="gathalast">Kāmañhi socati parattha sa bālabuddhi;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In this body, comparable to a boil, a dwelling place of manifold diseases, always filled with blood, urine, and excrement—whoever delights in this, which is food for dogs and jackals, that person of childish intellect will indeed grieve hereafter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:139">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">70</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0024">[O 0.0024]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">70.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:140">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bho pheṇapiṇḍasadiso viya sārahīno</p>
+<p rend="gatha2">Mīḷhālayo viya sadā paṭikūlagandho,</p>
+<p rend="gatha3">Āsīvisālayanibho sabhayo sadukkho</p>
+<p rend="gathalast">Deho sadā savati loṇaghaṭova bhinno;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">O good people, like a lump of foam, it is void of essence; like a cesspool, it is always of repulsive smell; like a viper’s lair, it is full of fear and suffering; the body always oozes like a broken salt-pot.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:141">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">71</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">71.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:142">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Jātaṃ yathā na kamalaṃ bhuvi nindanīyaṃ</p>
+<p rend="gatha2">Paṅkesu bho asucitoya samākulesu,</p>
+<p rend="gatha3">Jātaṃ tathā parahitampi ca dehabhūtaṃ</p>
+<p rend="gathalast">Taṃ nindanīyamiha jātu na hoti loke;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Just as a lotus born on earth is not despicable, O good people, though amidst mud and impure water, similarly, one born for the welfare of others, even if embodied, is never despicable here in the world.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:143">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">72</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">72.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:144">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dvattiṃsabhāgaparipūrataro viseso</p>
+<p rend="gatha2">Kāyo yathā hi naranāri gaṇassa loke,</p>
+<p rend="gatha3">Kāyesu kiṃ phalamihatthi ca paṇḍitānaṃ</p>
+<p rend="gathalast">Kāmaṃ tadeva nanu hoti paropakāraṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The body is a special thing, quite full with its thirty-two parts, just as it is for the multitude of men and women in the world. What fruit is there in bodies for the wise? Surely, it is for the benefit of others.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:145">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">73</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0025">[O 0.0025]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">73.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:146">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Posona paṇḍitatarena tathāpi deho</p>
+<p rend="gatha2">Sabbattanā cirataraṃ paripālanīyo,</p>
+<p rend="gatha3">Dhammaṃ careyya suciraṃ khalu jīvamāno</p>
+<p rend="gathalast">Dhamme have maṇivaro iva kāmado bho</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Nevertheless, even by a very wise person, the body should be protected for a very long time in every way. One should practice the Dhamma for a very long time while living, for in the Dhamma, O good people, there is a wish-granting jewel.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:147">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">74</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">74.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:148">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Khīre yathā suparibhāvitamosadhamhi</p>
+<p rend="gatha2">Snehena osadhabalaṃ paribhāsateva,</p>
+<p rend="gatha3">Dhammo tathā iha samācarito hi loke</p>
+<p rend="gathalast">Chāyāva yāti paraloka mito vajantaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">As with medicine well-infused in milk, its medicinal power shines forth through its essence, so too the Dhamma, well-practiced here in the world, follows one like a shadow when going from here to the next world.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:149">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">75</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">75.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:150">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kāyassa bho viracitassa yathānukūlaṃ</p>
+<p rend="gatha2">Chāyā vibhāti rucirāmaladappaṇe tu,</p>
+<p rend="gatha3">Katvā tatheva paramaṃ kusalaṃ parattha</p>
+<p rend="gathalast">Sambhūsitā iva bhavanti phalena tena;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">As the shadow of a well-adorned body, O good people, appears in accordance with it in a lovely, spotless mirror, just so, having done supreme meritorious deeds, they are as if adorned by that fruit in the next world.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:151">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">76</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0026">[O 0.0026]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">76.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:152">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dehe tathā vividhadukkha nivāsabhūte</p>
+<p rend="gatha2">Mohā pamādavasagā sukhasaññamūḷhā,</p>
+<p rend="gatha3">Tikkhe yathā khuramukhe madhulehamāno</p>
+<p rend="gathalast">Bāḷhañca dukkhamanugacchati hīnapañño;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Similarly, in the body, an abode of various sufferings, those subject to delusion and negligence, deluded by the perception of pleasure, are like one licking honey from a razor's sharp edge; the one of deficient wisdom encounters intense suffering.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:153">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">77</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">77.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:154">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saṃkapparāgavigate niratattabhāve</p>
+<p rend="gatha2">Dukkhaṃ sadā samadhigacchati appapañño,</p>
+<p rend="gatha3">Mūḷhassa ceva sukhasaññamihatthiloke</p>
+<p rend="gathalast">Kiṃpakkameva nanu hoti vicāramāne;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Delighting in existence through conceptual thought and passion, the one of little wisdom always attains suffering. For the fool who perceives pleasure here in this world, surely, upon reflection, it becomes but bitter fruit.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:155">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">78</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">78.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:156">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sabbopabhoga dhanadhaññavisesalābhī</p>
+<p rend="gatha2">Rūpena bho sa makaraddhajasannibhopi,</p>
+<p rend="gatha3">Yo yobbanepi maraṇaṃ labhate akāmaṃ</p>
+<p rend="gathalast">Kāmaṃ paratthaparapāṇaharo naro hi;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Though one may obtain all enjoyments, wealth, grain, and special gains, and, O good people, be like the banner of the god of love in form, whoever obtains death unwillingly even in youth, that person is indeed a taker of others' lives hereafter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:157">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">79</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">79.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:158">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> So yācako bhavati bhinnakapālahattho</p>
+<p rend="gatha2">Muṇḍo dhigakkharasatehi ca tajjayanto,</p>
+<p rend="gatha3">Bhikkhaṃ sadāribhavane sakucelavāso</p>
+<p rend="gathalast">Dehe paratthi paracittaharo naro yo;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He becomes a beggar with a broken bowl in hand, shaven-headed and threatening with hundreds of words of reproach, always begging at the houses of enemies, clothed in rags—that person who is a stealer of others' wealth and a deceiver of others' minds.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:159">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">80</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0027">[O 0.0027]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">80.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:160">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Itthī namuñcati sadā puna itthibhāvā</p>
+<p rend="gatha2">Nārī sadā bhavati so puriso parattha,</p>
+<p rend="gatha3">Yo ācareyya paradāramalaṅghanīyaṃ</p>
+<p rend="gathalast">Ghorañca vindati sadā vyasanañca nekaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A woman is never again freed from the state of womanhood. That man who transgresses with another's wife, which should not be done, always becomes a woman in the next world, and always encounters terrible and numerous misfortunes.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:161">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">81</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">81.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:162">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dīno vigandhavadano ca jaḷo apañño</p>
+<p rend="gatha2">Mūgo sadā bhavati appiyadassano ca,</p>
+<p rend="gatha3">Pappoti dukkhamatulañca manussabhūto</p>
+<p rend="gathalast">Vācaṃ musā bhaṇati yo hi apaññasatto;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Wretched, with foul-smelling mouth, dull, and unwise, he always becomes mute and unpleasant to behold; and, having become a human, he obtains immeasurable suffering—that witless being who speaks false speech.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:163">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">82</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">82.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:164">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ummattakā vigatalajjaguṇā bhavanti</p>
+<p rend="gatha2">Dīnā sadā vyasanasokaparāyaṇā ca,</p>
+<p rend="gatha3">Jātā bhavesu vividhesu virūpadehā</p>
+<p rend="gathalast">Pītvā halāhalavisaṃva suraṃ vipaññā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The mad become devoid of the virtue of shame, always wretched and devoted to misfortune and sorrow, born in various existences with deformed bodies. Having drunk liquor as if it were halāhala poison, they are of deluded wisdom.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:165">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">83</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">83.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:166">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pāpāni yena iha ācaritāni yāni</p>
+<p rend="gatha2">Yo vassakoṭinahutāni anappakāni,</p>
+<p rend="gatha3">Laddhāna ghoramatulaṃ narakesu dukkhaṃ</p>
+<p rend="gathalast">Pappoti cettha vividhavyasanañca nekaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whatever evil deeds one has committed here, having obtained dreadful, immeasurable suffering in the hells for no few crores and nayutas of years, one also obtains here various and numerous misfortunes.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:167">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">84</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0028">[O 0.0028]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">84.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:168">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Lokattayesu sakalesu samaṃ na kiṃci</p>
+<p rend="gatha2">Lokassa santikaraṇaṃ ratanattayena,</p>
+<p rend="gatha3">Taṃtejasā sumahatā jitasabbapāpo</p>
+<p rend="gathalast">Sohaṃ sadādhigatasabbasukho bhaveyyaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In all the three worlds, there is nothing equal to the Triple Gem, the peace-bringer for the world. By its great power, having conquered all evil, may I always be one who has attained all happiness.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:169">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">85</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">85.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:170">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Lokattayesu sakalesu ca sabbasattā</p>
+<p rend="gatha2">Mittā ca majjharipubandhujanā ca sabbe,</p>
+<p rend="gatha3">Te sabbadā vigatarogabhayā visokā</p>
+<p rend="gathalast">Sabbaṃ sukhaṃ adhigatā muditā bhavantu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In all the three worlds, may all beings—friends, neutrals, enemies, and relatives, all of them—be forever free from disease and fear, without sorrow. Having attained all happiness, may they be joyful.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:171">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">86</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">86.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:172">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kāyo karīsabharito viya bhinnakumbho</p>
+<p rend="gatha2">Kāyo sadā kalimalavyasanādhivāso,</p>
+<p rend="gatha3">Kāye vihaññati ca sabbasukhanti loko</p>
+<p rend="gathalast">Kāyo sadā maraṇarogajarādhivāso;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The body is like a broken pot filled with excrement; the body is always a dwelling place of defilement and misery. The world is afflicted in the body, thinking 'it is all happiness'; the body is always a dwelling place of death, disease, and old age.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:173">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">87</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0029">[O 0.0029]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">87.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:174">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> So yobbanoti thaviroti ca bālakoti</p>
+<p rend="gatha2">Satte na pekkhati vihaññatireva maccu,</p>
+<p rend="gatha3">Sohaṃ ṭhitopi sayitopi ca pakkamanto</p>
+<p rend="gathalast">Gacchāmi maccuvadanaṃ niyataṃ tathā hi;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Death does not regard beings as 'young,' 'old,' or 'child,' but simply afflicts them. Thus, whether I am standing, lying down, or walking, I am certainly going to the mouth of death; indeed, it is so.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:175">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">88</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">88.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:176">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Evaṃ yathā vihitadosamidaṃ sarīraṃ</p>
+<p rend="gatha2">Niccaṃva taggatamanā hadaye karotha,</p>
+<p rend="gatha3">Mettaṃ parittamasubhaṃ maraṇassatiñca</p>
+<p rend="gathalast">Bhāvetha bhāvanaratā satataṃ yatattā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Thus, as this body is constituted of faults, you should always hold this in your hearts, with minds directed to that. O you who delight in development, constantly, with controlled selves, cultivate loving-kindness, protection, the foul, and mindfulness of death.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:177">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">89</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">89.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:178">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dānādi puññakiriyāni sukhudrayāni</p>
+<p rend="gatha2">Katvā ca tamphalamasesa mihappameyyaṃ,</p>
+<p rend="gatha3">Deyyaṃ sadā parahitāya sukhāya ceva</p>
+<p rend="gathalast">Kimbho tadeva nanu hatthagatañhi sāraṃ?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having performed meritorious deeds such as giving, which result in future happiness, that immeasurable fruit, in its entirety, should always be given for the welfare and happiness of others. O friends, is not that very thing the essence grasped in hand?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:179">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">90</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">90.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:180">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Hetuṃ vinā na bhavatī hi ca kiṃci loke</p>
+<p rend="gatha2">Saddova pāṇitalaghaṭṭanahetujāto,</p>
+<p rend="gatha3">Evañca hetuphala bhāvavibhāgabhinno</p>
+<p rend="gathalast">Loko udeti ca vinassati tiṭṭhatī ca;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Without a cause, nothing whatsoever exists in the world, like sound born from the striking of hands. Thus, distinct because of the division into cause and effect, the world arises, perishes, and endures.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:181">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">91</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0030">[O 0.0030]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">91.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:182">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kammassa kāraṇāmayañhi yathā avijjā</p>
+<p rend="gatha2">Bho kammanā samadhigacchati jātibhedaṃ,</p>
+<p rend="gatha3">Jātiṃ paṭicca ca jarāmaraṇādidukkhaṃ</p>
+<p rend="gathalast">Sattā sadā paṭilabhanti anādikāle;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Indeed, just as ignorance is the cause of kamma, O friends, through kamma one attains distinction of birth. And conditioned by birth, beings always receive aging, death, and other suffering from time without beginning.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:183">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">92</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">92.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:184">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kammaṃ yathā na bhavatīha ca mohanāsā</p>
+<p rend="gatha2">Kammakkhayāpi ca na hoti bhavesu jāti,</p>
+<p rend="gatha3">Jātikkhayā iha jarāmaraṇādidukkhaṃ</p>
+<p rend="gathalast">Sabbakkhayo bhavati dīpevānilena;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When kamma does not arise here due to the destruction of delusion, and with the exhaustion of kamma there is no birth in future existences; with the exhaustion of birth here, aging, death, and other suffering are all exhausted, like a lamp by the wind.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:185">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">93</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">93.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:186">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo passatīha satataṃ munidhammakāyaṃ</p>
+<p rend="gatha2">Buddhaṃ sa passati naro iti so avoca,</p>
+<p rend="gatha3">Buddhañca dhammamamalañca tilokanāthaṃ</p>
+<p rend="gathalast">Sampassituṃ vicinathā’pi ca dhammataṃ bho;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever constantly sees here the Dhamma-body of the Sage, that person sees the Buddha—so he declared. To see the Buddha, the stainless Dhamma, and the Lord of the Three Worlds, seek to discern the truth of Dhamma, O friends!</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:187">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">94</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0031">[O 0.0031]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">94.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:188">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sallaṃva bho sunisitaṃ hadaye nimuggaṃ</p>
+<p rend="gatha2">Dosattayaṃ vividhapāpamalena littaṃ,</p>
+<p rend="gatha3">Nānāvidhabyasanabhājanamappasannaṃ</p>
+<p rend="gathalast">Paññāmayena balisena nirākarotha;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">O friends, this triad of faults is like a well-sharpened dart plunged deep within the heart, smeared with the stain of various evils, a vessel of diverse misfortunes, and impure—remove it with the hook of wisdom.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:189">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">95</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">95.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:190">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nākampayanti sakalāpi ca lokadhammā</p>
+<p rend="gatha2">Cittaṃ sadāpagatapāpakilesasallaṃ,</p>
+<p rend="gatha3">Rūpādayo ca vividhā visayā samaggā</p>
+<p rend="gathalast">Phuṭṭhaṃva merusikharaṃ mahatānilena;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">All worldly conditions do not shake the mind forever freed from the dart of evil defilements, though forms and other varied objects, all together, touch it, like Mount Meru’s peak by a mighty wind.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:191">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">96</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">96.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:192">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saṃsāradukkhamagaṇeyya yathā munindo</p>
+<p rend="gatha2">Gambhirapāramita sāgaramuttaritvā,</p>
+<p rend="gatha3">Ñeyyaṃ abodhi nipuṇaṃ hatamohajālo</p>
+<p rend="gathalast">Tasmā sadā parahitaṃ paramaṃ ciṇātha;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">As the Lord of Sages, having crossed the immeasurable suffering of saṃsāra and the deep ocean of the perfections, awakened to the subtle knowable, with the net of delusion destroyed—therefore, always strive for the highest good of others.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:193">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">97</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">97.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:194">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ohāya so’dhigatamokkhasukhaṃ paresaṃ</p>
+<p rend="gatha2">Atthāya saṃcari bhavesu mahabbhayesu,</p>
+<p rend="gatha3">Evaṃ sadā parahitaṃ purato karitvā</p>
+<p rend="gathalast">Dhammo mayānucarito jagadatthameva;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having abandoned the bliss of liberation he had attained, for the sake of others he wandered in realms of great fear. Thus, always placing the good of others foremost, the Dhamma I have followed is for the world's welfare alone.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:195">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">98</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0032">[O 0.0032]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">98.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:196">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Laddhāna dullabhatarañca manussayoniṃ</p>
+<p rend="gatha2">Sabbaṃ papañcarahitaṃ khaṇasampadañca,</p>
+<p rend="gatha3">Ñatvāna āsavanudekahitañca dhammaṃ</p>
+<p rend="gathalast">Ko paññavā anavaraṃ na bhajeyya dhammaṃ?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having obtained a human birth, which is very difficult to obtain, and the endowment of a favorable moment; and having known the Dhamma, which is entirely free from proliferation and beneficial for the removal of defilements—what wise person would not constantly cultivate the Dhamma?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:197">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">99</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">99.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:198">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Laddhāna buddhasamayaṃ atidullabhaṃca</p>
+<p rend="gatha2">Saddhamma maggamasamaṃ sivadaṃ tatheva,</p>
+<p rend="gatha3">Kalyāṇamittapavare matisampadañca</p>
+<p rend="gathalast">Ko buddhimā anavaraṃ na bhajeyya dhammaṃ?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having obtained the Buddha's era, which is extremely difficult to obtain, and likewise the incomparable Dhamma-path, which gives bliss; and with excellent spiritual friends and a wealth of understanding—what wise person would not constantly cultivate the Dhamma?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:199">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">100</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">100.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1209n_nrf:200">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Evampi dullabhataraṃ vibhave suladdhā</p>
+<p rend="gatha2">Maccheradosa viratā ubhayatthakāmā,</p>
+<p rend="gatha3">Saddhādidhammasahitā satatappamattā</p>
+<p rend="gathalast">Bho! Bho! Karotha amatādhigamāya puññaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Thus, having well obtained what is more difficult to obtain than wealth, abstaining from the fault of stinginess, desiring good in both worlds, endowed with faith and other qualities, ever diligent—O friends! O friends! Do merit for the attainment of the Deathless!</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

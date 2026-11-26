@@ -1,0 +1,3993 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e0602n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">Pali | Trans.</button><button type="button" data-mode="view-stack">Pali — Trans.</button><button type="button" data-mode="view-pali-only">Pali Only</button><button type="button" data-mode="view-trans-only">Trans. Only</button><button type="button" id="toggle-meta-btn">Note</button></div>
+<div class="pair-row" data-id="e0602n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre"> Namo tassa bhagavato arahato sammāsambuddhassa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Homage to the Blessed One, the Arahant, the Perfectly Self-Enlightened One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="chapter">Mahāpaṇāmapāṭha</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Great Homage</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="title">(Buddhavandanā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">Veneration to the Buddha</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> So<span class="pb hidden-meta" data-ed="M" data-n="0.0041">[M 0.0041]</span>, ko; Ne, saṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He, who? Not, indeed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Satthā, nesaṃ; Khemaṃ, dātā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Teacher for them; the Giver of security.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Heḷāta-kkāro so; Jantūnaṃ, no mā nu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He is no agent of contempt for beings; homage to him.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">4</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">4.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> So lokandhaṃ, hantvā nakko;</p>
+<p rend="gathalast">Sattambojaṃ, bodhetā nu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having destroyed the world's darkness, he is no monster; he is indeed the awakener of the lotus of beings.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Jinasūriyo, tibhavanabhe;</p>
+<p rend="gathalast">Muhatimiraṃ, abhitapaye.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Conqueror-Sun in the sky of the three worlds burns away the darkness of delusion.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Jeno jinamūle, disvā janakāyaṃ;</p>
+<p rend="gathalast">Saṃsāranimuggaṃ, sabbaññuta micchaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Conqueror, seeing at the foot of the Jina tree the host of people submerged in saṃsāra, desiring omniscience,</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Hitvā karupetaṃ, mokkhaṃ paṇidhānaṃ;</p>
+<p rend="gathalast">Vattesi dayāṇā, yo taṃ muni vande.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who, endowed with compassion, having abandoned the aspiration for his own liberation, set his course with compassion and knowledge; that sage I venerate.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sutāyubhariyā me, dhanaṅgamapi cajjaṃ.</p>
+<p rend="gathalast">Cinaṃ budhinidāne, agā muniyaṃ metaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">“My son, life, and wife, my wealth and limbs too are to be given up. For the cause of enlightenment I accumulated this; I went towards this sagehood.”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">9</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">9.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> So sasajātiya dehaṃ, cajjiya dānavarañca;</p>
+<p rend="gathalast">Nāgusabho varasīlaṃ, pūrayi samparicāgo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He, a noble bull-elephant and a complete sacrificer, having given up his own body and the best of gifts, fulfilled supreme virtue.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">10</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">10.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nekkhammaggaṃ rājā hutvā, senabbidvā paññāseṭṭhaṃ;</p>
+<p rend="gathalast">Vedehindo vīrukkaṃsaṃ, khantīvādī khantīseṭṭhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">As a king, he fulfilled supreme renunciation; supreme in wisdom, he routed the army. As the king of Videha, he was eminent in energy; as the Preacher of Patience, he was supreme in forbearance.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">11</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">11.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> So sutasomo tathagaṃ, temiya dhiṭṭhānavaraṃ;</p>
+<p rend="gathalast">Ekabhugo mettavaraṃ, lomahasopekkhataraṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">As Sutasoma, he fulfilled supreme truthfulness; as Temiya, supreme determination; as Ekarāja, supreme loving-kindness; and as Lomahaṃsa, he was preeminent in equanimity.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">12</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">12.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pāramī <span class="pb hidden-meta" data-ed="M" data-n="0.0042">[M 0.0042]</span> tidukkarāva, pūriyāna seṭṭhabodhi;</p>
+<p rend="gathalast">Pāpuṇittha yo ananta-dhammasāradaṃ namāmi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to him who, having fulfilled the exceedingly difficult perfections, attained supreme enlightenment and endless mastery of the Dhamma.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">13</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">13.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pahāya cakkavattikaṃ, karopanīta maddiyaṃ;</p>
+<p rend="gathalast">Bhusidhare sasenakaṃ, ajeni pāpimaṃ name.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having abandoned universal kingship, he conquered the Evil One with his army on the mountain; to him I bow.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">14</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">14.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Athuttaraṃ jayākaraṃ, bahūpakārataṃ jino;</p>
+<p rend="gathalast">Paṭicca nimmisakkhibhi, udikkhate namāmi taṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the unsurpassed, victory-making, greatly beneficial Conqueror, who gazes upon dependent origination with unblinking eyes.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">15</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">15.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Caṅkame maruvimati yo, chindayaṃ kami rataniye;</p>
+<p rend="gathalast">Iddhipāṭihiraṇakaro, cakkhumaṃ tamabhipaṇame.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I pay homage to that maker of miracles, the Seeing One, who on the walkway cut off doubt and desire for the delightful.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">16</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">16.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Atha ratanaghare buddho, chadidhiti janayaṃ saṅkhyaṃ;</p>
+<p rend="gathalast">Sīmīsā tamabhidhammaṃ yo, suranaramahitaṃ vande.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Then in the Jeweled House, the Buddha, generating six-colored rays, contemplated the Abhidhamma; I venerate him, who is honored by gods and humans.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">17</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">17.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nigrodhantika nubbhavī sukhaṃ, dhammaṃ yo vicinaṃ nadhīvaro;</p>
+<p rend="gathalast">Kicchāladdha manaññabodhiyaṃ, vande taṃ sugataṃ nigrocaraṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Near the Banyan tree, the great sage experienced bliss while investigating the Dhamma. I venerate that Sugata, who frequents the Banyan, whose unique enlightenment was won with difficulty.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">18</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">18.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sabbhogehi tha mucalindena,</p>
+<p rend="gatha2">Nāgindena rahasi pāvutto;</p>
+<p rend="gatha3">Sokhyaṃ yo nubhavi vimuttiṃtaṃ,</p>
+<p rend="gathalast">Vande mārāji atulappañño.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I venerate that conqueror of Māra, of incomparable wisdom, who, sheltered in solitude by all the coils of Mucalinda, the Nāga king, experienced the bliss of liberation.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">19</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">19.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kāruṇiko rājāyatane yo,</p>
+<p rend="gatha2">Bhoja muḷāraṃ bhojjarasekaṃ;</p>
+<p rend="gatha3">Vāsa makā nantagguṇadhāro,</p>
+<p rend="gathalast">Ekagato vandāmi mahesī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I venerate that solitary Great Seer, the compassionate one, bearer of endless qualities, who dwelt at the Rājāyatana tree and partook of the sublime food.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">20</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">20.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Keyyaṃ keyyaṃ abhijayaketuṃ,</p>
+<p rend="gatha2">Jeyyaṃ jeyyaṃ varajayapānaṃ;</p>
+<p rend="gatha3">Peyyaṃ peyyaṃ suvici name taṃ,</p>
+<p rend="gathalast">Neyyaṃ neyyaṃ samatamupekkhiṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to him: the banner of super-victory for what is to be known; the excellent drink of victory over what is to be conquered; the one of excellent investigation concerning what is to be drunk; the one who has attained equanimity concerning what is to be led to.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">21</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">21.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Satta ca sattāhe vijitāvī,</p>
+<p rend="gatha2">Khepiya nigrodhaṃ puna gantvā;</p>
+<p rend="gatha3">Dhammasududdasyaṃ pati jāto,</p>
+<p rend="gathalast">Dhammakathā pposukka vitakko.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having spent seven weeks as a conqueror, he went again to the Banyan tree. A thought of disinclination to teach the Dhamma arose, that the Dhamma he had realized was very difficult to see.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">22</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">22.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Marugaṇehi <span class="pb hidden-meta" data-ed="M" data-n="0.0043">[M 0.0043]</span> brahmunā samaṃ,</p>
+<p rend="gatha2">Ratanadāmameruṇā dadā;</p>
+<p rend="gatha3">Samabhiyācito paṭissavaṃ,</p>
+<p rend="gathalast">Dasabalo namāmi desituṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Requested by the host of gods along with Brahmā, the Ten-Powered One, like Meru with a jeweled garland, gave his consent to teach; to him I bow.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">23</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">23.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Gantvā isippātakkānanañca,</p>
+<p rend="gatha2">Satthā migaddāyaṃ desayittha;</p>
+<p rend="gatha3">Saccappakāraṃ yo dhammacakka-</p>
+<p rend="gathalast">Suttaṃ name chabbīdhaṃsu tāva.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having gone to the forest of Isipatana, the Teacher taught in the Deer Park. I bow to him who taught the Dhammacakka Sutta, which explains the nature of the truths.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">24</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">24.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Rañño magadhassa katappaṭiñño,</p>
+<p rend="gatha2">Gantvānatha rājagahaṃ vineti;</p>
+<p rend="gatha3">Satte malarogayute gadaggaṃ,</p>
+<p rend="gathalast">Pāyetuna taṃ paṇame bhisakkaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having made a promise to the king of Magadha, he then went to Rājagaha to train beings afflicted with the disease of defilements. To make them drink the supreme medicine, I bow to that great physician.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">25</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">25.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sakyādhivāse kapile saññatiṃ,</p>
+<p rend="gatha2">Mānaddhajaṃ bhindiya middhivātā;</p>
+<p rend="gatha3">Dhammāmataṃ pāyi pituppabhuti,</p>
+<p rend="gathalast">Vandāmi sakyinda manomadassiṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the Sakyan dwelling at Kapila, he tamed his kinsmen, breaking their banner of pride with the wind of his psychic power. He had his father and others drink the deathless nectar of the Dhamma. I venerate the Lord of the Sakyans, who is delightful to the mind.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">26</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">26.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Anāthapiṇḍoti vhayena nanta-</p>
+<p rend="gatha2">Ddhanaṃ cajitvā sukate vihāre;</p>
+<p rend="gatha3">Vihāsi bhiyyo janatā hitatthaṃ,</p>
+<p rend="gathalast">Sudhammabheriṃ vadayaṃ bhivande.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He dwelt in the well-made monastery built by Anāthapiṇḍika, who had given up endless wealth, and for the great welfare of the people, sounded the drum of the good Dhamma; to him I bow.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">27</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">27.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Upetapuññaṃ varalakkhaṇokaṃ-</p>
+<p rend="gatha2">Ṇokaṃ visuddhaṃ jalitappadīmaṃ;</p>
+<p rend="gatha3">Dīpaṃ pajānaṃ anighaṃ navajjaṃ-</p>
+<p rend="gathalast">Navajjavācaṃ sugataṃ namāmi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Endowed with merit, the abode of excellent characteristics, pure, like a lit lamp, an island for beings, untroubled, and blameless—I bow to the Sugata of blameless speech.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">28</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">28.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Munibhānu dhammapabhāhi jana-</p>
+<p rend="gatha2">Mbuja muddhatandhatamo sutapo;</p>
+<p rend="gatha3">Karuṇāruṇo samabodhayi yo,</p>
+<p rend="gathalast">Bhavisītalattapano paṇame.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The sun of sages, of excellent practice, who with the light of the Dhamma awakened the lotus of the people from the thick darkness; the dawn of compassion, the cooler of the heat of existence—to him I bow.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">29</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">29.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Indu viyambaramajjhatale yo,</p>
+<p rend="gatha2">Rājati tāragaṇena munindo;</p>
+<p rend="gatha3">Ariyagaṇapparito tibhave taṃ,</p>
+<p rend="gathalast">Sādara muggatasobha mavandi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Like the moon in the middle of the sky, the Lord of Sages shines with his host of stars. Surrounded by the noble assembly in the three worlds, I respectfully venerate that risen splendor.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">30</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">30.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mūlāmūlā <span class="pb hidden-meta" data-ed="M" data-n="0.0044">[M 0.0044]</span> tiṃsatipāramiyo,</p>
+<p rend="gatha2">Sākhāsākhā majjhimajjhānakāyā;</p>
+<p rend="gatha3">Pattāpattā buddhacakkhuni yassa,</p>
+<p rend="gathalast">Pupphāpupphā kāruṇā maggakhandho.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Of which the roots and rootlets are the thirty perfections; the branches and twigs, the collection of meditative absorptions; the leaves and leaflets, the eyes of a Buddha; the flowers and blossoms, compassion and the path factors.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">31</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">31.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sārāsārā yamakā pheggubhiññā,</p>
+<p rend="gatha2">Sabbālambaṅkurakaṃ sīlavaṇṭaṃ;</p>
+<p rend="gatha3">Sesādhammā madhupakkapphalāni,</p>
+<p rend="gathalast">Raṃsīchallī sutacā lakkhaṇāni.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Its heartwood is the twin miracles, its sapwood the higher knowledges; its stalk is virtue, its sprout all supports. The remaining dhammas are its fruits, ripe with honey; its skin is the rays, its bark the teachings and the characteristics.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">32</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">32.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Chāyupagā suṃ puthunaradevā,</p>
+<p rend="gatha2">Mārajidīpaṅkara mahijātaṃ;</p>
+<p rend="gatha3">Patthatanantañca kusalabījaṃ,</p>
+<p rend="gathalast">Ekaruhaṃ pādapamuni vande.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I venerate the Sage-Tree, grown from a single, endless seed of merit sown before Dīpaṅkara, the Conqueror of Māra. Born on this earth, many humans and gods have gone to its shade for refuge.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">33</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">33.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Māratitthiyaripuṃ tamañca yo,</p>
+<p rend="gatha2">Dhaṃsayaṃ nagaradhamma māpayaṃ;</p>
+<p rend="gatha3">Sīlanīvaraṇa dvārakoṭṭhakaṃ,</p>
+<p rend="gathalast">Esikāparamasaddha muttamaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Destroying the enemy—Māra, heretics, and darkness—he built the city of Dhamma, with virtue as its rampart and gate-tower, and supreme faith as its main pillar.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">34</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">34.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dvārapālasuyataṃ satiṭālaṃ,</p>
+<p rend="gatha2">Ñāṇacaccara sighāṭapadiddhiṃ;</p>
+<p rend="gatha3">Dhammamaggakuṭisāla sahittaṃ,</p>
+<p rend="gathalast">Dhammasenapatisārijabhūtaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having mindfulness as its well-restrained gatekeeper and watchtower; wisdom as its square, and the bases of psychic power as its crossroads; furnished with the huts and halls of the Dhamma path, with Sāriputta as its General of the Dhamma.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">35</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">35.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dutiyasutaparohitaṃ mahā-</p>
+<p rend="gatha2">Dhutaguṇadharamaggha dassikaṃ;</p>
+<p rend="gatha3">Vinayacinaka dhammarakkhakaṃ,</p>
+<p rend="gathalast">Tibhavapatika dhammarājiyaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Its chaplain is the second disciple; its path-shower, the great holder of the ascetic virtues; its collector of the Vinaya; its guardian of the Dhamma. Such is the Dhamma-kingdom of the Lord of the Three Worlds.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">36</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">36.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sutaṃ sutaṃ sabbadhi sajjanaṃjanaṃ,</p>
+<p rend="gatha2">Mitaṃ mitaṃ nantaguṇālayaṃ layaṃ;</p>
+<p rend="gatha3">Hutaṃ hutaṃ jantunamānamaṃ namaṃ,</p>
+<p rend="gathalast">Bhave bhave tebhavamaṅgalaṃ galaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Heard everywhere, delighting the virtuous; though measured, he is an immeasurable abode of endless virtues, free from attachment. Honored by offerings, he humbles the pride of beings who bow to him; in every existence, may the blessings of the three worlds flow.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">37</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">37.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Lokābhirāmaṃ ramaṇeyyaveduraṃ,</p>
+<p rend="gatha2">Lokantaguṃ antubhayānupāgataṃ;</p>
+<p rend="gatha3">Lokaddhajaṃ mānadhajappahārakaṃ,</p>
+<p rend="gathalast">Lokaggaruṃ aggaru paccaye name.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The delight of the world, a gem of loveliness; gone to the world's end, having passed beyond all fear. The banner of the world, who strikes down the banner of pride; I bow to the world's most honored one, the supreme support.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">38</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">38.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Makuṭaggaphalaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0045">[M 0.0045]</span> nayanañcanikaṃ,</p>
+<p rend="gatha2">Savanabbhusanaṃ vadanabbhusanaṃ;</p>
+<p rend="gatha3">Galamaṇḍanamiddhi manaññurasaṃ,</p>
+<p rend="gathalast">Kiriyaññudaraṃ dvikhaṇaññukaraṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The fruit of the crest-jewel, the collyrium for the eyes, the ornament for the ears and the ornament for the mouth; the adornment for the neck, psychic power, a pleasing taste, the core of functional knowledge, the maker of knowledge in two moments.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">39</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">39.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kaṭivibhūsana majjhimaññaṇakaṃ,</p>
+<p rend="gatha2">Dayavilepana dhāraṇamaṇḍanaṃ;</p>
+<p rend="gatha3">Paṭakhilaññunivattha manuttaraṃ,</p>
+<p rend="gathalast">Munimaruttama meka mahaṃ name.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">His waist-adornment is the middle-way knowledge, his unguent is compassion, his ornament is retention of the Dhamma; he is clad in the unsurpassed robe of knowledge that removes barrenness. To that one, the supreme sage, I bow.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">40</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">40.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sativara sucakaṃ ibbhaggapaññaṃ,</p>
+<p rend="gatha2">Suvīriyavasuvāhaṃ pītiselaṃ;</p>
+<p rend="gatha3">Gahapatisamathaggaṃ thīpasaddhiṃ,</p>
+<p rend="gathalast">Asaṇiyasunupekkhaṃ sattabhogaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The noble indicator of mindfulness, with the foremost wisdom of a master, the bearer of the wealth of great energy, a mountain of joy; foremost in serenity, with steadfast tranquility, unshakable equanimity, enjoying the sevenfold wealth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">41</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">41.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Catudisikiddhippada masahāyaṃ,</p>
+<p rend="gatha2">Suparivutaṃ khattiyavirajānaṃ;</p>
+<p rend="gatha3">Suciparisaṃ devanara manāpaṃ,</p>
+<p rend="gathalast">Dasabalacakkādhipati bhivande.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Unmatched, possessing the four bases of psychic power, well-surrounded by passionless nobles; having a pure assembly, beloved by gods and humans, I worship the sovereign Lord of the Ten Powers.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">42</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">42.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Samādhibbahiddhaṃ saticchaṭṭhaselaṃ,</p>
+<p rend="gatha2">Virappañcamā jīvamajjhaṃ sukamma-</p>
+<p rend="gatha3">Ttatiyaṃ suvācādutiyaṃ bhiseṭṭhaṃ,</p>
+<p rend="gathalast">Samātakkapubbañca sattappavāraṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Concentration is the fortress, mindfulness its sixth rocky battlement, energy the fifth, livelihood the center, right action the third, right speech the second and supreme, and right thought the first—the sevenfold excellence.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">43</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">43.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vividhañāṇapabhutibbasākaraṃ,</p>
+<p rend="gatha2">Bahumahiddhika marūna māsayaṃ;</p>
+<p rend="gatha3">Dhuṃvapabhājalitarāmaṇeyyakaṃ,</p>
+<p rend="gathalast">Sugatanerunagarāja māname.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">An ocean of various knowledges and powers, an abode for the fearless and those of great psychic power; delightful, blazing with a constant light, I honor the Sugata, the kingly Mount Meru.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">44</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">44.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sīlajjalaṃ ratanadhamma mākaraṃ,</p>
+<p rend="gatha2">Bhiññāviciṃ satikulaṭṭhi gambhiraṃ;</p>
+<p rend="gatha3">Vitthiṇṇañāṇa mariyodajāsayaṃ,</p>
+<p rend="gathalast">Aṭṭhambīdhacchariyakaṃ asandanaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A mine of the jewel of the Dhamma, its water is virtue; its waves are the higher knowledges, its shore mindfulness, its depth profundity; its expanse vast knowledge, its water the noble ones—an eightfold wonder, an unmoving ocean.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">45</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">45.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bahunajjamosaraṇa mekarasaṃ,</p>
+<p rend="gatha2">Durupaggamaṃ acitasambharinaṃ;</p>
+<p rend="gatha3">Puthupotapuññavatameva name,</p>
+<p rend="gathalast">Dvīpaduttamaṇṇava nadindavaraṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The refuge for many rivers, of a single taste; difficult to approach, holding immeasurable treasures; a broad ship for the meritorious. I bow to the supreme among bipeds, the excellent ocean, the lord of rivers.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">46</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">46.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Abhiniharadhanuṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0046">[M 0.0046]</span> guṇapāramiṃ,</p>
+<p rend="gatha2">Naḷamatimanabājarahammukhā;</p>
+<p rend="gatha3">Dhitisamitasarena sudhārayaṃ,</p>
+<p rend="gathalast">Malama gagaṇa mekapavedanā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Drawing the bow of resolve, with the perfection of virtue as the diamond-tipped arrow of wisdom from a mind free of pride; with the shaft of firmness, holding it steady, he penetrates with a single shot the defilements in the sky.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">47</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">47.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo pāvedhesiṃ aggamaggañca tūṇiṃ,</p>
+<p rend="gatha2">Dhammālaṅkārabbamma mekabbalaṃ taṃ;</p>
+<p rend="gatha3">Nettiṃsānantañāṇa gīrellimantaṃ,</p>
+<p rend="gathalast">Sabbaññussāsaṃ iddhidaṇḍaṃ namāmi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who revealed the supreme path, his quiver the Dhamma's adornments, his single strength that of Brahma; his sword infinite knowledge, his song the Netti, his breath omniscience, his staff psychic power—to him I bow.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">48</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">48.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Varatapavuṭṭhi subījakasaddhā,</p>
+<p rend="gatha2">Matiyuganaṅgala hīrutapīsā;</p>
+<p rend="gatha3">Susamatharajju satidvijatuttaṃ,</p>
+<p rend="gathalast">Vīriyadurāvaha saccanidānaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The rain is noble austerity, the good seed is faith; wisdom is the plow and yoke, conscience and fear of wrongdoing the plow-shaft; serenity is the rope, mindfulness the goad; energy the strong draft animals, truth the foundation.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">49</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">49.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vatisaṃvaraṃ soratamocanañcaṃ,</p>
+<p rend="gatha2">Saraṇā nivattabbahanatthaṃ yassa;</p>
+<p rend="gatha3">Amatapphalaṃ nekarasehupetaṃ,</p>
+<p rend="gathalast">Sugataṃ mahākassaka mābhivande.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">His field is the restraint of the precepts, its clearing is gentleness, his refuge is for the sake of not turning back; its fruit is the deathless, endowed with many tastes. I venerate the Sugata, the great farmer.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">50</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">50.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Devaggo tidasapure varāsane yo,</p>
+<p rend="gatha2">Devānaṃ janikapabhutinaṃ bhidhammaṃ;</p>
+<p rend="gatha3">Bālakkova laḷayamācale timāsaṃ,</p>
+<p rend="gathalast">Desesyā paravisayaṃ name ajeyyo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The chief of gods, who on the excellent throne in the city of the Thirty-three, taught the Abhidhamma to the gods and their progenitors; for three months, on the unmoving rock, as if at play, he taught in a realm beyond others. I bow to the Unconquered One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">51</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">51.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mahāyaso vividhasubhappakāsakaṃ,</p>
+<p rend="gatha2">Kurūsu yo amitaguṇo tamonudo;</p>
+<p rend="gatha3">Parappavādahari subhānuyoginaṃ,</p>
+<p rend="gathalast">Namāmi taṃ kathayi satippaṭhānakaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Of great fame, revealer of manifold goodness, he of immeasurable virtue, the dispeller of darkness in the Kuru country; a lion against the views of others, devoted to the good—I bow to him who taught the Foundations of Mindfulness.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">52</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">52.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Samathakapaliko sasnehasammāsati,</p>
+<p rend="gatha2">Paramamatiginī savaṭṭiparakkamo;</p>
+<p rend="gatha3">Sakalajutikaro sudhammapadīpako,</p>
+<p rend="gathalast">Ima mupajalito jinena namāmahaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The bowl of serenity, with the oil of right mindfulness, the wick of steadfast effort, the flame of supreme knowledge; the maker of all light, the lamp of the good Dhamma, lit by the Conqueror—to him I bow.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">53</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">53.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vigatagatamalaṃ malagatavigataṃ,</p>
+<p rend="gatha2">Mahita hitamanaṃ manahitamahitaṃ;</p>
+<p rend="gatha3">Vibhavabhavakaraṃ karabhavavibhavaṃ,</p>
+<p rend="gathalast">Sujana janaguṇaṃ guṇajanasujanaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He from whom defilement has gone, who has gone beyond the state of defilement; honored, with a mind for the welfare of others, whose mind is for the welfare of the honored; the maker of non-becoming and becoming, from whom becoming and non-becoming are made; the virtue of good people, the good person for the virtuous.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">54</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">54.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sīlaggadaṇḍavicitaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0047">[M 0.0047]</span> susamādhipattaṃ,</p>
+<p rend="gatha2">Sobhāsamujjala manantaga ñāṇasīkhaṃ;</p>
+<p rend="gatha3">Saddhammaseṭṭharatanañca tilokaketuṃ,</p>
+<p rend="gathalast">Vandāmi locanabhiseka susobhayuttaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Its excellent staff variegated with morality, its banner-cloth perfect concentration; radiant with splendor, its peak infinite knowledge; the supreme jewel of the good Dhamma, the banner of the three worlds—I venerate him, endowed with the beautiful anointment of vision.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">55</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">55.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vinayanaya manayavinaya manamitaṃ,</p>
+<p rend="gatha2">Vijayajaya majayavijaya matulitaṃ;</p>
+<p rend="gatha3">Vibhajabhaja mabhajavibhaja mananakaṃ,</p>
+<p rend="gathalast">Visamasama masamavisama mabhiname.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The way of discipline, taming the undisciplined, immeasurable; victory and triumph, conquering the unconquered, incomparable; analyzing for those who partake and those who do not, he is blameless; harmonizing the unequal and the equal, the unequalled and the dissimilar—to him I bow.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">56</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">56.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Paramarama maramaparama matiguṇaṃ,</p>
+<p rend="gatha2">Pagahagati magatipagata mamamakaṃ;</p>
+<p rend="gatha3">Pacayacaya macayapapaya manaṇakaṃ,</p>
+<p rend="gathalast">Pakatakata makatapakata macalakaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Supreme in delight, deathless, possessing supreme qualities of wisdom; whose progress is firm, who has gone beyond wrong paths, who is free from my-making; who is beyond accumulation and decline, unindebted; who has done what is natural and not what is artificial, the immovable one.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">57</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">57.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ujuka mayanamagge mokkhadesaṃ niyāsi,</p>
+<p rend="gatha2">Vararathakujarena cammacakkena satthā;</p>
+<p rend="gatha3">Hiritapadukapālambena dhammassutena,</p>
+<p rend="gathalast">Satinivarayutena ppāṭihiraddhajena.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Teacher leads to the land of liberation by the straight path with a noble chariot as mighty as an elephant, which has wheels of leather, conscience as its foot-board and support, the Dhamma as its pole, is yoked with the restraint of mindfulness, and has miracles as its banner.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">58</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">58.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Avihananakkhinā suyama nemupakkharā,</p>
+<p rend="gatha2">Udariyamabbhinā paripuraṅgasaccinā;</p>
+<p rend="gatha3">Kusalavibhūsinā nimadakupparena yo,</p>
+<p rend="gathalast">Akharanatesinā gupitasilanandanā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who has unwavering eyes, is well-tamed like the rim and fittings of a chariot; whose belly is not distended, whose limbs are full and true; who is adorned with skillfulness, free from arrogance and anger; who seeks the imperishable, delighting in guarded virtue.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">59</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">59.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Anusanughātinā matipurejavena kāla-</p>
+<p rend="gatha2">Ññutamatisārike na ca visāradatthidaṇḍā;</p>
+<p rend="gatha3">Satituda dhītirasmi manadammasindhavena,</p>
+<p rend="gathalast">Vinayagaṇe namāmi ta matulyasatthavāhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">With wisdom that precedes his swiftness, striking in accord with the teaching; with essential wisdom in knowing the right time, and not wielding a harsh rod; with mindfulness as his goad and patience as his reins for the thoroughbred of the mind to be tamed—I bow to him, that peerless caravan leader, amidst the Vinaya assembly.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">60</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">60.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:123">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yamakkaggijālaṃ paravisaya maccherasahitaṃ,</p>
+<p rend="gatha2">Dudiṭṭhandhubbāhaṃ yugagahaṇatitthīna makarī;</p>
+<p rend="gatha3">Bahūnaṃ majjhe yo ratanakamane pāṭihariyaṃ,</p>
+<p rend="gathalast">Jayakketussāpi ta mabhinami kaṇṭambasamipe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who, near the Kaṇḍamba tree, in the domain of others filled with stinginess, performed the miracle of the twin flames, uprooting the blindness of wrong views for the sectarians who grasp at dualities; who, in the midst of many, displayed this wonder on the jeweled walkway and raised the banner of victory—to him I bow.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:124">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">61</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">61.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:125">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nakhajutirajaṃ cakkaṅgopeta pādavarambujaṃ,</p>
+<p rend="gatha2">Subhasirimato raṃsijālaṅgulidasasaṃsubhiṃ;</p>
+<p rend="gatha3">Pavarasirasā devādevā sadā na pilandhayuṃ,</p>
+<p rend="gathalast">Ta mativa manorammaṃ tittīkarā nami yassa ke.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">His noble lotus-feet are endowed with the mark of the wheel and have ridges of splendor on the nails; the ten toes of that auspicious and glorious one shine with a web of rays. The gods of gods always adorn their noble heads with them. I bow to him, who is exceedingly delightful to the mind, to whom even partridges pay homage.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:126">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">62</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">62.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:127">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Buddhopyeko <span class="pb hidden-meta" data-ed="M" data-n="0.0048">[M 0.0048]</span> nidhanaguṇino vaṇṇaye yāvajīvaṃ,</p>
+<p rend="gatha2">Kāmaṃ aññaṃ kathamabhaṇa māsuṃ khiyethā yukappo;</p>
+<p rend="gatha3">Na tvevā yaṃ khaya mupavajje yassa vaṇṇo ananto,</p>
+<p rend="gathalast">Taṃ sabbaññuṃ sakalarirī nekanāthaṃ namāmi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Even one Buddha, were he to praise the treasure of virtues of that virtuous one for his entire life, could not come to an end. How much less could others? An eon of life would be exhausted long before the praise was complete. For the praise of him whose glory is endless never comes to an end. I bow to that All-Knowing One, the protector of many, the refuge for all.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:128">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">63</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">63.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:129">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pādidīpādaṃ dvinayanadijaṃ dhammakāyaṃ dhisoṇḍaṃ,</p>
+<p rend="gatha2">Bhāṇīsoṇḍaggaṃ saraṇasirasiṃ maggāvālaṃ subhaṅgaṃ;</p>
+<p rend="gatha3">Sīlālaṅkāraṃ vimalibhavu taṃ sattatiṭṭhidhidabbaṃ,</p>
+<p rend="gathalast">Nāthebhindaggaṃ phalakariṇukaṃ mokkhabhojaṃ namāmi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to him, the foremost lord, the king of elephants, who partakes of the food of liberation: the Dhamma-body whose feet are lamps, whose two eyes are birds, whose wisdom is his trunk, and his speech the tip of his trunk; whose head is the refuges and whose tail is the path, auspicious in all his limbs; who is adorned with virtue, of pure existence, the substance of the thirty-seven requisites of enlightenment, the young elephant that has attained the fruit.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:130">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">64</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">64.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:131">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Malāloḷullolaṃ atibhayajanaṃ duggasaṃsārasinduṃ,</p>
+<p rend="gatha2">Phiyabbhāniggāho sivataṭamukho nāvi kajjeṭṭhanātho;</p>
+<p rend="gatha3">Padappārakkāmaṃ bahujanagaṇaṃ ekamaggattaramhi,</p>
+<p rend="gathalast">Samāropetvā mattari ta matulasādarañcā bhivande.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having made the multitude of people who desire the further shore embark upon the ship of the single path, the chief captain, the Lord, ferries them across the impassable ocean of saṃsāra—which is stirred up with the filth and great waves of defilements and generates great fear—in the ship whose prow is the shore of peace. To that peerless one I pay respectful homage.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:132">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">65</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">65.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:133">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Byāmaṃsugghanadhāra makkuḷusatabbhāṇujjalantattanaṃ,</p>
+<p rend="gatha2">Ukkaṃsajjuti ketumālavicitaṃ saddhammajotindharaṃ;</p>
+<p rend="gatha3">Bundinniggatapajjalanta didhitiṃ ajjatthanā yāva ca,</p>
+<p rend="gathalast">Vandetaṃ muni sakyapuṅgava mahaṃ puṇṇinduvattampi ca.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I worship that sage, the bull of the Sakyans, whose face is like the full moon; who bears a dense, fathom-wide halo, whose body shines with the light of a hundred suns, who is adorned with the crest-garland of supreme radiance, who bears the light of the True Dhamma, and whose splendor shines forth from its source, from today until the end of time.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:134">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">66</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">66.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:135">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sattamaṃtamaṃ vināsakaṃsakaṃ dadaṃ vineyyakānameva,</p>
+<p rend="gatha2">Bhāvanaṃvanaṃ dhulīkaraṃ karaṃ tidukkaraṃ pajābhibhuñja;</p>
+<p rend="gatha3">Gāravaṃravaṃ manoharaṃharaṃ narānarānayaṃ namāmi,</p>
+<p rend="gathalast">Sādaraṃdaraṃ vinodakaṃdakaṃ pavassakaṃ pajānamiva.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I respectfully bow to the guide of men and devas, who destroys the darkness of beings, giving his own to those to be trained; who, with his hand, reduces the forest of craving to dust through meditation, having experienced the three hardships for the sake of beings; whose delightful voice, worthy of respect, takes away sorrow, dispelling fear and raining down the water of the deathless for beings.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:136">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">67</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">67.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:137">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Buddho nigrodhabimbo mudukaracaraṇo brahmaghoseṇijaṅgho,</p>
+<p rend="gatha2">Kosacchādaṅgajāto punarapi sugato suppatiṭṭhitapādo;</p>
+<p rend="gatha3">Mudodātuṇṇalomo athamapi sugato brahmujuggattabhāvo,</p>
+<p rend="gathalast">Nīlakkhī dīghapaṇhī sukhumamalachavī thomyarassaggasaggī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Buddha has the proportions of a banyan tree, soft hands and feet, a voice like a Brahma, and shins like an antelope. The Sugata's private parts are concealed in a sheath, and his feet are well-placed. The Sugata has a soft, white ūrṇā hair, and a body as straight as a Brahma's. He has deep blue eyes, long heels, fine and spotless skin, and is the supreme taster of tastes.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:138">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">68</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">68.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:139">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Cattālīsaggadanto samakalapanajo antaraṃsappapīṇo,</p>
+<p rend="gatha2">Cakkenaṅkītapādo aviraḷadasano mārajussaṅkhapādo;</p>
+<p rend="gatha3">Tiṭṭhantonomento bhayakaramudunā jaṇṇukānā masanto,</p>
+<p rend="gathalast">Vaṭṭakkhandho jino gotaruṇapakhumako sīhapubbaḍḍhukāyo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Victor has forty teeth, all of them even, and the space between his shoulders is filled out. His feet are marked with wheels, and his teeth are without gaps. Standing upright, without bending, he can touch his knees with his soft hands. He has rounded shoulders, eyelashes like a young heifer, and a torso like a lion's.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:140">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">69</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">69.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:141">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sattappīṇo ca dīghaṅgulaṃ matha sugato lomakūpekalomo,</p>
+<p rend="gatha2">Sampannodātadāṭho kanakasamataco nīlamuddhaggalomo;</p>
+<p rend="gatha3">Sambuddho thūlajivho atha sīhahanuko jālikappādahattho,</p>
+<p rend="gathalast">Nātho uṇhīsasīso iti guṇasahitaṃ taṃ mahesiṃ namāmi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to that Great Sage endowed with these qualities: he has the seven convex surfaces, long fingers, and one hair to every pore; he is the Fortunate One with perfectly white teeth, skin the color of gold, and dark body-hairs that curl upwards; the Fully Awakened One with a broad tongue, a jaw like a lion's, and hands and feet like a net; the Protector with a cranial protuberance like a royal turban.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:142">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">70</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">70.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:143">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vaṭṭacitānupubbakasubhaṅgulī <span class="pb hidden-meta" data-ed="M" data-n="0.0049">[M 0.0049]</span> ruhiramaṭṭhatuṅganakhako,</p>
+<p rend="gatha2">Nigguḷagopphako samapado sīhosabhibha haṃsasannibhakamo;</p>
+<p rend="gatha3">Dakkhiṇatāvatakkami samantamaṇḍala nigaṇṭhi jāṇusubhako,</p>
+<p rend="gathalast">Byañjanapuṇṇaposatanu nābhigambhīra achiddadakkhiṇavaṭo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He has beautiful fingers that are rounded and tapering, and nails that are coppery, smooth, and high. His ankles are hidden, and his feet are even. His gait is like that of a lion, a bull, and a swan. His steps turn to the right, and his knees are well-rounded, knotless, and beautiful. His body is complete with all the marks, and his navel is deep, without hollows, and spirals to the right.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:144">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">71</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">71.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:145">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dviradakarappakāsurubhujo suvibbhajanupubbamaṭṭhaanunā-</p>
+<p rend="gatha2">Nunaalinānupubbarucira ttilādirahitabbisuddhatanuko;</p>
+<p rend="gatha3">Dasasatakoṭi hatthibaladhāraṇo kanakatuṅganāsikasubho,</p>
+<p rend="gathalast">Suruhiradantamaṃsatha sucisiniddhadasano tha lokasaraṇo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">His beautiful arms are like an elephant's trunk; his limbs are well-proportioned, rounded, neither too long nor too short, and lovely. His body is pure, free from moles and other blemishes. He possesses the strength of ten billion elephants, and has a beautiful, high nose like gold. The gums of the world's refuge are very red, and his teeth are pure and smooth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:146">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">72</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">72.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:147">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Suddhapasādindri ca vaṭṭataradāṭho ruhiroṭṭha ca suranaranātho,</p>
+<p rend="gatha2">Āyatasobhabbadano tha muni gambhīrujukāyatasuruciralekho;</p>
+<p rend="gatha3">Byāmapabhāmaṇḍalabundi supuraggaṇṇi ca āyatavisaṭasubhakkhī,</p>
+<p rend="gathalast">Pañcapasādakkhi ca kuñcikasubhaggapakhumo mudutanuruṇajivho.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Lord of gods and men has faculties that are pure and clear, very rounded canine teeth, and red lips. The sage has a long and beautiful face, and the lines on his palms are deep, straight, long, and lovely. His body is surrounded by a fathom-wide halo, his cheeks are full, and his eyes are long, wide, and beautiful. His eyes have five kinds of clarity, his eyelashes are curved with beautiful tips, and his tongue is soft, thin, and red.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:148">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">73</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">73.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:149">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sommasiniddha tyujjalakomala varuṇavimalatanu ca amitaguṇo,</p>
+<p rend="gatha2">Komala dakkhiṇāvaṭa añjanabhidasarisanilaka mudutanuruho;</p>
+<p rend="gatha3">Dakkhiṇavaṭṭakomala saṇusamasunila alulita siraruhi jino,</p>
+<p rend="gathalast">Sobhaṇasaṇṭhāno tha siniddhasiraruhi ca supacitasatakusala jo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">His body is gentle, smooth, radiant, soft, excellent, and immaculate, and he is endowed with immeasurable virtues. His soft body-hair curls to the right and is fine and dark blue like crushed collyrium. The Victor’s head-hair is soft, curls to the right, is fine, even, very dark blue, and untangled. He is of beautiful proportions, with smooth hair on his head, born of a hundred well-accumulated skillful deeds.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:150">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">74</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">74.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:151">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nigguḷonigganticchattassarisaatisubhagasira cāyatāruci kaṇṇako,</p>
+<p rend="gatha2">Sosaṇṭhānassaṇhāhārānukamapahutabhamutha suāyatabbhamuko ca so;</p>
+<p rend="gatha3">Suggandhaggatto muddhicātha vadani ca puthulakanalāṭa āyatasobhaṇo,</p>
+<p rend="gathalast">Assāsappassāsātissaṇu dharamasamasama nami ketumālavicittakaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">His head is exceedingly beautiful, like a parasol, without lumps or knots, and his ears are long and lovely. His eyebrows are well-formed, fine, orderly, and abundant, and they are beautifully long. His body has a supreme fragrance, and his head and face, with a broad forehead, are long and beautiful. His in-breaths and out-breaths are exceedingly subtle, and his lips are perfectly even. I bow to him who is adorned as with a crest-garland.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:152">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">75</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">75.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:153">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Buddhuppādo kimaṅgaṃ atidulabhataraṃ ghosamattampi loke,</p>
+<p rend="gatha2">Tasmā nānappakāraṃ saparahitasukhaṃ viddhasū patthayantā;</p>
+<p rend="gatha3">Yātiṭṭhatthāva haṃ taṃ suranarasaraṇaṃ antarāyappahānaṃ,</p>
+<p rend="gathalast">Puññakkhettekabhūtaṃ sugatamavirataṃ sādhu vandantu santo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The arising of a Buddha is exceedingly rare in the world; how much more so even the mere sound of his name! Therefore, let the virtuous who desire various kinds of welfare and happiness for themselves and others pay homage well and unceasingly to the Sugata—the refuge for gods and humans, the dispeller of obstacles, the unique field of merit.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:154">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">76</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">76.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:155">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Khettavaraṅgatatthutipure javapaṇama tejasā idha bhave,</p>
+<p rend="gatha2">Rogabhayādyupaddavahato anunasukha bhogapuññamatiko;</p>
+<p rend="gatha3">Devamanussabhogapavaraṃ paratthanubhāvañca antimabhave,</p>
+<p rend="gathalast">Aññataro tibodhipavare bhavissati yathāsayaṃ katanato.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By the power of this swift homage and praise offered to the one who has gone to the excellent field, one will, in this very life, have all dangers such as disease and fear destroyed and possess undiminished happiness, wealth, and merit. Enjoying the excellent states of gods and humans and the power to help others, in the final existence one will become excellent in one of the three kinds of enlightenment, according to one's aspiration and deeds.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:156">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">77</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">77.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:157">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Puññenānena <span class="pb hidden-meta" data-ed="M" data-n="0.0050">[M 0.0050]</span> sohaṃ nipuṇajavamati pemavāco sakhīlo,</p>
+<p rend="gatha2">Saddho kalyāṇamittotisaraṇagamano sīlavā cāgayogo;</p>
+<p rend="gatha3">Hirottappī sudakkho avitasucarito dhitimā saccabhāṇī,</p>
+<p rend="gathalast">Bāhussacci vibhāgi saparahitakaro vaggurāvo bhirupo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By this merit may I be one with subtle and swift wisdom, of loving speech, friendly, faithful, having good friends, one who has gone for refuge to the Three Jewels, virtuous, devoted to generosity; conscientious and scrupulous, very skillful, of well-guarded good conduct, resolute, truthful in speech; learned, discerning, working for the welfare of myself and others, with a pleasant voice, and handsome.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:158">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">78</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">78.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:159">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dīghajjīvi nirogo sucikulapassuto dhammaratto viratto,</p>
+<p rend="gatha2">Niccāpalyo kataññu atimudujumano sādhubhāvādiviññū;</p>
+<p rend="gatha3">Dhammājīvo bhaveyyaṃ bahukusalarato appakodho aluddho,</p>
+<p rend="gathalast">Evañcaññaṃ kareyyaṃ paṇidhi carimake mokkhanibbānabhāgī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">May I be long-lived, healthy, born into a pure family, delighting in the Dhamma, and detached; constantly steadfast, grateful, with a very gentle and upright mind, discerning of what is good. May I live righteously, delighting in much that is skillful, with little anger and no greed. And thus may I make this aspiration, to be a partaker of liberation, Nibbāna, in my final existence.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:160">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">79</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">79.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:161">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (1) Mahākathaṃ buddhaghoso, tanumeva karaṃapi;</p>
+<p rend="gathalast">Cajaṃ heyyā diyā deyyaṃ, akarittha yathā tathā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">(1) Though the great commentary by Buddhaghosa was made concise, he did it accordingly: abandoning what should be rejected, and including what should be given.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:162">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">80</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">80.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:163">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (2) Mahāpaṇāmaporāṇaṃ, kiñci eva punappunaṃ;</p>
+<p rend="gathalast">Kāmokkamaṃ dudhārañca, cajaṃ deyyā diyaññattha.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">(2) From the great ancient homage, whatever was repetitive, or dealt with transcending desire and other difficult matters, I have omitted, giving what should be given and not taking from elsewhere.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:164">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">81</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">81.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:165">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (3) Sutajjaya anubhava-ṭṭhapanatthena lañchinā;</p>
+<p rend="gathalast">Sutena garunānena, katoyaṃ paṇāmo navo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">(3) This new homage has been made by the venerable Sutajjaya, marked with the seal of establishing the experience of his learning for the benefit of others.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:166">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">82</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">82.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:167">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (4) Ekakkharāya gāthāyo, yāva chabbisatakkharā;</p>
+<p rend="gathalast">Jātiya pajjasattatyā, saṅkhato caturādhikā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">(4) There are verses from one syllable up to twenty-six syllables. With the seventy verses on the birth story, the count is four more than that.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:168">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">83</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">83.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:169">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (5) Aṭṭhādhikā sahevuyyo- janādīhi midaṃ nataṃ;</p>
+<p rend="gathalast">Yathāvuttatthakā kāmā, ye niccaṃ dhārayantu te.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">(5) With the exhortations and so on, this homage has eight more verses. May those who desire the meaning as stated herein always bear it in mind.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:170">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">84</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">84.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:171">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Rājātirājātimanoharo yo,</p>
+<p rend="gatha2">Devātidevātiguṇoghadhārī;</p>
+<p rend="gatha3">Brahmātibrahmātibhavantagū taṃ,</p>
+<p rend="gathalast">Saṅghātisaṅghātivirāva vande.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to him who is more delightful than a king of kings, who bears a flood of virtues greater than a god of gods, who has gone to the end of existence, surpassing even a great Brahmā, the supreme one of the Saṅgha whose fame resounds.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:172">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">85</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">85.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:173">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Anaṅganaṅgaṃ naradevadevaṃ,</p>
+<p rend="gatha2">Aniñjaniñjaṃ bhayatāṇatāṇaṃ;</p>
+<p rend="gatha3">Anaṇḍanaṇḍañca anāthanāthaṃ,</p>
+<p rend="gathalast">Khayantayantaṃ paṇamāmi māmi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow down to him whose limbs are without blemish, the god of gods and men; whose own state is imperturbable, the shelter and protection from fear; the mighty one without defect, the protector of the unprotected; who is proceeding to the end of all destruction.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:174">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">86</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">86.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:175">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tambasiniddhatuṅganakhako nuṃvaṭṭasucituraṅguli ca muniso,</p>
+<p rend="gatha2">Sīhusabhobhahaṃsasamago nigūḷasama gopphakāyatamukho;</p>
+<p rend="gatha3">Komaladakkhāṇāvaṭatanuruho sucimalujjalābhasariro,</p>
+<p rend="gathalast">Pañcapasādayuttanayano sugandhamukhatuṅganāsikayuto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">That sage has high, smooth, copper-colored nails and rounded, well-adorned fingers. His gait is like that of a lion, a bull, and a swan; his ankles are concealed and even, and his face is long. His body-hair is soft and curls to the right, and his body is pure, stainless, radiant, and gleaming. His eyes are endowed with the five kinds of clarity, and he has a fragrant mouth and a high nose.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:176">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">87</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">87.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:177">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Koṭisahassanāgabaliko <span class="pb hidden-meta" data-ed="M" data-n="0.0051">[M 0.0051]</span> surattamadharo suvaṭṭadasano,</p>
+<p rend="gatha2">Āyatasaṇulomabhamūko muduttanukaratta jivhasahito;</p>
+<p rend="gatha3">Chattasamānasobhaṇasiro sukesavara ketumālavicito,</p>
+<p rend="gathalast">Iccanubyañjanebhi sahitaṃ munindapavaraṃ namāmi sirasā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow my head to the excellent lord of sages, who is endowed with all the minor characteristics: he possesses the strength of a thousand koṭi of elephants, has very red lips and well-rounded teeth, long and fine-haired eyebrows, and a soft, slender, red tongue. His head is beautiful like a parasol, adorned with a crest-garland of excellent, beautiful hair.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:178">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">88</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">88.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:179">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sakalamalehi so muni sudūratāya ca malāriniṃ hatatayā,</p>
+<p rend="gatha2">Tibhavarathe samānitamanārakāni ca namālayo naravaro;</p>
+<p rend="gatha3">Malakaraṇe rahāraha manantañeyya mabhijānanā muni tathā,</p>
+<p rend="gathalast">Caraṇayuto tivijji ca suvācatā sugamanā janesu sugato.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">That sage is far removed from all stains, for he has destroyed the enemy which is defilement. He is the best of men, an abode of homage, honored in the three existences, and without attachment. He is a sage worthy of secret places, having no stain-making deeds, and he knows the endless knowable. Endowed with conduct and the three true knowledges, he is called the Sugata because of his good speech and his good going among people.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:180">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">89</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">89.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:181">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Lokavidū so nitalokatayatā sākalato asamanaradamā so,</p>
+<p rend="gatha2">Sārathi jino anusāsanakaro satthavaho dupathataraṇasattā;</p>
+<p rend="gatha3">Bujjhati sāmaṃ catusaccamakhilaṃ bodhayi jantugaṇamiti ca buddho,</p>
+<p rend="gathalast">Bhākaraābhāphuṭapaṅkajasamo maggiyañāṇaphuvikasito ca.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He is the Knower of the Worlds, having penetrated the world in its entirety; the unsurpassed tamer of persons, the Victorious Charioteer, the instructor, the caravan leader helping beings cross the difficult path. He awakened by himself to the Four Noble Truths and awakens the hosts of beings—thus he is the Buddha, like a lotus blossomed by the sun, fully opened with knowledge of the path.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:182">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">90</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">90.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:183">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhaggakileso so bhagavā tibhava vamita gamana sujana bhajanato,</p>
+<p rend="gatha2">So bhaji saddhamme pavibhatta sarasa chabhagayuta garukaraṇiyato;</p>
+<p rend="gatha3">Sattanikāye kenapitulyaguṇamapamita sirighaṃnajutisusubhaṃ,</p>
+<p rend="gathalast">Devanarānaṃ ekapatiṭṭha mavitathutiyasa masaki mabhaṃname.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He is the Blessed One with defilements destroyed, who has rejected journeying in the three realms and is honored by good people. He partook of the good Dhamma, which is well-expounded and full of essence; he is endowed with the six fortunes and is worthy of reverence. In the host of beings, his virtues are unequalled by anyone; he is of immeasurable glory, dense radiance, and exceedingly beautiful. He is the sole refuge for gods and humans, whose fame is based on truthful speech. I bow to him, the unequalled.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:184">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">91</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">91.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:185">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Buddhuppādo kimmaṅgaṃ bho atidulabhataramidha bhave sughosa mapāparo,</p>
+<p rend="gatha2">Tasmā patthentā sabbaññuṃ vividhahitasukha manadhikaṃ namantu ca sādhavo;</p>
+<p rend="gatha3">Puññenānenete diṭṭhe bhayaaghaṃpīḷanaṭṭha virahitā parattha cubho subhe,</p>
+<p rend="gathalast">Bhutvānante ve hessante avikalasukhasirimatikā anuttara bhāgino.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The arising of a Buddha—what a blessing, friends! It is most difficult to obtain in this existence, a proclamation without parallel. Therefore, let the good people, aspiring for the Omniscient One who brings manifold welfare and unsurpassed happiness, pay homage to him. By this merit, may they, in this very life, be free from fear, evil, affliction, and misfortune, and in the next world attain both kinds of good. Having enjoyed boundless bliss, they will become possessors of unimpaired happiness and glory, partakers of the supreme.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:186">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">92</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">92.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:187">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> So cakkopetapādo mudubhujacaraṇo suppatiṭṭhitapādo,</p>
+<p rend="gatha2">Eṇījaṅgho ca buddho kanakanibhataco āyatapaṇhi nātho;</p>
+<p rend="gatha3">Kosonaddhaṅgajāto atisudhumachavī jālikappānaheṭṭhā,</p>
+<p rend="gathalast">Ussaṅkhapādayutto abhinilanayano āyataṅguliyogo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He has feet marked with wheels, soft hands and feet, and well-planted feet. The Buddha has calves like an antelope, skin the color of gold, and long heels; he is the Protector. His male organ is enclosed in a sheath, his skin is extremely fine, and his hands and feet are webbed. He has prominent ankles, deep blue eyes, and long fingers.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:188">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">93</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">93.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:189">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ṭhito <span class="pb hidden-meta" data-ed="M" data-n="0.0052">[M 0.0052]</span> kho no namanto kirubhayaputhunājāṇuyo āmasanto,</p>
+<p rend="gatha2">Lomakūpekekalomo samataladasano añjanuddhaggalomo;</p>
+<p rend="gatha3">Brahmaddehujjugatto aviraḷamukhato sattakaṅgussado so,</p>
+<p rend="gathalast">Nigrodhappāribimbo migapatihanuko sīhapubbaḍḍhakāyo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Standing, without bending, he can touch his knees with both hands. He has one hair per pore, evenly spaced teeth, and body-hairs that grow upwards. His body is as straight as Brahma's, he has the seven prominences, and his teeth are without gaps. His proportions are like a banyan tree's, his jaws are like a lion's, and his torso is like a lion's.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:190">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">94</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">94.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:191">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Puṇṇattālīsadanto supahutarasano sobhaṇodātadāṭho,</p>
+<p rend="gatha2">Saṇhodātuṇṇalomo samavaṭalagalo antaraṃsapiṇo so;</p>
+<p rend="gatha3">Brahmagghoso munindo punapi gupakhumo uṇhisasamphullasīso,</p>
+<p rend="gathalast">Bāttiṃsaṅgopasobhaṃ mudurasahaṇī lokajeṭṭhaṃ name taṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He has forty teeth, a large tongue, and very white canine teeth. The tuft of hair between his eyebrows is white and soft; his neck is evenly rounded, and his shoulders are full. The Lord of Sages has a voice like Brahmā's, eyelashes like a cow's, and a cranial protuberance on his head. I bow to him, the eldest in the world, adorned with the thirty-two marks, gentle and endowed with sublime taste.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:192">
+  <div class="pair-col col-pali">
+<p rend="centre">Mahāpaṇāma niṭṭhitā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Great Homage is concluded.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:193">
+  <div class="pair-col col-pali">
+<p rend="chapter">Tigumbacetiya thomanā</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">Praise of the Tigumba Cetiya</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:194">
+  <div class="pair-col col-pali">
+<p rend="centre">Namo tassa bhagavato arahato sammāsambuddhassa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Homage to the Blessed One, the Arahant, the Perfectly Self-Enlightened One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:195">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:196">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0118">[M 0.0118]</span> dīpaṅkaramūlamhi, padaṃ hattagataṃ caji;</p>
+<p rend="gathalast">Sammāsambodhi mākaṅkhaṃ, vande tassa siroruhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who, at the feet of Dīpaṅkara, renounced the state that was within his grasp, aspiring to perfect self-enlightenment—I venerate the hair of his head.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:197">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Pathyāvattagāthā).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pathyāvatta verse).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:198">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:199">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pūretvā bodhisambhāra-mahesaṃ yo anuttaraṃ;</p>
+<p rend="gathalast">Alattha buddhattaṃ tassa, kesadhātuvaraṃ name.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who fulfilled the great, unsurpassed requisites for enlightenment and attained Buddhahood—to his excellent hair relic I pay homage.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:200">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Pathyāvattagāthā).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pathyāvatta verse).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:201">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:202">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Laddhā buddhattaṃ chaṭhāna-matikkamma pavedayi;</p>
+<p rend="gathalast">Vimuttiṃ rājāyatane, tassa kesavaraṃ name.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having attained Buddhahood and passed beyond six places, he experienced liberation at the Rājāyatana tree. To his excellent hair I pay homage.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:203">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Rakāra bhakāravipulā pathyāvattagāthā).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pathyāvatta verse, Vipulā type with 'r' and 'bh').</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:204">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">4</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">4.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:205">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tattha sakkadattiyampi, nāgalataṃ harītakaṃ;</p>
+<p rend="gathalast">Anotattodakaṃ bhuñji, vande tassa siroruhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">There he used the toothbrush-stick of nāgalatā and the myrobalan fruit given by Sakka, and partook of water from Lake Anotatta. I venerate the hair of his head.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:206">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Rakāravipulā pathyāvattagāthā).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pathyāvatta verse, Vipulā type with 'r').</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:207">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:208">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tadā <span class="pb hidden-meta" data-ed="M" data-n="0.0119">[M 0.0119]</span> muggaselapattaṃ, mahārājūhi dinnakaṃ;</p>
+<p rend="gathalast">Tathāgato paṭiggaṇhi, vandāmi tassa sīsajaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Then the Tathāgata accepted the stone bowl given by the Great Kings. I venerate that which grew on his head.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:209">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Rakāravipulā pathyāvattagāthā).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pathyāvatta verse, Vipulā type with 'r').</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:210">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:211">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tadā dvinnaṃ dvebhātika-janehi madhupiṇḍikaṃ;</p>
+<p rend="gathalast">Paribhuñjesi manthampi, tassa sīsasiriṃ name.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Then he partook of the honey-cake and barley-gruel from the two brothers. I bow to the glory of his head.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:212">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Takāravipulā pathyāvattagāthā).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pathyāvatta verse, Vipulā type with 't').</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:213">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:214">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo tapussabhallikānaṃ, tadā dvisaraṇaṃ adā;</p>
+<p rend="gathalast">Lokamhi sabbapaṭhamaṃ, tassa sīrivahaṃ name.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who, first of all in the world, gave the two-fold refuge to Tapussa and Bhallika—I bow to him, the bearer of glory.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:215">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Rakāra nakāra vipulāpathyāvattagāthā).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pathyāvatta verse, Vipulā type with 'r' and 'n').</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:216">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:217">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tadā <span class="pb hidden-meta" data-ed="M" data-n="0.0120">[M 0.0120]</span> tatthupaṭṭhakānaṃ, tesaṃ kese adā aṭha;</p>
+<p rend="gathalast">Lokahita mapekkhanto, nātho yo tassa te name.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Then to those attendants he gave eight hairs. I pay homage to him, the Protector, who had regard for the welfare of the world.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:218">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Rakāravipulā pathyāvattagāthā).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pathyāvatta verse, Vipulā type with 'r').</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:219">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">9</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">9.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:220">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tepi taṃ āhāritvāna, pokkharabbatiyaṃ karuṃ;</p>
+<p rend="gathalast">Sajīvakesa cetiyaṃ, nametaṃ sabbapubbakaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">And they, having taken them, built in the city of Pokkharavatī the Cetiya of the Living Hairs. I bow to it, the very first of all.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:221">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Makāravipulā pathyāvattagāthā).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pathyāvatta verse, Vipulā type with 'm').</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:222">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">10</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">10.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:223">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Uposathuposathamhi, muñcantaṃ nīlarasmiyo;</p>
+<p rend="gathalast">Bhagavāva lokaatthaṃ, karontaṃ taṃ sadā name.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">On every Uposatha day it releases blue rays, acting for the welfare of the world just like the Blessed One. I always pay homage to it.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:224">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Rakāravipulā pathyāvattagāthā).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pathyāvatta verse, Vipulā type with 'r').</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:225">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">11</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">11.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:226">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Cūḷāmaṇidussacetyaṃ<span class="pb hidden-meta" data-ed="M" data-n="0.0121">[M 0.0121]</span>, kālamhi bodhisattake;</p>
+<p rend="gathalast">Buddhakāle idaṃ sabba-paṭhamaṃ taṃ namāmahaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Cūḷāmaṇi and the Dussa Cetiyas were from his time as a Bodhisatta; in the time of the Buddha, this one was the very first of all. I pay homage to it.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:227">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Rakāravipulā pathyāvattagāthā).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pathyāvatta verse, Vipulā type with 'r').</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:228">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">12</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">12.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:229">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Namāmahaṃ vandāmahaṃ, pūjemahaṃ siroruhaṃ;</p>
+<p rend="gathalast">Puññamidaṃ bhavatu me, paccayo āsavakkhaye.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I pay homage, I venerate, I worship the hair of the head. May this merit be for me a condition for the destruction of the taints.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:230">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Takāra nakāravipulā pathyāvattagāthā).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pathyāvatta verse, Vipulā type with 't' and 'n').</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:231">
+  <div class="pair-col col-pali">
+<p rend="centre">Tigumbacetiyathomanā niṭṭhitā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Praise of the Tigumba Cetiya is concluded.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:232">
+  <div class="pair-col col-pali">
+<p rend="chapter">Vāsamālinīkya</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Vāsamālinī</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:233">
+  <div class="pair-col col-pali">
+<p rend="centre">Namo tassa bhagavato arahato sammāsambuddhassa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Homage to the Blessed One, the Arahant, the Perfectly Self-Enlightened One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:234">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:235">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vuḍḍhopi <span class="pb hidden-meta" data-ed="M" data-n="0.0179">[M 0.0179]</span> jinānaṃ, buddhosi vijānaṃ;</p>
+<p rend="gathalast">Pubboditi māhaṃ, kubbomi vimānaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Foremost of victors, you are the Buddha for the wise. I fashion this celestial mansion of praise for you, the first dawn.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:236">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Tanumajjhāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Tanumajjhā verse).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:237">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:238">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mahāsamatakūlaṃ, narāpavarapūjaṃ;</p>
+<p rend="gathalast">Jahā abhayapūraṃ, namā kanakarūpaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the golden form, of a great and esteemed lineage, honored by the best of men, who abandoned the city of security.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:239">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Kumāralalitāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Kumāralalitā verse).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:240">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:241">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Narāsabhasubuddhaṃ<span class="pb hidden-meta" data-ed="M" data-n="0.0180">[M 0.0180]</span>, pajāmatanuruttaṃ;</p>
+<p rend="gathalast">Dayākaramuduttaṃ, namāma ha usukkaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">We bow with zeal to the bull among men, the well-awakened one, praised by the people, the exalted mine of compassion.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:242">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Kumāralalitāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Kumāralalitā verse).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:243">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">4</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">4.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:244">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Hitaṃ vahasusīlo, pamodati sukhatte;</p>
+<p rend="gathalast">Name tamapabuddhaṃ, jinaṃ gatasukhantaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The virtuous one brings welfare and rejoices in his own happiness. I bow to that awakened one, the Victor, who has reached the end of suffering.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:245">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Kumāralalitāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Kumāralalitā verse).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:246">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:247">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bandhu ca santakileso, yo pitavaṇṇapabhāso;</p>
+<p rend="gathalast">Gotamagottasuññato, tassa namo narasīho.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Homage to that lion of men, the kinsman with stilled defilements, who shines with a golden complexion, renowned in the Gotama clan.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:248">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Citrapadāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Citrapadā verse).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:249">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:250">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Buddhaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0181">[M 0.0181]</span> suddhaṃ lokesītaṃ, ukkaṃ yuttaṃ yoge haṃ;</p>
+<p rend="gathalast">Vantātītaṃ oghe sīdaṃ, vandāpīhaṃ sokehīhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I worship the Buddha, pure and cool in the world. Though sinking in the flood, I, free from sorrow, worship here him who is yoked to the practice, a torch who has gone beyond all taints.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:251">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Vijjummālāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Vijjummālā verse).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:252">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:253">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhogavatī yopakhamī, sītadayā lokasakhā;</p>
+<p rend="gathalast">Dhātutaye kitti sa ve, dātu jaye-tassa ca me;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He is patient like the earth, cool with compassion, a friend to the world. His fame is surely in the three kinds of relics. May there be victory for the giver—for him and for me.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:254">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Māṇavakagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Māṇavaka verse).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:255">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:256">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mānito lukho rutotha, sannibho subho sukho ca;</p>
+<p rend="gathalast">Jānito dharo namo ca, tassa yo thuto guṇova.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He is honored, though austere; his voice is beautiful, pleasant, and happy. He is known as a support. Homage to him who is praised for his virtue.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:257">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Samānikāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Samānikā verse).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:258">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">9</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">9.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:259">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Jayaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0182">[M 0.0182]</span> dhajaṃ pajāpuge, ṭhitaṃ lilaṃ mahāsukhe;</p>
+<p rend="gathalast">Subhaṃ phuṭaṃ pabhaṃ name, hitaṃ sukhaṃ dadātu me.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the auspicious, manifest radiance, a banner of victory among the hosts of beings, standing gracefully in great bliss. May it grant me welfare and happiness.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:260">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Pamāṇikāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pamāṇikā verse).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:261">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">10</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">10.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:262">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Puṇṇapuññajanitasubhaṃ, jātiñātithutiyaguṇaṃ;</p>
+<p rend="gathalast">Bhedaveravimalajinaṃ, ñāṇapādacaraṇa-mahaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I honor the stainless Victor, free from division and enmity, whose foundation is knowledge and conduct, who is auspicious, born of accumulated merit, and praised for his birth, clan, and virtue.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:263">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Halamukhīgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Halamukhī verse).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:264">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">11</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">11.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:265">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sati mati suci yo-bhāso, thuti muni sukhito kāyo;</p>
+<p rend="gathalast">Manujapumasuto nātho, jayavara mu-sabho dāto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who is mindfulness, wisdom, purity, and radiance; the sage whose body delights in praise; the Protector, son of man; the excellent victor, the bull, the giver.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:266">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Bhujagasusugāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Bhujagasusu Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:267">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">12</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">12.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:268">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0183">[M 0.0183]</span> buddho pavaro lilo puge,</p>
+<p rend="gatha2">Lokutto abhayo ṭhito sukhe;</p>
+<p rend="gatha3">Uttiṇṇaṃ nisabhaṃ hitaṃ vahe,</p>
+<p rend="gathalast">Monindaṃ vimalaṃ jinaṃ name.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who is the excellent Buddha, graceful among the people, supramundane, fearless, established in bliss; the bull who has crossed over, who brings welfare—to that stainless Victor, the lord of sages, I bow.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:269">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Suddhavirājitagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Suddhavirājita Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:270">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">13</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">13.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:271">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Devindaṃ varagaṇatherindaṃ,</p>
+<p rend="gatha2">Niṭṭhānaṃ bhavajananibbānaṃ;</p>
+<p rend="gatha3">Niddosaṃ raṇarajanipphoṭaṃ,</p>
+<p rend="gathalast">Vande-haṃ subhamukhasoṇṇemaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I venerate him with a beautiful golden face—the lord of gods, the lord of the excellent community of elders, the culmination, the Nibbāna that ends becoming, the faultless one who shatters the dust of conflict.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:272">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Paṇavagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Paṇava Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:273">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">14</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">14.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:274">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Gotamagotte <span class="pb hidden-meta" data-ed="M" data-n="0.0184">[M 0.0184]</span> ketuva ñātaṃ,</p>
+<p rend="gatha2">Lokajakhette meruva jātaṃ;</p>
+<p rend="gatha3">Thandilajeṭṭhe bheditamāraṃ,</p>
+<p rend="gatha2">Paṇḍitamajjhe medhiva bhāṇaṃ;</p>
+<p rend="gathalast">Mantiya vande sevitanāthaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Known as the banner in the Gotama clan, born as Meru in the field of the world, the foremost on earth who shattered Māra, speaking wisely among the wise—having reflected, I venerate the Lord who is served.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:275">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Rummavatīgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Rummavatī Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:276">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">15</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">15.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:277">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Buddho sukko amitaguṇīso,</p>
+<p rend="gatha2">Yutto mutto sasiva timīto;</p>
+<p rend="gatha3">Khe yo tejo tapasiva akko,</p>
+<p rend="gathalast">Phelo theto tava namakāro.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Buddha is pure, a lord of immeasurable virtue; yoked and liberated, like the moon from darkness. He is splendor in the sky, like the sun in its heat. My homage to you, the steadfast one, is abundant.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:278">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Mattāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Mattā Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:279">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">16</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">16.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:280">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0185">[M 0.0185]</span> jitamāre ve aji sabbaṃ,</p>
+<p rend="gatha2">Tho mitasāre he-dhitapattaṃ;</p>
+<p rend="gatha3">Saṃsitapuṇṇo so nami tassa,</p>
+<p rend="gathalast">Paṇḍitaphullo so matikassa.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who, having conquered Māra, has truly won all; praised, having attained the state of steadfastness in the essential Dhamma; he who is perfected by accumulated merit, a blossomed sage of great wisdom—to him I bow.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:281">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Campakamālāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Campakamālā Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:282">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">17</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">17.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:283">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kanakarūpa <span class="pb hidden-meta" data-ed="M" data-n="0.0186">[M 0.0186]</span> mūpameyyakaṃ,</p>
+<p rend="gatha2">Pavarasūra pūjasevataṃ;</p>
+<p rend="gatha3">Kamalabhūma dhūradesakaṃ,</p>
+<p rend="gathalast">Naramarūpa rū name ta-haṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to that form of men and gods: incomparable and golden, worshipped and served as the excellent hero, the teacher who shakes off the plane of desire.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:284">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Manoramāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Manoramā Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:285">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">18</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">18.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:286">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Deve gate dvevārā gamāsi,</p>
+<p rend="gatha2">Sele cale ye ñātā pacāyi;</p>
+<p rend="gatha3">Uddhaṃ tale tevāsaṃ akāsi,</p>
+<p rend="gathalast">Buddhaṃ mate esāhaṃ namāmi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When the gods had departed, you journeyed twice; when the mountain shook, your kinsmen paid homage. Above and on the ground, you made your three-month retreat. I bow to this Buddha, the sage.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:287">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Ubbhāsakantagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Ubbhāsakanta Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:288">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">19</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">19.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:289">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ukke sunutaṃ puthukañca theraṃ,</p>
+<p rend="gatha2">Vutte sukhumaṃ ujukaṃ tathetaṃ;</p>
+<p rend="gatha3">Dibbe paṭimaṃ kiriyaṃ vadetaṃ,</p>
+<p rend="gathalast">Iddhe mahitaṃ kathitaṃ namehaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Listen to the exalted, wide-ranging elder. What is spoken by him is subtle, straight, and true. He speaks of the practice, a divine counterpart. I bow to what is spoken by the powerful and revered one.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:290">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Upaṭṭhitagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Upaṭṭhita Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:291">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">20</span>. Dibbassa <span class="pb hidden-meta" data-ed="M" data-n="0.0187">[M 0.0187]</span> pūre pavarehi gutto,</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">20. Guarded by the excellent ones in the divine city,</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:292">
+  <div class="pair-col col-pali">
+<p rend="gatha2">Siddhattha bhūte nagarehi vuṭṭho;</p>
+<p rend="gatha3">Saṅkassa pūre ma-gaṇehi buddho,</p>
+<p rend="gathalast">Aññattha pūje paname ni kubbo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">the accomplished one, having arisen from the city; in the city of Saṅkassa, the Buddha among the great assembly. Worshipped in other places, I bow down and make my obeisance.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:293">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Indavajirāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Indavajirā Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:294">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">21</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">21.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:295">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Subhaṃ thutaṃ yo rajataṃ balatthaṃ,</p>
+<p rend="gatha2">Yugaṃ hutaṃ so kanakaṃ kamatthaṃ;</p>
+<p rend="gatha3">Citaṃ ṭhitaṃ lohitakaṃ manāpaṃ,</p>
+<p rend="gathalast">Lilaṃ itaṃ soraci taṃ namāhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to him who is praised as auspicious, who is like silver for the strong, a yoke and an offering, like gold for the desirous; a pleasing ruby, firm and collected, graceful, gone to radiance.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:296">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Upendavajirāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Upendavajirā Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:297">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">22</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">22.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:298">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pinitaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0188">[M 0.0188]</span> viṇaṃ sakhilaṃ yaji taṃ,</p>
+<p rend="gatha2">Susukhaṃ dhujaṃ biluvaṃ niyutaṃ;</p>
+<p rend="gatha3">Ṭhapiyaṃ simaṃ thunutaṃ puthulaṃ,</p>
+<p rend="gathalast">Nami haṃ khiṇaṃ sukhumaṃ mudukaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I worship him, who is like a pleasing, friendly lute, a very happy banner, a fixed post of Bilva wood, an established and praised boundary stone, broad and wide. I bow to him, who is subtle and gentle, his taints destroyed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:299">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Sumukhīgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Sumukhī Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:300">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">23</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">23.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:301">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sogati <span class="pb hidden-meta" data-ed="M" data-n="0.0189">[M 0.0189]</span> bodhayiṃ gāhiya pattaṃ,</p>
+<p rend="gatha2">Otari sonami jānita atthaṃ;</p>
+<p rend="gatha3">Bhūpati pūjayi sākiya vaṃsaṃ,</p>
+<p rend="gathalast">Sūjadhi ūpadhi bhāsita dhammaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having taken the bowl, he awakened to the good destination. Having understood the meaning, he descended and paid homage. The lord of the earth worshipped the Sakyan clan. The well-born one spoke the Dhamma that removes clinging.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:302">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Dodhakagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Dodhaka Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:303">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">24</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">24.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:304">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Cattāro-me yācite so pavutthe,</p>
+<p rend="gatha2">Laddhā bhoge kāmite oghamutte;</p>
+<p rend="gatha3">Kattā tose-taṃ name colayutte,</p>
+<p rend="gathalast">Tatthā-loke taṃpate kho padukke.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When he had gone forth, four things were requested. Having obtained desired enjoyments, he is freed from the flood. I bow to him, the doer who pleases, endowed with robes. In that world, he is truly the master of those who have set out on the path.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:305">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Sālinīgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Sālinī Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:306">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">25</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">25.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:307">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sattā-loko <span class="pb hidden-meta" data-ed="M" data-n="0.0190">[M 0.0190]</span> sarito yo dhajukkaṃ,</p>
+<p rend="gatha2">Tatthā-gopo raciyo-noja-muddhaṃ;</p>
+<p rend="gatha3">Bhaddā-soko-pacito-bho pabuddhaṃ,</p>
+<p rend="gathalast">Saddhāyogo bhaji so-ho-namuccaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He is a banner for the world of beings, which is like a river; a protector there, arranging the pinnacle of our strength. O, the awakened one, honored under the auspicious Asoka tree! He who is yoked to faith partakes of freedom from Namuci.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:308">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Vātompīgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Vātormī Verse)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:309">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">26</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">26.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:310">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ñātamarūnaṃ upari ṭhitānaṃ,</p>
+<p rend="gatha2">Vālapasūkaṃ huvati jinānaṃ;</p>
+<p rend="gatha3">Devasuyāmo jinamiti ñāto,</p>
+<p rend="gathalast">Tena sukhā-bho vinami idā so.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Standing above the kinsmen is the hair-tuft of the Victor. The deva Suyāma knew him as the Victor; therefore, I now bow to him in bliss.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:311">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Sirīgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Sirīgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:312">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">27</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">27.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:313">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Puṇṇakena <span class="pb hidden-meta" data-ed="M" data-n="0.0191">[M 0.0191]</span> kusumena sevataṃ,</p>
+<p rend="gatha2">Kuñjareva thunutena khe gataṃ;</p>
+<p rend="gatha3">Sundarena nami tena me jayaṃ,</p>
+<p rend="gathalast">Puññatejakari-dhesa ve dadaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Served by the Puṇṇaka flower, it went to the sky like a goaded elephant. I bow to that beautiful one who indeed gave me victory, this creator of merit and power.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:314">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Rathoddhatāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Rathoddhatāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:315">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">28</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">28.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:316">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mātu āyu khiṇu-ke iha pubbe,</p>
+<p rend="gatha2">Tāsu sādhu visute-disakucce;</p>
+<p rend="gatha3">Vāta tāla khaciteni-dha soṇṇe,</p>
+<p rend="gathalast">“Tāta tāta” yaji te-tisa vande.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">My mother's life-span was exhausted here before, among them, in a good, renowned womb. Like a golden palm leaf adorned by the wind, saying 'Father, father,' I venerate you and the Thirty-three.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:317">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Svāgatagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Svāgatagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:318">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">29</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">29.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:319">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Upari <span class="pb hidden-meta" data-ed="M" data-n="0.0192">[M 0.0192]</span> kamalayoni sobhitaṃ,</p>
+<p rend="gatha2">Juhati dhavalajoti-dositaṃ;</p>
+<p rend="gatha3">Sukari ya-matabodhi-mocitaṃ,</p>
+<p rend="gathalast">Sunami caraṇaloki-dho-rimaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Adorned above with a lotus-origin, he makes an offering, illuminated by a white light. Well-wrought is the liberation through deathless enlightenment. I bow to the foremost in the world for his conduct.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:320">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Bhaddikāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Bhaddikāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:321">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">30</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">30.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:322">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vane <span class="pb hidden-meta" data-ed="M" data-n="0.0193">[M 0.0193]</span> jino yo vinayaṃ supekkhi-maṃ,</p>
+<p rend="gatha2">Mate ṭhito-bho dijakaṃ dubajjitaṃ;</p>
+<p rend="gatha3">Aghe-nidho khobhi-taraṃ mune-cchi-daṃ,</p>
+<p rend="gathalast">Name-bhito bodhimahaṃ lukha-jjhitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Victor in the forest who has well-discerned the discipline, he stood firm in his view, O unconquerable twice-born! A treasure of the priceless, who crosses over agitation, the cutter of the sage's craving, fearlessly I bow to the great enlightenment attained through austerity.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:323">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Vaṃsaṭṭhagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Vaṃsaṭṭhagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:324">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">31</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">31.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:325">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo jāti-domānī-mupāsi lambi taṃ,</p>
+<p rend="gatha2">Kodhehi lokehi dubhāsi paṇḍitaṃ;</p>
+<p rend="gatha3">Pūrepi mūlepi pahāsi diṭṭhikaṃ,</p>
+<p rend="gathalast">Sabbehi pattehi namāmi icchitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who has gone beyond grief over birth, the wise one ill-spoken of by an angry world; who has abandoned all views, root and branch—with all my attainments, I bow to that desired one.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:326">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Indavaṃsāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Indavaṃsāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:327">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">32</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">32.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:328">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Verañjake <span class="pb hidden-meta" data-ed="M" data-n="0.0194">[M 0.0194]</span> pūravare vibhūsite,</p>
+<p rend="gatha2">Nelañjane dūmavane vikūjite;</p>
+<p rend="gatha3">Khemaṅkare thūlatare vidū site,</p>
+<p rend="gathalast">Eta-ṅgame pūna name virūpi ve.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In Verañjā, the excellent, adorned city; in the tree-grove by the Nerañjarā, resounding with song; in the greater Khemaṅkara, resorted to by the wise; indeed, I bow again to this peerless one who has gone beyond.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:329">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Indavaṃsāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Indavaṃsāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:330">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">33</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">33.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:331">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Adhunāpi sa sārisuto nimalaṃ,</p>
+<p rend="gatha2">Tamupāsi matāpi kuto ci nayaṃ;</p>
+<p rend="gatha3">Karuṇāyi dha yāci budho vinayaṃ,</p>
+<p rend="gathalast">Garukāpi namāmi su-yo jita-haṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Even now that Sāriputta is stainless; though dead, he attended him—whence comes such a method? With compassion, the Enlightened One was requested for the discipline. Though he is venerable, I bow to him who is well-conquered.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:332">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Toṭakagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Toṭakagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:333">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">34</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">34.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:334">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Janavaro <span class="pb hidden-meta" data-ed="M" data-n="0.0195">[M 0.0195]</span> muni so sarito vane,</p>
+<p rend="gatha2">Vasabhato udito-pari gotame;</p>
+<p rend="gatha3">Gamanaso guṇiko gami-to name,</p>
+<p rend="gathalast">Nagara-do juti-mo ghatito-sathe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">That best of men, the sage, a river in the forest; risen like a bull above the Gotamas. Virtuous in his conduct, I go to bow to him, the giver of the City, the radiant one who has struck down the deceitful one.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:335">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Dutavilambitagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Dutavilambitagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:336">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">35</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">35.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:337">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhagavati <span class="pb hidden-meta" data-ed="M" data-n="0.0196">[M 0.0196]</span> kuṭigāre yo nisinne,</p>
+<p rend="gatha2">Dhanavati suvisāle-ko isinde;</p>
+<p rend="gatha3">Ya-malabhi muni lābhe molichinne,</p>
+<p rend="gathalast">Sa panami juti-māse-to kilinne.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When the Blessed One was seated in the hut, a wealthy one, a single, exceedingly great lord of sages, obtained a gain—the sage with the top-knot cut off. To him I bow, the radiant, unattached, and unstained one.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:338">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Puṭagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Puṭagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:339">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">36</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">36.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:340">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Paṭhapita-miccassa sidatu sabbaṃ,</p>
+<p rend="gatha2">Paṭhami-dha sikkhassa hitasukhatthaṃ;</p>
+<p rend="gatha3">Pavadiya giddhassa khiṇalukhatthaṃ,</p>
+<p rend="gathalast">Panami ca kiccassa sikhamukappaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">May all that is wrongly established perish. For the welfare and happiness of the first trainee here, having spoken for the greedy one to destroy harshness, I bow to him who is like the crest and face of the duty.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:341">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Kusumavicittāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Kusumavicittāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:342">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">37</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">37.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:343">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nilobhāsi <span class="pb hidden-meta" data-ed="M" data-n="0.0197">[M 0.0197]</span> dhūmehi yu-cco vilāse,</p>
+<p rend="gatha2">Ṭhito cā-bhi bhū tehi rukkho-digāhe;</p>
+<p rend="gatha3">Yi-to tāni pūrepi luddho dvivāre,</p>
+<p rend="gathalast">Jino-kāsi pūjemi buddho hitā-se.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">You were without greed, graceful amidst the smokes; you stood as a conqueror in the deep woods. Since the greedy one tempted the Victor twice even in the city, I, seeking my own welfare, worship the Buddha.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:344">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Bhujaṅgappayātagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Bhujaṅgappayātagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:345">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">38</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">38.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:346">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Janarame <span class="pb hidden-meta" data-ed="M" data-n="0.0198">[M 0.0198]</span> dasasare visālake,</p>
+<p rend="gatha2">Munivare kuṭighare-riyāpathe;</p>
+<p rend="gatha3">Dhutatare-subhakathe caji sa ve,</p>
+<p rend="gathalast">Tatiyake-ta-midha ve ṭhapi name.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Delighting the people, with ten powers, in the great hall; the excellent sage in his hut and in the four postures. Most austere, speaking auspiciously, he indeed abandoned all. Here indeed I establish his name as the third.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:347">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Piyaṃvadāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Piyaṃvadāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:348">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">39</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">39.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:349">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vesālike tu vasi kātu cātukaṃ,</p>
+<p rend="gatha2">Te ñāhi tesu labhi-dhā-mukā-mukaṃ;</p>
+<p rend="gatha3">Negāmikesu bhaji phāsu sā-yukaṃ,</p>
+<p rend="gathalast">Etā-dhikesu nami-kāsu-dā-tulaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">To dwell in Vesālī was indeed pleasant. Knowing them, among them he obtained face-to-face instruction. Among the townspeople he partook of a comfortable life. To these excellent ones I bow, to the peerless giver.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:350">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Lalitāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Lalitāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:351">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">40</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">40.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:352">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vadi <span class="pb hidden-meta" data-ed="M" data-n="0.0199">[M 0.0199]</span> suppiyo duvacanaṃ tamato,</p>
+<p rend="gatha2">Sahi muttiko guṇakathaṃ tathato;</p>
+<p rend="gatha3">Gami māṇavo durapathaṃ carato,</p>
+<p rend="gathalast">Nami sādhavo budhavaraṃ paraso.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Suppiya spoke harsh words from ignorance, while his pupil truthfully spoke praise of his virtues. The young man went, walking a difficult path. The virtuous bow to the excellent Buddha, that supreme person.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:353">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Pamitakkharāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pamitakkharāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:354">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">41</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">41.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:355">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yu-pagami vimalo sakhilo tadā,</p>
+<p rend="gatha2">Yuvavati-pivano rami yo brahmā;</p>
+<p rend="gatha3">Ekasayi <span class="pb hidden-meta" data-ed="M" data-n="0.0200">[M 0.0200]</span> ṭhitato kathi kho guṇe,</p>
+<p rend="gathalast">Esa nami jina-mo padhi-do-juke.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Then he approached, stainless and gentle; he who delights like a Brahmā drinking from the fount of youth. Standing alone, he indeed spoke of virtues. I bow to this Victor, the giver of the straight path.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:356">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Ujjalāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Ujjalāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:357">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">42</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">42.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:358">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Jānaṃ sabbesaṃ desi yo kho-dhimuttaṃ,</p>
+<p rend="gatha2">Ānandattheraṃ vedito coḷisuttaṃ;</p>
+<p rend="gatha3">Kāyassammukhe kātuno-lokiyaṃ-se,</p>
+<p rend="gathalast">Ṭhāna-ssa-ppuge kāruṇo hoti vande.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who, knowing the disposition of all, taught accordingly; by whom the Elder Ānanda was informed of the Coḷisutta. In the presence of the assembly, concerning worldly matters, he is compassionate in every instance; I venerate him.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:359">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Vessadevī gāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Vessadevī gāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:360">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">43</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">43.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:361">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sukathiya <span class="pb hidden-meta" data-ed="M" data-n="0.0201">[M 0.0201]</span> majjhimasīla-maparaṃ,</p>
+<p rend="gatha2">Yu-pacita-metthi-dha cīra-manayaṃ;</p>
+<p rend="gatha3">Budhayi ca bhajjita-mīṇavataraṃ,</p>
+<p rend="gathalast">Sunami pavajjita-mīha-mamalaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Well-spoken are the middle and higher virtues, accumulated here for a long time without misfortune. He awakened and crossed over like a roasted fish. I bow to the stainless one who has gone forth from striving.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:362">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Tāmarasagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Tāmarasagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:363">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">44</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">44.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:364">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mahakañhi sīlampi abhāsi kante,</p>
+<p rend="gatha2">Brahmathandilī mamhi manāpi ramme;</p>
+<p rend="gatha3">Calakampi gīrampi kadāci ambe,</p>
+<p rend="gathalast">Varapaṇḍi khīṇampi namāmi taṃ ve.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The great one indeed spoke sweetly of virtue on the delightful sacred ground, pleasing to my mind. Though his voice sometimes trembled, O friend, I indeed bow to that excellent wise one whose cankers are destroyed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:365">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Kamalāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Kamalāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:366">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">45</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">45.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:367">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mohante <span class="pb hidden-meta" data-ed="M" data-n="0.0202">[M 0.0202]</span> jini paṭhame jaye jitāyaṃ,</p>
+<p rend="gatha2">Soramme isipatane vane nivāsaṃ.</p>
+<p rend="gatha3">Khobhante kiri sakale vade vilāsaṃ,</p>
+<p rend="gathalast">Ghoraṃve vinidamane name jinā-haṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He conquered the deluded in the first victory, this victory being while dwelling in the delightful forest of Isipatana. It is said he speaks with grace to all the agitated. I bow to the Victor, the subduer of the terrible.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:368">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Pahāsinīgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pahāsinīgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:369">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">46</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">46.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:370">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Divārakaṃ bajanagaraṃ phitaṃ vase,</p>
+<p rend="gatha2">Nisāya taṃ janagaṇanaṃ ṭhitaṃ mate;</p>
+<p rend="gatha3">Vijānakaṃ tamajaṭakaṃ sitaṃ vane,</p>
+<p rend="gathalast">Hitāvahaṃ narapavaraṃ imaṃ name.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By day he dwells in the prosperous city of Bajanagara; at night the assembly of people holds him as established in his view. I bow to this wise one, without matted hair, dwelling serenely in the forest, this bringer of welfare, this best of men.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:371">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Ruciragāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Ruciragāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:372">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">47</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">47.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:373">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Racita-maviralaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0203">[M 0.0203]</span> manussa mathā paṇaṃ,</p>
+<p rend="gatha2">Pasiya tatiyakaṃ catuttha makā sayaṃ;</p>
+<p rend="gatha3">Karita-madhikataṃ akhubbhamalā sabhaṃ,</p>
+<p rend="gathalast">Jahitagatiparaṃ panujja namāma-haṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Seeing the third and fourth jhānas, he made them his own. He created and accomplished an unshakeable, stainless assembly, densely filled, a veritable market for men. Having dispelled defilements, I bow to him who has abandoned further destinations.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:374">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Parājitāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Parājitāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:375">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">48</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">48.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:376">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nagara-majaya-mesa nivasi tha pare,</p>
+<p rend="gatha2">Mahati sa maṇike sakuṇakujavane;</p>
+<p rend="gatha3">Yapati vasati ve hitasivavahane,</p>
+<p rend="gathalast">Surata mubhayame-sita mima paname.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He dwelt formerly in the city of Ajaya, in the great, jeweled forest resounding with birdsong. He maintains his life and dwells indeed, bringing welfare and blessings. I bow to this one, unattached and delighting in both ways.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:377">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Paharaṇakalikāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Paharaṇakalikāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:378">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">49</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">49.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:379">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Chaṭṭhaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0204">[M 0.0204]</span> vase athu-da tattha vane mune saṃ,</p>
+<p rend="gatha2">Sabbaṃ dhare makulapabbatake upedaṃ;</p>
+<p rend="gatha3">Cattaṃ male manuja matthavase sudesaṃ,</p>
+<p rend="gathalast">Bhattaṃ name lahuka mappa mare dhune taṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the sixth year, the sage was there in that forest, on Mount Makula, endowed with all virtues, bearing all. I bow to that man who has abandoned stain, who is in a good land under the sway of the goal, the devoted one who shakes off Māra where Māra has no power.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:380">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Vasantatilakagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Vasantatilakagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:381">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">50</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">50.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:382">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nuna <span class="pb hidden-meta" data-ed="M" data-n="0.0205">[M 0.0205]</span> upavasati idha tha puna parime,</p>
+<p rend="gatha2">Sukhaguṇamahati tidasapura ajite;</p>
+<p rend="gatha3">Yuganuta mavadi vitatha mughatari ve,</p>
+<p rend="gathalast">Hutathuna manami simada tula mariye.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Surely he dwells here, and then again elsewhere, great in bliss and virtue, unconquered like the city of the Thirty-three. Praised by the age, the crosser-over indeed spoke what is not vain or fruitless. I bow to the peerless, deathless boundary-maker.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:383">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Sasikalāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Sasikalāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:384">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">51</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">51.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:385">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Jinapati susumāraṃ bhesakallāvane-saṃ,</p>
+<p rend="gatha2">Nivasati puthuñāṇaṃ khve-sa nandālaye-taṃ;</p>
+<p rend="gatha3">Vimala-mi dhu-jukāyaṃ bhedasantāpa-sesaṃ,</p>
+<p rend="gathalast">Vijaha-pi sukhumālaṃ esamantā name-haṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Lord of Victors, he of diverse knowledge, dwells on Mount Susumāra in the Bhesakaḷā forest, in the abode of bliss. Here, in this stainless state, with upright body, he abandons the remainder of division and torment. To him, the subtle one, I bow from every side.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:386">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Mālinīgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Mālinīgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:387">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">52</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">52.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:388">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mahati <span class="pb hidden-meta" data-ed="M" data-n="0.0206">[M 0.0206]</span> sukantiye atha ca tattha sītale,</p>
+<p rend="gatha2">Vasati kusambiye navamavassa-pī-tare;</p>
+<p rend="gatha3">Avahi sukha-ntime pajaha-mattha-mī-dha ve,</p>
+<p rend="gathalast">Panami nudaṃ hine sakalasatthavasaye.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In that great, lovely, and cool place, he dwells in Kosambi during the ninth rains-retreat. He brought final bliss, here indeed abandoning self-interest. I bow to him who dispels what is low, the master of all doctrines.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:389">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Pabhaddakagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Pabhaddakagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:390">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">53</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">53.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:391">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yudhavati pālileyyaka vane pahāya nāge,</p>
+<p rend="gatha2">Upaṭhahi nāgi-dhe-sa dasame jahāya bāle;</p>
+<p rend="gatha3">Sukhavasi kāyike ca manake tadāsa sāte,</p>
+<p rend="gathalast">Yuta-madhi vāhite ca paname payāta māre.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having left the great ones, he was attended by an elephant in the Pārileyyaka forest; here in the tenth year, abandoning the fools, he dwelt in bodily and mental happiness, and was then in bliss. I bow to him who is yoked to endurance, from whom Māra has departed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:392">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Vāṇinīgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Vāṇinīgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:393">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">54</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">54.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:394">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ito <span class="pb hidden-meta" data-ed="M" data-n="0.0207">[M 0.0207]</span> patte nāḷe vasati dijagāmepi dasame,</p>
+<p rend="gatha2">Hitopatthenā-yeka adhiki-dha vādehi vadake;</p>
+<p rend="gatha3">Vilomatthehā-neka-sahi ṭhita-māghepi samaye,</p>
+<p rend="gathalast">Viyogatthe-tā-neja-mapi pihavāsehi paname.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">From here, having reached Nāḷa, he dwells also in the brahmin-village in the tenth year. He is the one who has attained the goal, supreme here in debate among disputants. He endured many contrary things, standing firm even in the time of Māgha. I bow with longing to the unshakeable one, even when separated from his presence.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:395">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Sikharaṇīgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Sikharaṇīgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:396">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">55</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">55.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:397">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dviadhiki-tare <span class="pb hidden-meta" data-ed="M" data-n="0.0208">[M 0.0208]</span> verañjāyaṃ tato dasamaṃ pare,</p>
+<p rend="gatha2">Nivasi nilake khedaṅghātaṃ karo paramaṃ vane;</p>
+<p rend="gatha3">Kilami idha ve vehaṅgānaṃ manoramakaṃ vase,</p>
+<p rend="gathalast">Viraji-sigaṇe medhaṅkāraṃ asokadadaṃ name.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the twelfth year, he dwelt in Verañjā, and then elsewhere. He dwelt in Nālaka, enduring supreme fatigue in the forest. Here indeed he grew weary, in the delightful dwelling of birds. I bow to the giver of sorrowlessness, the wise maker, amidst the stainless flock.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:398">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Hiriṇīgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Hiriṇīgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:399">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">56</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">56.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:400">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo sampuṇṇe upari tirase cāliye pabbatepi,</p>
+<p rend="gatha2">Sobhaṃ phulle suvasi itare kāmite appamehi;</p>
+<p rend="gatha3">Sāvatthikkenu-da catudase kārite ālayepi,</p>
+<p rend="gathalast">Kāmo-cchidde tu bhaya muname ñātime dvārakehi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who is complete, dwelt during the thirteenth [rains] upon Mount Cāliya, in blooming splendor, desired by other immeasurable ones; and during the fourteenth in the constructed dwelling in Sāvatthī. I bow to the fearless sage who has severed desire, known to his kinsmen at the gates.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:401">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Mandakkantāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Mandakkantāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:402">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">57</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">57.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:403">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sakko <span class="pb hidden-meta" data-ed="M" data-n="0.0209">[M 0.0209]</span> kappile kariya madake niggaho yoti pañce,</p>
+<p rend="gatha2">Dakkho kappiye vasidha yamake iddhako bhohi aññe;</p>
+<p rend="gatha3">Yakkho dabbike damiya nagare soḷase-topi vaṅke,</p>
+<p rend="gathalast">Aggo-ghattite paciya paname bodhake monipaññe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Able One subdued the proud in Kapila, thus in the fifth [year]; the skillful one dwelt here, performing the twin miracle, making it suitable, while others became prosperous. The yakkha was tamed in the city of Dabbika, and also in the sixteenth [year] in Vaṅka. I bow to the enlightener of sage-like wisdom, who has ripened, having been touched by the foremost.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:404">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Kusumitalatāvellitagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Kusumitalatāvellitagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:405">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">58</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">58.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:406">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Duladdhe <span class="pb hidden-meta" data-ed="M" data-n="0.0210">[M 0.0210]</span> pūre yopari ca dasato rājagehaṃ bhajanto,</p>
+<p rend="gatha2">Tu satte kūle kho kari dha yapato vāsamejaṃ jahanto;</p>
+<p rend="gatha3">Dumaṭṭhe pūneso ramita-calato ṭṭhārasetaṃ dadaṃ so,</p>
+<p rend="gathalast">Guṇasse vūpeto namidha karabho kāyakhedaṃ sahanto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">During the seventeenth year, frequenting the royal palace, he acted for the beings on the bank, abandoning the trembling abode. Standing firm by a tree, he who delighted in the unmoving gave this during the eighteenth [year]. Endowed with virtue, I bow here to the noble one, enduring bodily fatigue.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:407">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Meghavipphujjitagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Meghavipphujjitagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:408">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">59</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">59.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:409">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Cālīye <span class="pb hidden-meta" data-ed="M" data-n="0.0211">[M 0.0211]</span> parime tatheva acale-kūnepi vīse lilaṃ,</p>
+<p rend="gatha2">Bhāgī ce sa hite pageva pavase sūrehi nisevitaṃ;</p>
+<p rend="gatha3">Kārite ramike pare ca nagare pūrepi vīse imaṃ,</p>
+<p rend="gathalast">Hārite vasime jahena paname mūlepi khīṇe jitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In Cāliya and likewise on the unmoving mountain, during the nineteenth and twentieth years, he dwelt gracefully. He is a partaker in welfare, dwelling early in a place frequented by heroes. In the delightful city made by another, and also in the twentieth year, I bow to this one in the charming dwelling, who has conquered, abandoning pride, with the root of defilements destroyed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:410">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Saddūlavikkīlitagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Saddūlavikkīlitagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:411">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">60</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">60.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:412">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pañcapañca-mākare tatopi piṇḍakena jetakānane ca,</p>
+<p rend="gatha2">Aññamañña-mādarena yo nisinnakena te ca māpayeva;</p>
+<p rend="gatha3">Pubbapubbaārāme payoji-pāsikāya vāramāvasedha,</p>
+<p rend="gathalast">Suddhasuddha-māmalena poriyātimāya mānasā namesa.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For twenty-five [years], a mine [of virtues], and then with alms-food in Jeta's Grove; with mutual respect for him who was seated there, they prepared a place for him. In the Pubbārāma, through the laywoman's offering, he entered the excellent rains-residence. With a mind utterly pure and stainless, with surpassing dignity, I bow to him.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:413">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Vuttagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Vuttagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:414">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Puññenā’nena <span class="pb hidden-meta" data-ed="M" data-n="0.0212">[M 0.0212]</span> saṃsāramupadhi suci sappūrise vo paseve,</p>
+<p rend="gatha2">Tehā dinnaṃ sugāho suciparisaupeto arogo bhaveyyaṃ;</p>
+<p rend="gatha3">Dīghāyūko mahāpañña yasadhanasulābho ca kalyāṇamitto,</p>
+<p rend="gathalast">Lokādibbo ca maggo samamatiparivārova nibbānapatto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By this merit, throughout saṃsāra, may I have a pure basis of existence and associate with true persons. Having well grasped what is given by them, endowed with a pure assembly, may I be free from illness. May I be long-lived, of great wisdom, with easy gain of fame and wealth, and with good friends. May I attain Nibbāna, the supramundane path, accompanied by a retinue of equanimous mind.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:415">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Saddharāgāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Saddharāgāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:416">
+  <div class="pair-col col-pali">
+<p rend="hangnum">Ka.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">Ka.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:417">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nassati <span class="pb hidden-meta" data-ed="M" data-n="0.0213">[M 0.0213]</span> sāsane chanavutādhike ca tivise sate kaliyuge,</p>
+<p rend="gatha2">Dvesatacuddasādhikasahassake sakalaraṭṭhakaṃ khubhi gate;</p>
+<p rend="gatha3">Bhātikayuddhakena nagaraṃ tadā bhavati chārikā yatigaṇo,</p>
+<p rend="gathalast">Dukkhagato mahāpaharaṇehi jivitakhayampi eti piṭake.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When 2396 years of the dispensation have passed in the Kali Yuga, and in the year 1214 of the era, the entire kingdom will fall into turmoil. Then, because of a war between brothers, the city will become ashes, and the community of ascetics will come to suffering. Afflicted by great blows, they will come to the end of their lives, and the Piṭaka will perish.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:418">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Bhaddakagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Bhaddakagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:419">
+  <div class="pair-col col-pali">
+<p rend="hangnum">Kha.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">Kha.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:420">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Udisaka <span class="pb hidden-meta" data-ed="M" data-n="0.0214">[M 0.0214]</span> cetyakepi vikiriya nāsati dha so thiro sagaṇato,</p>
+<p rend="gatha2">Vijahiya purato ttaravaneka kumbhakaragāmakaṃ nivasaye;</p>
+<p rend="gatha3">Satagaṇakehi tattha janakopi “bhota idha vāsa sabbayatinaṃ,</p>
+<p rend="gathalast">Upaṭṭhahamī”ti tamhi katipāhanaṃ vasati kho vimaṃsiya sukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Even if the Udisaka shrine were to be scattered and perish, that steadfast one with his following would not. Having abandoned the former Uttara-vana, he took up residence in the potter's village. There the people, along with the accountants, said: "Venerable Sir, let this be a residence for all ascetics; we will attend upon you." Having reflected on this, he dwelt there happily for some days.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:421">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Lalitagāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Lalitagāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:422">
+  <div class="pair-col col-pali">
+<p rend="hangnum">Ga.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">Ga.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:423">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tattha araññe ramito sucari saddhamma-timāni suyatīhi tipīko,</p>
+<p rend="gatha2">Dhūrasuyutto parigāhiya sujāto supaṭṭhāti kunadita-muyānaṃ;</p>
+<p rend="gatha3">So satamaccehi kataṃ nagari daṃ tassa ca pācina raha dhikakose,</p>
+<p rend="gathalast">Paccayanāyāsu da chāyabahuko suddhayatipi idha vasanakāle.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Delighting there in the forest, of good conduct, honoring the true Dhamma, a master of the Tipiṭaka with good ascetics; well-yoked to the burden, restrained, well-born, he is well-established, beyond the ill-sounding delusion. He dwelt for a time seeking requisites in this place of abundant shade, a pure ascetic, at that city built by a hundred ministers, his former secluded dwelling with abundant stores.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:424">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Tanugāthā)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Tanugāthā)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:425">
+  <div class="pair-col col-pali">
+<p rend="hangnum">Gha.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">Gha.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:426">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Phagguṇamāse chadine raciya niṭṭhaṃva gato paramari iminā-yaṃ,</p>
+<p rend="gathalast">Sijjhatu pemaṃ vata rakkhatu sudevo uda vaḍḍhatu jinavacane taṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the month of Phagguṇa, on the fourteenth day, this supreme sage reached his end, as it were, by means of this [work]. Indeed, may this affection succeed! May a good deva protect it, and may it grow in the teaching of the Victorious One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0602n_nrf:427">
+  <div class="pair-col col-pali">
+<p rend="centre">Vāsamālinī niṭṭhitā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Vāsamālinī is concluded.</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

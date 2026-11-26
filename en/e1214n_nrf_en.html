@@ -1,0 +1,2942 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1214n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">Pali | Trans.</button><button type="button" data-mode="view-stack">Pali — Trans.</button><button type="button" data-mode="view-pali-only">Pali Only</button><button type="button" data-mode="view-trans-only">Trans. Only</button><button type="button" id="toggle-meta-btn">Note</button></div>
+<div class="pair-row" data-id="e1214n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="chapter">Kaccāyana <span class="pb hidden-meta" data-ed="O" data-n="0.0001">[O 0.0001]</span> dhātu mañjūsā</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">Kaccāyana's Compendium of Roots</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="centre"> Namo tassa bhagavato arahato sammāsambuddhassa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Homage to the Blessed One, the Arahant, the Perfectly Self-Enlightened One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Nirutti nikarā’pāra-pāravāra’ntagaṃ muniṃ,</p>
+<p rend="gathalast">Vanditvā dhātumañjūsaṃ-brūmi pāvacanañjasaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having paid homage to the sage who has reached the farther shore of the boundless ocean of grammatical analysis, I shall declare the Dhātumañjūsā, the direct path of the teachings.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Sogatāgama mā’gamma-taṃ taṃvyākaraṇāni ca,</p>
+<p rend="gathalast">Pāṭhe cā’paṭhitāpe’ttha dhātvatthā ca pavuccare.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having relied upon the scriptures of the Sugata and their various grammatical treatises, the meanings of the verbal roots are declared herein, from texts both read and even those unread.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Chanda’hānitthamo’kāraṃ-dhātvantānaṃ <span class="pb hidden-meta" data-ed="O" data-n="0.0002">[O 0.0002]</span> siyākva ci, yūnaṃ dīgho ca dhātumhā-pubbama’tthapadaṃ api.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The final vowel of roots such as chanda, hāni, ittha, amu, and okāra may sometimes be altered; and the 'yu' affixes may be lengthened, as may the word 'attha' preceding the root.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhū sattāyaṃ paca pāke gamusappa gatimhi (ca);</p>
+<p rend="gathalast">Siloka (dhātu) saṅghāte saki saṅkāya (vattate;).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The root 'bhū' is in the sense of existence; 'paca' in ripening; 'gamu' and 'sappa' in going; the root 'siloka' in collection; and 'saki' occurs in the sense of doubt.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (Atho) kuka-vakā’dāne ke sadde aki lakkhaṇe;</p>
+<p rend="gathalast">Ku sadde kucchite ṭaṅka dhāraṇe maki maṇḍane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Then, 'kuka' and 'vaka' are in the sense of taking; 'ke' in sound; 'aki' in characteristic; 'ku' in sound and disparagement; 'ṭaṅka' in holding; 'maki' in ornamentation.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vaki koṭillayātrāsu sakka-ṭīkadvayaṃ gate;</p>
+<p rend="gathalast">Kaki lolattane yāte takī (idha) gatādisu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Vaki' is in the sense of crookedness and going; 'sakka' in going; 'kaki' in fickleness and going; 'takī' (here) in going and so forth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">4</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0003">[O 0.0003]</span> Vava, lokanavittisu cakkhavutimhi (tu) rukkha (ca) khe thirahiṃsakhaṇe niya, mo’panayiṭṭhi vatādisa muṇḍisu dikkha (’tha) kakkha-kakhā hasane tura, hiṃsanavuddhigatīsu (hi) dakkha’danamhi (tu) jakkha (ca) bhakkha (matā) ana, jāladukhesu (tu) dikkha (ca) dukkha (ca) ikkha disa’ṅka na ko’kha suse.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">4. 'Vava' is in the sense of seeing and knowing; 'cakkh' in speaking; 'rukkha' and 'kha' in steadfastness, violence, and digging; 'niya' in leading; 'mo' in removing; 'iṭṭhi' in desiring; 'vat' in pointing out; 'muṇḍ' in shaving; 'dikkh' in consecrating; then 'kakkha' and 'kakhā' in laughing; 'tura' in violence, growth, and going; 'dakkha' in giving; 'jakkha' and 'bhakkha' are held to be in eating; 'ana' in breathing; 'dikkha' and 'dukkha' in ensnaring and causing pain; 'ikkha' in seeing; 'disa' in pointing out; 'aṅka' in marking; 'na' in binding; 'ko' in sound; 'kha' in space; 'sus' in drying.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">5</span>. [A] nikkha cumbane’(pi) sikkha vijju’pādu’ pāsānamhi rakkha guttivāraṇe (pi) uñchane (siyā’pi) bhikkha yāvaladdhya’laddhisū (pi) vakkha rosasaṃhatesu mokkha muttiyaṃ caje (pi) cikkha vācabodhanesu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">5. [A] 'Nikkha' is in the sense of kissing; 'sikkha' in acquiring knowledge; 'rakkha' in protecting and warding off; 'bhikkha' in gleaning, begging, obtaining, and not obtaining; 'vakkha' in anger and accumulation; 'mokkha' in liberation and abandoning; 'cikkha' in speech and informing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="bodytext">[Ba] <span class="pb hidden-meta" data-ed="O" data-n="0.0004">[O 0.0004]</span> nakha makha rakha naṅkhāmaṅkharakkhī’khīlaṅkhā lakha vakha ikha iṅkhā uṅkha vaṅkhū’kha gatyaṃ vakhi makhi kakhi kaṅkhe khī khaye ukkha seke khu khutadhanisu (vutto) khe(’tha) khāde supe (ca.)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">[Ba] The roots 'nakha', 'makha', 'rakha', 'naṅkha', 'maṅkha', 'rakkhī', 'īkha', 'īlaṅkha', 'lakha', 'vakha', 'ikha', 'iṅkha', 'uṅkha', 'vaṅkha', and 'ūkha' are in the sense of going; 'vakhi', 'makhi', and 'kakhi' are in the sense of doubt; 'khī' in decay; 'ukkha' in sprinkling; 'khu' is said to be in the sense of sneezing and sound; then 'khā' in eating, and 'supa' in sleeping.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Aggo (tu) gatikoṭille laga saṅge mage’sane;</p>
+<p rend="gathalast">Agī igī rigī ligī vagī gatya’tthadhātavo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Agga' is in the sense of going and crookedness; 'laga' in attachment; 'mag' in seeking; 'agī', 'igī', 'rigī', 'ligī', and 'vagī' are verbal roots in the sense of going.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Silāgha katthane jaggha hasane aggha agghane;</p>
+<p rend="gathalast">Sighī āghāyane (hoti) laghi sosagatīsu (ca;).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Silāgha' is in the sense of praising; 'jaggha' in laughing; 'aggha' in pricing; 'sighī' is in smelling; 'laghi' in drying and going.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vaca byattavace yāca yācane ruca dittiyaṃ;</p>
+<p rend="gathalast">Suca soke kuca sadde (atho) vica vivecane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Vaca' is in the sense of clear speech; 'yāca' in requesting; 'ruca' in shining; 'suca' in sorrow; 'kuca' in sound; and 'vica' in discerning.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">9</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0005">[O 0.0005]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">9.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Añca pūjāgate vañca gamane kiñcā’vamaddane;</p>
+<p rend="gathalast">Luñcā’panayane nacca naccane maca rocane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Añca' is in the sense of worship and going; 'vañca' in going; 'kiñca' in crushing; 'luñca' in removing; 'nacca' in dancing; 'maca' in liking.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">10</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">10.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Accā’ccane cu vacane saco (tu) samavāyane;</p>
+<p rend="gathalast">Paca yāte kaci-vacca dittiyaṃ maci dhāraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Acca' is in the sense of worship; 'cu' in speech; 'sac' is in concord; 'paca' in going; 'kaci' and 'vacca' in shining; 'maci' in holding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">11</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">11.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Puccha sampucchane muccha mohasmiṃ lañcha lakkhaṇe;</p>
+<p rend="gathalast">Añchā’yāme (bhave) puñcha puñchane uñcha uñchane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Puccha' is in the sense of questioning; 'muccha' in delusion; 'lañcha' in marking; 'añcha' is in stretching; 'puñcha' in wiping; 'uñcha' in gleaning.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">12</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">12.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Taccho tanukiraye piñcha piñchane rāja dittiyaṃ;</p>
+<p rend="gathalast">Vajā’jagamane rañja rāge bhañjā’vamaddane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Taccha' is in the sense of thinning and cutting; 'piñcha' in carding; 'rāja' in shining; 'vaja' in going; 'rañja' in coloring; 'bhañja' in crushing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">13</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">13.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Añju byattigatīkanti makkhaṇesve’ja kampane;</p>
+<p rend="gathalast">Bhaja saṃsevane sañja saṅge (tu) iñja kampane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Añju' is in the sense of clear going, beauty, and anointing; 'eja' in trembling; 'bhaja' in serving; 'sañja' is in attachment; 'iñja' in trembling.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">14</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0006">[O 0.0006]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">14.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yaja devaccane dānasaṅgatīkaraṇesu (ca);</p>
+<p rend="gathalast">Tijakkhamanisānesu dāne(’pi) caja hāniyaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Yaja' is in the sense of worshipping gods, giving, and associating; 'tija' in patience, sharpening, and giving; 'caja' in abandoning.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">15</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">15.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sajā’liṅgana vissajja nimmāṇe mujja mujjane;</p>
+<p rend="gathalast">Majja saṃsuddhiyaṃ lajja lajjane tajja tajjane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Saja' is in the sense of embracing; 'vissajja' in creating; 'mujja' in sinking; 'majja' in purifying; 'lajja' in being ashamed; 'tajja' in threatening.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">16</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">16.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ajja-sajjā’jjane sajja nimmāṇe gajja saddane;</p>
+<p rend="gathalast">Guja-kuja dvayaṃ sadde akhyatte khajja bhakkhaṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Ajja' and 'sajja' are in the sense of acquiring; 'sajja' in creating; 'gajja' in sounding; 'guja' and 'kuja' are both in indistinct sound; 'khajja' in eating.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">17</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">17.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhajja pāke viji bhayacalane vīja vījane;</p>
+<p rend="gathalast">Khajī gamanavekalle jī jaye ju jave (siyā;).</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Bhajja' is in the sense of roasting; 'viji' in fear and trembling; 'vīja' in fanning; 'khajī' in difficulty of going; 'jī' in conquering; 'ju' may be in the sense of speed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">18</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">18.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Jhe cintāyujjha ussagge gamane aṭa-paṭa dvayaṃ;</p>
+<p rend="gathalast">Naṭa nacce raṭa paribhāsane vaṭa veṭhane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Jhe' is in the sense of thinking; 'ujjha' in abandoning; 'aṭa' and 'paṭa' are both in going; 'naṭa' in dancing; 'raṭa' in speaking; 'vaṭa' in wrapping.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">19</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0007">[O 0.0007]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">19.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vaṭṭa āvattane vaṇṭa vaṇṭatthe kaṭa maddane;</p>
+<p rend="gathalast">Phuṭo visaraṇādīsu kaṭa saṃvaraṇe gate.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Vaṭṭa' is in the sense of revolving; 'vaṇṭa' in dividing; 'kaṭa' in crushing; 'phuṭa' in spreading and so forth; 'kaṭa' in covering and going.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">20</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">20.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ghuṭa ghose patighāte viṭa’kkose (ca) pesane;</p>
+<p rend="gathalast">Bhaṭa bhatyaṃ kuṭa-koṭṭacchedane luṭa loṭane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Ghuṭa' is in the sense of sounding and striking; 'viṭa' in reviling and sending; 'bhaṭa' in nourishing; 'kuṭa' and 'koṭṭa' in cutting; 'luṭa' in rolling.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">21</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">21.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Jaṭa-jhaṭa-piṭa saṅghāte ciṭu’ttāse ghaṭī’hane;</p>
+<p rend="gathalast">Ghaṭi saṅghaṭṭane taṭṭa cchedane muṭa maddane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Jaṭa', 'jhaṭa', and 'piṭa' are in the sense of collection; 'ciṭu' in frightening; 'ghaṭi' in striving; 'ghaṭi' in colliding; 'taṭṭa' in cutting; 'muṭa' in crushing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">22</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">22.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Paṭha byattavace heṭha bādhāyaṃ veṭha veṭhane;</p>
+<p rend="gathalast">Suṭhī-kuṭhī dvayaṃ sose pīṭha hiṃsanadhāraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Paṭha' is in the sense of clear speech; 'heṭha' in hindering; 'veṭha' in wrapping; 'suṭhī' and 'kuṭhī' are both in drying; 'pīṭha' in harming and holding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">23</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">23.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kaṭha sosanapākesu vaṭha thulattane (bhave);</p>
+<p rend="gathalast">Kaṭhi sose ruṭha-luṭho’paghāte saṭha ketave.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Kaṭha' is in the sense of drying and cooking; 'vaṭha' is in stoutness; 'kaṭhi' in drying; 'ruṭha' and 'luṭha' in striking; 'saṭha' in deceit.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">24</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0008">[O 0.0008]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">24.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (Siyā haṭha balakkāre kaḍibhede kaḍicchide;</p>
+<p rend="gathalast">Maṇḍa vibhūsane caṇḍa caṇḍikke bhaḍi bhaṅḍane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Haṭha' may be in the sense of force; 'kaḍi' in breaking and cutting; 'maṇḍa' in decorating; 'caṇḍa' in fierceness; 'bhaḍi' in quarreling.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">25</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">25.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Paḍi uppaṇḍane liṅgavekalle muḍi khaṇḍane,</p>
+<p rend="gathalast">Gaḍi vatte’kadesamhi gaḍi sannivaye(’pica;);</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Paḍi' is in provoking and gender defect; 'muḍi' in breaking; 'gaḍi' in a part of a circle, and also in gathering.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">26</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">26.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Raḍi-eraḍi hiṃsāyaṃ piḍi saṅghātaādisu,</p>
+<p rend="gathalast">Kuḍi dāhe paḍi gate hiḍi āhiṇḍane (siyā;);</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Raḍi' and 'eraḍi' are in harming; 'piḍi' in collecting and so forth; 'kuḍi' in burning; 'paḍi' in going; 'hiḍi' may be in wandering.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">27</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">27.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Karaṇḍa bhājana’tthamhi (atho) laḍi jigucchane,</p>
+<p rend="gathalast">(Vattate) meḍikoṭille saḍi gumbatthamīraṇe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Karaṇḍa' is in the sense of a container; 'laḍi' in loathing; 'meḍi' in crookedness; 'saḍi' in the sense of a thicket and moving.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">28</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">28.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (Atho’pi) aḍi aṇḍatthe (dissate) tuḍi toḍane,</p>
+<p rend="gathalast">Vaḍḍha saṃvaḍḍhane kaḍḍha kaḍḍhaṇe bhaṇa bhāsane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Also, 'aḍi' appears in the sense of an egg; 'tuḍi' in breaking; 'vaḍḍha' in increasing; 'kaḍḍha' in dragging; 'bhaṇa' in speaking.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">29</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0009">[O 0.0009]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">29.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Soṇa vaṇṇe guṇa’bhyāse iṇa-pheṇa dvayaṃ gate,</p>
+<p rend="gathalast">Paṇa vohārathomesu (vattate) kaṇa milane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Soṇa' is in color; 'guṇa' in practice; 'iṇa' and 'pheṇa' are both in going; 'paṇa' occurs in trade and praise; 'kaṇa' in meeting.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">30</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">30.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Aṇa-raṇa-kaṇa-muṇa-kvaṇa-kuṇa sadde,</p>
+<p rend="gatha2">Yata patiyatane juta dittimhi;</p>
+<p rend="gatha3">Ata-pata gamane cita saññāṇe,</p>
+<p rend="gathalast">Kita vāsā’do vatu vattumhi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Aṇa', 'raṇa', 'kaṇa', 'muṇa', 'kvaṇa', and 'kuṇa' are in sound; 'yata' in striving; 'juta' in shining; 'ata' and 'pata' in going; 'cita' in knowing; 'kita' in dwelling and so forth; 'vatu' in speaking.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">31</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">31.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (Bhave) kattha silāghāyaṃ matha-mattha viloḷane,</p>
+<p rend="gathalast">Nātha yācanasantāpa isserā’siṃsanesu (ca;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Kattha' is in praising; 'matha' and 'mattha' in churning; 'nātha' in requesting, affliction, lordship, and aspiring.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">32</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">32.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Putha (ce) puthu vitthāre byatha bhīticalesu (ca),</p>
+<p rend="gathalast">Gotthu vaṃse patha-pantha gate nanda samiddhiyaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Putha' and 'puthu' are in spreading; 'byatha' in fear and trembling; 'gotthu' in lineage; 'patha' and 'pantha' in going; 'nanda' in prosperity.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">33</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">33.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vandā’bhivādathomesu gada byattavace’(pica),</p>
+<p rend="gathalast">(Atho) ninda garahāyaṃ khadi pakkhandanādisu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Vanda' is in salutation and praise; 'gada' also in clear speech; 'ninda' in blaming; 'khadi' in attacking and so forth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">34</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0010">[O 0.0010]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">34.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Edī (tu) kiñcicalena cadi kantihiḷādane,</p>
+<p rend="gathalast">Kilidī paridevādo udissavakiledane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Edī' is in slight movement; 'cadi' in shining and delighting; 'kilidī' in lamenting and so forth, in pointing out, and in defiling.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">35</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">35.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Idī (tu) paramissariye adiandu (ca) bandhane,</p>
+<p rend="gathalast">Bhaganda sevane (hoti) bhadda kalyāṇakammani;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Idī' is in supreme power; 'adi' in oppression and bondage; 'bhaganda' is in indulgence; 'bhadda' in good deeds.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">36</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">36.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sida siṅgārapākesu sadduharitasosane,</p>
+<p rend="gathalast">Madi balye muda-madā santose madda maddane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Sida' is in adornment and ripening; 'sada' in removing and drying up; 'madi' in foolishness; 'muda' and 'madā' in satisfaction; 'madda' in crushing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">37</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">37.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sandu passavanādīsu kanda’vhāne (ca’) rodane,</p>
+<p rend="gathalast">Vida lābhe dada dāne rudi assuvimocane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Sandu' is in flowing and so forth; 'kanda' in calling and weeping; 'vida' in gain; 'dada' in giving; 'rudi' in shedding tears.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">38</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">38.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sado visaraṇā’dānagamane (cā’)vasādane,</p>
+<p rend="gathalast">Hiḷāda (tu) sukhe sūdakkharaṇe rada vilekhaṇe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Sada' is in scattering, taking, going, and depression; 'hiḷāda' in happiness; 'sūda' in flowing; 'rada' in scratching.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">39</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">39.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sāda assādanādīsu gada byattavace’(pica),</p>
+<p rend="gathalast">Nada abyattasadde (tu) radā’dā-khāda-bhakkhaṇe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Sāda' is in tasting and so forth; 'gada' also in clear speech; 'nada' in indistinct sound; 'rada' in taking, eating, and consuming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">40</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0011">[O 0.0011]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">40.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Adda yācanayātrādisva (tho) mida sinehane,</p>
+<p rend="gathalast">(Siyā) khuda jigacchāyaṃ daḷidda duggaccaṃ (hi tu;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Adda' is in begging, journeying, and so forth; 'mida' in affection; 'khuda' may be in hunger; 'daḷidda' in distress.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">41</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">41.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dā dave du gatīvuddhayaṃ dā dāne vida jānane,</p>
+<p rend="gathalast">Tadi ālasiye bādha bādhāyaṃ gudha kīḷane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Dā' is in purifying; 'du' in going and increasing; 'dā' in giving; 'vida' in knowing; 'tadi' in laziness; 'bādha' in hindering; 'gudha' in playing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">42</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">42.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (Atho) gādha patiṭṭhāyaṃ vuṭhu-edha (ca) vuddhiyaṃ,</p>
+<p rend="gathalast">Dhā (hoti) dhāraṇe (ceva) cintāyaṃ budha bodhane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Then, 'gādha' is in firm foundation; 'vuṭhu' and 'edha' in growth; 'dhā' is in holding and in thought; 'budha' in awakening.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">43</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">43.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sidhu gatimhi yudha sampahāre vidha vedhane,</p>
+<p rend="gathalast">Rādha hiṃsāyasaṃrādhe badha-bandha (ca) bandhane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Sidhu' is in going; 'yudha' in striking; 'vidha' in piercing; 'rādha' in violence and accomplishment; 'badha' and 'bandha' in binding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">44</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">44.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sidha-sādha (ca) siddhimhi dhe pāne indha dittiyaṃ,</p>
+<p rend="gatha2">Māna pūjāya vana-sana sambhave ana pāṇane;</p>
+<p rend="gathalast">Kana dittigatīkantyaṃ khana-khanva’vadāraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Sidha' and 'sādha' are in accomplishment; 'dhe' in drinking; 'indha' in shining; 'māna' in honoring; 'vana' and 'sana' in arising; 'ana' in breathing; 'kana' in shining, going, and loveliness; 'khana' and 'khanva' in tearing apart.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">45</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0012">[O 0.0012]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">45.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Gupa gopanake gupa saṃvaraṇe tapa santāpe tapa issariye,</p>
+<p rend="gathalast">Cupa mandagate tapuubbege rapa-lapa vākye sapa akkose;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Gupa' is in guarding; 'gupa' in restraint; 'tapa' in heating; 'tapa' in lordliness; 'cupa' in slow going; 'tapu' in excitement; 'rapa' and 'lapa' in speech; 'sapa' in abuse.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">46</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">46.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Japa-jappa vace’byatte tappa santappane (siyā),</p>
+<p rend="gathalast">Kapi kiñcicale kappa sāmatthe vepu kampane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Japa' and 'jappa' are in indistinct speech; 'tappa' may be in satisfying; 'kapi' in trembling slightly; 'kappa' in capability; 'vepu' in shaking.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">47</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">47.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tappa santagatecchede takke hiṃsādisu’(ccate),</p>
+<p rend="gathalast">Vapa bījavinikkhepe dhūpa santapane’(pi ca);</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Tappa' is in heating and cutting; 'takka' is said to be in violence and so forth; 'vapa' in sowing seeds; 'dhūpa' also in fumigation.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">48</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">48.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Capa sāntve pu pavane jhapa dāhe supo saye,</p>
+<p rend="gathalast">Puppha vikasane (hoti) ramba’lambavasaṃsane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Capa' is in soothing; 'pu' in purifying; 'jhapa' in burning; 'supo' in sleeping; 'puppha' is in blooming; 'ramba' in hanging down and swaying.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">49</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">49.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Cumba vadanasaṃyoge kamba saṃvaraṇe (mato),</p>
+<p rend="gathalast">Amba sadde (ca) assāde tāyane sabi maṇḍane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Cumba' is in the union of mouths; 'kamba' is intended in covering; 'amba' in sound, taste, and protecting; 'sabi' in adorning.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">50</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0013">[O 0.0013]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">50.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Gabba dappe’bba-sabbā’(pi) gamane pubba pūraṇe,</p>
+<p rend="gathalast">Gumba’bbagumbane cabba adane ubba dhāraṇe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Gabba' is in pride; 'abba' and 'sabba' also in going; 'pubba' in filling; 'gumba' in swaying; 'cabba' in eating; 'ubba' in holding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">51</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">51.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Labha lābhe jambha gattavināme subha sobhane,</p>
+<p rend="gathalast">Bhī bhaye rabha rābhasse (cā)’rambhe khubha sañcale;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Labha' is in gain; 'jambha' in body-bending; 'subha' in beauty; 'bhī' in fear; 'rabha' in rushing and beginning; 'khubha' in agitation.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">52</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">52.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Thambha-khambha patibandhe gabbha pāgabbhiye vadhe,</p>
+<p rend="gathalast">Sumbha saṃsumbhane sambha vissāse yabha methune;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Thambha' and 'khambha' are in obstruction; 'gabbha' in boldness and killing; 'sumbha' in crushing; 'sambha' in confidence; 'yabha' in sexual intercourse.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">53</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">53.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dubha jīgiṃsane dabbha ganthane udrabhā’dane,</p>
+<p rend="gathalast">Kamū (tu) padavikkhepe khamū (tu) sahaṇe (siyā;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Dubha' is in the desire to harm; 'dabbha' in binding; 'udrabha' in eating; 'kamū' in stepping; 'khamū' may be in enduring.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">54</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">54.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhamu anavaṭṭhāne (ca) vamu uggiraṇādisu,</p>
+<p rend="gathalast">Kilamu-klamū gelaññe ramu kīḷā’ya (mīrito;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'Bhamu' is in unsteadiness; 'vamu' in vomiting and so forth; 'kilamu' and 'klamū' in sickness; 'ramu' is said to be in playing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">55</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">55.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Damo dame nama name (atho) sama parissame,</p>
+<p rend="gathalast">Yamu uparame nāse ama yāte mu bandhane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Dama is used in taming; nama, in bowing; then, sama, in exertion; yamu, in cessation and destruction; ama, in going; mu, in binding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">56</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0014">[O 0.0014]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">56.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dhamo pumo (ca) dhamane tama saṅkāvibhūsane,</p>
+<p rend="gathalast">Dhuma-thīma (ca) saṅghāte tama sāntva’vasādiye;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Dhama and puma are used in blowing; tama, in doubt and in adorning; dhuma and thīma, in assembling; tama, in consoling and in dispiriting.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">57</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">57.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ayo vayo paya-mayo nayo rayagatimhi (ca)</p>
+<p rend="gathalast">Daya dānagatīrakkhā hiṃsādisu yu missane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Aya, vaya, paya, maya, naya, and raya are used in the sense of motion; daya, in giving, going, protection, and harming, etc.; yu, in mixing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Cāya sampūjane tāya santāne pāya vuddhiyaṃ,</p>
+<p rend="gathalast">(Atho) usūya dosā’vikaraṇe sāya sāyane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Cāya is used in veneration; tāya, in continuity; pāya, in growth; then, usūya, in envy and in revealing faults; sāya, in tasting.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">58</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">58.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tara taraṇasmiṃ thara santharaṇe bhara bharaṇasmiṃ phara sampharaṇe,</p>
+<p rend="gathalast">Sara gati cintā hiṃsā sadde phura calanādo hara haraṇasmiṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Tara is used in crossing; thara, in spreading; bhara, in bearing; phara, in pervading; sara, in going, thinking, harming, and sounding; phura, in trembling and so forth; hara, in taking.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">59</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">59.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:123">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ri santatismiṃ ri gate ru sadde khuracchidasmiṃ dhara dhāraṇamhi,</p>
+<p rend="gathalast">Jara jīraṇatthe marapāṇacāge khara sekanāse ghara sevanamhi;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Ri is used in continuity; ri, in going; ru, in sound; khura, in cutting; dhara, in holding; jara, in the sense of decaying; mara, in abandoning life; khara, in sprinkling and destroying; ghara, in serving.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:124">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">60</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0015">[O 0.0015]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">60.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:125">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Garo nigareṇa seke dara ḍāhe vidāraṇe,</p>
+<p rend="gathalast">Cara gatibhakkhaṇesu vara saṃvaraṇādisu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Gara is used in swallowing and sprinkling; dara, in burning and splitting; cara, in going and eating; vara, in choosing, restraining, and so forth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:126">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">61</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">61.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:127">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Caracchede aranāse gate (ca) pūra pūraṇe,</p>
+<p rend="gathalast">Kura kkose nara naye jāgara supinakkhaye;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Cara is used in cutting; ara, in destroying and going; pūra, in filling; kura, in reviling; nara, in leading; jāgara, in the destruction of sleep.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:128">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">62</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">62.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:129">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pīlu-palū-sala-hulā gatya’tthā cala kampane,</p>
+<p rend="gathalast">Khala sañcalane phulla vikāse jala dittiyaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Pīlu, palū, sala, and hulā are used in the sense of movement; cala, in trembling; khala, in shaking; phulla, in blooming; jala, in shining.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:130">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">63</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">63.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:131">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Phala nipphattiyaṃ (hoti) dala dittividāraṇe,</p>
+<p rend="gathalast">Dala duggatiyaṃ nīla vaṇṇe mīla nimīlane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Phala is used in fruition; dala, in shining and splitting; dala, also in misfortune; nīla, in coloring; mīla, in closing the eyes.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:132">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">64</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">64.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:133">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sila samādhimhi kīla bandhe gala-gilā’dane,</p>
+<p rend="gathalast">Kūla āvaraṇe sūla rujāyaṃ balapāṇane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Sila is used in concentration; kīla, in binding; gala and gilā, in eating; kūla, in covering; sūla, in pain; bala, in living.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:134">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">65</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">65.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:135">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tala-mūla patiṭṭhāyaṃ vala-valla nivāraṇe,</p>
+<p rend="gathalast">Palla ninne (ca) gamane mala-malla’vadhāraṇe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Tala and mūla are used in establishing; vala and valla, in warding off; palla, in low ground and in going; mala and malla, in ascertaining.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:136">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">66</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0016">[O 0.0016]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">66.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:137">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (Vattate) khila kāṭhinne kalile ala-kala dvayaṃ,</p>
+<p rend="gathalast">Vella sañcalane kalla sajjane alibandhane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Khila is used in hardness; the pair ala and kala, in mixture; vella, in shaking; kalla, in readiness; ali, in binding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:138">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">67</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">67.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:139">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Culla hāvakiraye thūlā’kassane cūla maddane,</p>
+<p rend="gathalast">(Vattate) khala soceyyo pala rakkhagatesu(pi;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Culla is used in amorous gesture; thūla, in pulling; cūla, in crushing; khala, in purity; pala, in protection and in going.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:140">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">68</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">68.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:141">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kela-khela-cela-pela-vela-sañcalanādisu,</p>
+<p rend="gathalast">Ava rakkhaṇe jīva pāṇadhāraṇe (tu) plavo gate;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Kela, khela, cela, pela, and vela are used in shaking and so forth; ava, in protecting; jīva, in maintaining life; plava, in going.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:142">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">69</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">69.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:143">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kaṇḍuvanamhi kaṇḍuvo saraṇe chedane dave,</p>
+<p rend="gathalast">Davo (tu) davane devu devane sevu sevane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Kaṇḍu is used in itching; sara, in going; chida, in cutting; dava, in running; devu, in playing; sevu, in serving.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:144">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">70</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">70.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:145">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dhāva gamanavuddhimhi (paṭhito) dhovu dhovane;</p>
+<p rend="gatha2">Ve-vī dve tantusantāne ve-vu saṃvaraṇe (siyā)</p>
+<p rend="gathalast">Hve avhāne keva seke dhuva yātrā thiresu (ca;);</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Dhāva is taught in the sense of going and growing; dhovu, in washing; the two roots ve and vī, in the continuity of thread; ve and vu, in restraining; hve, in calling; keva, in sprinkling; dhuva, in going and in steadfastness.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:146">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">71</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0017">[O 0.0017]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">71.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:147">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Asa gasa adane ghasa adanasmiṃ-isa pariyese isuicchāyaṃ,</p>
+<p rend="gathalast">Sasu pāṇanagatihiṃsā’dya’tthe-masa āmasane musa sammose;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Asa and gasa are used in eating; ghasa, in eating; isa, in seeking; isu, in desiring; sasu, in the sense of breathing, going, harming, and so forth; masa, in touching; musa, in stealing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:148">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">72</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">72.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:149">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kusa akkose dusa appīte-tusa santose pusa posamhi,</p>
+<p rend="gathalast">Rusa ālepe rusa hiṃsāyaṃ-masu macchere usu dāhe (’pi;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Kusa is used in reviling; dusa, in displeasure; tusa, in contentment; pusa, in nourishing; rusa, in smearing; rusa, also in harming; masu, in miserliness; usu, also in burning.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:150">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">73</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">73.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:151">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Hasa hasanasmiṃ ghusa saddasmiṃ-tasa ubbege trasa ubbege,</p>
+<p rend="gathalast">Lasa kantya’tthe rasa assāde-(puna)bhasa bhasmikaraṇe(cā’pi;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Hasa is used in laughing; ghusa, in sounding; tasa, in trembling; trasa, in trembling; lasa, in the sense of shining; rasa, in tasting; and again, bhasa, in reducing to ashes.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:152">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">74</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">74.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:153">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Gavesa maggaṇe paṃsa nāsane disa pekkhaṇe,</p>
+<p rend="gathalast">Sāsā’nusiṭṭhiyaṃ haṃsa pitiyaṃ pāsa bandhane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Gavesa is used in seeking; paṃsa, in destroying; disa, in seeing; sāsa, in instructing; haṃsa, in delight; pāsa, in binding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:154">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">75</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">75.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:155">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saṃsa pasaṃsane issa issāyaṃ kassa kassane,</p>
+<p rend="gathalast">Dhaṃsa padhaṃsane siṃsa icchāyaṃ ghaṃsa ghaṃsane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Saṃsa is used in praising; issa, in jealousy; kassa, in ploughing; dhaṃsa, in destroying; siṃsa, in wishing; ghaṃsa, in rubbing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:156">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">76</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0018">[O 0.0018]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">76.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:157">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saṃsa-daṃsā (tu) ḍasane bhāsa vācāya dittiyaṃ,</p>
+<p rend="gathalast">(Siyā) bhusa alaṅkāre (atho) āsū’pavesane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Saṃsa and daṃsa are used in biting; bhāsa, in speaking and in shining; bhusa, in adornment; then, āsu, in entering.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:158">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">77</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">77.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:159">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vasa kantinivāsesu vassasecanasaddane,</p>
+<p rend="gathalast">Kisa sāṇe kasa gate kasa hiṃsāvilekhane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Vasa is used in beauty and in dwelling; vassa, in sprinkling and in sounding; kisa, in thinning; kasa, in going; kasa, also in harming and in scratching.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:160">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">78</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">78.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:161">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Disā’tisajjanā’dīsu kāsa dittimhi sajjane,</p>
+<p rend="gathalast">(Duve dhātu) khasa-jhasa hiṃsāyaṃ misa milane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Disa is used in pointing out, excessive giving, and so forth; kāsa, in shining and in readiness; the two roots khasa and jhasa, in harming; misa, in mixing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:162">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">79</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">79.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:163">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Su hiṃsākulasandhānayātrā’dīsu su passave,</p>
+<p rend="gathalast">Su sadde su pasavane si saye (ca) si sevane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Su is used in harming, joining, going, and so forth; su, in flowing; su, in sounding; su, in producing; si, in lying down; and si, in serving.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:164">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">80</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">80.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:165">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Maha pūjāyā’rahapūjāyaṃ-guha saṃvaraṇe liha assāde,</p>
+<p rend="gathalast">Raha cāgasmiṃ muha mucchāyaṃ-maha sattāyaṃ bahu saṃkhyāne;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Maha is used in worship and in honoring the worthy; guha, in concealing; liha, in tasting; raha, in abandoning; muha, in delusion; maha, in existence; bahu, in counting.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:166">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">81</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0019">[O 0.0019]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">81.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:167">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saha khame daha bhasmikaraṇe (ca) patiṭṭhāyaṃ,</p>
+<p rend="gathalast">Ruha sañjanane ūha vitakke vaha pāpaṇe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Saha is used in enduring; daha, in reducing to ashes and in establishing; ruha, in generating; ūha, in reasoning; vaha, in obtaining.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:168">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">82</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">82.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:169">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Duha’ppapūraṇe nāse diho upacaye (mato),</p>
+<p rend="gathalast">Nindāyaṃ garaho īha ghaṭṭane miha sevane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Duha is used in filling and destroying; diha is considered in the sense of accumulating; garaha, in blaming; īha, in striving; miha, in serving.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:170">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">83</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">83.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:171">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Gāha viloḷane brūha-baha-braha (ca) vuddhiyaṃ,</p>
+<p rend="gatha2">Vhe saddamhi hasane hā cāge luḷa manthane</p>
+<p rend="gathalast">Kīḷavihāramhi laḷa vilāse’(mesavuddhikā;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Gāha is used in stirring; brūha, baha, and braha, in growing; vhe, in sounding and in laughing; hā, in abandoning; luḷa, in churning; kīḷa, in playing; laḷa, in sporting.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:172">
+  <div class="pair-col col-pali">
+<p rend="chapter">Tudādayo avuddhikā</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">Tuda and the like are without vowel gradation.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:173">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">84</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">84.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:174">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tuda byathāyaṃ (tu) nuda kkhepaṇe likha lekhaṇe,</p>
+<p rend="gathalast">Kuca saṅkocane rica kkharaṇe khaca bandhane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">tuda: in tormenting; nuda: in dispelling; likha: in writing; kuca: in shrinking; rica: in emptying; khaca: in binding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:175">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">85</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0020">[O 0.0020]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">85.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:176">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Uca sadde samavāye vijī bhayacalesu (ca),</p>
+<p rend="gathalast">(Vattate) bhuja koṭille valañjo (tu) valañjane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">uca: in sounding, assembling; vijī: in fear, trembling; bhuja: in crookedness; valañja: in using, going.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:177">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">86</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">86.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:178">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhaja sevāputhakkāre ruja roge aṭā’ṭane,</p>
+<p rend="gathalast">Kuṭacchede (ca) koṭille agā sajjhāyanā’disu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">bhaja: in serving, separating; ruja: in sickness; aṭa: in wandering; kuṭa: in cutting, crookedness; aga: in reciting, etc.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:179">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">87</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">87.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:180">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Puṇo subha kiraye vatta vattane cata yācane,</p>
+<p rend="gathalast">Putha pāke pūtibhāve kuthasaṃklesane’(pi ca;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">puṇa: in doing good; vatta: in turning; cata: in asking; putha: in cooking, decaying; kutha: in defiling.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:181">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">88</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">88.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:182">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (Ubho dhātu) putha-patha vitthāre vida jānane,</p>
+<p rend="gathalast">Hada uccāra ussagge-cintāyaṃ mida hiṃsane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">putha/patha: in spreading; vida: in knowing; hada: in ejecting, abandoning; cinta: in thinking; mida: in harming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:183">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">89</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">89.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:184">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nandha vinandhane thīna-puna saṅghātavācino,</p>
+<p rend="gathalast">Kapa acchādane vappa vāraṇe khipa peraṇe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">nandha: in binding; thīna/puna: in assembling, speaking; kapa: in covering; vappa: in obstructing; khipa: in impelling.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:185">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">90</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">90.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:186">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Supo saye chupo phasse (vattate) capa sāntvane,</p>
+<p rend="gathalast">Nabha (dhātu) vihiṃsāyaṃ rumbha uppīḷanādisu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">supa: in sleeping; chupa: in touching; capa: in conciliating; nabha: in harming; rumbha: in oppressing, etc.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:187">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">91</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0021">[O 0.0021]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">91.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:188">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sumbha saṃsumbhane jambha jambhane jubha nicchubhe,</p>
+<p rend="gathalast">Ṭhubha niṭṭhubhane camu adane chamu hīḷane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">sumbha: in crushing; jambha: in obstructing; jubha: in rejecting; ṭhubha: in spitting; camu: in eating; chamu: in despising.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:189">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">92</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">92.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:190">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Jhamu dāhe chamu adane irīya vattane’(pi ca),</p>
+<p rend="gathalast">Kira (dhātu) vikiraṇe giro nigiraṇā’disu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">jhamu: in burning; chamu: in eating; irīya: in moving; kira: in scattering; gira: in swallowing, etc.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:191">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">93</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">93.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:192">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Phura sañcalanādīsu kura saddā’danesu (ca),</p>
+<p rend="gathalast">Khuracchede vilikhaṇe ghura bhīme gilā’dane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">phura: in moving, etc.; kura: in sounding, taking; khura: in cutting, scratching; ghura: in terrifying; gilā: in eating.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:193">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">94</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">94.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:194">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tila snehe cila vāse hila hāve silu’ñchane,</p>
+<p rend="gathalast">Bila bhede thūla caye kusacchedana pūraṇe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">tila: in oiling; cila: in dwelling; hila: in coquetry; silu: in gleaning; bila: in splitting; thūla: in accumulating; kusa: in cutting, filling.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:195">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">95</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">95.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:196">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Visappavese pharaṇe disā’tisajjanā’disu</p>
+<p rend="gatha2">Phula phasse musa theyye thusa appikirayāya (tu)</p>
+<p rend="gathalast">Guḷa mokkhe guḷa parivattanamhi (tudādayo;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">visa: in entering; phara: in pervading; disa: in liberality, etc.; phula: in touching; musa: in stealing; thusa: in dispersing; guḷa: in releasing; guḷa: in transforming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:197">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Hū <span class="pb hidden-meta" data-ed="O" data-n="0.0022">[O 0.0022]</span> bhuvādayo luttavikaraṇā</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Hū and the Bhū group are roots with elided verbal affixes.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:198">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">96</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">96.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:199">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Hū-bhū sattāya (mu’ccanti) i ajjhāne gatimhi (ca,)</p>
+<p rend="gathalast">Khā-khyā (dvayaṃ) pakathane ji jaye ñā’vabodhane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">hū/bhū: in existence; i: in studying, going; khā/khyā: in speaking; ji: in conquering; ñā: in understanding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:200">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">97</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">97.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:201">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sī-ḷī vehāsagamane ṭhā gatīvinivuttiyaṃ,</p>
+<p rend="gathalast">Nī pāpaṇe muna ñāṇe hana hiṃsāgatīsu (’pi)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">sī/ḷī: in moving through the air; ṭhā: in stopping movement; nī: in obtaining; muna: in knowing; hana: in harming, going.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:202">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">98</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">98.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:203">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pārakkhaṇamhi pā pāne brū vācāyaṃ viyattiyaṃ,</p>
+<p rend="gathalast">Bhā dittiyaṃ mā pamāṇe (atho) yā pāpuṇe (siyā;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">pā: in protecting; pā: in drinking; brū: in speaking, explaining; bhā: in shining; mā: in measuring; yā: in reaching.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:204">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">99</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">99.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:205">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (Duvepi) rā-lā ādāne vā gatīgandhanesu (pi,)</p>
+<p rend="gathalast">Asa (dhātu) bhuvi (khyāto) si saye sā samatthiye;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">rā/lā: in taking; vā: in going, smelling; asa: in existence; si: in lying down; sā: in ability.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:206">
+  <div class="pair-col col-pali">
+<p rend="chapter">Juhotyā’dayo <span class="pb hidden-meta" data-ed="O" data-n="0.0023">[O 0.0023]</span> sadvibhāvaluttavikaraṇā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Juhoti group are roots with reduplication and elided verbal affixes.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:207">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">100</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">100.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:208">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Hū dāne’(pi ca) ādāne havyadāne (ca vattate,)</p>
+<p rend="gathalast">Hā cāge kamu yātrāyaṃ dā dāne dhā (ca) dhāraṇe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">hū: in giving, receiving, and offering oblations; hā: in abandoning; kamu: in going; dā: in giving; dhā: in holding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:209">
+  <div class="pair-col col-pali">
+<p rend="centre">Avikaraṇabhūvādayo samattā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Bhū group roots without verbal affixes are complete.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:210">
+  <div class="pair-col col-pali">
+<p rend="chapter">Rudhādayo</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Rudh group.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:211">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">101</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">101.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:212">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Rudhi āvaraṇe muca mocane rica recane,</p>
+<p rend="gathalast">Sica seke yuja yoge bhuja pālanabhojane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">rudhi: in obstructing; muca: in releasing; rica: in emptying; sica: in sprinkling; yuja: in joining; bhuja: in protecting and enjoying.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:213">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">102</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">102.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:214">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Katicchede chidi dvedhākaraṇe bhida vidāraṇe</p>
+<p rend="gatha2">Vida lābhe lupacchede vināse lipalimpane</p>
+<p rend="gathalast">Pisa saṃcuṇṇane hisi vihiṃsāyaṃ (rudhādayo;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">kati: in cutting; chidi: in splitting in two; bhida: in tearing apart; vida: in obtaining; lup: in cutting off and destroying; lipa: in smearing; pisa: in crushing; hisi: in harming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:215">
+  <div class="pair-col col-pali">
+<p rend="chapter">Divādayo <span class="pb hidden-meta" data-ed="O" data-n="0.0024">[O 0.0024]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Div group.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:216">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">103</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">103.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:217">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Divu kīlā vijigiṃsā vohārajjuti thomite,</p>
+<p rend="gathalast">Sivu tantūnasantāne khī khaye khā pakāsane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">divu: in playing, desiring victory, conduct, shining, and praising; sivu: in sewing; khī: in destroying; khā: in revealing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:218">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">104</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">104.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:219">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kā-gā sadde (pi) ghā gandho’pādāne ruca rocane,</p>
+<p rend="gathalast">Kaca dityaṃ muca moce (atho) vica vivecane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">kā/gā: in sound; ghā: in smelling and taking; ruca: in pleasing and shining; kaca: in shining; muca: in releasing; vica: in discerning.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:220">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">105</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">105.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:221">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Rañja rāge sañja saṅge khalane majja suddhiyaṃ,</p>
+<p rend="gathalast">Yujo samādhimhi lujo vināse jhā vicintane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">rañja: in delighting; sañja: in clinging; khala: in stumbling; majja: in purity; yuj: in concentration; luj: in destroying; jhā: in contemplating.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:222">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">106</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">106.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:223">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tā pālane chidi dvedhākāre mida sinehane,</p>
+<p rend="gathalast">Madu’mmāde khida dīnabhāve bhida vidāraṇe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">tā: in protecting; chidi: in dividing into two; mida: in affection; madu: in intoxication; khida: in wretchedness; bhida: in tearing apart.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:224">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">107</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">107.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:225">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sida pāke padagate vida sattā vicintane,</p>
+<p rend="gathalast">Dī khaye supane dā (ca) dāne dātva’vakhaṇḍane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">sida: in ripening; pada: in going; vida: in existence and discerning; dī: in destroying; supa: in dreaming; dā: in giving; dātva: in cutting off.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:226">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">108</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0025">[O 0.0025]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">108.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:227">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Budhā’vagamanā’dīsu atthesu yudha yujjhane,</p>
+<p rend="gathalast">Kudha kope sudha soce rādha hiṃsāya siddhiyaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Budh in understanding, etc.; Yudh in fighting; Kudh in anger; Sudh in purity; Rādh in harming and in accomplishing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:228">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">109</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">109.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:229">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Idha saṃsiddhivuddhīsu sidha-sādha (ca) siddhiyaṃ,</p>
+<p rend="gathalast">Vidha vedhe gidha gedhe rudhi āvaraṇā’disu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Idh in accomplishment and in increase; Sidh and Sādh in accomplishment; Vidh in piercing; Gidh in greed; Rudh in obstructing, etc.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:230">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">110</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">110.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:231">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mana ñāṇe janu’ppāde hana hiṃsāgatīsu (pi,)</p>
+<p rend="gathalast">Sinā soce kupa kope tapa santāpa pīṇane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Man in knowing; Jan in arising; Han in harming and in going; Sinā in purity; Kup in anger; Tap in tormenting and in satisfying.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:232">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">111</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">111.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:233">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Lupacchede rupa nāse pakāse dipa dittiyaṃ,</p>
+<p rend="gathalast">Dapa hāse labha lābhe lubha gedhe khubho cale;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Lup in cutting off; Rup in destroying; Pakās in shining; Dip in shining; Dap in diminishing; Labh in gaining; Lubh in greed; Khubh in shaking.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:234">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">112</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">112.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:235">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Samū’pasama khedesu hara-hirī (ca) lajjane,</p>
+<p rend="gathalast">Milā gattavīnāme (ca) gilā hāsakkhaye (pi ca;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Sam in calming and in weariness; Har and Hirī in shame; Milā in the bending of the body; Gilā in the decline of joy.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:236">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">113</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0026">[O 0.0026]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">113.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:237">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Lī silese dravīkāre vā gatī bandhanesu (ca,)</p>
+<p rend="gathalast">Lisi lese tusa tose silisā’liṅganādisu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Lī in clinging and in melting; Vā in going and in binding; Lisi in diminishing; Tus in satisfaction; Silis in embracing, etc.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:238">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">114</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">114.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:239">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kilisa kaliso’patāpe (atho) tasa pipāsane,</p>
+<p rend="gathalast">Rusa rose disa-dusa appītimhi (duve siyuṃ;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Kilis in defilement and in tormenting; Tas in thirsting; Rus in anger; Dis and Dus in displeasure.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:240">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">115</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">115.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:241">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yasuppayatane asu khepane (pi ca vattate,)</p>
+<p rend="gathalast">Susa sose bhasa adhopāte nasa adassane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Yas in striving; Asu in throwing; Sus in drying; Bhas in falling downwards; Nas in disappearing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:242">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">116</span>. Sā’ssāde sā’vasāne (ca) sā tanūkaraṇe (pi ca) hā cāge muha vecitte naha sajjanabandhane naha soce pihicchāyaṃ siniha-saniha pītiyaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">116. Sā in tasting, Sā in ending, and Sā in attenuating; Hā in abandoning; Muh in delusion; Nah in attaching and in binding; Nah in purity; Pih in longing; Sinih and Sanih in affection.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:243">
+  <div class="pair-col col-pali">
+<p rend="chapter">Svādayo <span class="pb hidden-meta" data-ed="O" data-n="0.0027">[O 0.0027]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Su-group, etc.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:244">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">117</span>. Su savaṇe saka sattimhi khī khayamhi gi saddane,</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">117. Su in hearing; Sak in power; Khī in decay; Gi in sounding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:245">
+  <div class="pair-col col-pali">
+<p rend="gathalast">Apa-sambhū (ca) pāpuṇane hi gatimhi vū saṃvare;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Āp and Sambhū in reaching; Hī in going; Vū in restraint.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:246">
+  <div class="pair-col col-pali">
+<p rend="chapter">Kiyādayo</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Kī-group, etc.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:247">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">118</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">118.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:248">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kī vinimaye ci caye ji jaye ñā’vabodhane,</p>
+<p rend="gathalast">Thava’bhitthave kampane dhu (atho) pu pavane (siyā;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Kī in exchange; Ci in accumulation; Ji in conquest; Ñā in understanding; Thav in praising; Dhu in trembling; Pū in blowing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:249">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">119</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">119.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:250">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Pī tappaṇe mā pamāṇe khipakkhepe mi hiṃsane,</p>
+<p rend="gatha2">Mi pamāṇe mu bandhe (ca) lu pacchede si bandhane</p>
+<p rend="gathalast">Asa bhakkhaṇe (atho) gaha upādāne (kiyādayo;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Pī in satisfying; Mā in measuring; Khip in throwing; Mi in harming; Mi in measuring; Mu in binding; Lu in cutting off; Si in binding; As in eating; Gah in grasping.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:251">
+  <div class="pair-col col-pali">
+<p rend="chapter">Tanādayo <span class="pb hidden-meta" data-ed="O" data-n="0.0028">[O 0.0028]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Tan-group, etc.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:252">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">120</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">120.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:253">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tanu vitthāre saka sattismiṃ-du paritāpe sanu dānasmiṃ,</p>
+<p rend="gatha2">Vana yācāyaṃ manu bodhasmiṃ-hi gate apa pāpuṇanasmiṃ (hi,)</p>
+<p rend="gathalast">Kara karaṇasmiṃ(bhavati)si bandhe-su abhissavane(tanu ādīni;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Tan in extending; Sak in power; Du in tormenting; San in giving; Van in begging; Man in knowing; Hī in going; Āp in reaching; Kar in doing; Si in binding; Su in flowing forth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:254">
+  <div class="pair-col col-pali">
+<p rend="centre">Niccaṃ ṇeṇayantā curādayo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The roots of the Cur-group, etc., always take the suffixes ṇe and ṇaya.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:255">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">121</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">121.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:256">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Cura theyye loka (dhātu) dassane aki lakkhaṇe,</p>
+<p rend="gathalast">Siyā thaka patighāte (puna) takka vitakkaṇe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Cur in stealing; Lok in seeing; Ak in marking; Thak in obstructing; Takk in reasoning.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:257">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">122</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">122.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:258">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Lakkha dassanaaṅkesu (vattate) makkha makkhaṇe,</p>
+<p rend="gathalast">Bhakkhā’dane mokkha moce sukha-dukkha (ca) takiraye;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Lakkh in seeing and in marking; Makkh in smearing; Bhakk in eating; Mokkh in releasing; Sukh and Dukkh in causing pleasure and pain.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:259">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">123</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0029">[O 0.0029]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">123.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:260">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Liṅga cittakirayā’dīsu maga-magga gavesane,</p>
+<p rend="gathalast">(Punā’pi) paca vitthāre klese vañca palambhane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Liṅg in mental activity, etc.; Mag and Magg in seeking; Pac in extending; Kilis in afflicting; Vañc in deceiving.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:261">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">124</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">124.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:262">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vacca ajjhāyane acca pūjāyaṃ vaca bhāsane,</p>
+<p rend="gathalast">Raca patiyatane suca pesuññe ruca rocane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Vacc in studying; Acc in honoring; Vac in speaking; Rac in arranging; Sūc in slandering; Ruc in shining.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:263">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">125</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">125.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:264">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mucappamocane loca dassane kaca dittiyaṃ,</p>
+<p rend="gathalast">Sajjā’jja ajjane tajja tajjane vajja vajjane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Muc in releasing; Loc in seeing; Kac in shining; Sajj and Ajj in acquiring; Tajj in threatening; Vajj in avoiding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:265">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">126</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">126.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:266">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yuja saṃyamane pūja pūjāyaṃ tija tejane,</p>
+<p rend="gathalast">Paja magga saṃvaraṇe gate bhaja vibhājane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Yuj in restraining; Pūj in honoring; Tij in sharpening; Paj in obstructing the path and in going; Bhaj in dividing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:267">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">127</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">127.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:268">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (Atho) bhāja puthakkāre sabhāja pītidassane,</p>
+<p rend="gathalast">(Atho tu) ghaṭa saṅghāte ghaṭṭa sañcalanā’disu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Bhāj in separating; Sabhāj in showing affection; Ghaṭ in assembling; Ghaṭṭ in moving, etc.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:269">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">128</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0030">[O 0.0030]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">128.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:270">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kuṭa-koṭṭacchedane (dve) kuṭa ākoṭanā’disu,</p>
+<p rend="gathalast">Naṭa nacce caṭa-puṭa bhede vaṇṭa vibhājane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Kuṭ and Koṭṭ in cutting; Kuṭ in pounding, etc.; Naṭ in dancing; Caṭ and Puṭ in splitting; Vaṇṭ in dividing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:271">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">129</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">129.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:272">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tuvaṭṭa ekasayane ghaṭo visaraṇe (siyā),</p>
+<p rend="gatha2">Guṇṭha oguṇṭhane heṭha bādhāyaṃ veṭha veṭhane</p>
+<p rend="gathalast">Guḍi veṭhe kaḍi-khaḍi bhedane maḍi bhūsane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Tuvaṭṭ in lying down alone; Ghaṭ in scattering; Guṇṭh in covering; Heṭh in oppressing; Veṭh in winding; Guḍ in wrapping; Kaḍ and Khaḍ in splitting; Maḍ in adorning.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:273">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">130</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">130.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:274">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Paṇḍa-bhaṇḍa paribhāse daḍi āṇāya (mīrito),</p>
+<p rend="gathalast">Taḍi saṃtāḷane piṇḍa saṅghāte chaḍḍa chaḍḍane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Paṇḍ and Bhaṇḍ in reviling; Daḍ in commanding; Taḍ in striking; Piṇḍ in collecting; Chaḍḍ in abandoning.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:275">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">131</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">131.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:276">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vaṇṇa saṃvaṇṇane cuṇṇa cuṇṇane āṇa pesane,</p>
+<p rend="gathalast">Gaṇa saṃkalane kaṇṇa savaṇe cinta cintane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Vaṇṇ in describing; Cuṇṇ in pulverizing; Āṇ in commanding; Gaṇ in counting; Kaṇṇ in hearing; Cint in thinking.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:277">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">132</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">132.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:278">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Santa saṅkocane manta gutta bhāsana jānane,</p>
+<p rend="gathalast">Cita saṃcetanā’disu kitta saṃsaddane (bhave;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Sant in shrinking; Mant in secret speech and in knowing; Cit in perceiving, etc.; Kitt in proclaiming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:279">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">133</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0031">[O 0.0031]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">133.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:280">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yata nīyyātane gantha sandabbhe attha yācane,</p>
+<p rend="gathalast">Katha vākyappabandhe (ca) vida ñāṇe nude cuda;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Yat in leading forth; Ganth in composing; Atth in asking; Kath in connected discourse; Vid in knowing; Nud in impelling; Cud in instigating.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:281">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">134</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">134.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:282">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Chadā’pavāraṇe chadda vamane chanda icchayaṃ,</p>
+<p rend="gathalast">Vadī’bhivāda thomesu bhadikalyāṇakammani;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Chad in concealing; Chadd in vomiting; Chand in desiring; Vad in greeting and praising; Bhad in auspicious deeds.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:283">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">135</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">135.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:284">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Hiḷāda (tu) sukhe gandha sūcane vidha kampane,</p>
+<p rend="gathalast">Randha pāke (atho) māna pūjāyaṃ nu tthutimhi (tu;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Hiḷād in happiness; Gandh in indicating; Vidh in trembling; Randh in cooking; Mān in honoring; Nu in praising.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:285">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">136</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">136.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:286">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Thana devasadde ūna parihāne thena coriye,</p>
+<p rend="gathalast">Dhana sadde ñapa tosa nisāna māraṇā’disu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Than in divine sound; Ūn in diminishing; Then in stealing; Dhan in sounding; Ñap in satisfying, marking, killing, and so forth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:287">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">137</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">137.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:288">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Lapa vākye jhapa dāhe rupa ropaṇaādisu,</p>
+<p rend="gathalast">Pī tappane (siyā) kappa vitakke labhi vañcane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Lap in speaking; Jhap in burning; Rup in planting, and so forth; Pī in satisfying; Kapp in thinking; Labh in deceiving.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:289">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">138</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0032">[O 0.0032]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">138.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:290">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> (Atho) vahi garahāyaṃ samu sāntvana dassane,</p>
+<p rend="gathalast">Kamu icchāya kantimhi (siyā) thoma silāghane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Vah in censuring; Samu in consoling and showing; Kam in desiring and shining; Thom in praising.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:291">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">139</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">139.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:292">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Timu temana saṅkāsu ama rogagatā’disu,</p>
+<p rend="gathalast">Saṃgāma yuddhe (vatteyya) īra vācā pakampane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Tim in moistening and doubting; Am in sickness, going, and so forth; Saṃgām in fighting; Īr in speaking and shaking.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:293">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">140</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">140.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:294">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vara āvaraṇi’cchāsu yācāyaṃ dhara dhāraṇe,</p>
+<p rend="gathalast">Tīra kamma samattimhi pāra sāmatthiyā’disu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Var in concealing and desiring; Yāc in begging; Dhar in holding; Tīr in completing work; Pār in ability, and so forth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:295">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">141</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">141.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:296">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tulu’mmāne khala sove sañcaye pālarakkhaṇe,</p>
+<p rend="gathalast">Kala saṅkalanā’dīsu (bhave) mīla nimīlane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Tul in measuring; Khal in sleeping and accumulating; Pāl in protecting; Kal in collecting, and so forth; Mīl in closing the eyes.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:297">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">142</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">142.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:298">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sīlū’padhāraṇe mūla rohaṇe lala icchane,</p>
+<p rend="gathalast">Dula ukkhepaṇe pūla mahattana samussaye;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Sīl in upholding; Mūl in rooting; Lal in desiring; Dul in lifting up; Pūl in greatness and accumulating.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:299">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">143</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0033">[O 0.0033]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">143.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:300">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ghusa sadde pisa pese bhusā’laṅkaraṇe (siyā,)</p>
+<p rend="gathalast">Rusa pārusiye khuṃsa akkose pusa posane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Ghus in sounding; Pis in grinding; Bhus in decorating; Rus in harshness; Khuṃs in abusing; Pus in nourishing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:301">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">144</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">144.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:302">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Disa uccāraṇā’dīsu vasa acchādane (siyā,)</p>
+<p rend="gathalast">Rasa’ssāde rave snehe (atho) sisa visesane;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Dis in uttering, and so forth; Vas in covering; Ras in tasting, sounding, and affection; Sis in distinguishing.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:303">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">145</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">145.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:304">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Si bandhe missa sammisse kuha vimbhāpane siyā,</p>
+<p rend="gathalast">Raha cāge gate (cā’pi) maha pūjāya (mīrito;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Si in binding; Miss in mixing; Kuh in deceiving; Rah in abandoning and going; Mah in honoring.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:305">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">146</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">146.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:306">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pihi’cchāyaṃ siyā vīḷa lajjāyaṃ eḷa phāḷane</p>
+<p rend="gatha2">Hīḷa gārahiye pīḷa bādhāyaṃ taḷa tāḷane</p>
+<p rend="gathalast">Laḷa (dhātū)’pasevā’yaṃ (vattatī’mecurādayo;)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Pih in longing; Vīḷ in shame; Eḷ in splitting; Hīḷ in reproaching; Pīḷ in oppressing; Taḷ in striking; Laḷ in serving (these roots belong to the Curādi group, and so forth).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:307">
+  <div class="pair-col col-pali">
+<p rend="centre">Samattā sattagaṇā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The seven groups are complete.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:308">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">147</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0034">[O 0.0034]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">147.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:309">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhuvādī ca rudhādī ca-divādi svā’dayo gaṇā,</p>
+<p rend="gathalast">Kiyādī ca tanādī ca-curādītī’dha sattadhā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Bhū-group, the Rudh-group, the Div-group, the Su-group, the Kī-group, the Tan-group, and the Cur-group – thus, here, they are sevenfold.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:310">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">148</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">148.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:311">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kirayāvācittamakkhātu-me’kekattho bahū’dito,</p>
+<p rend="gathalast">Payogato’nugantabbā-anekatthā hi dhātavo;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For the root which denotes an action, a single meaning has been stated by me, yet many are given. Indeed, roots have many meanings; they are to be understood from usage.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:312">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">149</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">149.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:313">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Hitāya mandabuddhīnaṃ-vyattaṃ vaṇṇakkamā lahuṃ,</p>
+<p rend="gathalast">Racitā dhātumañjusā-sīlavaṃsena dhīmatā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For the benefit of those with slow intellect, the Dhātumañjusā was composed clearly, in alphabetical order, and concisely by the wise Sīlavaṃsa.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:314">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">150</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">150.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:315">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saddhammapaṅkeruharājahaṃso,</p>
+<p rend="gatha2">Āsiṭṭhadhammaṭṭhiti sīlavaṃso;</p>
+<p rend="gatha3">Yakkhaddilenākhya nivāsavāsī,</p>
+<p rend="gathalast">Yatissaro soyamidaṃ akāsi;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A royal swan on the lotus of the True Dhamma, Sīlavaṃsa, who desires the establishment of the Dhamma, a resident dwelling in the place named Yakkhaddila—this lord of ascetics composed this.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:316">
+  <div class="pair-col col-pali">
+<p rend="centre">Kaccāyana dhātumañjūsā samattā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Kaccāyana Dhātumañjūsā is complete.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:317">
+  <div class="pair-col col-pali">
+<p rend="subhead">Sācariyānusiṭṭhā <span class="pb hidden-meta" data-ed="O" data-n="0.0035">[O 0.0035]</span> parisiṭṭhaparibhāsā</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">The Appendix of Technical Terms, as Taught by the Teacher.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:318">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:319">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ekā nekassa rānantū-’bhayesaṃ antimā sarā,</p>
+<p rend="gathalast">Aṅgānubandhā dhātūnaṃ-vuccante’pi yathākkamaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One vowel is the final for many roots, and for both; the indicatory letters of the roots are also stated in order.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:320">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:321">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dhātuno vyāñjanā pubbe-niggahītaṃ sama’ntimā,</p>
+<p rend="gathalast">Ivaṇṇenā’rudhādīna-manubandhena ciṇhitaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For the roots of the Rudh-group and so forth, the insertion of a niggahīta before the final consonant of the root is marked by the indicatory letter 'i'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:322">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:323">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sesā’nubandhā sabbesaṃ-hontī’dhu’ccāraṇapphalā,</p>
+<p rend="gathalast">Uccāvacapphalā bhāsa-ntarampatvā bha vanti’pi;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The remaining indicatory letters of all roots are here for the purpose of pronunciation; they may also have various effects when words pass into another language.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:324">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">4</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0036">[O 0.0036]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">4.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:325">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nāmadhātuka bhāvo’pi-kirayāya adhikārato,</p>
+<p rend="gathalast">Viruddhantarābhāvā-kvacideva payujjate;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The state of being a nominal root, by virtue of its governing rule over action, is employed only in certain cases, due to the absence of any contradiction.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:326">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1214n_nrf:327">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dvandayuttivasā kvāpi-ādeso yovibhattiyā,</p>
+<p rend="gathalast">Guṇādibhāva saddo’pi-takirayatthe vidhīyate;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In some cases, by the force of a dual construction, a substitute for an inflection is applied; the term 'guṇa' and so forth is also prescribed in the sense of that action.</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

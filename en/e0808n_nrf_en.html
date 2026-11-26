@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vuttodayaṃ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">Pali | Trans.</button><button type="button" data-mode="view-stack">Pali — Trans.</button><button type="button" data-mode="view-pali-only">Pali Only</button><button type="button" data-mode="view-trans-only">Trans. Only</button><button type="button" id="toggle-meta-btn">Note</button></div>
+<div class="pair-row" data-id="e0808n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre">Namo tassa bhagavato arahato sammāsambuddhassa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Homage to the Blessed One, the Arahant, the Perfectly Self-Enlightened One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="book">Vuttodayaṃ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="book">The Exposition of Meter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="chapter">1. Saññāparibhāsāniddesa-paṭhamapariccheda</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">1. The Exposition of Definitions of Terms – First Chapter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="title">Ratanattayappaṇāma</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">Homage to the Triple Gem.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nama’tthu jana santāna, tama santāna bhedino;</p>
+<p rend="gathalast">Dhammu’jjalanta rucino, munindo’dāta rocino.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Homage to the breaker of the continuum of beings and the continuum of darkness; to the Dhamma, shining with radiance; to the Lord of Sages, pure in his light.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="title">Nimitta</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">The Occasion.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Piṅgalā’cariyādīhi, chandaṃ ya muditaṃ purā;</p>
+<p rend="gathalast">Suddhamāgadhikānaṃ taṃ, na sādheti yathicchitaṃ <span class="note hidden-meta">ya’dicchitaṃ yati’cchitaṃ (ka.)</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The meter that was formerly expounded by teachers like Piṅgala does not accomplish what is desired for the pure Magadhan language.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="title">Ganthaparimāṇa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">The Scope of the Work.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tato māgadhabhāsāya, mattā,vaṇṇa,vibhedanaṃ;</p>
+<p rend="gathalast">Lakkhya lakkhaṇa saṃyuttaṃ, pasanna’ttha,pada,kkamaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Therefore, in the Magadhan language, the distinction of quantity and syllable, connected with examples and definitions, with clear meaning, words, and arrangement.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="title">Abhidhānādi</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">Appellation, etc.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">4</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">4.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Idaṃ <span rend="bold">vuttodayaṃ</span> nāma, lokiya’cchandanissitaṃ;</p>
+<p rend="gathalast">Ārabhissa’mahaṃ dāni, tesaṃ sukhavibuddhiyā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">This, called Vuttodaya, based on worldly meter, I shall now commence for their easy comprehension.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="title">Gaṇasaṅketasaññā</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">The Designation of Terms for Metrical Feet.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sabbaglā mnā,’digalahū, <span rend="bold">bhyā’</span>,majjha’nta garū <span rend="bold">jasā;</span></p>
+<p rend="gathalast">Majjha’ntalā <span rend="bold">ra,te’</span>te’ṭṭha, gaṇā go garu,lo lahu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The `m` foot is all-heavy, the `n` all-light; `bh` is heavy at the beginning, `y` is light at the beginning; `j` is heavy in the middle, `s` is heavy at the end; `r` is light in the middle, `t` is light at the end. These are the eight feet. `Go` signifies a heavy syllable, `lo` a light one.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="title">Gaṇaniyama</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">The Rule of Metrical Feet.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bha,ja,sā <span class="pb hidden-meta" data-ed="M" data-n="0.0192">[M 0.0192]</span> sabbaga,lahū, pañci’me saṇṭhitā gaṇā;</p>
+<p rend="gathalast"><span rend="bold">Ariyādimhi</span> viññeyyā, gaṇo idha catu’kkalo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The `bha`, `ja`, `sa`, all-heavy, and all-light feet—these five established feet are to be known in the Ariyā meter and others; here, a foot consists of four morae.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="title">Garu,lahusarūpa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">The Nature of Heavy and Light Syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saṃyogā’di ca, dīgho ca, niggahītaparo ca, yo;</p>
+<p rend="gathalast"><span rend="bold">Garu,</span> vaṅko, pādanto,vā, rasso’ñño mattiko <span rend="bold">lu’</span>ju.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A syllable before a conjunct consonant, a long vowel, and one followed by a niggahīta is heavy; its symbol is curved. A syllable at the end of a foot may also be heavy. Otherwise, a short syllable is light, has one mora, and its symbol is straight.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pare pādādisaṃyoge, yo pubbo garuka’kkharo;</p>
+<p rend="gathalast"><span rend="bold">Lahu</span> sa kvaci viññeyyo, tadudāharaṇaṃ yathā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When a conjunct consonant is at the beginning of the following foot, the preceding heavy syllable is sometimes to be known as light, as in the following example.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">9</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">9.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dassanarasā’nubhāvane, nibaddhagedhā jinassa’yaṃ janatā;</p>
+<p rend="gathalast">Vimhayajananī sañña<span rend="bold">ta, kri</span>yā nu kaṃ nā’nurañjayati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">This populace is deeply devoted to experiencing the essence of the Victor's teaching; what restrained action, generating wonder, does not delight anyone?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">10</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">10.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Viññeyyā lokato saññā, <span rend="bold">samuddo,su,rasā</span>dinaṃ;</p>
+<p rend="gathalast"><span rend="bold">Pādo</span>ñeyyo catutthaṃ’so, padacchedo <span rend="bold">yatī</span> bhave.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Terms such as 'ocean,' 'taste,' and so on, are to be known from worldly usage; a foot is to be known as a fourth part, and the caesura is the word-break.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">11</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">11.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> <span rend="bold">Sama,maḍḍhasamaṃ,</span> vuttaṃ, <span rend="bold">visamaṃ</span> cā’paraṃ tidhā;</p>
+<p rend="gathalast">Samā lakkhaṇato pādā, cattāro yassa taṃ <span rend="bold">samaṃ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Equal, semi-equal, and unequal—thus it is said to be threefold; that in which all four feet are equal in characteristics is called equal.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">12</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">12.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yassa’ntimena dutiyo, tatiyenā’dimo samo;</p>
+<p rend="gathalast">Ta’<span rend="bold">daḍḍhasama, maññaṃ</span> tu, bhinna lakkhaṇa pādikaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">That in which the second foot is equal to the last, and the first is equal to the third, is semi-equal; the other, however, has feet with different characteristics.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">13</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">13.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pāda’mekakkharā’rabbha, yāva chabbīsata’kkharā;</p>
+<p rend="gathalast">Bhave pādehi taṃ chandaṃ, nānānāmo’ditaṃ tato.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Beginning with a one-syllable line up to one of twenty-six syllables, that meter is formed from such lines; thereafter, it is called by various names.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">14</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">14.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> <span rend="bold">Daṇḍakā</span> caṇḍavuṭṭhyā’di, pādehi chahi, tīhi tu;</p>
+<p rend="gathalast"><span rend="bold">‘Gāthā’</span>ti ca paratthe’vaṃ, chando saññā pakāsitā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Daṇḍaka, Caṇḍavuṭṭhi, etc., are meters with six feet, and with three; 'Gāthā' is also termed thus elsewhere. In this way, the terms for meter have been declared.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">15</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">15.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Anantaro’ditaṃ ca’ñña, metaṃ sāmañña nāmato;</p>
+<p rend="gathalast"><span rend="bold">‘Gāthā’</span>icceva niddiṭṭhaṃ, munindavacane pana.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">And this other, mentioned immediately before, is specified by the common name 'Gāthā'; in the words of the Lord of Sages, however...</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">16</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">16.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Visesanāmato kiñci, gahetvā sabbatho’citaṃ;</p>
+<p rend="gathalast">Dassayissāma’haṃ te’ttha, nāmānā’vi bhavissare.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having taken certain meters by their specific names, as is appropriate in every way, I shall present them here; the names will thus become clear.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti vuttodaye chandasi saññāparibhāsā niddeso nāma</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus ends the exposition called 'Definitions of Terms' in the Vuttodaya on Prosody.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="centre">Paṭhamo paricchedo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">First Chapter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="chapter">2. Mattāvuttiniddesa-dutiyapariccheda</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">2. The Exposition of Quantity-based Meters – Second Chapter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="title">Gaṇaniyama</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">The Rule of Metrical Feet.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">17</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">17.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Chaṭṭho’khilalahu,jo <span class="pb hidden-meta" data-ed="M" data-n="0.0193">[M 0.0193]</span> vā,</p>
+<p rend="gatha2">Gayutā’ññe,cha’ggaṇā,na jo visame,;</p>
+<p rend="gathalast">Ariyāya’ntaḍḍhe lo, chaṭṭho,’nte go,gaṇā cha’ññe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The sixth gaṇa is all-light (`na`), or `ja`; [in Gīti and others], there are six gaṇas; `ja` is not in the odd feet. In the Ariyā, in the final half, there is a light syllable; the sixth gaṇa is heavy at the end, and the other six gaṇas apply.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="title">Yatiniyama</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">The Rule of Caesura.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">18</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">18.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Paṭhamaḍḍhe chaṭṭho ce,</p>
+<p rend="gatha2">Sabbalahe,’tthā’dilahuni bhavatiyati;</p>
+<p rend="gathalast">Tapparako,ntepi, sace, carimepi, bhavati catuttho’nte.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If the sixth gaṇa in the first half is all-light, here the caesura becomes light at the beginning; if it is followed by a heavy syllable, even at the end, or even at the very end, the fourth syllable becomes heavy at the end.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">19</span>. <span rend="bold">Ariyāsāmaññaṃ</span> ce, pubbo’dita lakkhaṇaṃ bhave yassā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">19. That whose characteristics are as previously stated is the common Ariyā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">20</span>. Ādima’matha pādayugaṃ, yassā tyaṃ’sehi sā <span rend="bold">pathyā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">20. Furthermore, she whose first pair of feet is regular in its parts is Pathyā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">21</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">21.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yattha gaṇattaya mullaṅghi,</p>
+<p rend="gathalast">Yo’bhayatthā’dimo bhave <span rend="bold">vipulā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Where the triad of gaṇas is transgressed, and the `ja` gaṇa is first in both places, it is Vipulā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">22</span>. Garumajjhago jakāro, catutthako dutiyako <span rend="bold">capalā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">22. When the `ja` gaṇa, which has a heavy middle, is the fourth or the second gaṇa, it is Capalā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">23</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">23.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Capalā’gatā’khilaṃ ce, dalā’dimaṃ lakkhaṇaṃ bhajati yassā;</p>
+<p rend="gathalast">Pathyālakkhaṇa’maññaṃ, <span rend="bold">mukhacapalā</span> nāma sā bhavati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">She in whose first half the complete characteristic of Capalā is found, while the other half has the characteristic of Pathyā, is called Mukhacapalā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">24</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">24.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pathyāya lakkhaṇaṃ ce, paṭhamaḍḍhe lakkhaṇaṃ tu capalāya;</p>
+<p rend="gathalast">Dutiye dale’tha yassā, pakittitā sā <span rend="bold">jaghanacapalā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">She who has the characteristic of Pathyā in the first half, and the characteristic of Capalā in the second half, is proclaimed Jaghanacapalā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="centre">Ariyājātiyo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Kinds of Ariyā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">25</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">25.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sabbaṃpaṭhamadale yadi, lakkhaṇa’mariyāya vutta’mubhayesu;</p>
+<p rend="gatha2">Yassā dalesu yuttaṃ,</p>
+<p rend="gathalast">Vuttā sā <span rend="bold">gīti</span> vutta yati lalitā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If the entire characteristic stated for the first half of the Ariyā is applied to both halves of a verse, it is called Gīti, declared graceful in its caesura.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">26</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">26.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ariyāyaṃ dutiya’ḍḍhe, gaditā’khilalakkhaṇaṃ yaṃ taṃ;</p>
+<p rend="gatha2">Bhavati dalesu’bhayesupi,</p>
+<p rend="gathalast">Yadi yassā sā’ya <span rend="bold">mupagīti.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If that entire characteristic which is stated for the second half of the Ariyā is present in both halves of a verse, that is Upagīti.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">27</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">27.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ariyāya’ḍḍhadvitayaṃ, pubbodita lakkhaṇo’petaṃ;</p>
+<p rend="gatha2">Vipariyayenā’bhihitaṃ,</p>
+<p rend="gathalast">Yassā sambhavati ce’ha so’<span rend="bold">ggīti.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If the two halves of the Ariyā, endowed with the characteristics mentioned before, are stated in reverse order, that is Uggīti.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">28</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">28.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ariyāpubba’ḍḍhaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0194">[M 0.0194]</span> yadi, garune’kenā’dhikena nidhane yuttaṃ;</p>
+<p rend="gathalast">Yadi pubba’ḍḍhasamānaṃ, dala mitaraṃ co’ditā’ya’<span rend="bold">mariyāgīti.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If the first half of an Ariyā is joined at the end with one extra heavy syllable, and if the other half is equal to the first half, this is called Ariyāgīti.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="centre">Gītijātiyo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Kinds of Gīti.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">29</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">29.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Visame cha siyuṃ kalā mukhe,</p>
+<p rend="gatha2">Same tva’ṭṭha, ra,la,gā, tato’pari;</p>
+<p rend="gathalast"><span rend="bold">Vetālīyaṃ</span> ta muccate, lahu chakkaṃ na nirantaraṃ same.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the odd pādas, there should be six mātrās at the beginning; in the even pādas, eight, followed by a `ra` gaṇa, a light, and a heavy syllable. That is called Vetālīya. A sequence of six light syllables is not continuous in the even pādas.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">30</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">30.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vetālīyopamaṃ mukhe taṃ,</p>
+<p rend="gathalast"><span rend="bold">Opacchandasakaṃ</span> ra,yā ya’dante.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">That which is like the Vetālīya at the beginning, and has `ra` and `ya` gaṇas at the end, is Opacchandasaka.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">31</span>. <span rend="bold">Āpātalikā</span> kathitā’yaṃ, bhagagā’nte yadi pubbamiva’ññaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">31. This is called Āpātalikā, if at the end there is a `bha` gaṇa and two heavy syllables, and the rest is like the former meter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">32</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">32.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yadā’dito <span rend="bold">dakkhiṇantikā,</span></p>
+<p rend="gathalast">Ṭhite’ttha pādesvā’khilesu jo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">It is Dakkhiṇantikā when a `ja` gaṇa is placed at the beginning of all pādas.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">33</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">33.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> <span rend="bold">‘Udiccavuttī’</span>ti vuccate,</p>
+<p rend="gathalast">Jo cā’do visamesu saṇṭhito.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">It is called Udiccavutti when a `ja` gaṇa is established at the beginning of the odd pādas.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">34</span>. Pubbattha, samesu ce ga, jā, <span rend="bold">‘paccavutti’</span> ruditā’ti saṇṭhitā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">34. In the former case, if in the even pādas there is a heavy syllable and a `ja` gaṇa, it is established as Paccavutti.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">35</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">35.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Samāsamā’trā’dinaṃ samā,</p>
+<p rend="gathalast">Saṃyutā bhavati taṃ <span rend="bold">pavattakaṃ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When it is composed with mātrās equal to those of the sama and asama meters, it becomes Pavattaka.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">36</span>. Assa sā sama katā’ <span rend="bold">parantikā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">36. When this is made equal, it is Aparantikā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">37</span>. Tada’ññajā <span rend="bold">cāruhāsinī.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">37. Another meter born from that is Cāruhāsinī.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="centre">Vetālīyajātiyo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Kinds of Vetālīya.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">38</span>. Dvika vihata vasu lahu <span rend="bold">acaladhiti</span> ri’ha.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">38. Here, Acaladhiti has eight mātrās multiplied by two, and is light.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">39</span>. <span rend="bold">Mattāsamakaṃ</span> navamo lga’nte.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">39. Mattāsamaka has at its end the ninth syllable as a light followed by a heavy.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">40</span>. Jo nlā’ thavā’ṇṇavā <span rend="bold">visiloko.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">40. If there is a `ja` gaṇa, or a `na` gaṇa and a light syllable, or `aṇṇavā`, it is Visiloka.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">41</span>. Tadvayato <span rend="bold">vānavāsikā’</span>khyā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">41. From those two is that which is called Vānavāsikā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">42</span>. Pañca,ṭṭha,navasu yadi lo <span rend="bold">citrā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">42. If a light syllable is in the fifth, eighth, and ninth positions, it is Citrā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">43</span>. Ga,lyā’ṭṭhahi ce’sā vu’<span rend="bold">pacitrā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">43. If the gaṇas 'ga' and 'la' are in the eighth position, this is Upacitrā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">44</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">44.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ya’matīta lakkhaṇa visesa yutaṃ, (citrā)</p>
+<p rend="gatha2">Mattā samā’di pādā’bhihitaṃ; (Visiloka)</p>
+<p rend="gatha3">Aniyata vutta parimāṇa sahitaṃ, (vānavāsikā)</p>
+<p rend="gathalast">Pathitaṃ janesu <span rend="bold">pādākulakaṃ.</span> (visiloka)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">That which is endowed with specific characteristics transcending the previous, designated by feet beginning with equal mātrās, and possessing an indeterminate metrical measure, is known among the people as Pādākulaka.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="centre">Mattāsamaka jātiyo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Kinds of Mattāsamaka Meters.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">45</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">45.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vinā <span class="pb hidden-meta" data-ed="M" data-n="0.0195">[M 0.0195]</span> vaṇṇehi mattā gā, vinā vaṇṇā garūhi tu;</p>
+<p rend="gathalast">Vinā lahūhi garavo, dale pathyādino matā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Mātrā-gaṇas are independent of syllables; syllables, in turn, are independent of heavy syllables; heavy syllables are independent of light syllables. In a half-verse, the Pathyā and others are thus considered.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti vuttodaye chandasi mattāvuttiniddeso nāma</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus ends the exposition named 'Meters Based on Quantity' in the Vuttodaya, the treatise on prosody.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="centre">Dutiyo paricchedo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Second Chapter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="chapter">3. Samavuttiniddesa-tatiyapariccheda</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">3. The Exposition of Uniform Meters—The Third Chapter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">46</span>. Tyā’ ce <span rend="bold">tanumajjhā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">46. If the gaṇas are 'ta' and 'ya', it is Tanumajjhā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="centre">Gāyattī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Gāyattī meter-class.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">47</span>. <span rend="bold">Kumāra lalitā</span> jsgā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">47. Kumāralalitā is composed of 'ja', 'sa', and 'ga'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="centre">Uṇhikā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Uṇhika meter-class.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">48</span>. <span rend="bold">Citrapadā</span> yadi bhā gā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">48. If the gaṇas are 'bha' and 'ga', it is Citrapadā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">49</span>. Mo mo go go <span rend="bold">vijjummālā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">49. Vijjummālā is composed of 'ma', 'ma', 'ga', and 'ga'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">50</span>. Bhā ta, la, gā <span rend="bold">māṇavakaṃ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">50. Māṇavakaṃ is composed of 'bha', 'ta', 'la', and 'ga'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">51</span>. Glā <span rend="bold">samānikā</span> ra,jā ca.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">51. And Samānikā is composed of 'ra', 'ja', 'ga', and 'la'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">52</span>. <span rend="bold">Pamāṇikā</span> ja, rā la, gā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">52. Pamāṇikā is composed of 'ja', 'ra', 'la', and 'ga'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="centre">Anuṭṭhubhā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Anuṭṭhubha meter-class.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">53</span>. Rā na,sā yadi <span rend="bold">halamukhī.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">53. If the gaṇas are 'ra', 'na', and 'sa', it is Halamukhī.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">54</span>. <span rend="bold">Bhujaga susu saṭā</span> nā mo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">54. Bhujagasusutā is composed of 'na' and 'ma'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="centre">Brahatī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Brahatī meter-class.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">55</span>. Msājgā <span rend="bold">suddhavirājitaṃ</span> mataṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">55. Suddhavirājitaṃ is held to be composed of 'ma', 'sa', 'ja', and 'ga'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">56</span>. Mnā yo go yadi <span rend="bold">paṇavo</span> khyāto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">56. If the gaṇas are 'ma', 'na', 'ya', and 'ga', it is known as Paṇavo.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">57</span>. Mbhā sa,gayuttā <span rend="bold">rummavatī</span> sā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">57. That Rummavatī is endowed with 'ma', 'bha', 'sa', and 'ga'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">58</span>. Ñeyyā <span rend="bold">mattā</span> ma, bha, sa, gayuttā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">58. Mattā should be known as that which is endowed with 'ma', 'bha', 'sa', and 'ga'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">59</span>. <span rend="bold">Campakamālā</span> ce bha, ma, sā go <span class="note hidden-meta">idaṃ nāmantarañāpanatthameva puna vuttaṃ (ṭī.)</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">59. If the gaṇas are 'bha', 'ma', 'sa', and 'ga', it is Campakamālā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">60</span>. Na, ra, ja, gehi sā <span rend="bold">manoramā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">60. That Manoramā is composed with the gaṇas 'na', 'ra', 'ja', and 'ga'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">61</span>. <span rend="bold">Ubbhāsakaṃ</span> taṃ ce to ma, rā lca.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">61. And if that meter is composed of 'ta', 'ma', 'ra', and 'la', it is Ubbhāsakaṃ.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">62</span>. To jā garunā’ya’<span rend="bold">mupaṭṭhitā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">62. This Upaṭṭhitā is composed of 'ta', 'ja', and a heavy syllable ('ga').</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="centre">Panti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Panti meter-class.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">63</span>. <span rend="bold">Indā</span>dikā <span class="pb hidden-meta" data-ed="M" data-n="0.0196">[M 0.0196]</span> tā <span rend="bold">vajirā</span> ja, gā go.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">63. The Vajirā meters, beginning with Inda, are composed of 'ja', 'ga', and 'ga'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:123">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">64</span>. <span rend="bold">Upādi</span>kā sā’va ja,tā ja,gā go.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">64. That indeed is the Upādikā meter, with the feet ja, ta, ja, and two heavy syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:124">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">65</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">65.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:125">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Anantaro’dīrita lakkhaṇā ce, (upendavajira)</p>
+<p rend="gatha2">Pādā vimissā <span rend="bold">upajātiyo</span> tā; (Indavajira)</p>
+<p rend="gatha3">Evaṃ kila’ññāsupi missitāsu, (indavajira)</p>
+<p rend="gathalast">Vadanti jātisvida’ meva nāmaṃ. (upendavajira)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When the feet of the meters with the characteristics just described are mixed, they are the Upajātis. Thus, indeed, when others are also mixed, they call this very name for that class of meter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:126">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">66</span>. Na, ja, ja, la, gā gaditā <span rend="bold">sumukhī.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">66. The Sumukhī meter is said to have the feet na, ja, ja, a light syllable, and a heavy syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:127">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">67</span>. <span rend="bold">Dodhaka</span> micchati ce bha,bha,bhā gā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">67. If one desires the Dodhaka meter, it has the feet bha, bha, bha, and a heavy syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:128">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">68</span>. Veda,ssehi,dhtā tgagā,<span rend="bold">sālinī</span> sā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">68. That is the Sālinī meter, with caesuras after the fourth and seventh syllables, and with the feet ta, ga, ga.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:129">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">69</span>. <span rend="bold">Vātommī</span> sā, yati sā mbhā ta, gā go.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">69. That is the Vātommī meter, with the feet ma, bha, ta, and two heavy syllables, and a caesura after the fourth syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:130">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">70</span>. Bhā ta, na, gā go’su, rasa <span rend="bold">sirī</span> sā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">70. That is the Sirī meter, with the feet bha, ta, na, and two heavy syllables, with caesuras after the fifth and sixth syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:131">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">71</span>. Ro na, rā iha <span rend="bold">rathoddhatā</span> la, gā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">71. Here, the Rathoddhatā meter has the feet ra, na, ra, a light syllable, and a heavy syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:132">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">72</span>. <span rend="bold">Svāgate’</span>ti ra, na, bhā garukā dve.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">72. It is called Svāgatā, with the feet ra, na, bha, and two heavy syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:133">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">73</span>. Na,na,ra,lahu,garūhi <span rend="bold">bhaddikā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">73. The Bhaddikā meter has the feet na, na, ra, a light syllable, and a heavy syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:134">
+  <div class="pair-col col-pali">
+<p rend="centre">Tiṭṭhubhā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Tiṭṭhubha Class.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:135">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">74</span>. Vadanti <span rend="bold">vaṃsaṭṭhami’</span>daṃ ja, tā ja, rā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">74. They call this the Vaṃsaṭṭha meter, with the feet ja, ta, ja, ra.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:136">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">75</span>. Sā <span rend="bold">indavaṃsā</span> khalu yattha tā ja,rā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">75. That indeed is the Indavaṃsā meter, where there are the feet ta, ta, ja, ra.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:137">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">76</span>. Idha <span rend="bold">toṭaka</span> mambudhi,sehi mitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">76. Here, the Toṭaka meter is measured by four `sa` feet.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:138">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">77</span>. <span rend="bold">Dutavilambita</span> māha na, bhā bha,rā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">77. The Dutavilambita meter is said to have the feet na, bha, bha, ra.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:139">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">78</span>. Vasu yuga viratī nā,myā’ <span rend="bold">puṭo’</span>yaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">78. This is the Puṭa meter, with the feet na, ya, ma, ya, and caesuras after the eighth and fourth syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:140">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">79</span>. Na, ya, sahitā nyā’ <span rend="bold">kusumavicittā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">79. The Kusumavicittā meter is composed of the feet na, ya, na, ya.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:141">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">80</span>. <span rend="bold">Bhujaṅga’ppayātaṃ</span> bhave veda, yehi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">80. The Bhujaṅgappayāta meter would have four `ya` feet.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:142">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">81</span>. Na, bha, ja, rehi bhavati’<span rend="bold">ppiyaṃvadā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">81. The Piyṃvadā meter consists of the feet na, bha, ja, ra.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:143">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">82</span>. Vuttā sudhīhi <span rend="bold">lalitā</span> ta, bhā ja, rā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">82. The Lalitā meter is said by the wise to have the feet ta, bha, ja, ra.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:144">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">83</span>. <span rend="bold">Pamitakkharā</span> sa, ja, sa,sehu’ditā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">83. The Pamitakkharā meter is spoken with the feet sa, ja, sa, sa.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:145">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">84</span>. Na,na,bha,ra,sahitā’bhihitu’<span rend="bold">jjalā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">84. The Ujjalā meter is said to be composed of the feet na, na, bha, ra.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:146">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">85</span>. Pañca’ssa’cchinnā, <span rend="bold">vessadevī</span> ma,mā yā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">85. The Vessadevī meter has the feet ma, ma, ya, ya, with a caesura after the fifth and seventh syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:147">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">86</span>. Bhavati <span class="pb hidden-meta" data-ed="M" data-n="0.0197">[M 0.0197]</span> hi <span rend="bold">tāmarasaṃ</span> na, ja, jā yo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">86. Indeed, the Tāmarasa meter consists of the feet na, ja, ja, ya.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:148">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">87</span>. <span rend="bold">‘Kamalā’</span>ti ñeyyā sa,ya,sehi yo ce.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">87. If it has the feet sa, ya, sa, ya, it should be known as the Kamalā meter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:149">
+  <div class="pair-col col-pali">
+<p rend="centre">Jagatī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Jagatī Class.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:150">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">88</span>. Mnā jrā go, tidasayati’<span rend="bold">ppahassiṇī</span> sā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">88. That is the Pahassiṇī meter, with the feet ma, na, ja, ra, and a heavy syllable, and with caesuras after the third and tenth syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:151">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">89</span>. Catu,ggahe,hi’ha <span rend="bold">rucirā,</span> ja,bhā sja,gā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">89. Here, the Rucirā meter has the feet ja, bha, sa, ja, and a heavy syllable, with caesuras after the fourth and ninth syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:152">
+  <div class="pair-col col-pali">
+<p rend="centre">Atijagatī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Atijagatī Class.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:153">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">90</span>. Na,na,ra,sa,lahu,gā,sarehi’<span rend="bold">parājitā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">90. The Aparājitā meter has the feet na, na, ra, sa, a light syllable, and a heavy syllable, with a caesura after the fifth syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:154">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">91</span>. Na,na,bha,na,la,gi’ti,<span rend="bold">ppaharaṇakalikā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">91. The ppaharaṇakalikā is composed of na, na, bha, na, a light syllable, and a heavy syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:155">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">92</span>. Vuttā <span rend="bold">vasantatilakā</span> ta,bha,jā ja,gā go.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">92. The vasantatilakā is said to be composed of ta, bha, ja, ja, and two heavy syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:156">
+  <div class="pair-col col-pali">
+<p rend="centre">Sakkarī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Sakkarī.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:157">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">93</span>. Dvihata haya lahu ra’tha gi’ti <span rend="bold">sasikalā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">93. The sasikalā is thus defined: with a pause after the seventh syllable, a light syllable, ra, tha, and a heavy syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:158">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">94</span>. Vasu,haya,yati ri’ha,<span rend="bold">maṇiguṇanikaro.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">94. The maṇiguṇanikaro has pauses here at the eighth and seventh syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:159">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">95</span>. Na,na,ma,ya,ya,yutā’yaṃ,<span rend="bold">mālinī</span> bhogi’sīhi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">95. This mālinī, endowed with na, na, ma, ya, ya, has pauses after the eighth and seventh syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:160">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">96</span>. Bhavati na,jā,bha,jā rasahitā <span rend="bold">pabhaddakaṃ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">96. The pabhaddakaṃ consists of na, ja, bha, ja, with a pause after the sixth syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:161">
+  <div class="pair-col col-pali">
+<p rend="centre">Atisakkarī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Atisakkarī.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:162">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">97</span>. Na,ja,bha,ja,rā sadā bhavati <span rend="bold">vāṇinī</span> ga, yuttā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">97. The vāṇinī always consists of na, ja, bha, ja, ra, and is endowed with a heavy syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:163">
+  <div class="pair-col col-pali">
+<p rend="centre">Aṭṭhi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Aṭṭhi.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:164">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">98</span>. Ya, mā no so bhalgā, rasa, haravirāmā <span rend="bold">sikharaṇī.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">98. The sikharaṇī has the feet ya, ma, na, sa, bha, a light syllable, and a heavy syllable, with pauses after the sixth and eleventh syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:165">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">99</span>. Rasa, yugi, sito, no so mrā slā, gya’dā <span rend="bold">hariṇī</span> tadā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">99. When there are the feet na, sa, ma, ra, sa, a light syllable, and a heavy syllable, with pauses after the sixth and tenth syllables, then it is the hariṇī.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:166">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">100</span>. <span rend="bold">Mandakkantā,</span> ma,bha,na,ta,ta,gā, go yugu,tva,ssakehi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">100. The mandakkantā is composed of ma, bha, na, ta, ta, and two heavy syllables, with pauses after the fourth and tenth syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:167">
+  <div class="pair-col col-pali">
+<p rend="centre">Accaṭṭhi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Accaṭṭhi.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:168">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">101</span>. Mo to no yo yā, <span rend="bold">kusumitalatā, vellitā’</span> kkhu,tvi,sīhi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">101. The kusumitalatāvellitā is composed of ma, ta, na, ya, ya, with pauses indicated by akkhu, ṛtu, isi.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:169">
+  <div class="pair-col col-pali">
+<p rend="centre">Dhuti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Dhuti.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:170">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">102</span>. Rasu,tva,ssehi ymā, na,sa,ra,ra,garū, <span rend="bold">meghavipphujjitā</span> sā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">102. That meghavipphujjitā is composed of ya, ma, na, sa, ra, ra, and a heavy syllable, with pauses after the sixth, twelfth, and nineteenth syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:171">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">103</span>. Akkassehi yati msa,jāsa,ta,ta,gā, <span rend="bold">saddūlavikkīḷitaṃ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">103. The saddūlavikkīḷitaṃ has the feet ma, sa, ja, sa, ta, ta, and a heavy syllable, with a pause after the twelfth syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:172">
+  <div class="pair-col col-pali">
+<p rend="centre">Atidhuti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Atidhuti.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:173">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">104</span>. <span rend="bold">Vutta</span> <span class="pb hidden-meta" data-ed="M" data-n="0.0198">[M 0.0198]</span> mīdisaṃ tu nāmato ra,jā ra,jā ra,jā garū,lahū ca.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">104. A meter of this kind is said to be composed of ra, ja, ra, ja, ra, ja, and a heavy and a light syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:174">
+  <div class="pair-col col-pali">
+<p rend="centre">Kati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Kati.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:175">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">105</span>. Mrā bhnā yo yo’tra yena,tti,muni, yatiyutā, <span rend="bold">sandharā</span> kittitā’yaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">105. This is declared the sandharā, composed of ma, ra, bha, na, ya, ya, ya, with pauses every seven syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:176">
+  <div class="pair-col col-pali">
+<p rend="centre">Pakati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Pakati.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:177">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">106</span>. O na,ra,nā ra,nā ca tha garū dasa,kka,viramañhi <span rend="bold">bhaddaka’</span>midaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">106. This bhaddaka is composed of o, na, ra, nā, ra, nā, and tha and a heavy syllable, with a pause at the tenth and eleventh syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:178">
+  <div class="pair-col col-pali">
+<p rend="centre">Ākati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Ākati.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:179">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti vuttodaye chandasi samavuttiniddeso nāma</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus in the Vuttodaya, the treatise on meters, is the chapter named the Exposition of Regular Meters.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:180">
+  <div class="pair-col col-pali">
+<p rend="centre">Tatiyo paricchedo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Third Chapter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:181">
+  <div class="pair-col col-pali">
+<p rend="chapter">4. Aḍḍhasamavuttiniddesa-catutthapariccheda</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">4. Exposition of Semi-regular Meters—The Fourth Chapter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:182">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">107</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">107.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:183">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Visame yadi sā sa,la,gā same,</p>
+<p rend="gathalast">Bha,ttayato garukā vu’<span rend="bold">pacittaṃ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If in the odd lines there are the feet sa, sa, a light syllable, and a heavy syllable, and in the even lines, three bha feet and a heavy syllable, it is the upacitta.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:184">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">108</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">108.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:185">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bha,ttayato yadi gā <span rend="bold">dutamajjhā;</span></p>
+<p rend="gathalast">Yadi punare’va bhavanti na, jā <span rend="bold">jyā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If the even lines consist of three bha feet and a heavy syllable, and the odd lines consist of na, ja, ja, ya, it is the dutamajjhā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:186">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">109</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">109.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:187">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yadi sa,ttitayaṃ garuyuttaṃ,</p>
+<p rend="gathalast"><span rend="bold">Vegavatī</span> yadi bha,ttitayā gā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If it consists of three `sa` gaṇas followed by a heavy syllable, [it is one meter]; it is Vegavatī if it consists of three `bha` gaṇas and two heavy syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:188">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">110</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">110.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:189">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> To jo visame rato garū ce;</p>
+<p rend="gathalast">Smā jgā <span rend="bold">bhaddavirāja</span> mettha go ce.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If in the odd pādas there are the gaṇas `ta`, `ja`, `ra`, `ta`, and two heavy syllables; and in the even, `sa`, `ma`, `ja`, and two heavy syllables, it is here called Bhaddavirāja.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:190">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">111</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">111.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:191">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Visame sa, jā sa,garu,yuttā;</p>
+<p rend="gathalast"><span rend="bold">Ketumatī</span> same bha,ra,na,gā go.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the odd pādas, there are the gaṇas `sa`, `ja`, `sa`, followed by a heavy syllable; it is Ketumatī if in the even pādas there are `bha`, `ra`, `na`, and two heavy syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:192">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">112</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">112.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:193">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> <span rend="bold">Ākhyānakī</span> tā visame ja, gā go; (Indavajira)</p>
+<p rend="gathalast">Ja,tā ja,gā go tu same’tha pāde. (upendavajira)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">It is Ākhyānakī if the odd pādas consist of `ta`, `ja`, and two heavy syllables (Indavajirā); but the even pādas consist of `ja`, `ta`, `ja`, and two heavy syllables (Upendavajirā).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:194">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">113</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">113.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:195">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ja,tā ja,gā go visame same tu; (Upendavajira)</p>
+<p rend="gathalast">Tā jo ga,gā ce <span rend="bold">viparītapubbā.</span> (indavajira)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If in the odd pādas there are `ja`, `ta`, `ja`, and two heavy syllables (Upendavajirā); but in the even, `ta`, `ja`, and two heavy syllables, it is Viparītapubbā (Indavajirā).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:196">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">114</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">114.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:197">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sa,sa,to sa,la,gā visame same;</p>
+<p rend="gathalast">Na,bha,bha,rā bhavate <span rend="bold">hariṇaplutā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If in the odd pādas there are the gaṇas `sa`, `sa`, `ta`, `sa`, a light syllable, and a heavy syllable; and in the even, `na`, `bha`, `bha`, `ra`, it is Hariṇaplutā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:198">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">115</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">115.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:199">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yadi na,na,ra,la,gā na,jā ja,rā,</p>
+<p rend="gathalast">Yadi ca tadā’<span rend="bold">paravatta</span> micchati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If the odd pādas consist of `na`, `na`, `ra`, a light syllable, and a heavy syllable; and the even pādas consist of `na`, `ja`, `ja`, `ra`, then it is known as Aparavatta.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:200">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">116</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">116.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:201">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Visama <span class="pb hidden-meta" data-ed="M" data-n="0.0199">[M 0.0199]</span> mupagatā na,nā ra,yā ce;</p>
+<p rend="gathalast">Na,ja,ja,ra,gā samake ca <span rend="bold">pupphitaggā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If the odd pādas consist of the gaṇas `na`, `na`, `ra`, `ya`; and the even pādas consist of `na`, `ja`, `ja`, `ra`, and a heavy syllable, it is Pupphitaggā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:202">
+  <div class="pair-col col-pali">
+<p rend="centre">Dvayaṃ midaṃ <span rend="bold">vetālīya’</span>ppabhedo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">This pair is a minor variety of the Vetālīya meter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:203">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">117</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">117.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:204">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sā <span rend="bold">yavā</span>dikā <span rend="bold">matī</span> ra,jā ra,jā tva,</p>
+<p rend="gathalast">Same same ja,rā ja,rā garū bhaveyyuṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">That is held to be Yavādikāmatī which has in its odd pādas `ra`, `ja`, `ra`, `ja`, and `tva`; in the even pādas, there should be `ja`, `ra`, `ja`, `ra`, and a heavy syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:205">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti vuttodaye chandasi aḍḍhasamavuttiniddeso nāma</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus, in the Vuttodaya, a treatise on prosody, ends the chapter named the Exposition of Half-Even Meters.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:206">
+  <div class="pair-col col-pali">
+<p rend="centre">Catuttho paricchedo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Fourth Chapter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:207">
+  <div class="pair-col col-pali">
+<p rend="chapter">5. Visamavuttiniddesa-pañcamapariccheda</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">5. The Fifth Chapter: The Exposition of Uneven Meters.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:208">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">118</span>. Na’ṭṭhakkharesu pādesu, snā’dimhā yo’ṇṇavā <span rend="bold">vattaṃ.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">118. In the eight-syllable pādas of the Vatta meter, there is a `ya` gaṇa from the fourth syllable, and not `sa` or `na` from the beginning.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:209">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">119</span>. Samesu sindhuto jena, <span rend="bold">pathyāvattaṃ</span> pakittitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">119. When in the even pādas, there is a `ja` gaṇa from the fourth syllable, it is declared to be Pathyāvatta.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:210">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">120</span>. Ojesu jena sindhuto, ta’meva <span rend="bold">vīparītā’di.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">120. When there is a `ja` gaṇa from the fourth syllable in the odd pādas, that is the Viparītā and other such meters.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:211">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">121</span>. Na,kāro ce jaladhito, <span rend="bold">capalāvatta’</span>micce’taṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">121. If there is a `na` gaṇa from the fourth syllable, this is called the Capalāvatta.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:212">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">122</span>. Same lo sattamo yassā, <span rend="bold">vipulā</span> piṅgalassa sā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">122. That in which the seventh syllable of the even pādas is light, is the Vipulā of Piṅgala.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:213">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">123</span>. <span rend="bold">Setava</span>ssā’khilesupi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">123. Also in all the Setavassā variations.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:214">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">124</span>. Bhena’ṇṇavā <span rend="bold">bha’bbipulā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">124. By a `bha` gaṇa from the fourth syllable, it is the Bha-vipulā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:215">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">125</span>. Eva’<span rend="bold">maññā ro</span> catutthā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">125. Similarly, another Vipulā has a `ra` gaṇa from the fourth syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:216">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">126</span>. No’ṇṇavā ce <span rend="bold">navipulā.</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">126. If there is a `na` gaṇa from the fourth syllable, it is the Na-vipulā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:217">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">127</span>. To’ṇṇavā tathā’<span rend="bold">ññā</span> siyā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">127. By a `ta` gaṇa from the fourth syllable, there may similarly be another Vipulā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:218">
+  <div class="pair-col col-pali">
+<p rend="centre">Vatta’ppabhedo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Minor varieties of the Vatta meter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:219">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">128</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">128.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:220">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nadissate’ttha yaṃ chandaṃ, payoge dissate yadi;</p>
+<p rend="gathalast">Visama’kkharapādaṃ taṃ, <span rend="bold">gāthā</span> sāmaññanāmato.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whatever meter is not described herein, yet is found in usage, if it has pādas of uneven syllable-count, it is known by the general name of Gāthā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:221">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti vuttodaye chandasi visamavutti niddeso nāma</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus, in the Vuttodaya, a treatise on prosody, ends the chapter named the Exposition of Uneven Meters.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:222">
+  <div class="pair-col col-pali">
+<p rend="centre">Pañcamo paricchedo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Fifth Chapter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:223">
+  <div class="pair-col col-pali">
+<p rend="chapter">6. Chappaccayavibhāga-chaṭṭhapariccheda</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">6. The Sixth Chapter: The Analysis of the Six Factors.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:224">
+  <div class="pair-col col-pali">
+<p rend="title">Patthāranaya</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">The Method of Expansion.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:225">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">129</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">129.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:226">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Patthāre <span class="pb hidden-meta" data-ed="M" data-n="0.0200">[M 0.0200]</span> sabbage pāde, pubbagā’dho lpa’re samā;</p>
+<p rend="gathalast">Pubbe garu te ca mime, kattabbā yāva sabbalā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the expansion, beginning with a line of all heavy syllables, the preceding heavy syllables are placed below, and the following light syllables are on the same level. The first line is all heavy, and this should be done until a line of all light syllables is reached.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:227">
+  <div class="pair-col col-pali">
+<p rend="title">Naṭṭhanaya</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">The Method of the Lost (Meter).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:228">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">130</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">130.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:229">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Naṭṭhassa yo bhaveyya’ṅko, tasmiṃ lo’ddhikate same;</p>
+<p rend="gathalast">Visame tve’kasahite, bhaveyya’ddhikate garu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whatever the number of the lost (meter) may be, if that number is even, when halved, it indicates a light syllable; but if it is odd, with one added and then halved, it would indicate a heavy syllable.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:230">
+  <div class="pair-col col-pali">
+<p rend="title">Uddiṭṭhanaya</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">The Method of Specifying (the Meter).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:231">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">131</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">131.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:232">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ekā’dinukkamena’ṅke, pubbādho dviguṇe likhe;</p>
+<p rend="gathalast">Missakehi lahuṭṭhehi, se’kehu’ddiṭṭhakaṃ bhave.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One should write the numbers in sequence beginning with one, each doubled below the preceding. The specified (number) is the sum of the numbers corresponding to the light syllables, plus one.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:233">
+  <div class="pair-col col-pali">
+<p rend="title">Sabbagalakriyanaya</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">The Method for All Heavy and Light Syllables.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:234">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">132</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">132.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:235">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vutta’kkhara samā saṅkhyā, likkhya seko’parū’pari;</p>
+<p rend="gathalast">Ekekahīna mekādi, nu’ṭṭhāne sabbagādikaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A number equal to the stated syllables having been written, with a one above. Then, beginning with one and proceeding sequentially, the numbers for all-heavy and so forth are found in their respective positions.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:236">
+  <div class="pair-col col-pali">
+<p rend="title">Vuttasaṅkhyānaya</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">The Method of Enumerating the Meters.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:237">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">133</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">133.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:238">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Garukriyā’ṅka sandohe, bhave saṅkhyā vimissite;</p>
+<p rend="gathalast">Uddiṭṭha’ṅka samāhāro, se’ko ve’maṃ samā’naye.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The total number of meters is the sum of the collection of numbers from the heavy-syllable operation. Alternatively, the sum of the specified numbers, plus one, also yields this result.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:239">
+  <div class="pair-col col-pali">
+<p rend="title">Vuttaaddhānaya</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">The Method of the Extent of the Meter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:240">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">134</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">134.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:241">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saṅkhyeva dviguṇe’kūnā, vitthārā’yāmasambhavā;</p>
+<p rend="gathalast">Vuttassa’ddha’ntarānañca, garulānañca aṅgulaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The length of the path is the total number of meters doubled, less one. The total space arises from the width and length. For the intervals of the meter and for the heavy and light syllables, the unit of measure is an aṅgula.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:242">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti vuttodaye chandasi chappaccayavibhāgo nāma</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus, in the Vuttodaya, is the chapter named the Division of the Six Procedures of Prosody.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:243">
+  <div class="pair-col col-pali">
+<p rend="centre">Chaṭṭho paricchedo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Sixth Chapter.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:244">
+  <div class="pair-col col-pali">
+<p rend="title">Nigamana</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="title">Conclusion.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:245">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">135</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">135.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:246">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sela’ntarā’yatana <span class="pb hidden-meta" data-ed="M" data-n="0.0201">[M 0.0201]</span> vāsika <span rend="bold">sīla’</span>tthera,</p>
+<p rend="gatha2">Pādo garu gguṇagaru jjayataṃ mame’so;</p>
+<p rend="gatha3">Yassa ppabhāva’mavalamba maye’disopi,</p>
+<p rend="gathalast">Sampādito’bhimata siddhikaro parattho.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">May this work of mine be victorious, dedicated to the revered feet of the Elder Sīla, resident of the Selantarāyatana, who is venerable and heavy with virtue. Relying on his power, even I, such as I am, have accomplished this work for the welfare of others, which brings the attainment of what is desired.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:247">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">136</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">136.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:248">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Parattha sampādanato, puññenā’dhigatena’haṃ;</p>
+<p rend="gathalast">Parattha sampādanako, bhaveyyaṃ jāti jātiyaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By the merit acquired from accomplishing the welfare of others, may I, in birth after birth, be one who accomplishes the welfare of others.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:249">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">137</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">137.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:250">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Avalokita mattena, yathā chappaccayā mayā;</p>
+<p rend="gathalast">Sādhitā sādhayante’va, micchitatthampi pāṇinoti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Just as the six methods have been mastered by me, so may they, merely by being studied, accomplish for living beings even a wrongly desired aim.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:251">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti saṅgharakkhitamahāsāmittherena viracitaṃ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus composed by the Great Elder Saṅgharakkhita.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0808n_nrf:252">
+  <div class="pair-col col-pali">
+<p rend="centre">Vuttodayappakaraṇaṃ pariniṭṭhitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The treatise Vuttodaya is completed.</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

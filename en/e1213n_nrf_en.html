@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1213n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">Pali | Trans.</button><button type="button" data-mode="view-stack">Pali — Trans.</button><button type="button" data-mode="view-pali-only">Pali Only</button><button type="button" data-mode="view-trans-only">Trans. Only</button><button type="button" id="toggle-meta-btn">Note</button></div>
+<div class="pair-row" data-id="e1213n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="chapter">Saddabindu <span class="pb hidden-meta" data-ed="O" data-n="0.0001">[O 0.0001]</span> pakaraṇaṃ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Treatise of Saddabindu</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="centre">Namo tassa bhagavato arahato sammāsambuddhassa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Homage to the Blessed One, the Arahant, the Perfectly Self-Enlightened One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yassañeyyesu dhammesu, nāṇumattampaveditaṃ,</p>
+<p rend="gathalast">Natvāsaddhammasaṅghaṃtaṃ, saddabinduṃsamārabhe;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having paid homage to him, by whom concerning all knowable phenomena not even the slightest part was left unrevealed, and to the good Dhamma and the Sangha, I shall commence the Saddabindu.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0002">[O 0.0002]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kādiritā navasaṅkhyā, kamenaṭā di yādica,</p>
+<p rend="gathalast">Pādayopañca saṅkhyātā, suññanāmā saraññanā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Those beginning with 'k' are stated as nine in number, and in order those beginning with 'ṭ' and 'y'. The five groups are enumerated. The one named 'zero' and the vowels are made known.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sarehevasarāpubbe luttāvāvīpareramā,</p>
+<p rend="gathalast">Byañjanācāgamāvāvī dīgharassādisambhavā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Vowels preceding may be elided or not; for consonants there may be addition or elision; and the occurrence of long and short vowels, and so forth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">4</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0003">[O 0.0003]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">4.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kākāsenāgatosisa keniddhimaccadassayi,</p>
+<p rend="gathalast">Arājakhvaggimesīnaṃ sotukammeghayitthiyo;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Examples: Crows; one who has come with an army; head; 'By whom was psychic power displayed?'; not a king; a sword; of the foremost sages; to hear; in action; women.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti sandhikappo samatto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus, the chapter on euphonic combination is completed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0004">[O 0.0004]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Buddhapumayuvasanta rājabrahmasakhācasā,</p>
+<p rend="gathalast">Yatādidehījantuca satthupitābhibhūvidū;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Buddha, man, youth, good person, king, Brahmā, friend, and lord; ascetic and so forth, the embodied one, and creature; teacher, father, conqueror, knower.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kaññāmmārattithipo, kkharaṇīnadirumātubhū,</p>
+<p rend="gathalast">Napuṃsaketiyantāca, padakammadadhāyuno;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Maiden, mother, night, woman; lotus pond, river, tree, mother, earth; and in the neuter gender those ending in -ti, and those that function as verbal nouns.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0005">[O 0.0005]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Gahitāgahaṇenettha suddhosyādyantakāpume,</p>
+<p rend="gathalast">Vimalāhontijāntehi thyaṃpañcantehidādhikā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Here, by means of inclusion and exclusion, in the masculine, pure stems are determined by their initial and final letters; they become stainless through their endings. In the feminine, through the five endings, there are additional forms.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Napuṃsakepayogātu janakāhontityantato,</p>
+<p rend="gathalast">Padhānānugatāsabba nāmasamāsataddhitā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the neuter gender, however, from the -ti ending, usages become agent nouns; all nominal compounds and derivatives follow the principal noun.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">9</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0006">[O 0.0006]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">9.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Attiliṅgānipātādi tatoluttāvasyādayo,</p>
+<p rend="gathalast">Suttānurūpatosiddhā hontivattāmanādayo;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">There are genders, indeclinables, etc., and then elided forms and so on; the present tense forms, etc., are established according to the Suttas.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti nāmakappo samatto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus, the chapter on nominals is completed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">10</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">10.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Chakārakesasāmismiṃ samāsohotisambhavā,</p>
+<p rend="gathalast">Taddhītākattukammasa, mpadānokāsasāmisu;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the six case relations, compounding occurs where possible, particularly in the possessive; derivatives are formed in the senses of agent, object, dative, locative, and possessive.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">11</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0007">[O 0.0007]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">11.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sādhattayamhiākhyāto kitakosattasādhane,</p>
+<p rend="gathalast">Sabbatthapaṭhamāvutte avuttedutiyādayo;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The verb and the primary derivative are employed in the seven means of expression; everywhere, the first case is used when the agent is expressed, and the second and other cases when it is unexpressed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">12</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">12.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Manasāmuninovutyā vanebuddhenavaṇṇite,</p>
+<p rend="gathalast">Vaṭṭāhitovivaṭṭatthaṃ bhikkhubhāvetibhāvanaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By mind, by the sage's utterance, in the forest praised by the Buddha, the monk cultivates development for the sake of release from the round of existence, for the goal of liberation.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti kārakakappo samatto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus, the chapter on case relations is completed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">13</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0008">[O 0.0008]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">13.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Rāsīdvipadikādvandā liṅgenavacanenaca,</p>
+<p rend="gathalast">Luttātulyādhikaraṇā bahubbīhītukhemarū;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Aggregate and two-word Dvandva compounds are determined by gender and number; elided compounds, Karmadhāraya, and Bahubbīhi, however, are of a secure form.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">14</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">14.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tappurisācakhemorā dayācakammadhārayā,</p>
+<p rend="gathalast">Digavocāvyayāhārā etesabbepihāritā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Tappurisa, and the khema, the ora, and the dayā, and the Kammadhāraya, the Digu, and the Avyayībhāva—all these are also included.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti samāsakappo samatto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus, the chapter on compounds is completed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">15</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">15.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kaccāditopiekamhā saddatoniyamaṃvinā,</p>
+<p rend="gathalast">Nekatthesatibhonteva sabbetaddhitapaccayā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Following Kaccāyana and others, even from a single word, without a fixed rule, all derivative suffixes may indeed arise when there are multiple meanings.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti taddhitakappo samatto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus, the chapter on derivatives is completed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">16</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0009">[O 0.0009]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">16.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kattarināññathākamme tathābhāvetumerayā,</p>
+<p rend="gathalast">Sabbetepacadhātumhi saṅkhepenamarūmayā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the agent sense, not otherwise; in the object sense, and likewise in the impersonal sense. All these are briefly formed from the root 'pac' as a paradigm.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">17</span>.<span class="pb hidden-meta" data-ed="O" data-n="0.0010">[O 0.0010]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">17.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Gamīmhātiguṇāphatto sambhavāaññadhātusu,</p>
+<p rend="gathalast">Anantāvapayogāte ādesapaccayādihi;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">From the root 'gam', vowel gradation, attainment, and other such phenomena arise in other roots. Their usages are infinite, by means of substitution, suffixes, and so forth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti ākhyātakappo samatto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus, the chapter on verbs is completed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">18</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">18.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kitādipaccayāsabbe, ekamhāapidhātuto,</p>
+<p rend="gathalast">Siyuṃnurūpatosatta, sādhanesatipāyato;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">All suffixes beginning with 'kita', even from a single verbal root, may fittingly be of seven kinds, according to the means of expression, based on the text.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti kitakappo samatto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus, the chapter on primary derivatives is completed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">19</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0011">[O 0.0011]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">19.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Iminākiñcilesena, sakkāñātuṃjināgame,</p>
+<p rend="gathalast">Payogāñāṇināsindhu, rasovekenabindunā;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By this slight effort, one may know the Victor's doctrine; just as for one skilled in application, the taste of the ocean is known from a single drop.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">20</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">20.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Rammaṃsīghappavesāya, puraṃpiṭakasaññitaṃ,</p>
+<p rend="gathalast">Maggojumaggataṃmaggaṃ, saddāraññevisodhito;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A path for swift entry into the pleasant city known as the Piṭaka, a straight way, a road well-cleared in the forest of grammar.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">21</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0012">[O 0.0012]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">21.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Teneva kiñci jalito jalito padīpo</p>
+<p rend="gatha2">Kaccāyanuttiratano citagabbhakoṇe,</p>
+<p rend="gatha3">Dhammādirājagurunā garumāmakena</p>
+<p rend="gathalast">Dhammena yobbipatinā sagaruttanīto;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By that, this lamp is somewhat lit, the jewel of Kaccāyana's tradition, in the corner of the decorated chamber, brought forth with reverence by my revered teacher, Dhammādirāja, the lord of the young.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti saddabindu pakaraṇaṃ parisamattaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus, the Treatise on the Sound-Point is concluded.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Yosaññamo guṇadhano nayanaṃ nijaṃva</p>
+<p rend="gatha2">Sikkhāpayī mama mavaṃ sugatāgamādo,</p>
+<p rend="gatha3">Salloka puñja suhado padumādi rāma</p>
+<p rend="gathalast">Nāmo mahā yativarā cariyo samayhaṃ;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who, restrained and rich in virtues, taught me, the foolish one, from the Sugata's doctrine as if I were his own eye—that friend to the multitude of good people, named Padumādi Rāma, the great and excellent ascetic—is my teacher.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1213n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Saddhādhanena vasatā viditamhi pupphā</p>
+<p rend="gatha2">Rāmedhunā ariyavaṃsa dhajavhayena,</p>
+<p rend="gatha3">Santena ñāṇatilako tyaparākhyakena</p>
+<p rend="gathalast">Bālānametamavidhīyi mayāhitāya;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">While dwelling with the wealth of faith, now in the renowned Pupphārāma, this was composed for the benefit of the foolish by me, the peaceful one, named 'Banner of the Noble Lineage' and also called 'Crest-jewel of Wisdom'.</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

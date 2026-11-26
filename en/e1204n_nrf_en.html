@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1204n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">Pali | Trans.</button><button type="button" data-mode="view-stack">Pali — Trans.</button><button type="button" data-mode="view-pali-only">Pali Only</button><button type="button" data-mode="view-trans-only">Trans. Only</button><button type="button" id="toggle-meta-btn">Note</button></div>
+<div class="pair-row" data-id="e1204n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="chapter">Dhātupāṭha <span class="pb hidden-meta" data-ed="O" data-n="0.0001">[O 0.0001]</span> vilāsiniyā</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Dhātupāṭha Vilāsinī</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="centre">Namo tassa bhagavato arahato sammāsambuddhassa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Homage to the Blessed One, the Arahant, the Perfectly Self-Enlightened One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sammāsambuddha sūriyo yo sambodho dayo dito;</p>
+<p rend="gathalast">Jagu paṅkaja saṅghāte bodhayī paṇamāmi taṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Perfectly Self-Enlightened Sun, who shone forth with the dawn of awakening and awakened the world's lotus-like multitude—to him I bow.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saddhammabhānu yo lokā lokaṃ katvāna dhī tamaṃ;</p>
+<p rend="gathalast">Dhaṃsayī muninā sammā pātubhūto namāmi taṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to him, the sun of the True Dhamma, who, having illuminated the world and dispelled the darkness, was rightly manifested by the Sage.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Silagandhasamākiṇṇo buddho saddhammahāya yo;</p>
+<p rend="gathalast">Saṅghatoyaruho pāṇa lī tosesi namāmi taṃ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to him, the Buddha, replete with the fragrance of virtue; who, like a lotus grown from the water of the Sangha, brought delight to living beings.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">4</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">4.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Natvā mama garuṃvāsi padumārāma nāmakaṃ;</p>
+<p rend="gathalast">Pāḷiṃ nissāya kassā haṃ dhātupāṭhavilāsini-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having paid homage to my teacher, the venerable Padumārāma by name, and relying on the Pāli, I shall compose this Dhātupāṭhavilāsinī.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Imañhi ganthakaraṇaṃ satthāgamanaye rato;</p>
+<p rend="gathalast">Mūkalaṃgamu saṅkhāte gāme sajjanakārite-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">This composition was made by one devoted to the Teacher’s tradition, at the request of good people in the village known as Mūkalaṅgamu.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Suvisuddhārāmanāma vihāramhi nivāsako;</p>
+<p rend="gathalast">Tasmiṃ padhāna thero si kataññū santavutti yo-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Residing in the monastery named Suvisuddhārāma, he was the chief elder there, grateful and of virtuous conduct—</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Guṇālaṅkāranāmo so thero theranvaye rato;</p>
+<p rend="gathalast">Yāci maṃ abhigantvāna mitto me vaṅkamānaso.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">That elder named Guṇālaṅkāra, devoted to the lineage of elders, my friend of humble mind, approached and requested this of me.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Buddho hessaṃ yadā loke niddeso haṃ tadā iti;</p>
+<p rend="gathalast">Pāpuṇissa mahaṅkāraṃ ko vādo pani hantare-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">“When I become a Buddha in the world, then this will be my declaration: ‘Who could attain such great eminence? What talk is there of another in this matter?’”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Appaccayo <span class="pb hidden-meta" data-ed="O" data-n="0.0003">[O 0.0003]</span> paro hoti bhūvādi gaṇato sati;</p>
+<p rend="gathalast">Suddhakattu kirayākhyāne sabbadhātuka nissitaṃ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The non-causative is distinct when it belongs to the bhū-group; in the verbal expression of the pure agent, it is dependent on any verbal root.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Payutto <span class="pb hidden-meta" data-ed="O" data-n="0.0005">[O 0.0005]</span> kattunā yoge ṭhito yevā ppadhāniye;</p>
+<p rend="gathalast">Kirayaṃ sādheti etassa dīpakaṃ sāsane padaṃ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When employed in connection with the agent, standing indeed in a subordinate role, it accomplishes the action; this word is an indicator of this in the Teaching.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Karaṇa vacanaṃyeva yebhuyyena padissati;</p>
+<p rend="gatha2">Ākhyāte kāritaṭṭhānaṃ sandhāya kathitaṃ idaṃ;</p>
+<p rend="gathalast">Na nāme kārataṭṭhānaṃ bodhetā itiādikaṃ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The instrumental expression mostly appears; this is stated with reference to the causative sense in verbs, not to indicate the causative sense in nouns, such as ‘the enlightener,’ and so forth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Sunakhehipi khādāpenti iccādini padānitu;</p>
+<p rend="gathalast">Āharitvāna dīpeyya payoga kusalo budho-yī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A wise one, skilled in application, should bring forth and explain such phrases as, ‘They make even dogs eat.’</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Kathito <span class="pb hidden-meta" data-ed="O" data-n="0.0007">[O 0.0007]</span> sacca saṅkhepe paccanta vacanena ve;</p>
+<p rend="gathalast">Bhuyyate iti saddassa sambandho bhāvadīpano-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Truly, it is stated in brief with a limiting expression that the connection of the word ‘bhūyate’ is one that indicates existence.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Niddesapāḷiyaṃ rūpaṃ vihoti vihavīyati;</p>
+<p rend="gathalast">Iti dassanatovāpi paccattavacanaṃ thiraṃ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the Niddesa Pāli, the forms ‘vihoti’ and ‘vihavīyati’ are seen; thus, from this evidence also, the reflexive expression is confirmed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Tathā dhajaggasuttante muninā hacca bhāsite;</p>
+<p rend="gathalast">So pahīyissati iti pāḷidassanatopica-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Likewise, in the Dhajagga Sutta, authoritatively spoken by the Sage, and also from the evidence in the Pāli text itself: ‘so pahīyissati’ (it will be abandoned).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Pāramitānu bhāvena mahesīnaṃva dehato;</p>
+<p rend="gathalast">Sanni nipphādanā neva sakkaṭādi vaco viya-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Through the power of the perfections, as from the bodies of the great seers, the production of perception is not possible, just as with words like ‘sakkaṭa’.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Paccatta dassaneneva purisattaya yojanaṃ;</p>
+<p rend="gatha2">Ekavacanikañcāpi bahuvacanikampica;</p>
+<p rend="gathalast">Kātabba miti no khantī parassapadaādike-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By personal insight alone is the application of the three persons, both singular and plural, to be made; thus, there is no tolerance for error regarding the active voice and so forth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Bhāve kirayāpadaṃ nāma pāḷiyā atiduddasaṃ;</p>
+<p rend="gathalast">Tasmā taggahaṇūpāyo vutto ettāvatā mayā-yī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The action-word (kiriyāpada) in the impersonal sense is extremely difficult to see in the Pāli; therefore, the method for grasping it has been explained thus far by me.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Yaṃ <span class="pb hidden-meta" data-ed="O" data-n="0.0008">[O 0.0008]</span> tikālaṃ tipurisaṃ kirayāvāci tikārakaṃ;</p>
+<p rend="gathalast">Attiliṅgaṃ dvivacanaṃ ta dākhyātanti vuccati-yī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">That which is threefold in time, threefold in person, action-denoting, and threefold in case-role; which is without gender and has two numbers—that is called a verb (ākhyāta).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Ākhyāta <span class="pb hidden-meta" data-ed="O" data-n="0.0009">[O 0.0009]</span> sāgara matha jjatani taraṅgaṃ,</p>
+<p rend="gatha2">Dhātujjalaṃ vikaraṇa gama kālamīnaṃ;</p>
+<p rend="gatha3">Lopā nubandha raya mattha vibhāgatīraṃ,</p>
+<p rend="gathalast">Dhīrā taranti kavino puthu buddhi nāvā-yī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Wise poets, with the boat of their broad intellect, cross the ocean of verbs—with its waters of verbal roots, its fish of conjugational signs, moods, and tenses, its churning waves, and its shores of elision, appended letters, and division of meaning.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Cakkhakkhī <span class="pb hidden-meta" data-ed="O" data-n="0.0011">[O 0.0011]</span> nayanaṃ nettaṃ locanaṃ diṭṭhi dassanaṃ;</p>
+<p rend="gathalast">Pekkhanaṃ acchi pamhantu pakhumanti pavuccati-yi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">‘Cakkhu,’ ‘akkhi,’ ‘nayana,’ ‘netta,’ ‘locana,’ and ‘acchi’ are words for the eye; ‘diṭṭhi’ and ‘dassana’ are words for sight; ‘pekkhana’ means looking; ‘pamha’ and ‘pakhuma’ are said to be eyelashes.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1">“Pabbājito <span class="pb hidden-meta" data-ed="O" data-n="0.0017">[O 0.0017]</span> sakā raṭṭhā, aññaṃ janapadaṃ gato,</p>
+<p rend="gathalast">Mahantaṃ koṭṭhaṃ kayirātha, duruttānaṃ nivetave”-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">“Driven from his own kingdom and gone to another district, he would build a great fortress to ward off harsh words.”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Porāṇa <span class="pb hidden-meta" data-ed="O" data-n="0.0022">[O 0.0022]</span> metaṃ atula netaṃ ajjatanāmiva,</p>
+<p rend="gatha2">Nindanti tuṇhi māsīnaṃ nindanti bahubhāṇinaṃ;</p>
+<p rend="gathalast">Mitabhāṇinampi nindanti natthi loke anindito-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">This is an ancient saying, Atula, not one of today alone: they blame one who sits in silence, they blame one who speaks much, and they blame one who speaks in moderation. There is no one in the world who goes unblamed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Nagaraṃ <span class="pb hidden-meta" data-ed="O" data-n="0.0025">[O 0.0025]</span> yathā paccantaṃ “guttaṃ” santarabāhiyaṃ,</p>
+<p rend="gathalast">Evaṃ ‘gopetha’ attānaṃ, khaṇe ve mā upaccagā-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">As a border city is guarded within and without, so you should guard yourself. Do not let this moment pass you by.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Dhiratthu <span class="pb hidden-meta" data-ed="O" data-n="0.0028">[O 0.0028]</span> taṃ visavantaṃ, yamahaṃ jīvita kāraṇā,</p>
+<p rend="gathalast">Vantaṃ pacchā vamissāmi, mataṃ me jivitaṃ varaṃ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">“Fie on that which was vomited, which I, for the sake of life, vomited forth! That I should consume again what was vomited—better for me is death than life.”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Viluppateva <span class="pb hidden-meta" data-ed="O" data-n="0.0041">[O 0.0041]</span> puriso, yāvassa upakappati,</p>
+<p rend="gathalast">Yadā caññe vilumpantī, so vilutto vilumpatī-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A person plunders as long as it is to his advantage; and when others plunder him, he, the plundered one, plunders in turn.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="gatha1">“Appamādo <span class="pb hidden-meta" data-ed="O" data-n="0.0044">[O 0.0044]</span> amatapadaṃ, pamādo maccuno padaṃ,</p>
+<p rend="gathalast">Appamattā na mīyanti, ye pamattā yathāmatā”.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">“Heedfulness is the path to the Deathless; heedlessness is the path to death. The heedful do not die; the heedless are as if already dead.”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0062">[O 0.0062]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ñāṇavimala tissākhyo, yo mahāsaṅgha nāyako,</p>
+<p rend="gathalast">Marammavaṃsaṃ ādoca, dīpe saṇṭhāpayī idha-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who was the great Sangha leader, Ñāṇavimalatissa by name, first established the Burmese lineage here on this island.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tassa padhāna sissosi, pāḷi yaṭṭhakathā vidū,</p>
+<p rend="gathalast">Dhammadhāra samaññāto, yo mahā saṅghasāmiko-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He was his chief disciple, skilled in the Pāli and its commentaries, known by the name Dhammadhāra, who was a great master of the Sangha.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo tassa mukhyasiṃssā si, dhamme sattheva kovido,</p>
+<p rend="gathalast">Ñāṇānanda mahāthero, khe mā viya supākaṭo-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who was his chief disciple, skilled indeed in the Dhamma and the scriptures, the great Elder Ñāṇānanda, was as renowned as the moon in the sky.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">4</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">4.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vimalasāra tissākhyo, mahāsaṃsādhipo kavi,</p>
+<p rend="gathalast">Sissosi dutiyo tassa, pariyatti visārado-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Vimalasāratissa by name, a great lord of the assembly and a poet, was his second disciple, skilled in the scriptures.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Padumārāma nāmo me, ācero therapuṅgavo,</p>
+<p rend="gathalast">Tatiyo tassa sisso si sikkhāgārava saññuto-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">My teacher, Padumārāma by name, a pre-eminent elder, was his third disciple, endowed with reverence for the training.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saṅghādhipoca vimala, sārākhyo therakuñjaro,</p>
+<p rend="gathalast">Padumārāma vikhyāta, mahāthero cime duve-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">And the Sangha leader, the elder-elephant named Vimalasāra, and the great elder renowned as Padumārāma—these two.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dhammādhāra mahāsaṅgha, sāminoca upantike,</p>
+<p rend="gathalast">Ñāṇānanda mahāthera, ssantikeva samuggahuṃ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">They studied in the presence of the great Sangha master Dhammadhāra, and also in the presence of the great elder Ñāṇānanda.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0063">[O 0.0063]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tesu kho padumārāma mahāthero avaṃ mamaṃ,</p>
+<p rend="gathalast">Sikkhayi sadda sattheca, pāḷiyaṭṭhakathāsu ca-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Among them, the great elder Padumārāma taught me grammar, and also the Pāli and its commentaries.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">9</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">9.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tasmiṃ divaṅgate pacchā, chando vyākaraṇādikaṃ,</p>
+<p rend="gathalast">Vimalasāra mahāthera, ssantikeca samuggahiṃ-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">After he passed away, I learned prosody, grammar, and the like from the great elder Vimalasāra.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">10</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">10.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tassa kho padumārāma mahātherassa dhīmato,</p>
+<p rend="gathalast">Sissena ñāṇatilaka therena saṃsasāminā-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By his disciple, the elder Ñāṇatilaka, the Saṃsasāmin, for that wise great elder Padumārāma—</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">11</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">11.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Buddhassa parinibbāṇa vīsahasse catussate,</p>
+<p rend="gathalast">Sa sattatyādhike vasse jeṭṭhamāse manorame-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the year two thousand four hundred and seventy-seven after the Buddha's Parinibbāna, in the pleasant month of Jeṭṭha—</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">12</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">12.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Aṭṭhamiyaṃ kāḷapakkhe, katāyaṃ matisūdanī,</p>
+<p rend="gathalast">Dhātupāṭhattha bodhāya dhātupāṭha vilāsinī-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">On the eighth day of the dark fortnight, this Matisūdanī, the Dhātupāṭha Vilāsinī, was composed for the understanding of the meaning of the Dhātupāṭha.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">13</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">13.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ādi muddāpanaṃ assā, guṇālaṅkāra nāmino,</p>
+<p rend="gathalast">Onojitaṃ, mamāyattaṃ tatopari tapassino-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Its first printing was by one named Guṇālaṅkāra; it was offered, being my property, and thereafter for the ascetics.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">14</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">14.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sisso mayhaṃ gunānando unākuruva gāmajo,</p>
+<p rend="gatha2">Mamu patthamhito āsi, gaṇṭhiṭṭhānesanādito;</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">My pupil Gunānanda, born in the village of Unākuruva, was my supporter, from seeking out difficult passages and so forth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">15</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">15.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bastyaṃ samaññako rājā, macco mama pitā ahu,</p>
+<p rend="gathalast">Ontīnyā vī sanāmā me mātā senāpatānyanu–</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A king named Bastian resided; my father was a minister. My mother was named Ontī, and she was of the general's lineage.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">16</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">16.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ācerā ceva pācerā, janako jananīva me,</p>
+<p rend="gathalast">Devā cetyaṅgino sabbe, nenapappontu nibbutinti-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By this merit, may my teachers and preceptors, my father and mother, and all the deities of the shrine precincts attain Nibbāna.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1204n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="centre">Dhātupāṭhavilāsiniyā samāptayi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Dhātupāṭhavilāsinī is concluded.</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

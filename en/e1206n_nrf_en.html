@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1206n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">Pali | Trans.</button><button type="button" data-mode="view-stack">Pali — Trans.</button><button type="button" data-mode="view-pali-only">Pali Only</button><button type="button" data-mode="view-trans-only">Trans. Only</button><button type="button" id="toggle-meta-btn">Note</button></div>
+<div class="pair-row" data-id="e1206n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="chapter">Hatthavanagallavihāra <span class="pb hidden-meta" data-ed="O" data-n="0.0001">[O 0.0001]</span> vaṃso</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Chronicle of the Hatthavanagalla Vihāra</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="centre">Namo tassa bhagavato arahato sammāsambuddhassa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Homage to the Blessed One, the Arahant, the Perfectly Self-Enlightened One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Snehuttarāya hadayā malamallikāya,</p>
+<p rend="gatha2">Pajjālito matidasāya jinappadīpo;</p>
+<p rend="gatha3">Mohaṇdhakāramakhilaṃ mama nīharanto,</p>
+<p rend="gathalast">Niccaṃ vibhāvayatu cāru padattharāsiṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">May the lamp of the Conqueror, kindled by a heart supreme in affection, like a garland of jasmine, and by the gift of intelligence, dispelling all my darkness of delusion, constantly illuminate the beautiful array of words and their meanings.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Laṅkābhisittavasudhādhipatīsu rājā,</p>
+<p rend="gatha2">Yo bodhisattaguṇavā sirisaṅghabodhi;</p>
+<p rend="gatha3">Tassāticāru cariyā racanāmukhena,</p>
+<p rend="gathalast">Vakkāmi hatthavanagallavihāra vaṃsaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Among the kings consecrated over the land of Laṅkā was King Sirisaṅghabodhi, who possessed the virtues of a Bodhisatta. By means of an account composed about his most charming conduct, I shall relate the Chronicle of the Hatthavanagalla Vihāra.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Brahmanvayenanugatatthamanomadassī,</p>
+<p rend="gatha2">Khyātena sabbayatirājadhurandharena;</p>
+<p rend="gatha3">Vyāpāritohamitibhānugataṃ kathañca,</p>
+<p rend="gathalast">Nissāya pubbalikhitaṃvidha vāyamāmi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I, of flawless insight, who follow the aim of the Brahmanical tradition, famed as the bearer of the burden of all chief ascetics, am engaged in this work. Relying on prior writings, I thus endeavour upon this story which has become so renowned.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">4</span>. Arṇtha sugatāgamasudhāpagāniddhotakudiṭṭhivisakalaṅkāya laṃkāya bhagavato aṅgīrasassamahānāgavanuyyāne samitisamāgatayakkha rakkhasalokavijayāpadānassa siddhakkhentabhūto sīhaḷamahīmaṇḍalamaṇḍanāya māno vividharatanākaropalakkhamānamahagghamaṇi bhedo maṇi bhedo nāma janapado.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">4. Now, in Laṅkā—where the stain of the poison of wrong views has been washed away by the river of nectar that is the Sugata's teaching, and which has become the field for the accomplishment of the heroic tale of victory over the assembled world of yakkhas and rākkhasas in the Mahānāgavana park of the Blessed One, the sage of the Aṅgīrasa clan—adorning the sphere of the earth of Sīhaḷa, is the district named Maṇibheda, distinguished by its various mines of precious jewels and gems.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Laddhāna satthu varaṇaṅkamanaññalabbha,</p>
+<p rend="gatha2">Mānaṇdinā sumanakūṭasiluccayena;</p>
+<p rend="gatha3">Ussāpitā vijayaketumatallikeva,</p>
+<p rend="gathalast">Suddhoruvālukanadī yamalaṅkaroti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A pure, wide, sandy river adorns it, like a splendid victory banner raised high, flowing from the Sumanakūṭa peak, which, exulting, has received the Teacher's excellent footprint, unobtainable by others.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Laṅkāya yakkhagaṇanīharaṇe jinassa,</p>
+<p rend="gatha2">Cammāsanugganahunāsanaphassadāhā;</p>
+<p rend="gatha3">Saṃsārarakkhasavapubbhavabubbulaṃca,</p>
+<p rend="gathalast">Yasmiṃ vihāti mahiyaṅgaṇa thūparājā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Wherein stands the royal stūpa of Mahiyangana, which destroys the bubble of past existence—the body of the demon Saṃsāra—and which commemorates the burning from the touch of the fierce fire of the leather mat of the Victor, during the expulsion of the host of yakkhas in Laṅkā.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0002">[O 0.0002]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sadāmahoghāya mahāpagāya,</p>
+<p rend="gatha2">Pānīyapānāya samosaṭānaṃ;</p>
+<p rend="gatha3">Samuccayo sāradavāridānaṃ,</p>
+<p rend="gathalast">Nūnaṃ gato thāvarathūparūpaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For those who have gathered at the great river, the ever-flowing flood, to drink its water, a collection of autumnal rains has surely taken the form of a stable stūpa.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tassāpagāya vimalambuni dissamāna,</p>
+<p rend="gatha2">Mālolavicitaralaṃ paṭibimbarūpaṃ;</p>
+<p rend="gatha3">Bhogehi veṭhiya nijaṃ bhavanaṃ phaṇīhi,</p>
+<p rend="gathalast">Pūjatthikehi viya rājati nīyamānaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Its reflection, seen in the clear water of that river and trembling with shimmering waves, shines as if it were the Nāgas' own abode, encircled by their coils and carried by them in worship.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">9</span>. Tassa mahiyaṅgaṇa mahā vihārassa pariyantagāmake selābhayo nāma khattiyo paṭivasanto puttaṃ paṭilabhitvā aṅgalakkhaṇapāṭhakānaṃ dassesi te tassa kumārassa aṅgalakkhaṇāni oloketvā “ayaṃ kumāro khamakasatto nahoti. Dhaññapuññalakkhaṇasampanno, sakalampi sīhaḷadīpaṃ ekacchattaṃ karitvā mahantamahantāni acchariyabbhutāni mahāvīracaritāni dassessatī”ti vyākariṃsu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">9. In a boundary village of that Mahiyangana Mahāvihāra, a nobleman named Selābhaya, residing there, obtained a son and showed him to those who read bodily marks. They, examining the boy's bodily marks, declared: "This boy is not of a passive nature. Endowed with marks of fortune and merit, he will unite the entire island of Sīhaḷa under one canopy and display very great and marvelous, heroic deeds."</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">10</span>. Tato selābhaya khattiyo puttassa abhisekādisampattiṃ sutvā koṭippattapamodaparavasopi tasmiṃ kāle anurādhapure rajjaṃ kārayatā “vohāratissamahārājato kadāci keci upaddavo jāyissatīti. Jātaparisaṅkotaṃ kumāramādāya mahiyaṅgaṇamahāvihāre bodhi aṅgaṇe parittagge sannipatitassa naṇdamahātherapamukhassa mahābhikkhusaṅghassa majjhe nipajjāpetvā “eso me bhante kumāro mahāsaṅghassa ca mahā bodhipādassa ca saraṇaṃ gacchati taṃ sabbepi bhadantā rakkhantu saṅghabodhi nāmako cāyaṃ hotu”ti mahāsaṅghassa ca bodhi devatāya ca niyyādetvā paṭijagganto kumārassa sattavassika kāle kālamakāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">10. Then the khattiya Selābhaya, hearing of the good fortune of his son's consecration and so forth, though overwhelmed with joy reaching its peak, at that time King Vohāratissa was ruling in Anurādhapura, and thinking, "At some time trouble may arise from the great king Vohāratissa," he became anxious. Taking the prince, he laid him down in the midst of the great Saṅgha of monks headed by the great elder Nanda, assembled in the hall for protective recitations in the Bodhi enclosure of the Mahiyangana Mahāvihāra, and said: "Venerable sirs, this my prince goes for refuge to the great Saṅgha and the great Bodhi tree. May all the venerable sirs protect him. And let him be named Saṅghabodhi." Having entrusted him to the great Saṅgha and the Bodhi deity, and while caring for the prince, he passed away when the prince was seven years old.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">11</span>. Atha mātulo naṇdamahāthero kumārakaṃ vihāramānetvā paṭijagganto tepiṭakaṃ buddhavacanaṃ uggaṇhāpetvā bāhirasatthesu ca paramakocidaṃ kāresi. Saṅghabodhikumāropi katādhikārattā tikkhapaññattā ca ñāṇaviññāṇasampanno hutvā vayappatto lokassa locanehinipiyamānāya rūpasampattiyā savañjalipuṭehi assādiyamānasadācāraguṇa sampattiyā ca pattha ṭa yasoghoso ahosi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">11. Then, his maternal uncle, the great elder Nanda, brought the young prince to the monastery and, attending to him, had him learn the Tipiṭaka, the Buddha's word, and also made him highly skilled in the external sciences. Prince Saṅghabodhi, also, because of his past aspirations and sharp intellect, being endowed with knowledge and understanding, having reached adulthood, became widely renowned for his perfect beauty, which was pleasing to the eyes of the world, and for his virtuous conduct, which was savored by all with reverently cupped hands.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">12</span>. Kimiha bahunā?- Kādambinī kadambato siniddhanīlāyataguṇaṃdhammillakalāpe, paripuṇṇahariṇaṅkamaṇḍalato hilādakarapasādasommaguṇaṃ mukhamaṇḍale cāmīkarapiṃjarakambuvarato medurodārabaṇdhurabhāvaṃ gīvāvayave, kalyāṇasiluccayato saṃhata vilāsaṃ uratthale, surasādhisākhato <span class="pb hidden-meta" data-ed="O" data-n="0.0003">[O 0.0003]</span> pīvarāyatalalitarūpaṃ kāmadānapadānadva bāhuyugaḷe, samadagandhasindhurato gamanalīḷhaṃ karākāradva hatthiyugaḷe, cārutaratharucirocamānacāmīkaramukurato tadākāraṃ sajāṇumaṇḍale jaṅghayugaḷe, niccā sīnakamalā kamalato rattakomaḷadalasiraṃ caraṇayugaḷe ādāya yojayatā pāramitādhammasippitā nimmitassa paramadassanīyagarūpavilāsassa tassa attabhāvassa saṃvaṇṇanāganthagāravamāvahati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">12. Why say more? From a bank of rain clouds, the quality of being glossy, dark, and long was taken for his mass of curls; from the full orb of the moon, the quality of refreshing, clear, and gentle radiance for his face; from a fine, golden-hued conch, the state of being smooth, noble, and beautifully curved for his neck; from a beautiful mountain peak, a compact grace for his chest; from a branch of the celestial tree, a plump, long, and graceful form for his pair of arms, which were bestowers of desired gifts; from a fragrant elephant in rut, graceful movement for his pair of hands, which were shaped like trunks; from a golden mirror gleaming with the beauty of a fine chariot, their shape for his pair of shanks with their kneecaps; from a lotus ever fresh, a red, soft, petal-like texture for his pair of feet. The description of his person, possessing a supremely beautiful and graceful form, created by the craftsman of the perfection-qualities who took and applied these attributes, brings great honor to this book.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">13</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">13.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dehe sulakkhaṇayute navayobbanaḍḍhe,</p>
+<p rend="gatha2">Tassujjale ca pasamāharaṇodayena;</p>
+<p rend="gatha3">Kā vaṇṇanā kamalarūpini jātarūpe,</p>
+<p rend="gathalast">Lokuttaraṃ parimalaṃ parito vahante.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">His radiant body, endowed with auspicious marks and rich with fresh youth, shone with the arising of peace. What description can there be of one whose golden form is like a lotus, bearing a transcendent fragrance all around?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">14</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">14.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dosārayo hadayaduggapure vijitvā,</p>
+<p rend="gatha2">Tatthābhisicca suhadaṃ viya dhammabhūpaṃ;</p>
+<p rend="gatha3">Atthānusāsanimimassa vadaṃ girāya,</p>
+<p rend="gathalast">Tatthappavattayi sudhī nijakāyakammaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having conquered the enemies of the defilements in the fortress-city of the heart, and having there anointed the Dhamma-king as if a dear friend, uttering with his voice this instruction on the goal, the wise one there set in motion his own bodily action.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti rājakumāruppatti paricchedo paṭhamo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus ends the first chapter, on the birth of the prince.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">15</span>. Athekadā mātulamahātherā vayappattaṃ sirisaṅghabodhi kumāraṃ dhammasavanāvasāne āmantetvā evamāha, “kumāra! Mahābhāgadheyya! Idāni tvamasi adhītasugatāgamo, viditasakala bāhirasattho. Catubbidhapaṇḍiccakoṭippatto, tathāpi abhimānadhane khattiyakule jāti, sabbapatthavyāpitā yobbanavilāsena samalaṅkataṃ sarīraṃ, appaṭimā rūpasiri, amānusaṃ balañceti mahatīya balavanaṇtha paramparā’sabbāavinayāna mekekampi tesamāyatanaṃ kimuta samavāyo?“Yebhuyyena satthasalila vikkhālanāti nimmalāpi kālusiyamupayāni buddhī, anujjhitadhavalatāpi sarāgāeva bhavati navayobbanagabbitānaṃ diṭṭhi, apaharati ca vātamaṇḍali keva sukkhapaṇṇaṃ ubabhutarajo bhanti atidūramattano icchāya yobbanasamaye purisaṃ pakati. Iṇdriyabhariṇabhārinī sattamatidurantāya mupabhogamigataṇahikā tasmā ayamevānassādita visaya rasassa te kālo gurupadesassa. Madanasarappabhārajajjarite hadaye jalamiva galati gurūnamanussānaṃ akāraṇaṃchavati duppakati no kulaṃvā sutaṃ vā manayassa vaṇdanappabhavonadahati kiṃ dahano? Kiṃvāpasamahetunāpi nātivaṇḍataro bhavati vaḍabānaḷo salilena, tasmā gāḷhatara manusāsītabbosi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">15. Then one day, the great elder, his maternal uncle, after concluding a Dhamma talk, addressed the young prince Sirisaṅghabodhi, who had come of age, saying: "Prince! Most fortunate one! Now you have thoroughly studied the teachings of the Sugata and mastered all external sciences. You have reached the pinnacle of the fourfold wisdom. Yet, you are born into a noble warrior clan whose wealth is pride; your body is adorned with the splendor of youth; your beauty is unmatched, and your strength is superhuman—such is a great and powerful lineage. Each of these is a source of all indiscipline; what then of their combination? Most often, even an intellect purified by the washing of the water of the scriptures becomes sullied. The view of those proud of their new youth becomes passionate, though its purity is not abandoned. And like a whirlwind scattering dry leaves, the dust of existence carries a man in the prime of youth far from his own wishes. Beings, bearing the heavy burden of the senses, are drawn to the craving for enjoyment, which is so difficult to overcome. Therefore, now is the time for the teacher's advice, before you have tasted the flavor of sense objects. When the heart is afflicted by the pollen of the arrows of lust, the instruction of elders trickles away like water. Neither family nor learning can touch the evil nature of one whose mind is born from the worship of pride—what fire will such a one not burn? Or does not the submarine fire become even more intense from water, though it should be a cause for quenching? Therefore, you must be disciplined with great firmness."</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">16</span>. Apagatamale hi manasi elikamaṇimhi viya rajanikaramayukhāpavisanti, sukhamupadesaguṇā, guruvacanamamalampi salilamiva mahantaṃ jānimupajanayati savanahataṃ sūlamiva abhabbassa, bhabbassatu <span class="pb hidden-meta" data-ed="O" data-n="0.0004">[O 0.0004]</span> karino viya sabbābharaṇamānanasobhāsamudayamadhikatara mupavahati, anādisiddha taṇhākasāyitiṇdriyānucarañhi cittaṃ nāvahati kannāmānatthaṃ, tasmā rāja kumārānañca yatīnañca satibalena iṇdriyavijayo diṭṭhadhammikasamparāyikambilaṃ kalyāṇajātamupajanayati, iṇdriyavijayo ca sambhavati guruvuddhopasevāya tabbavanamavirādhetvā paṭipajjato, tasmā tayā āpāṇapariyantaṃ vatthuttayasaraṇaparāyaṇatā na pahātabbā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">16. For into a mind free from stain, like a flawless beryl gem, the qualities of instruction enter with ease, bringing happiness. The teacher's stainless word, like pure water, generates great knowledge. For the unworthy, it is like a spear striking the ear, but for the worthy, like an elephant with all its adornments, it brings about an even greater arising of splendor and beauty of countenance. Indeed, the mind, following the senses and stained by craving from beginningless time, what harm does it not bring? Therefore, for princes and ascetics alike, victory over the senses through the power of mindfulness generates a multitude of good things beneficial in this life and the next. And victory over the senses comes about from attending on teachers and elders, and from practicing without contradicting their word. Therefore, devotion to the refuge in the Triple Gem should not be abandoned by you until the end of your life.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Na rāgāpasmāravibodhanaṃ visayadahanasalila saṃsevanaṃ kātabbaṃ, passatū hi kalyāṇābhinivesi cakkhūṇdriyalāḷana paravasassa salabhassa samujjalita dīpasikhāpatanaṃ sotiṇdriya sukhānuyuttassa taruṇa harīṇassa usu pātasammukhībhavanaṃ ghāṇiṇdriya paravasassa madhukarassa madavāraṇakaṇṇatālabhannaṃ rasaniṇdriyatappaṇavyasanino puthulomassa balisāghāsavyasanaṃ phassīṇdriyānubhavanalālasassamataṅgajassavāriṇi baṇdhanāpāyaṃ imehi iṇdriyehi militehi ekassa kāmino sadideva pañcannaṃ, visayarasānamupasevāya pattabbaṃ mahantaṃ dukkhajālaṃ kathamupavaṇṇayāma? Imāni ca subhāsitāni paccavekkhatu anukkhaṇaṃ vicakkhaṇo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Let one not engage in the indulgence of sense objects, which awakens the madness of passion and fuels the fire of the senses. Let one intent on the good observe: the falling of the moth, overcome by fondness for the faculty of sight, into the blazing flame of a lamp; the facing of a falling arrow by the young deer, devoted to the pleasure of the faculty of hearing; the crushing of the bee, overcome by the faculty of smell, by the flapping ear of an intoxicated elephant; the disaster of swallowing the bait on the hook for the fish, addicted to satisfying the faculty of taste; the peril of being bound in the water for the elephant, eager for the experience of the faculty of touch. For a single lustful person, with these five senses combined, what great net of suffering is to be attained through indulging in the flavors of sense objects? How can we describe it? Let the discerning one constantly reflect upon these well-spoken words.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">17</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">17.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nāgārikaṃ sukhamudikkhati kiñci dhīro,</p>
+<p rend="gatha2">Jānāti dehapaṭijagganamatthatove;</p>
+<p rend="gatha3">Saṃsevatopi yuvatiṃ ratimohitassa,</p>
+<p rend="gathalast">Kaṇḍuyane viya banassa sukhābhimāno.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The wise man perceives no pleasure in city life; he knows it is only for the sake of maintaining the body. For one deluded by passion while consorting with a young woman, there is a conceit of happiness, like that in scratching a sore.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">18</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">18.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ko seveyya paraṃ poso avamānaṃ saheyyavava,</p>
+<p rend="gathalast">Na ve kalattanigaḷaṃ yadi dukkhanibaṇdhanaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">What man would serve another, enduring contempt, if the fetter of a wife were not a bond of suffering?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">19</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">19.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ākaḍḍhamānā cisikhā smipaṃ,</p>
+<p rend="gatha2">Parammukhāyeva sadā pavattā;</p>
+<p rend="gatha3">Dūrampi gacchanti guṇaṃ vihāya,</p>
+<p rend="gathalast">Pavattanaṃ tādisameva thīna.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Like a lock of hair being pulled, they always proceed with face turned away; abandoning virtue, they go far. Such is the behavior of women.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">20</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">20.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Asanthutaṃ tā purisampi anto,</p>
+<p rend="gatha2">Karonti ādāyakatāva bhitti;</p>
+<p rend="gatha3">Nettiṃ savallī viya haṇthagāpi,</p>
+<p rend="gathalast">Dasāsu sabbāsu ca saṅkanīyā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Even a man unacquainted with them, they win over, making him a support for their taking. Like a creeper over the eye, even when held in hand, they are to be suspected in all circumstances.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">21</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">21.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Antoruddhā bahiddhāpi nissāsā viya nāriyo,</p>
+<p rend="gathalast">Karonti nāsamevassa kodhīmātāsu vissase.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Women are like breath, whether held in or let out; they cause one's ruin. What wise man would place his trust in them?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">22</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">22.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mānasa pāpasaṃninnaṃ apāyā vivaṭā nanā,</p>
+<p rend="gathalast">Samantā pāpamittāva mokkho sabbabhayākathaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For a mind inclined towards evil, the various woeful states are open; surrounded by evil friends, how can there be liberation from all fear?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">23</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0005">[O 0.0005]</span> Api ca hadayatarukoṭara kuṭīro kodha kuṇḍalīna kadāci bahi kātabbo. Api tu’titikkhāmantena acipphaṇdantaṃ upanetabbo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">23. Moreover, the coiled snake of anger, whose dwelling is the hollow of the tree of the heart, should never be brought out. Rather, with the incantation of supreme forbearance, it should be rendered still.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">24</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">24.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sataṃ titikkhākavace viguṇṭhitā,</p>
+<p rend="gatha2">Siyuṃ durālāpakhagā khalānaṃ;</p>
+<p rend="gatha3">Sabhāpasaṃsākusumatta metā,</p>
+<p rend="gathalast">Nibajjhare tā guṇa mālikāya.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For the good, enveloped in the armor of forbearance, the harsh-word-arrows of the wicked are of no avail. For them, praises in assemblies become flowers, by which they are bound with a garland of virtues.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">25</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">25.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Lokādhipaccaṃ vipuledhane ca,</p>
+<p rend="gatha2">Manonukūle tanaye ca dāre;</p>
+<p rend="gatha3">Laddhāpi yāyeti na jātu titatiṃ,</p>
+<p rend="gathalast">Bādhetu sātaṃ na papañca taṇhā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Even having obtained lordship over the world, abundant wealth, and a wife and children pleasing to the mind, one never attains satisfaction. Craving for proliferation obstructs happiness.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">26</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">26.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vaṇṇappasādā yassā sukhāva,</p>
+<p rend="gatha2">Dhanā ca hāyantupa jīvikāca;</p>
+<p rend="gatha3">Yenābhibhūtāripuneva sattā,</p>
+<p rend="gathalast">Dosaggi so te hadayaṃ jahātu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">May that fire of hatred—by which beings are overcome as if by a foe—leave your heart. For through it, clarity of complexion, fame, and happiness diminish, as do wealth and livelihood.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">27</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">27.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Khedo vipattīsu paṭikirayā na,</p>
+<p rend="gatha2">Tasmā na dīnappa katiṃ bhajeyya;</p>
+<p rend="gatha3">Paññānuyātaṃ vīriyaṃ vadanti,</p>
+<p rend="gathalast">Sabbattha siddhiggahaṇaggahaṇthaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Grief is no remedy for misfortunes; therefore, one should not give way to dejection. Energy accompanied by wisdom, they say, is the foremost means for grasping success in all things.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">28</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">28.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vyāpārā sabbabhūtānaṃ sukhatthāya vidhīyare;</p>
+<p rend="gathalast">Sukhañca na vinā dhammaṃ tasmā dhammaparo bhavā’ti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The activities of all beings are undertaken for the sake of happiness; and happiness is not found without the Dhamma. Therefore, be devoted to the Dhamma.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">29</span>. Evamādikaṃ sappurisanītipathaṃ ādisante mahāthere tena kalyāṇadhammena asotabbatānādariyaracitabhukūṭika mukhena vā disācikkhittacakkhunā ca ahaṅkāraparavasena gajanimilitamubbhāvayatā vā attano paññādhikkhepamivaca acintayatā cuḷāvinihitakomaḷañjalipuṭena tanninnena, tappoṇena sirasā ca pīti samudita sādhuvādavikasitakapolenamukhena ca. Sakalāvayavacitthaṭaromañca kañcukitena dehena ca bhūmiyaṃ nipajjitvā dīghappamāṇa pamāṇa māvarattāmaggaphalalābhatoviya visiṭṭhataraṃ pamuditamāvikatamāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">29. Thus, when the great elder was expounding such teachings on the path of good men, he, not showing disrespect for that good Dhamma with a frowning face from unwillingness to listen, nor with eyes cast in another direction, nor feigning disinterest like an arrogant elephant, and not considering it a disparagement of his own wisdom, but rather with his soft hands placed in reverence upon his head, with his head inclined and bent towards the teaching, with a face whose cheeks blossomed with approving words arisen from joy, and with a body covered as if with a cloak of bristling hairs over all his limbs—prostrating himself at full length upon the ground—manifested a joy more excellent than even the attainment of the path and its fruit.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti anusāsana paricchedo dutiyo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus ends the second chapter on instruction.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">30</span>. Tato paṭṭhāya yathāvuttapaṭipadaṃ avirādhetvā samāvaraṇena santuṭṭho tassa saṅghabodhi samaññaṃ gopetukāmo mātulamahāthero dhammikoti vohāraṃ paṭṭhapesi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">30. From then on, as he did not deviate from the aforementioned practice and was content with restraint, the great elder, his maternal uncle, wishing to protect the designation 'Saṅghabodhi', established for him the appellation 'Dhammiko'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">31</span>. Lakkhaṇapāṭhakānaṃ vacanaṃ saddahanto bhāgineyyaṃ pabbajitukāmampi <span class="pb hidden-meta" data-ed="O" data-n="0.0006">[O 0.0006]</span> apabbājetvā “idha vāsato anurādhapure vāsoyeva kumārassa yogakkhemāvaho, puññānurūpena jāyamānassa vipākassa ca ṭhānaṃ hoti, mahācetiyassa vattapaṭivattasamācaraṇenaca mahanto puññakkhaṇdho sampajissati”ti maññamāno taṃ kumāramādāya gacchanto anurādhapuraṃ gantukāmo nikkhami. Saṅghatissogoṭhābhayoti ca lambakaṇṇā rāja kumārā aparepi duce tassa paṃsukīḷanato paṭṭhāya sahāyātena kumārena saddhiṃ nikkhamiṃsu te tayo kumāre ādāya gacchanto mahāthero puretarameva anurādhapuraṃ pāvisi. Mahātheramanugacchantesu tesu kumāresu jeṭṭho saṅghatisso majjhimo saṅghabodhi kaniṭṭho goṭhābhayoti te theraṃ pacchato anugacchantā tayopi paṭipāṭi yā tissavāpiyā setumatthakena gacchanti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">31. Trusting the words of the interpreters of marks, though his nephew wished to ordain, he did not allow him to be ordained. Thinking, 'Rather than living here, living in Anurādhapura is what will bring security to the prince; it will be the basis for the ripening of his merit as it arises, and by performing the duties and services for the Great Stupa, a great mass of merit will be accumulated,' he took that prince and set out, wishing to go to Anurādhapura. Two other Lambakaṇṇa princes, Saṅghatissa and Goṭhābhaya, who had been friends with that prince since they played in the dust together, also set out with him. The great elder, taking those three princes, entered Anurādhapura before long. Among those princes following the great elder, the eldest was Saṅghatissa, the middle was Saṅghabodhi, and the youngest was Goṭhābhaya. Following the elder from behind, the three of them proceeded in order along the causeway of the Tissa tank.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">32</span>. Tattha setusālāya nisinno koci aṇdhovicakkhaṇo tesaṃ tiṇṇantaṃ kumārānaṃ padaviññāsaddaṃ sutvā lakkhaṇānusārena upaparikkhipitvā “ete tayopi sīhaḷadīpe pathavissarā bhavissantī”ti tattha nisinnānaṃ vyākāsi. Taṃvacanaṃ pacchā gacchanto goṭhābhayo sutvā itaresaṃ gacchantānaṃ anivedayitvā paccāgamma “katamo ciraṃ rajjaṃ kāressati? Caṃsaṭṭhitiñca karoti”ti? Pucchitvā pacchimoti vutte haṭṭhapahaṭṭho udaggudaggo sīghataraṃ āgamma tehi saddhiṃ gacchanto tikhiṇa mantitāya gambhīrabhāvato ca kañci ajānāpetvā antopuraṃ pāvisi. Te tayopi patirūpe nivāse vāsaṃ gaṇhiṃsu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">32. There, seated in a hall on the causeway, a certain blind but discerning man, hearing the sound of the footsteps of those three princes, examined them according to the signs and declared to those seated there, 'These three will become lords of the earth in the island of Sīhaḷa.' Goṭhābhaya, who was walking behind, heard that statement and, without informing the others who were walking on, turned back and asked, 'Which one will rule the kingdom for a long time and establish a dynasty?' When it was said, 'The last one,' he, overjoyed and elated, quickly returned and went with them. Due to his sharp counsel and profound nature, he did not let anyone know, and entered the inner city. All three of them took up residence in a suitable dwelling.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">33</span>. Atha kaniṭṭho “ete dvepi appāyukattā rajje patiṭṭhitāpi na ciraṃ jīvanti kira ahameva tesaṃ rajjaṃ dupessāmi”ti tadanurūpena upāyenapaṭijjanto tesaṃ rajjalābhāya upāyaṃ dassento abhiṇhaṃ matteti. Jeṭṭhopi tasmiṃ atipiyāsamāno tenopadiṭṭhameva samācarantorājānaṃ disvā laddha sammāno sabbesu rājakiccesu pubbaṅgamo hutvā na cirasseva rājavallabho ahosi? Tasmiṃ kāle rajjaṃ kārento vijaya rājā nāma khattiyo tasmiṃ pasanno sabbesu rājakiccesu tamameva padhānabhūtaṃ katvā senāpatiṃ akāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">33. Then the youngest, thinking, 'It is said that these two, being short-lived, will not live long even if established in the kingdom. I myself will obtain their kingdom,' frequently advised them, practicing by a means suitable for that and showing them a way to obtain the kingdom. The eldest, being very fond of him and acting just as instructed by him, met the king and received honor. Having become pre-eminent in all royal duties, in no long time he became a favorite of the king. At that time, the warrior king named Vijaya, who was ruling the kingdom, being pleased with him, made him the commander-in-chief, making him the foremost in all royal duties.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">34</span>. Dhammiko pana rajjena anatthikatāya rajjalābhāya cittampi anuppādetvā kevalaṃ mahātherassa anusāsanamatteneva rājupaṭṭhānavelāyaṃ anucaraṇamattamācaranto rājagehaṃ pavisitvā tato tehi saddhiṃ nikkhamma sāyaṃ mahā therassa vihāreyeva vasanto attano dhammikānuṭṭhānaṃ ahāpetvā mahācetiyo paṭṭhānagilānupaṭṭhānādikaṃ <span class="pb hidden-meta" data-ed="O" data-n="0.0007">[O 0.0007]</span> anavajja dhammaṃcaranto kālaṃ vītināmeti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">34. The righteous one, however, having no desire for the kingdom and not even giving rise to a thought to obtain it, merely followed the Great Elder's instructions, attending upon the king only at the time of service. Entering the royal house and then departing with them, he resided in the evening in the Great Elder's monastery itself, not neglecting his own righteous practices, and passed his time performing blameless deeds such as service at the Great Stūpa and care for the sick.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Tadā saṅghatisso sakalarajjañca purañca attanohatthagataṃ katvā ekasmiṃ dine laddhokāso rājānaṃ antobhavaneyeva goṭhābhayena mārāpetvā sayaṃ rajje patiṭṭhati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Then Saṅghatissa, having brought the entire kingdom and the city into his own hands, upon gaining an opportunity one day, had the king killed by Goṭhābhaya inside the palace itself and established himself in the kingdom.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti anurādhapurappavesaparicchedo tatiyo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus ends the third chapter, the Section on the Entry into Anurādhapura.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">35</span>. Atha goṭhābhayo dhammikaṃ anicchāmānampi senāpatiṭṭhāne ṭhapetvā āyatiṃ apekkhamāno sayaṃ bhaṇḍāgāriko ahosi. Atha saṅghatisso rājā bahuṃ puññca apuññca pasavanto jambuphalapākakāle saseno sāmacco sabhorodho abhiṇhaṃ pācīna desaṃ gantvā jambuphalāni khādati. Rañño yebhuyyena gamanā gamanena upaddutā raṭṭhavāsino rājupabhogārahesu jambuphalesu visaṃ yojesuṃ. Atha so saṅghatisso rājā tena visena tattheva kālamakāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">35. Then Goṭhābhaya, though Dhammika was unwilling, installed him in the position of commander-in-chief, and looking to the future, he himself became the treasurer. Then King Saṅghatissa, accumulating much merit and demerit, during the time when the rose-apples were ripening, frequently went to the eastern region with his army, ministers, and retinue to eat the rose-apples. The people of the kingdom, oppressed by the king's frequent comings and goings, mixed poison into the rose-apples intended for the king's consumption. Then King Saṅghatissa died right there from that poison.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">36</span>. Atha goṭhābhayo aṇdhavicakkhaṇassa vacanaṃ anussaranto anukkamena rajjaṃ dāpetvā pacchā ahaṃ suppatiṭṭho bhavissāmi’ti maññamāno sāmacco saseno saṅghabodhikumāraṃ rajjena nimantesi. So temiya mahābodhisattena diṭṭhādīnavattā rajjasukhāpariccāgānubhūtaṃ mahantaṃ dukkhajālaṃ anussaritvā punappunaṃ yāciyamānopi paṭikkhipiyeva abhayo gāmanigamarājadhānīsu sabbepi manusse sannipātetvā tehi saddhiṃ nānāppakāraṃ yācamānopi sampaṭicchāpetuṃ nāsakkhi. Atha sabbepi raṭṭhavāsino sāmaccāmahāvihāraṃ gantvā mahā saṅghaṃ sannipātetvā saṅgha majjhe saṅghabodhikumāro mahā saṅghaṃ bhūmiyaṃ nipajja namassitvā laddhokāso ekamantaṃ nisīditvā evaṃ vattumārabhī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">36. Then Goṭhābhaya, recalling the words of the blind seer and thinking, 'After having the kingdom given in succession, I shall be well-established,' invited Prince Saṅghabodhi, along with his ministers and army, to take the kingdom. But the prince, recalling the great web of suffering experienced by the great Bodhisatta Temiya, who had seen the danger in being unable to renounce the pleasure of kingship, refused again and again, even though he was repeatedly implored. Goṭhābhaya, having gathered all the people in the villages, towns, and the capital, was unable to make him accept, even though he implored him in various ways along with them. Then all the inhabitants of the kingdom and the ministers went to the Mahāvihāra and assembled the great Saṅgha. In the midst of the Saṅgha, Prince Saṅghabodhi, having prostrated himself on the ground and paid homage to the great Saṅgha, and having received the opportunity, sat down to one side and began to speak thus:</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">37</span>. Ayañhi rājalakkhīnāma yathā yathā dippate, tathā tathā kappuradīpasikheva kajjilaṃmalinameva kammajātaṃ kevalamubbamati. Tathāhi ayaṃ saṃvadhanavāridhārā taṇhāvisavallīnaṃ, nenāda madhurabhītikā ayaṃ iṇdriyamigānaṃ, parāmāsadhumalekhā sucarita cittakammassa vibbhamaseyyā mohaniddānaṃ timiruggati paññādiṭṭhīnaṃ, purassarapatākā avinayamahāsenāya, uppattininnanā kodhavega kumbhilānaṃ, āpānabhūmi micchādiṭṭhivadanaṃ. Saṃgīti sālā issariya vikāranāṭakānaṃ āvāsadarīdosāsivisānaṃ, ussāraṇavettalatā sappurisavohārānaṃ, akālajadāgamo sucarita haṃsānaṃ, patthāvanā kapaṭanāṭakānaṃ, kadalikā kāmakarino vajjhavālā sādhubhāvassa, rāhumukhaṃ dhammacaṇda <span class="pb hidden-meta" data-ed="O" data-n="0.0008">[O 0.0008]</span> maṇḍalassa, nahi taṃ passāmi yohi aparicitāyāpi etāya nibbharamupagulho na vippaladdho, apica, abhisekasamaye rājaññānaṃ maṅgalakalasajalehi viya vikkhālanamupayāti dakkhiññaṃ aggihutatadhumeneva malinībhavati hadayaṃ purohita kusagga samajjatena viya apaniyate titikkhā, uṇhīsa paṭṭa baṇdhanena viya chādīyatī jarāgamadassanaṃ, ātapatta maṇḍalena viya tirokarīyati paralokāpekkhaṇaṃ, cāmarapavanena viya duramuddhuyate saccāditā vettalatāppahārena viya duramapayanti sagguṇā eke rajjasiri madirā madamattā sakatthanipphādanaparehi dhanapisitāghāsagijjhehi sahānalīnībakehi dūtaṃ vinodananti, paradārābhigamanaṃ viddhatāti, mīgavana parissamoti, surāpānaṃ vilāsoti, niccappamattatā, surabhāvoti sadārappiccāgaṃ avyasanitāni, guruvacanāvadhīraṇaṃ aparappaneyattamiti ajitahaccataṃ sukhopasevattamīti, naccagīta gaṇākānusatti rasikatehi paribhavasahattaṃ khameti, serībhāvaṃ paṇḍiccāmiti vaṇdijana navacanaṃ yaseṃghosoti taralatā ussāhoti. Avisesaññuttaṃ apakkhapātittamiti? Eva dosagaṇampi guṇapakkhe ajjhāropayantehi sayampi anto ha santehi patāraṇakusalehi dhuttehi amānusocitāhi thomānāhi patāriyamānā, cittamadamatta cittā nicceta na tāya tatheti attani ajjhāropayantā alikābhimānaṃ maccadhammasamānāpi dibbaṃ sāvatiṇṇamiva amānusamiva attāna maññamānā āradhadibbocitakirayānu bhāvā sabbajano pabhasanīya bhāvamupayanti. Atta milambanañca anu jīvijanena karīyamānaṃ abhinaṇdanti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">37. For this royal splendor, the more it shines, the more, like the flame of a camphor lamp, it gives rise only to the defiled soot of kamma. Indeed, it is a flood that nourishes the poisonous vine of craving; a sweet-sounding snare for the deer of the senses; a line of smoke that obscures the artwork of a virtuous mind; a couch of confusion for the sleep of delusion; a rising darkness for the eye of wisdom; the vanguard banner for the great army of indiscipline; a low-lying ground for the birth of the crocodiles of the torrent of anger; a drinking hall for the mouth of wrong view. It is a concert hall for the dramas of the distortion of power; a den for the venomous snakes of hatred; a cane for driving away the conduct of good people; an unseasonable frost for the swans of good conduct; a prologue to the drama of deceit; a plantain tree for the elephant of lust; a slaughterhouse for goodness; the mouth of Rāhu for the moon of the Dhamma. I see no one who, though unacquainted with it, is not thoroughly embraced and deceived by it. Moreover, at the time of consecration, just as the nobles are washed with the water from auspicious pitchers, so is their generosity washed away; the heart is sullied by the smoke of the fire-oblation; patience is swept away as if by the purohita’s kusa grass; the sight of old age’s approach is covered as if by the binding of the turban; concern for the next world is obstructed as if by the state umbrella; truthfulness is blown far away as if by the fanning of whisks; good qualities are driven far away as if by the blows of the cane. Some, intoxicated by the wine of royal glory, intent on their own gain, greedy for the flesh of wealth like vultures, call sending messengers ‘a diversion’; adultery ‘gallantry’; hunting ‘exertion’; drinking liquor ‘sport’; constant heedlessness ‘heroism’; abandoning one's wife ‘freedom from attachment’; disregarding a teacher's word ‘independence’; shamelessness ‘the pursuit of pleasure’; addiction to dance, song, and courtesans ‘being a connoisseur’; enduring insults ‘patience’; willfulness ‘wisdom’; the new words of bards ‘a proclamation of fame’; fickleness ‘energy’; and lack of discrimination ‘impartiality.’ Thus, being deceived by the inhuman praises of cunning rogues who are themselves inwardly corrupt and who present a host of faults as virtues, their minds intoxicated with pride, not understanding its true nature, they impose false pride upon themselves. Though subject to the law of death, they consider themselves descended deities or superhumans, and through their actions, which are praised as fitting for gods, they become an object of censure for all people. And they delight in the flattery offered by their dependents.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">38</span>. Mānasā devatājjhāropaṇappatāraṇa sambhūta sambhāvano pahatañca anto paviṭṭha aparabhujayugaṃ viya attano bāhuyugaṃ sambhāvayanti. Tacantarita locanaṃsakalalāṭa māsaṃkanti, alikasambhāvanābhimānabharitā na namassanti devatāyo na pūjayanti samaṇa brāhmaṇe na mānayantī mānanīye, na upatiṭṭhanti gurudassanepi anatthakāyā sāntarīta, visayo pabhogasukhāti apahasanti yatino? Jarābhi bhavapalapimiti na suṇanti vuddhajanupadesaṃ, attano paññā paribhavoti ususanti sacivo pahesassa,kuñjanti ekanta hitavādinaṃ evamādinā kākaṇena bahunnaṃ dosānaṃ mākara bhūtaṃrajjīvibhavaṃ ayaṃ na icchāmī’ti avoca.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">38. Their minds, struck by the honor born from the deception of imposing divinity upon them, esteem their own pair of arms as if another pair had entered them. With eyes hidden by a frowning forehead, filled with false honor and pride, they do not pay homage to deities, they do not venerate ascetics and brahmins, they do not respect the respectable, and they do not attend upon their teachers even when they see them. Being inwardly corrupt, they mock ascetics, saying, 'Sensual objects are for enjoyment and pleasure!' They do not listen to the advice of the elderly, thinking it is the prattling of those overcome by old age. They disparage the counsel of their ministers, considering it an insult to their own wisdom. They scorn one who speaks for their exclusive welfare. For these and other reasons, he said, 'I do not desire this royal splendor, which is a source of many faults.'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">39</span>. Atha mahājanena sādara majjhesito mahāsaṅgho kumārabhimukho hutvā “mahābhāgadheyya! Thanacucuke laggitājaluka tikkhaḍasanenatattha vedanuppādayanti lohitameva ākaḍḍhati, dārako pana komalena mukhapuṭenamātu sukhasaññaṃ uppādayanto khīrameva avheti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">39. Then the great Saṅgha, having been respectfully requested by the great multitude, turned to the prince and said: 'O you of great fortune! A leech clinging to the nipple with its sharp bite causes pain there and draws only blood, but a child, with his tender mouth, produces a feeling of pleasure in the mother and draws only milk.'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">40</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0009">[O 0.0009]</span> Evameva rajjavibhavaṃ patto adhīro bālo bahuṃ apuññameva sañciṇāni, medhāvi dhirapuriso pana āyusaṅkhārassa dubbalattañca dhanasañcayassa nissārattañca paññāya upa parikkhitvā dasa kusalakammāni pūrento tādisena mahatā bhogakkhaṇdhena mahantaṃ kusalarāsiṃ upaciṇāti, tvamasikatādhi kāro mahāsattadhuraṇdharo, etādisaṃ puññāyatanaṭṭhānaṃ laddhā dhammena samena lokaṃ paripālento sugatasāsanaṃ paggaṇhanto dānapāramikoṭippattaṃ katvā pacchā abhinikkhamaṇañca karonto bodhipakkhiyadhamme paripācehī”ti anusāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">40. In the same way, a foolish and unsteadfast person who has attained royal splendor accumulates much demerit. But a wise and steadfast person, having investigated with wisdom the weakness of the life-formation and the essencelessness of accumulated wealth, fulfills the ten wholesome courses of action and with such a great mass of riches accumulates a great mass of merit. You are one who has made a resolution, a bearer of the yoke of a great being. Having obtained such a basis for merit, you should protect the world righteously and justly, support the Dispensation of the Sugata, bring the perfection of giving to its culmination, and then, after renouncing, bring to maturity the qualities that pertain to enlightenment.' Thus they instructed him.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">41</span>. Atha so mahajjhāsayo purisavaro mahāsaṅghassa anusāsaniṃ madditu masamaṇtho adhivāsesī. Anantarañca mahājanakāyo saṅghassa anuññāya sakalaṃ sīladīpaṃ ekacchattaṃ katvā abhisiñciya dhammika sirisaṅghabodhirājāti vohāraṃ paṭṭhapesi goṭhābhayañca senāpatiṭṭhāne ṭhapesi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">41. Then that excellent man of great aspiration, unable to oppose the instruction of the great Saṅgha, consented. Immediately thereafter, the great body of people, with the Saṅgha's permission, brought the entire island of Sīhaḷa under one umbrella, consecrated him, and established for him the title 'the Righteous King Sirisaṅghabodhi.' And they appointed Goṭhābhaya to the position of commander-in-chief.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">42</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">42.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dānaṃ adā dhārayi niccasīlaṃ,</p>
+<p rend="gatha2">Vahī titikkhaṃ bhaji appamādaṃ;</p>
+<p rend="gatha3">Pajā hitajjhāsaya sommarūpo,</p>
+<p rend="gathalast">Dhammo ca so viggabhavā virocī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He gave gifts and maintained constant virtue; he bore with patience and cultivated heedfulness. With a gentle form and a mind set on the welfare of his people, he, an embodiment of Dhamma, shone forth, free from conflict.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">43</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">43.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Viññāya lokassa hi so sabhāvaṃ,</p>
+<p rend="gatha2">Padhānavattānu gatippadhānaṃ;</p>
+<p rend="gatha3">Nidhātukāmo jantāsu dhammaṃ,</p>
+<p rend="gathalast">Sayampi dhammā varaṇamhi satto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having understood the true nature of the world, he was foremost in pursuing the practice of striving. Desiring to establish the Dhamma among beings, he himself was devoted to the choice of the Dhamma.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti rajjābhiseka paricchedo catuttho.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus ends the fourth chapter, on the Royal Consecration.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">44</span>. So rājā mahā vihāre mahaggha mahāvisālaṃ salākaggaṃ kārāpetvā anekasahassānaṃ bhikkhūnaṃ niccaṃ salāka bhattaṃ paṭṭhapesi. Mātulamahātherassaṃca sakanāma dheyyena mahantaṃ pariveṇa vihāraṃ kārāpetvā anekehi kappiyabhaṇḍehi saddhiṃ saparivāra veṇā kāni gāmakkhettāni saṅasaparibhogārahāni katvā dāpesi sattameva nisīthakāle rahogato mahābodhisattassa dukkaracaritāni sallakkhento tādisāpadānaṃ attani sampādetumāsiṃsi. Tathā hi</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">44. That king had a costly and very spacious ticket-hall built in the Mahāvihāra and established a permanent distribution of ticket-food for many thousands of bhikkhus. For his maternal uncle, the Great Elder, he had a large monastic college built, named after himself, and donated it along with many allowable requisites, including villages and fields with their surrounding territories, making them suitable for the Saṅgha's use. Then, on the seventh day, at midnight, having gone into solitude, he reflected on the difficult-to-perform deeds of the great Bodhisatta and aspired to accomplish such heroic deeds himself. For so it is said:</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">45</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">45.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dehīti vatthumasukaṃ gaditotthikehi,</p>
+<p rend="gatha2">Nālaṃ kathetumha natthi na demicāti;</p>
+<p rend="gatha3">Citte mahākaruṇāya pahaṭāvakāsāva,</p>
+<p rend="gathalast">Duraṃjagāma viya tassa bhavatthu taṇhā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When beggars would say, 'Give me this or that!', he was unable to say, 'I have nothing, I will not give.' In his heart, great compassion left no room, and his craving for existence seemed to flee far away.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Evamamhākaṃ <span class="pb hidden-meta" data-ed="O" data-n="0.0010">[O 0.0010]</span> bodhisattassa viya bāhira vatthupariccāgamahussavo kadā me bhavissatiti ca,</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">And he reflected: 'When will there be for me a great festival of relinquishing external possessions, just like our Bodhisatta?'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">46</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">46.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ānīyate nisita satthanipātanena,</p>
+<p rend="gatha2">Nikkaḍḍhate ca muhu dānhavāyaratyā;</p>
+<p rend="gatha3">Evaṃ punappuna gatāgatavegakhinnaṃ,</p>
+<p rend="gathalast">Dukkhaṃ na tassa hadayaṃ vata pīḷayittha.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Though struck by the fall of a sharp weapon, and repeatedly dragged out by a fierce, tearing wind; though exhausted by the force of being tossed to and fro, alas, suffering did not oppress his heart.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Evaṃ kirassa mahāsattassa maṃsa lohitādi ajjhattikavatthudānasamaye dukkhavedanā manaṃ na sambādhesi. Mamāpi īdisaṃ ajjhattika dānamahāmaṅgalaṃ kadā bhavissatīti ca.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">And he reflected: 'Thus, it is said, at the time of giving internal things such as his own flesh and blood, painful feeling did not constrict the Great Being's mind. When will such a great and auspicious occasion of giving an internal gift be mine?'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">47</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">47.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> So saṃkhapālabhūjago visavegavāpi,</p>
+<p rend="gatha2">Sīlassa bhedanabhayena akuppamāno;</p>
+<p rend="gatha3">Icchaṃ sadehaharavābhijane dayāya,</p>
+<p rend="gathalast">Gantuṃ sayaṃ apadatāya susocanūnaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">That Saṅkhapāla serpent, though possessing venomous force, was not angered, for fear of breaking his virtue. Wishing with compassion for the people who were taking his body, he lamented his own inability to walk, being without feet.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Evaṃ sīla rakkhanāpadānasiriṃ kadā vindāmīti ca,</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">And he reflected: 'When shall I find the glory of the heroic deed of protecting virtue?'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">48</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">48.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Piveyya thaññaṃ amatañca bālo,</p>
+<p rend="gatha2">Vuddhiṃ gato sova jigucchite taṃ;</p>
+<p rend="gatha3">Sa jātu evaṃ anubhūya rajjaṃ,</p>
+<p rend="gathalast">Ñāṇassa pāke satataṃ jahāti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A child might drink his mother's milk, as if it were nectar, but having grown up, he becomes disgusted by it. So too, one who has experienced kingship, at the ripening of wisdom, certainly abandons it.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Evaṃ mayāpi acirasseva avassaṃ abhinikkhamanaṃ kātabbanti ca,</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">And he reflected: 'Thus I too must certainly make the great renunciation without delay.'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">49</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">49.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> So senako dvijapasibbakasāyisappaṃ,</p>
+<p rend="gatha2">Aññāsi dosakalusāya dhiyābbhutaṃtaṃ;</p>
+<p rend="gatha3">Kā vaṇṇanāssa khalu dosaviniggatāya,</p>
+<p rend="gathalast">Sabbaññutāya dasapāramisādhitāya.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">If even Senaka, with a mind sullied by defilements, recognized that marvel, the serpent lying in the brahmin's bag, what then can be said of the omniscience, free from defilements, achieved through the ten perfections?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Evaṃvidhā kalyānañāṇasampatti kadā me samijjhissatīti ca,</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">And he reflected: 'When will such an accomplishment of noble wisdom be realized by me?'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">50</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">50.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vālena so kisakalaṇdakajātiyampi,</p>
+<p rend="gatha2">Ussiñcituṃ salilamussahi sāgarassa;</p>
+<p rend="gatha3">Taṃ muddhatāya na bhave matiyā mahanyā,</p>
+<p rend="gathalast">Sampādanāya bhimatassa samatthatāya.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Though born as a squirrel, he endeavored to empty the ocean with his tail. This was not from folly, but from a great resolve, and the capacity to accomplish what he wished.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Evaṃ vidhāya vīriyapāramiyā kadā bhājanaṃ bhavissāmiti ca</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">And he reflected: 'When will I become a vessel for such a perfection of energy?'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">51</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">51.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kalāburājena hi khantivādi,</p>
+<p rend="gatha2">Vadhaṃ vidhāyāpi atittakena;</p>
+<p rend="gatha3">Hate padenorasi khantisodhe,</p>
+<p rend="gathalast">So kūṭasaṇdhiggahaṇaṃ bubodha.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Though being put to death by the insatiate King Kalābu, and struck on the chest with a foot, the Preacher of Patience, pure in his forbearance, understood the nature of that treacherous assault.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Evaṃ vidhāya khattipāramiyā attānaṃ kadā alaṃkarissāmiti ca</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">And he reflected: 'When will I adorn myself with such a perfection of patience?'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">52</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0011">[O 0.0011]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">52.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Micchābhiyogaṃ na sahiṃsu tassa,</p>
+<p rend="gatha2">Rāmābhidhānassapi pādukāyo;</p>
+<p rend="gatha3">Saccañcayā nāññamabhāsidhīro,</p>
+<p rend="gathalast">So saccasandho catusaccavādī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Even the sandals of him named Rāma could not endure a false accusation. The steadfast one, out of reverence for truth, spoke no other word; he was true to his promise, a speaker on the Four Truths.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Ahampi īdisena saccapāramitābalena sabbalokassa catu saccāva bodhana samattho kadā bhavissāmiti ca</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">And he reflected: 'When shall I, too, by the power of such a perfection of truth, be capable of awakening the entire world to the four noble truths?'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">53</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">53.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> So mugapakkha vidito siribhīrukāya,</p>
+<p rend="gatha2">Mukādikaṃ vatavidhiṃ samadhiṭṭhahitvā;</p>
+<p rend="gatha3">Taṃ tādisa anubhavaṃ asahampi dukkhaṃ,</p>
+<p rend="gathalast">Yāvābhinikkhammabhedi adhiṭṭhitaṃno.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who was known as Mūgapakkha, fearing royal splendor, having undertaken the vow of silence and other observances, endured such unbearable suffering, yet his resolve was not broken until his great renunciation.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Evaṃ ma māpi adhiṭṭhāna pāramitāya pāripūrī kadā bhavissatīti ca</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">And he reflected: 'Thus, when will the perfection of determination be fulfilled for me also?'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">54</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">54.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mettānubhāvena sa lomahaṃso,</p>
+<p rend="gatha2">Pemānubaddhena sabīkaronto;</p>
+<p rend="gatha3">Satte samattepi ca niccaverī,</p>
+<p rend="gathalast">Saddaṃ viruddhatthamakāsi dhīro.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By the power of loving-kindness, his hair stood on end; bound by affection, he made them fearless. Though all beings were perpetually hostile, the wise one made a sound with a contradictory meaning.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Ahampi evaṃvidhāya mettāpāramitāya koṭippatto kadā bhavissāmīti ca.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">And he reflected: 'When shall I, too, reach the ultimate point of such a perfection of loving-kindness?'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">55</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">55.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> So ekarājā vidito samacittatāya,</p>
+<p rend="gatha2">Mānāvamāna nakaresu tulāsarūpo;</p>
+<p rend="gatha3">Tosañca rosamanupecca bhajī upekkhaṃ,</p>
+<p rend="gathalast">Sabbattha pītivikatī hatacetanova.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">That King Eka, known for his equanimity, was like a scale amidst honor and dishonor. Without yielding to joy or anger, he cultivated equanimity, his mind free from agitation, with delight and aversion eradicated everywhere.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Evaṃ ahappi upakkhāpāramitāya kadā sabbasādhāraṇobhavissāmiti ca niccaṃ cintesi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Thus, he constantly reflected: "When will I also, through the perfection of equanimity, become impartial towards all?"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti pāramitāsiṃsana paricchedo pañcamo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus ends the fifth chapter, on the Aspiration for the Perfections.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">56</span>. Evamanavajjadhammena rajjaṃ kārente tasmiṃ kadāci kenacipajānaṃ akusala vipākena-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">56. Thus, while he was ruling the kingdom according to the faultless Dhamma, at some time, due to the unwholesome consequences of some people—</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Jaṭhara piṭharabhārakkantavaṅkorujāṇu,</p>
+<p rend="gatha2">Sajala jalada kuṭākāraghororukāyo;</p>
+<p rend="gatha3">Kuṭilakaṭhinadāṭhākoṭisaṇdaṭṭhahaṇḍo,</p>
+<p rend="gathalast">Navadivasakarakkho rakkhasodipamāga.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">With knees bent, burdened by his pot-like belly; his body huge and terrible, like a water-filled thundercloud; his jaw bitten by the tips of his curved, hard fangs, a demon like a newly-risen sun came to the island.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">57</span>. So tesu tesu gāmapariyantesu nisīdati, ye ye manussā tamāgamma taṃ rattakkhamudikkhanti tesaṃ akkhini rattāni bhavanti. Taṃ khaṇeyeva rattakkhamārako nāma jararogo pātubhavitvā māreti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">57. He sits down in the outskirts of various villages. Those people who come to him and gaze at his red eyes have their own eyes turn red. At that very moment, the disease called 'red-eye killer' manifests and kills them.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">58</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0012">[O 0.0012]</span> So yakkho matamate nirāsaṅke khādati. Taṃ yakkhaṃ adasvāpi ye ye narā tenāturā te te passanti, tepi so rogo āvisati. Evaṃ na cironavayakkhabhayena rogena ca janapado viralajano jāto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">58. The yakkha devours the dead without hesitation. Even those men who do not see that yakkha, yet are afflicted by him, are entered by that disease. Thus, before long, the country became sparsely populated due to fear of the new yakkha and the disease.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">59</span>. Rājā taṃ pavattiṃ sutvāmayi rajjaṃ kārente pajānaṃ īdisassa bhayassa uppajjana ananucchavikanti maññamāno tadaheva aṭṭhaṃga sīlaṃ svādiyitvā attanā niccaṃ karīyamānāni dasakusalakammāni anussaritvā ahaṃ dhammavijayi bhavissāmīti taṃrakkhasaṃ ādisvā na uṭṭhahissāmīti daḷhataraṃ adhiṭṭhāya vāsagabbhe sayi. Tassa tena ācāra dhammatejena rājānubhāvena ca so rakkhaso santatto uttasitvā khaṇampi ṭhātuṃ asahanto ākāsenā gantvā balavapaccusa samaye antogabbhaṃ pavisitumasakkonto bāhire ṭhatvā rañño attānaṃ dassesi. Raññā ca kositvanti puṭṭho āha. Rattakkho nāmāhaṃ rakkhaso durajanapadesmiṭhito, ahaṃ khaṇampi ṭhātuṃ asakkonto tavānubhāvena baddhoviyahutvā idhānīto? Bhāyāmi deva tava dassananti.”</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">59. Hearing this account, the king, thinking it unbefitting that such fear should arise among the people while he was ruling the kingdom, took the Eight Precepts that very day. Reflecting on the ten wholesome deeds he himself constantly performed, he resolved firmly, "I shall be victorious through Dhamma," and, addressing the rakshasa, declared, "I will not rise," before lying down in his chamber. By the power of his righteous conduct and royal majesty, the rakshasa, scorched and terrified, unable to endure even for a moment, went through the sky. Unable to enter the inner chamber at early dawn, he stood outside and showed himself to the king. When asked by the king, "Who are you?" he said: "I am a rakshasa named Rattakkha, dwelling in a remote region. Unable to stand even for a moment, I have been brought here by your power as if bound. I fear to see you, O Deva!"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">60</span>. Atha rājā sayanato vuṭṭhahitvā sīhapañjaraṃ vivaritvā oloketvā are! Jamma! Mma visayagate manusse kasmā? Khādayīti. Mahārāja tava visaye mayā māretvā ekopi khādito natthi, apitumatakalebaraṃ sonasigālādīnaṃ sādhāraṇa bhakkhabhūtaṃ khādāmi, na me koci aparādho atthi, atthi ce rājadaṇḍo mayi vidhīyatū’ti vatvā pavedhamāno niccalabhāvena ṭhātuṃ asakkonto bhayavegena jātalomahaṃso sānunayameva māha. “Devassa raṭṭhaṃthitaṃ dhanadhañña samiddhisampuṇṇaṃ devassa dhana vassena sampuṇṇamāno rathā manussā, idāni yācakāpi bahutarā na honti, aha mīdisaṃ raṭṭhaṃ patvāpi aladdhagocaro aparipuṇṇamanoratho jato pipāsitova hutvā dīna bhāvena jīvikaṃ kappemi, tathā īdisaṃ bhayaṃ pattomhi abhayaṃ me dehi mahārājā’ti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">60. Then the king rose from his bed, opened the lion-window, looked out and exclaimed: "Ah, wretch! Why do you devour humans in my domain?" The rakshasa replied: "Great king, in your realm, I have not killed and devoured even a single person. Rather, I eat corpses, which are the common food of dogs, jackals, and the like. I have committed no offense. If there is any, let the king’s punishment be inflicted upon me." So saying, trembling and unable to stand still, his hair standing on end from the force of his fear, he spoke with supplication: "Your Majesty's kingdom is secure, prosperous, and filled with wealth and grain; it is replete with Your Majesty's wealth, chariots, and people. Now, even beggars are not numerous. Having come to such a kingdom, I find no feeding ground, my desires are unfulfilled, and I make my living in a wretched state, like one who is thirsty. Thus, I have come to such fear—grant me safety, great king!"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">61</span>. Atha rājā tassa dīnavacanaṃ sutvā karuṇāya kampitahadayo “mā bhāyitvaṃ rakkhasa! Abhayaṃ te dammi icchitaṃ tevadā”ti āha. Evaṃ raññoca rakkhassaca aññamaññehi saddhiṃ sallapannānaṃ saddaṃ sutvā antogatā anucarā rājānaṃ parivāresuṃ, atha kathānukathāya rakkhaso “agato raññā saddhiṃ sallapatī”ti sutvā sabbe amaccā ca nāgarā ca senā ca sannipatitvā rājaṅgaṇañca rāja bhavanañca pūretvā aruṇe uggacchante mahantaṃ kolāhalamakaṃsu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">61. Hearing the rakshasa’s pitiful words, the king’s heart was moved with compassion. "Fear not, rakshasa! I grant you safety; speak what you desire," he said. As the king and the rakshasa conversed thus, the attendants inside, hearing their voices, surrounded the king. Then, as the talk went on, when it was heard that the rakshasa "has come and converses with the king," all the ministers, citizens, and soldiers assembled, filling the royal courtyard and the royal residence, and as the dawn was rising, they made a great uproar.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">62</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0013">[O 0.0013]</span> Atha sorakkhaso sannipatitaṃcaturaṅgabalañca āyudha hatthaṃ aneka sahassayodhabalañca disvā ativiyabhīto ṭhātuñca rañño āṇattibalena gattuñca kimapi bhāṇituñca na sakkoti, rājā tadavatthaṃ taṃ disvā laddhābhayosi imacchitaṃ te kathehī’ti āha, dhammiko rājā na me kiñci bhayaṃ uppādessatiti ñatvā rājānameva māha “devo jānātiyeva sabbesaṃ sattānaṃ āharaṭṭhitikataṃ, tathāhi uddhalokavāsino deva sudhābhojanena pīṇitā jīvanti, adhe lokavāsine nāgā bhekabhojanena suhitā vasanti manussā khajjakādinānāvidhena āhārajātena pīṇitā jīvanti. Amhādisā yakkha rakkhasādayo pana maṃsalohi sassādato tussanti? Tesvaha maññataro chāte ca pipāsite ca tādisaṃ karuṇāparāyaṇaṃ mahāpurisaṃ disvāpi aparipuṇṇamanorato maṇdabhāgadheyyo socāmī”ti āha.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">62. Then, seeing the assembled fourfold army with weapons in hand and the many thousands of warrior forces, the rakshasa, greatly terrified, was unable to stand still, yet unable to leave due to the power of the king's command, nor could he utter anything. The king, seeing him in that state, said, "You have been granted safety; speak what you wish." Knowing that the righteous king would cause him no fear, he spoke to the king thus: "Your Majesty indeed knows that the existence of all beings is sustained by food. For instance, the devas dwelling in the upper world live nourished by ambrosial food; the nāgas dwelling in the world below live contentedly on the food of frogs; and humans live nourished by various kinds of food, such as edibles. But beings like us—yakkhas, rakshasas, and the like—are satisfied by the taste of flesh and blood. I am one among them, and though I have seen such a great man devoted to compassion, I remain hungry and thirsty, with my desires unfulfilled and my fortune meager, and so I grieve."</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">63</span>. Tanutcamavoca “matakalebarāni khāditvā vasāmi“ti saccaṃ mahārāja! Matasarīraṃ sukkhapaṇṇaṃ viya nīrasaṃ kiṃ metāya dujjavikāya pasīda deva! Varaṃ me dehi nava visayethita manusso eko janapado gocaratthāya me dīyatu, tattha manussānaṃ anapagatuṇhavegaṃ jīvarudhirañca jīvamaṃ sañca khāditvā ciraṃ sukhena jīvituṃ sakkā’ti āha. Atha rājā arepāpima! Rakkhasa! Nāhaṃ pāṇavadhaṃ anujānissāmi cajetaṃ tava gāhavikāranti. “Tenahi dine dine ekaṃ manussabaliṃdehi”ti. Jīvabalimekampi na demīti vutte “sacca menaṃ maṃdisāna kappa rukkhāpi avakesino jāyantīti hā hatosmi kimahaṃ karomī”ti visāda dinnayano dummukho domanassappatto appaṭihāno aṭṭhāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">63. He spoke thus: "Great king, it is true that I live by devouring dead bodies. A dead body is like a dry leaf, devoid of savor—what is this difficult livelihood to me? Be gracious, lord! Grant me a boon: let one district of men in a new territory be given to me as a feeding ground. There, by consuming the living blood and living flesh of humans, still warm and vigorous, it would be possible to live long and happily." The king replied, "O wicked rakshasa! I shall not permit the killing of living beings. Abandon this obsession of yours." "Then give me one human sacrifice daily." When it was said, "I will not give even a single living sacrifice," he lamented, "Truly, for one such as I, even the wish-granting trees become barren! Alas, I am ruined! What shall I do?" With eyes wretched from despair, crestfallen, dejected, and helpless, he stood there.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">64</span>. Atha tassa nariṇdassa karuṇābhūyasi tahiṃ jāyamānā manotassa viratyā vyākulaṃ akāsi. Atha rājā evaṃ pari vitakkesi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">64. Then, as great compassion for him arose in the king, it threw his mind into confusion and distress. Then the king reflected thus:</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">65</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">65.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nānussarāmi vata yācitu māgatānaṃ,</p>
+<p rend="gatha2">Icchāvighāta paritāpa hatajjutīti;</p>
+<p rend="gatha3">Hemanta nibbahimamāruta nissirīka,</p>
+<p rend="gathalast">Paṅkerubhehi sadisāni mukhāni jātu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">"Indeed, I do not recall ever having seen the faces of those who came to beg become like lotuses stripped of their splendor by the frosty winter wind, their radiance destroyed by the torment of a frustrated wish."</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">66</span>. Etassa rakkhassa paresaṃ dukkhamā pādayituṃ na kadāci sakkā, ahañca ajjhattika dānaṃ kadādassāmiti patthemi, tadidaṃ pattakakālaṃ jātaṃ, saka sarīrassa ahameva issaro, mama maṃsalohitena etaṃ santappayāmīti kata nicchayo amacce āmantetvā evamāha.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">66. "It is by no means possible to allow this rakshasa to inflict suffering upon others, and I have long desired, 'When shall I give a gift of my own person?' Now, that time has come. I alone am master of my own body; I shall satisfy him with my own flesh and blood." Having made this resolution, he summoned his ministers and said thus:</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">67</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0014">[O 0.0014]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">67.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:123">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Imaṃ sarattaṃ piyitaṃ sarīraṃ,</p>
+<p rend="gatha2">Dhāremi lokassa hitattha meva;</p>
+<p rend="gatha3">Ajjātitheyyatta mupeti tañce,</p>
+<p rend="gathalast">Ato paraṃ kiṃ piya matthi mayhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">"This body, to which I am attached and which I cherish, I bear for the welfare of the world alone. If today it is to become a gift of hospitality, what could be more beloved to me than that?"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:124">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Amaccā evamāhaṃsu ekassa rakkhassa atthāya sakala lokaṃ anāthikattu micchato koyaṃ dhamma maggo devassa atha rājā evamāha.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The ministers said thus: "For the sake of one rakshasa, you wish to make the whole world helpless. What sort of righteous path is this for Your Majesty?" Then the king said thus:</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:125">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">68</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">68.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:126">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nicco pahogassa dhanassa cāpi,</p>
+<p rend="gatha2">Na yācake daṭṭhu mahaṃ labhāmi;</p>
+<p rend="gatha3">Evaṃ vidhaṃ atthi janantu laddhuṃ,</p>
+<p rend="gathalast">Na devatā rādhanāyapi sakkā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">"Even with constant and abundant wealth, I do not get to see beggars. To find such a person in need is not possible even by propitiating deities."</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:127">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">69</span>. Apetha tumhe na me dānantarāyaṃ karothā’ti āha. Atha amaccā yadicāyaṃ nicchayo apariccajanīyo amhesu ekeka meva dine dine rakkhassa balikammāya hotūti āhaṃsu. Atha rājā “ahameva jīvanto evaṃ nānājānissāmi”ti sallakattaṃ sīghaṃ ettha ānehīti saṃvidhahi. Atha tattha samāgatā sabbe janā taṃ pavattiṃ sutvā tassa guṇe anurattā sokena kampamānā tahiṃ patiṭṭhitena paṭighena ati kuddhā visuṃ visuṃ evamāhaṃsu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">69. "Go away! Do not create an obstacle to my giving," he said. Then the ministers said, "If this resolve is not to be abandoned, then let each one of us, day by day, be a sacrifice for the rakshasa." Then the king said, "While I am living, I will not permit such a thing," and he commanded, "Bring a surgeon here quickly!" Then all the people who had gathered there, hearing of this matter, being devoted to his virtues and trembling with sorrow, became exceedingly angry at the opposition being made, and each one spoke thus:</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:128">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">70</span>. Eso rakkhaso sīsacchedamarahatiti keci, kāla megha sadisa metassa mahā sarīraṃ aneka satānaṃ sarānaṃ tuṇirabhāvaṃ netumarahatīti keci, anekesaṃ khepana satthānaṃ lakkhabhāvaṃ mupanetuṃ yuttamiti ca pare, asikadalikīlāya vajjhoyamiti aññño telacolena veṭhetvā mahatā pāvakena ujjāletvā dahitabboyamiti apare, idaṃ sabbaṃ rājānānu jānāti. Imaṃ asappurisaṃ jīvagāhaṃ gahetvā rajjūhi guḷapiṇḍaveṭhanaṃ veṭhetvā baṇdhanāgāre pakkhipi tabbanti aññe evamevaṃ tattha bahudhā kathentānaṃ kaṭukataraṃ vadhavidhānaṃ yakkho sutvā tasito militakkhamatadeho viya niccalova ṭhito, atha so rājā “ehi sakhe rakkhasa! Mahopakāra karaṇa bhūta!</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">70. Some said: 'This yakkha deserves to have his head cut off.' Others said: 'His massive body, like a dark rain cloud, is fit to be made into a quiver for hundreds of arrows.' Still others declared: 'It would be fitting to make him a target for countless hurled weapons.' Another suggested: 'He should be cut down with a sword as in the sport of slicing a banana stalk.' Yet others proposed: 'He should be wrapped in an oil-soaked cloth, set ablaze with a great fire, and burned.' The king did not approve of any of this. Others insisted: 'This wicked man should be captured alive, bound with ropes as one wraps a ball of molasses, and thrown into prison.' While they were thus discussing various cruel methods of execution, the yakkha heard their harsh words and, terrified, stood motionless as if dead, with his eyes closed. Then the king said: 'Come, friend yakkha! You who have been of such great help!'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:129">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">71</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">71.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:130">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Deyyañca dānappavanañcacittaṃ,</p>
+<p rend="gatha2">Atthi tuvaṃ lohita maṃsakāmī;</p>
+<p rend="gatha3">Sametu metaṃ hitāya durāpaṃ,</p>
+<p rend="gathalast">Mano ratho sijjhatu no ubhinnanti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Your heart is worthy of gifts and inclined to giving, yet you are one who desires blood and flesh. May this difficult-to-obtain offering come together for our welfare; may the wish of both our minds be fulfilled.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:131">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Vatvā “mama sarīrato dīyamānaṃ jīvamaṃsaṃ jīvarudhirañca mayi anuggahena sampaṭicchā’ti rakkhassa vatvā sallakattābhimukhaṃ dakkhiṇabāhuṃ pasāresi maṃsakattanāya.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Having said to the yakkha, 'Out of compassion for me, please accept the living flesh and living blood being given from my body,' he extended his right arm toward the surgeon to have the flesh cut.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:132">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">72</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0015">[O 0.0015]</span> Atha so yakkho ubho kaṇṇe pidhāya santaṃ pāpaṃ paṭihatamamaṃgalaṃ rañño sotthi bhavatu, kimidamāpatitaṃ mahatā me pāpa vipākena jīvatu micchato visabhojanamicca, ātapatilantassa dāvaggi parikkhepo viya ca yadi īdiso me saṃkappa mahārāje samujjo yeyya deva daṇḍo me sirasi addhā patatūti, lokapālāpi me sīsaṃ chiṇdanti nāha mevaṃ vidhamaparādhaṃ karissāmī’ti na sampaṭicchi,</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">72. Then that yakkha, covering both his ears, thought: 'Peace! Away with evil! May misfortune be averted! Well-being to the king! What is this that has befallen me as a result of my great evil kamma? This is like poison as food for one who wishes to live, and like a forest fire surrounding one afflicted by the sun's heat. If such an intention toward the great king were to arise in me, may the divine punishment surely fall upon my head! The guardians of the world themselves would cut off my head. I will not commit such an offense!' Thus he did not accept the offer.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:133">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">73</span>. Atha rājā tena hi yakkha! “Kiṃ te mayā kātabbantī’ti āha. Atha so rakkhaso mahājanānaṃ vadha vidhānena rañño ānāya ca bhīto santatto “deva! Nāha maññaṃ patthayāmi kintu itoppabhūti rājārahena bhojanena gāme gāme upahārabaliṃ laddhukāmomhi’ti āha atha rājā “evaṃ karontu raṭṭhavāsino”ti nagareva sakala raṭṭhe ca bheriṃ carāpetvā pānātipāta viramaṇāya ovaditvā naṃ yakkhaṃ uyyojesi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">73. Then the king said: 'Well then, yakkha, what can I do for you?' Frightened and distressed by the people's discussion of execution and by the king's offer, the yakkha said: 'Your Majesty, I do not desire anything else, but from now on I wish to receive offerings of food fit for a king as tribute in every village.' Then the king, commanding, 'Let the inhabitants of the country do so,' had a drum beaten throughout the city and the entire country. After exhorting the yakkha to abstain from the destruction of life, he sent him away.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:134">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti rattakkhidamana paricchedo chaṭṭho.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus ends the sixth chapter, on the Taming of the Red-Eyed One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:135">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Atha kadāci vassādhikatānaṃ devatānaṃ pamādena avaggaho pāturahosi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Then on one occasion, owing to the negligence of the deities in charge of the rains, a drought arose.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:136">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">74</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">74.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:137">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nidāghavegena ravi patāpi,</p>
+<p rend="gatha2">Uṇhābhitattā pacano baro ca;</p>
+<p rend="gatha3">Jarāturevāsisirā dharā ca,</p>
+<p rend="gathalast">Piviṃsu te sabbadhi sabbima mbu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The sun blazed with the force of summer, and the strong wind blew, scorched by the heat; the earth, like a sick old person, became cracked; they drank up all the water everywhere.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:138">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">75</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">75.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:139">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Anetābhusuṇehana vipaccamāna,</p>
+<p rend="gatha2">Sanīssanamebhāhariteva vāṭī;</p>
+<p rend="gatha3">Tibbātapakkattavanantarājī,</p>
+<p rend="gathalast">Runākulā khāyati vīrikānaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Tormented by many blights and wilting from the heat, the garden plot appears devoid of greenness; a row of forest trees, scorched by the fierce sun, appears full of sorrow to the farmers.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:140">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">76</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">76.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:141">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vassānakālepi pabhākarassa,</p>
+<p rend="gatha2">Patāpasantāpitamantalikkhaṃ;</p>
+<p rend="gatha3">Samācitaṃ paṇḍaravāridehi,</p>
+<p rend="gathalast">Savaṇdanālepamivātirocī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Even in the rainy season, the sky, heated by the radiance of the sun, was filled with white clouds and shone exceedingly, as if smeared with sandalwood paste.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:142">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">77</span>. Evaṃ mahatā gimhavipphuraṇena nadītaḷākasobbhādīsu sikatākaddamāvasesaṃ sositesu kedāresu mata sassesu bahudhā eḷitabhūmibhāgesu salilabhāvena kilantesu migapakkhisu taṃ pavattiṃ sutvā rāja karuṇāya kampitahadayo aṭṭhaṅgasīlaṃ samādiyitvā mahācetiyaṅgaṇamāgamma yāva devo sabbattha vittha tāhi saliladhārāhi sakala laṅkādīpaṃ pinento vassaṃ vassitvā mahatā udakappavāhena maṃ na plavayissati maramānopi tāva na uṭṭhahissāmīti daḷhataraṃ adhiṭṭhāya tattha silāpatthare sayi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">77. Thus, with the great pervasion of summer heat, when the rivers, lakes, and ponds had dried up leaving only sand and mud, when the crops in the fields had died, when parts of the earth were cracked, and when the beasts and birds were afflicted by the lack of water—hearing of this situation, the king, his heart trembling with compassion, undertook the eight precepts. He went to the courtyard of the Great Cetiya and, making a firm resolution, lay down there on a stone slab, thinking: 'I will not rise from this spot, even if I should die, until the rain god sends rain with widespread torrents, satisfying the entire island of Laṅkā, and a great flood of water rises and floats me away.'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:143">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">78</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0016">[O 0.0016]</span> Taṃkhaṇe tassa raññe dhammatejena cakitānaṃ guṇappabaṇdhena ca pasantānaṃ devanāgayakkhānaṃ ānubhāvena samantato vassavalāhakā uṭṭhahiṃsu tathā hi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">78. At that moment, through the power of the devas, nāgas, and yakkhas—who were startled by that king's righteous power and pleased by his stream of virtues—rain clouds arose on all sides. For indeed:</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:144">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">79</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">79.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:145">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dīghāminantāva disāpayāmaṃ,</p>
+<p rend="gatha2">Vitthārayantāva tamaṃ sikhāhī;</p>
+<p rend="gathalast">Chāyā girīnaṃ viya kāḷameghā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Stretching out the directions as if long and endless, spreading darkness with their peaks, the black clouds appeared like the shadows of mountains.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:146">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">80</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">80.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:147">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Gambhīradhīratthanitā payodā,</p>
+<p rend="gatha2">Tahiṃ tahiṃ vassitumārabhiṃsu;</p>
+<p rend="gatha3">Samunnadattā sikhino kalāpaṃ,</p>
+<p rend="gathalast">Sandhārayuṃ jattamicuttamaṅige.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The clouds, thundering deep and steady, began to rain here and there; the peacocks, crying out with joy, held up their plumage like a parasol on their heads.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:148">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">81</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">81.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:149">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Muttākalāpā viya tehi muttā,</p>
+<p rend="gatha2">Lambiṃsu dhārā pasamiṃsu reṇu;</p>
+<p rend="gatha3">Gaṇdho subho mediniyāvacāra,</p>
+<p rend="gathalast">Vitaññamāno jaladānilena.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Released by them, the streams of rain hung down like strings of pearls, and the dust subsided; a pleasant fragrance from the earth was spread about by the wind that accompanied the rain.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:150">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">82</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">82.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:151">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Jutīhi jambunadapippharāhi,</p>
+<p rend="gatha2">Muhuṃ disante anura jayanti;</p>
+<p rend="gatha3">Meghassanāḷituriyānuyātā,</p>
+<p rend="gathalast">Vijjullatā naccamivācariṃsu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">With splendors spreading like Jambu-river gold, again and again they appeared, illuminating the quarters; accompanied by the music of the thunder-trumpets of the clouds, the lightning-creepers performed as if in a dance.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:152">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">83</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">83.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:153">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kodhena rattā viya tambavaṇṇā,</p>
+<p rend="gatha2">Ninādavanto jayapītiyāva;</p>
+<p rend="gatha3">Gavesamānā viya gimhaveriṃ,</p>
+<p rend="gathalast">Vyāpiṃsu sabbattha tadā mahoghā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Copper-colored, as if red with anger, roaring as if with the joy of victory, as if searching for their enemy, summer, the great floods then spread everywhere.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:154">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">84</span>. Evaṃvidhe vasse pavattesi rājā namaṃ mahogho uppilāpadhīti na uṭṭhāsiyeva atha amaccā cetiyaṅgaṇe jalaniggamapaṇāliyo thakeseṃ anto sampuṇṇavāripūro rājānaṃ uppilāpesi. Atha so uṭṭhāya cetiyassa mahussavā vidhāya rājabhavanameva gato.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">84. Although the rain fell in this way, the king did not rise, as the great flood had not yet floated him. Then the ministers blocked the water outlets in the Cetiya courtyard. The water, filling the enclosure, made the king float. Then, having risen, he held a great festival for the Cetiya and went back to the royal palace.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:155">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">85</span>. Tato adaṇḍena asatthena rajjamanusāsato rañño accantamudramānasattaṃ viditvā unnaḷā keci manussā gāmavilopādikaṃ ācarantā corā ahesuṃ taṃ sutvā rājā te core jīvagāhaṃ gāhāpetvā baṇdhanāgāre khipitvā rahasi tesaṃ ratanahiraññādikaṃ datvā mā evaṃ karothāti ovaditvā palāpetvā rattiyaṃ āmakasusānato chavarūpe ānetvā corahiṃsaṃkārento viya agginā <span class="pb hidden-meta" data-ed="O" data-n="0.0017">[O 0.0017]</span> uttāpetvā nagarato bahi khipāpesi evaṃ corabhayadva apanetvā ekadā evaṃ cintesi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">85. Then, knowing that the king, who ruled the kingdom without rod or weapon, was of an exceedingly gentle disposition, some arrogant men became thieves, committing plunder of villages and so on. Hearing this, the king had those thieves captured alive and thrown into prison. Then, in secret, he gave them valuables such as jewels and gold, admonished them, saying, 'Do not act like this again,' and allowed them to escape. At night, he had corpses brought from a charnel ground for the uncremated and, as if he were having the thieves executed, had the bodies burned and cast outside the city. Having thus removed the fear of thieves, one day he thought to himself:</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:156">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">86</span>. Kimanena rajjavibhavena, indaṃ paripuṇṇaṃ sakosaṃ saparajanaṃ sahorodhaṃ sāmaccaṃ sakhavāhanaṃ rajjaṃ kassaci dānarūpena datvā vanaṃ pavisitvā sīlaṃ samādāya kāyavivekaṃ cittavivekadva sampādetuṃ vaṭṭatīti abhinikkhamane ratiṃ janesi. Tadā goṭhābhayopi evarūpaṃ pāpavitakkaṃ uppādesi. Esa rājā dhammiko sadācārakusalo patidivasaṃ vīdhīyamānehi dasavidhakusalakammehi āyusaṃkhāropissa vaḍḍhati upapīḷakakammānica dūramapayanti. Tatoyeva cirataraṃ jīvissati etassa accayena kadāhaṃ rajjaṃ labhissāmi rajjaṃ patvāpi vaḍataro āhaṃ yuvajanasevanīyaṃ visayasukhaṃ kathamanubhavissāmi sīghamimaṃ ito palāpetvā rajje patiṭhahissāmīti cintetvā bahuṃ sāradhanamādāya uttaradvārato nikkhamitvā pubbacore sannipātetvā balakāyaṃ gahetvā āgamma nagaradvāraṃ gaṇhi taṃ pavattiṃ sutvā rājā “rajjaṃ kassacidatvā abhinikkhamanaṃ karissāmiti katasanniṭṭhānassa mama ayaṃ kenaci devānubhāvena sannidhāpito maññe amaccā mayaṃ ananumatāpi purāyujjhitumāra bhanti evaṃ sati maṃ nissāya ubhayapakkhagatassa mahājanassa vipulaṃ dukkhaṃ “bhavissati kimanena rajjena phalaṃ rajjaṃ tasseva dinnaṃ hotu”ti vatvā kaṃci ajānāpetvā parissāvanamattaṃ gahetvā dullakkhiyamānaveso dakkhiṇadvārena nikkhamitvā malayadesaṃ gacchanto</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">86. 'What is the use of this royal splendor? It would be good to give this kingdom—complete with its treasury, people, harem, ministers, and army with its vehicles—to someone as a gift, enter the forest, undertake the moral precepts, and achieve both bodily and mental seclusion.' Thus he generated delight in renunciation. At that time, Goṭhābhaya conceived an evil thought: 'This king is righteous and skilled in good conduct. His life-formation is extended daily by the ten kinds of wholesome action he performs, and deeds that might oppress him are kept far away. Therefore he will live for a very long time. When will I get the kingdom after he passes away? And even if I get the kingdom, being older, how will I enjoy the sensual pleasures fit for the young? I must quickly drive him from here and establish myself in the kingdom.' Thinking thus, he took much valuable wealth, left by the northern gate, assembled the former thieves, raised an army, and came and seized the city gate. Hearing this news, the king thought: 'For me, who has resolved to give the kingdom to someone and go forth, I believe this man has been brought here by some divine power. Even without my permission, the ministers will start to fight. If that happens, on my account great suffering will befall the people on both sides. What is the use of this kingdom? Let the kingdom be his!' So, without informing anyone, taking only his water strainer, he adopted an inconspicuous disguise, left by the southern gate, and went towards the Malaya country.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:157">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">87</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">87.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:158">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sadāsantuṭṭhacittānaṃ sakkā sabbattha jīvitu;</p>
+<p rend="gathalast">Kutra nāma na vijjanti phalamūlajallāyā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For one whose mind is always content,</p>
+<p rend="gathalast">It is possible to live anywhere.</p>
+<p rend="gathalast">Where, indeed, are fruits, roots, and water plants not to be found?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:159">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">88</span>. Iti cintayanto kamena gantvā hatthavanagallaṃ nāma mahantaṃ araññāyantaṃ pāvisi, aviralapavālakusumaphalasaṃjannavisālasākhāmaṇḍalehi uccāvacehi panassahakārakapittha timbarujambirajambuvibhita kāmalaka bharīta katirīṭakasālasaralavakula punnāga nāgakandambakāsoka nīpacampaka bhintālatālappabhūtihi vividhatarugaṇehi samākiṇṇaṃ vipulavimalasiluccayapariyapariyantasaṅhatanadīsambhedatitthopasaṃkanta vividhamigayuthavihagavagganisevitaṃ mahesakkha devatādhiggahītaṃ naṇdanavanakamanīyaṃ suḷabhamūlaphalasalila sukhopabhogaramaṇīya taṃ mahā kānnaṃ oloketvā idaṃ me tapovanaṃ bhavitumarahatiti katālayo kāyavivekacittavivekānaṃ lābhena ekaggamānaso mettāvihāramanuyujantovaññajīvikāya saṃjanitasantosavippharaṇapinītakāyo vāsaṃ kappeti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">88. Thinking thus, he proceeded in stages and entered a great forest tract named Hatthavanagalla. It was crowded with various kinds of trees, high and low, with wide-spreading branches covered in dense shoots, flowers, and fruits—such as jackfruit, mango, wood apple, timbaru, jambu, rose apple, vibhītaka, emblic myrobalan, harītaka, sal, pine, bakula, punnāga, nāga, kadamba, asoka, nīpa, campaka, palmyra, and tāla palms. It was bordered by vast, pure, rocky heights, frequented by various herds of beasts and flocks of birds that came to its river confluences and fords. It was inhabited by powerful deities, as lovely as the Nandana Grove, and delightful for the pleasant enjoyment of its easily obtainable roots, fruits, and water. Seeing that great forest, he made his dwelling there, thinking, 'This is a suitable hermitage for me.' With his mind unified through the attainment of bodily and mental seclusion, he took up his residence there, practicing the meditation on loving-kindness, his body nourished by the pervasive satisfaction born of a livelihood on wild produce.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:160">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti abhinikkhamanaparicchedo sattamo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus ends the seventh chapter, on the Great Renunciation.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:161">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">89</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0018">[O 0.0018]</span> Goṭhābhayopi rajjaṃ patvā katipāhaccayena “mama caṇḍatāya vīratto pajāvaggo manaṃ paviṭṭhaṃ saṅghabodhiṃ ānetvā rajjaṃ kāretuṃ kadāci ussahatī”ti saṃjātaparisaṅko taṃ mārāpetuṃ vaṭṭatīti abhisaṇdhāya “saṅghabodhirañño yo sīsaṃ ānessati tassa sahassaṃ pāritosikadhananti nagare bheriṃ carāpesi. Tato malayadesasiko koci duggatapuriso attano kaccena puṭabhatta ādāya vana maggena gacchanto bhojana velāya soṇḍisamīpe nisinnaṃ saṅghabodhirājānaṃ disvā tassa ākappena pasannahadayo bhattena taṃ nimantesi rājā taṃ nasampaṭicchi. So purisonāhaṃ nihīna jātiyaṃ jāto na pāṇavadhaṃ jivikāya jīvanto kevaṭṭo vā luddako vā bhavāmi atha ko uttama vaṇṇehi paribhogārahe vaṃse sañjātomhi mama santakamidaṃ bhattaṃ bhottumarabhati kallyāṇa dhammikoti taṃ punappuna yāci. Atha rājā</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">89. Having attained the kingship, Goṭhābhaya, after a few days, grew apprehensive that the populace, alienated by his cruelty, might strive to bring back Saṅghabodhi, who had won their hearts, and make him king. Thinking it was necessary to have him killed, he had a drum beaten in the city, proclaiming: 'Whoever brings the head of King Saṅghabodhi will receive a reward of a thousand.' Then, a certain poor man from the country of Malaya, carrying his portion of rice in a leaf-packet, was walking along a forest path. At mealtime, he saw King Saṅghabodhi seated near a pond. Pleased by his demeanor, he invited him to partake of his meal, but the king did not accept it. That man said: 'I was not born into a low caste, nor do I make my living by taking life as a fisherman or a hunter. Rather, I am born in a lineage whose possessions are fit for use by the highest class. It is proper for you, O righteous one, to eat this meal of mine.' He repeatedly begged him.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:162">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">90</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">90.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:163">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Chāyaya gehaṃ sādhāya seyyaṃ vatthaṃ tacenaca;</p>
+<p rend="gathalast">Asanaṃ thalapattehi sādhenti taravo mama.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">“The trees provide me a home with their shade, a bed and clothes from their bark, and a seat with their leaves; thus they sustain me.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:164">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">91</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">91.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:165">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Evaṃ sampanna bhogassa na taṇhā parasantake;</p>
+<p rend="gathalast">Tava jaccādimuddissa garahā mama na vijjatīti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Being thus endowed with wealth, I have no craving for the possessions of others. There is no censure in me on account of your birth and so on.”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:166">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Vatvā na icchi eva.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Having spoken thus, he still did not consent.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:167">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">92</span>. Atha so puriso bhūmiyaṃ nipajjanamassamāno nibandhitva yāci. Tato tassa nibaṇdhanaṃ nivāretumasakkonto sagāravaṃ sopacāraṃ dīyamānaṃ bhattañca sakaparīssāvanaparīputapānīyañcā paribhuñjitvā hatthamukhadhovanena parisamatta bhatta kicco annohaṃ katupakāro kīdisamassa paccupakāraṃ karissāmiti cintayantova taṃ abhimukhīkariya “anurādhapure kā pavattī”ti pucchi, atha so puriso pubbarājānaṃ palāpetvā goṭhābhayo nāma rājā rajjepatiṭṭhahitvā siri saṅghabodhirañño yo sīsaṃ ādāya dasseti tasha sahassaṃ pāritosikadhananti nagare bheriṃ carāpesi kirāti suyati”ti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">92. Then that man, prostrating himself on the ground, begged him insistently. Unable to refuse his entreaties, the king partook of the food offered so respectfully and courteously, along with water purified with his own water-strainer. When the meal was finished and he had washed his hands and mouth, he thought: 'What return favor can I do for this person who has helped me?' Facing him, he asked, 'What is the news in Anurādhapura?' The man replied: 'Having driven out the former king, a king named Goṭhābhaya has established himself in the kingship. It is heard that he has had a drum beaten in the city, proclaiming: ‘Whoever brings the head of King Sirisaṅghabodhi will be given a reward of a thousand.’”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:168">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Tassa vacana samanantarameva tuṭṭhapahaṭṭhahadayo mama sahassārahasīsadānena idāni etassa paccupakāro kato bhavissati ajjhattikadānattā dānapāramitāva koṭippattā bhavissati idañca vatare-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Immediately upon hearing his words, with a heart full of joy and delight, he thought: 'Now, by the gift of my head, which is worth a thousand, a return favor will have been done for this man. Since it is an internal gift, the perfection of giving will reach its culmination.' And this verse was spoken:</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:169">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">93</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">93.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:170">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Na puti pugīphalamattakampi,</p>
+<p rend="gatha2">Agghanti sīsāni cichivitānaṃ;</p>
+<p rend="gatha3">Sīsantu me vattati bodhiyā ca,</p>
+<p rend="gathalast">Dhanassa lābhāya ca addhikassa.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">“The heads of those who wish to live are not worth</p>
+<p rend="gathalast">Even as much as a rotten areca nut.</p>
+<p rend="gathalast">But my head exists for the sake of enlightenment</p>
+<p rend="gathalast">And for the gain of wealth for this poor traveler.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:171">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Api <span class="pb hidden-meta" data-ed="O" data-n="0.0019">[O 0.0019]</span> ca.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Furthermore:</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:172">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">94</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">94.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:173">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nāḷivanasseva rujākarassa,</p>
+<p rend="gatha2">Putippadhānassa kalebarassa;</p>
+<p rend="gatha3">Dukkhannubhuta paṭijagganne,</p>
+<p rend="gathalast">Sadatthayogā saphalaṃ karomīti-</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Of this body—like a thicket of reeds, a source of disease,</p>
+<p rend="gathalast">And chiefly composed of foulness—</p>
+<p rend="gathalast">Though suffering is experienced in tending it,</p>
+<p rend="gathalast">By application to the true goal, I make it fruitful.”</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:174">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Cintetvā kataticchayo “bho purisa sobhaṃ pirī sirisaṅghabodhi rājānāma, mama sīsaṃ gahetvā gantvā rañño dassehī”ti āha. So taṃ sutvā “deva nāhamevaṃ vidhaṃ mahāpātaka kammaṃ āvajissāma bhāyāmi”ti āha.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Having reflected and made his resolve, he said: 'Good man, I am that King Sirisaṅghabodhi. Take my head, go, and show it to the king.' Hearing this, the man replied: 'My lord, I could not commit such a great and evil deed! I am afraid.'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:175">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">95</span>. Atha rājā “mā bhāyi kahāpaṇasaggassalābhāya ahameva te upāsaṃ karissāmi kevalaṃ tvaṃ mayā vuttaniyāmeva paṭipajjā”ti vatvā sahassalābhagiddhena tena pathikapurisena adhivāsite sīsacchedāya satthaṃ alabhamāno dhammādhiṭṭhānateja sā sīsaṃ sandhito visuṃ karitvā dassāmīti cintetvā pallaṅkaṃ suṇthiraṃ baṇdhitvā mamedaṃ sīsadānaṃ sabbaññutañāṇa paṭilābhāya paccayo bhavatūti somanassapubbakaṃpatthanaṃ katvā taṃ purisaṃ attano samīpaṃ āmantesi. So adhikapuriso pubbe adiṭṭhāsutapubbadukkarakamma dinnaṃ sīsaṃ gahetvā anurādhapuraṃ gantvā dissemi kotaṃ sañjānāti kotaṃ saddahissatīti, atha so goṭhābhayo sace tena saddahissati ahavettha sakkhihutvā sahassaṃ dāpessāmi tayātu tattha evaṃ kattabba”nti paṭipajjitabbā karaṃ upadisitvā ehisappurisa mma santike mbaṇato hutvā ubhayartthalānaṃ ekīkaraṇavasena añjaliṃ katvā bāhuṃ pasārehīti vatvāubhosu passesu nīlamaññāsamaññānaṃ nālinaṃ ujubhāvāpādanena kaṇḍhanāḷaṃ sammā ṭhapetvā salilaparissāvanne sīsasaṇdhiṃ jala lekhāya paricchaṇditvā sakena dakkhiṇa hatthamuṭṭhinā culābaddhaṃ daḷhaṃ gaṇhitvā yāva mama sīraṃ ādāya addhikaṃ purisassa hatthe samappemi tāva mama cittakiriya vāyo dhātuvego avicchinno pavattatūti adhiṭṭhāya cuḷābaddhaṃ uddhābhimukhaṃ ukkhipi. Tāvadeva sīsabaṇdho puthubhūto hutvā tena dakkhiṇa hattha muṭṭhināgahitoyeva paggharantiyā lohitadhārāya saddhi addhikassahatthatāle patiṭṭhāsi, tasmiṃyeva khaṇe vanādhivatthā devatā sādhuvādamukharā pupphavassaṃ vassāpetvā sīsassa ārakkhaṃ gaṇhiṃsu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">95. Then the king said: 'Do not be afraid. For the sake of gaining a thousand kahāpaṇas, I myself will assist you. Just do as I say.' When the traveler, greedy for the reward of a thousand, had consented, the king, not finding a weapon to sever his head, thought: 'By the power of my righteous resolve, I will separate my head from the neck joint and give it.' Having seated himself firmly in the cross-legged posture, he made a wish with a joyous mind: 'May this gift of my head be a condition for attaining the knowledge of omniscience!' Then he summoned the man to his side and instructed him: 'Take the head I give you—a difficult deed never before seen or heard—and go to Anurādhapura. If you think, “Who will recognize it? Who will believe it?”—I myself will bear witness and ensure you receive the thousand. You must act in this way.' Then he said: 'Come, good man, stand near me. For the benefit of us both, join your hands in reverence and stretch out your arms.' Then, having positioned his neck correctly and marked the neck joint with a line of water from his water-strainer, he grasped his topknot firmly with his right fist and made a resolve: 'Until I take my head and place it in this traveler's hand, may the activity of my mind and the force of the wind element continue uninterrupted!' Having made this resolve, he pulled the topknot upwards. At that very moment, the head was severed and, still grasped by his right fist, fell with a gushing stream of blood onto the traveler's outstretched palms. At that same moment, the deities dwelling in the forest, with cries of 'Sādhu!', caused a rain of flowers to fall and took the head under their protection.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:176">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">96</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">96.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:177">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saṃsattaratta kalale ddhikapāṇikhetteta,</p>
+<p rend="gatha2">Nikkhitta sīsa varabīja samubbhavāya;</p>
+<p rend="gatha3">Etassa dānamaya pāramitālatāya,</p>
+<p rend="gathalast">Sabbaññutā phalaraso janataṃ dhinotuṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the mire of clinging and passion, and in the field of the traveler's hand,</p>
+<p rend="gathalast">The excellent seed of the head was sown to sprout.</p>
+<p rend="gathalast">From the creeper of this perfection of giving,</p>
+<p rend="gathalast">May the nectar-fruit of omniscience delight the world!</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:178">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">97</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0020">[O 0.0020]</span> Atha so addhikapuriso sugaṇdhavana kusuma mālāhi taṃ sīsaṃ alaṃkaritvā pugakuhulikāpuṭe pakkhipitvā sīghagati vegena anurādhapuraṃ gantvā goṭhābhayassa dassesi, so taṃ disvā sañjanitu masakkonto saṃsayappatto aṭṭhāsi. Atha addhikapuriso raññā vuttavidhi manussaranto taṃ sīsaṃ gahetvā ākāse khipitvā “sāmi! Sirisaṅghabodhimahārāja! Tva mettha me sakkhibhavā”ti añjalimpaggahetvā ākāsa muddikkhamāno yāci, atha taṃ devatādhiggahitaṃ sīsaṃ nirālambe ambare laddha patiṭṭhaṃ goṭhābhayassa abhimukhaṃ hutvā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">97. Then that traveler, having adorned the head with garlands of fragrant forest flowers, placed it in a basket of areca-nut spathe and went with great speed to Anurādhapura to show it to Goṭhābhaya. Seeing it, but unable to recognize it, Goṭhābhaya stood there full of doubt. Then the traveler, remembering the procedure told to him by the king, took the head and threw it into the air. Raising his hands in reverence and looking up at the sky, he pleaded: 'Lord! Great King Sirisaṅghabodhi! Be my witness here!' Then the head, sustained by the deities, found a footing in the supportless sky and faced Goṭhābhaya.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:179">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">98</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">98.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:180">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Rājā hameva suhado sirisaṅghabodhi,</p>
+<p rend="gatha2">Sīsappadāna vidhināsmi samiddhicitto;</p>
+<p rend="gatha3">Tvaṃ cāsi rajja sirilābha sukhena deva,</p>
+<p rend="gathalast">Esova hotu paṭipanna sahassalābho’ti āha.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">It spoke: 'I am indeed King Sirisaṅghabodhi, your friend. With a joyful mind, I have fulfilled the gift of my head. You, my lord, now have the happiness and glory of kingship. Let this traveler now receive his reward of a thousand.'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:181">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">99</span>. Taṃ sutvā goṭhābhayo sāmacco vimbhītahadayo sīhāsanaṃ sajjetvā upari setacchattaṃ kāretvā idha deva! Otarāti yācitvā tattha otiṇṇaṃ taṃ sīsaṃ nānāvidhāhi pūjāhi ārādhetvā namassamāno khamāpetvā mahatā mahena āḷāhanakiccaṃ kāretvā aṅikaṃ kahāpaṇasahassena tosetvā uyyojesi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">99. Hearing this, King Goṭhābhaya and his ministers, their hearts trembling with terror, prepared the lion-throne, had the white parasol raised above it, and entreated, 'Descend here, O lord!' When the head had descended there, they honored it with various kinds of offerings, paid homage, and begged for forgiveness. With great ceremony, they had the cremation rites performed. Then, having satisfied the traveler with a thousand kahāpaṇas, Goṭhābhaya sent him away.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:182">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti ajjhattikadāna paricchedo aṭṭhamo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus ends the Eighth Chapter, on the Internal Gift.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:183">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">100</span>. Sirisaṅghabodhi rañño mahesī pana rañño palātabhāvaṃ ñatvā “ahañca taṃ anubbajāmi”ti aññatara vesena dakkhiṇadvārena nikkhamitvā maggaṃ ajānanni ujukamaggaṃ pahāya taṃ taṃ gāmaṃ pavisitvā sāmikaṃ apassantī bhayena sālintāya ca pacchitumpi asahamānā malaya desa meva gatoti cintetvā vaṅkamaggena gacchantī komalatāya sīghaṃ gantumasakkonti kālaṃ yāpetvā tassa araññāyatanassa samīpagāmasmiṃ raññosisadānappavattiṃ sutvā “sā haṃ varākī dassanamattampi nālattha”nti soka paripuṇṇahadayā tameva vanasaṇḍaṃ adhiruyha bhattuno kalebaraṃ vicinantī samīpagāmesu mahajanaṃ pucchanti avandinasaṅiketattā tattha tattha vicarantī samīpagāmavāsino bālakā gopālakā kaṭṭhabhārikā itthiyo ca etissā vilāpaṃ sutvā kampita hadayā tāya saddhiṃ vicarantī. Sā evaṃ cilūpamānā bhīmiyaṃ supupphitaṃ vimalavālukaṃ vanagumbaṃ disvā tattha nipatitvā bhūmiyaṃ parivantamānā atikaruṇaṃ vilāpamakāsi, so padeso ajjāpi vidhavācana”nti vohārīyati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">100. Now, the chief queen of King Sirisaṅghabodhi, learning that the king had fled, thought, 'I too shall follow him.' Leaving by the southern gate in disguise, she did not know the way. Straying from the direct path, she entered one village after another, but could not find her husband. Overcome by fear and shame, unable to bear being questioned, she thought he must have gone to the Malaya country and so took a winding path. Due to her delicate nature, she could not travel quickly and lost much time. In a village near that forest region, she heard the news of the king's gift of his head and lamented, 'Wretched me! I was not able to get even a glimpse of him!' With a heart full of sorrow, she entered that very forest grove, searching for her husband's body. She asked the people in the nearby villages, wandering here and there as there had been no appointed meeting place. The children, cowherds, wood-carriers, and women of the nearby villages heard her wailing and, with trembling hearts, wandered with her. Lamenting thus, she saw a forest thicket with pure white sand and blooming flowers. Falling down there, she rolled on the ground and wept most piteously. To this day, that place is known as 'The Widow's Lament.'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:184">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">101</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0021">[O 0.0021]</span> Sā mahatā rodante rodanena taṃrattiṃta ttheva khepetvā puna divase ito cito ca vicaranti mahatā sokagginā ḍayhamānā santāpaṃ adhivāsetuṃ asakkonti ekasmiṃ khuddaka jalāsaye nipatitvā nimuggaṃyeva mucchāvegena dve tayo muhutte ativāhetvā upaladdhapaṭibodhā pariḷāhaṃ nibbāpesi, taṃ ṭhānametarahi ca “nibbāṇa pokkharaṇī”ti ca samaññaṃ alabhi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">101. Weeping profusely, she spent that night right there. The next day, as she wandered here and there, she was burning with the great fire of sorrow. Unable to endure the torment, she fell into a small pond. Submerged, she remained unconscious for two or three moments from the force of her swoon. Having regained her senses, she extinguished her burning grief. To this day, that place has received the name 'The Pond of Quenching' (Nibbāṇa Pokkharaṇī).</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:185">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">102</span>. Tato uṭṭhahitvā anubhūmiṃ anurukkhaṃ anusilā talaṃ gavesamānā soṇḍi samīpe sayamānaṃ devatādhiggahena sigālādīhaanupahataṃ sukkhaṃ kavaṇdharūpaṃ disvā sokavega phalipataneva hadayena daḷhataraṃ taṃ aliṃgitvā sayi, tāva bhone vekallena durāgamanena tattha tattha nipatita sarīra ghātena ca nilanta rūpā mucchā samakālameva kālamakāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">102. Rising from there and searching along the ground, among the trees, and upon the rocky surfaces, she saw near the pond a dry, headless trunk lying there. It was untouched by jackals and other creatures, being under the protection of a deity. With a heart as if rent by the force of her grief, she embraced it tightly and lay down. Then, due to her weakness, the hardship of her journey, and the injuries to her body from falling here and there, her complexion changed, and overcome by a swoon, she passed away at that very moment.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:186">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">103</span>. Samīpagāma vāsino sannipatitvā muddhābhi sittassa rañño ca mahesiyā ca sarīraṃ amhādisehi phusituñca na yoggaṃ, vattamānassa rañño anivedayitvā āḷāhana kiccaṃ kātumpi na yuttanti sammanetatvā vassātapa nivāraṇāya kuṭiṃ katvā tiracchānappavesanisedhāya vatiñca katvā pakkamiṃsu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">103. The villagers nearby gathered and agreed: "The bodies of the anointed king and his chief queen are not fit to be touched by the likes of us. Without informing the reigning king, it would not be proper to perform the cremation rites." So, they built a shelter to protect the bodies from rain and sun, erected a fence to prevent animals from entering, and departed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:187">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">104</span>. Goṭhābhayo sirisaṅghabodhirājassa anañña sādhāraṇa guṇappabaṇdhaṃ anussaranto daharakālato paṭṭhāya vatthuttaya saraṇaparāyaṇataṃ niccaṃ sīlarakkhaṇaṃ sugatāgama vicikkhaṇattaṃ sakalakalākosallaṃ rajje anatthikataṃ dānasoṇḍa taṃ rakkhasadamanādikaṃ dukkaracaritakañca tassa nāma sacetanassa na pitimāvahati visesato “addhikaduggatassa sahassa lābhāya sahatthena sīsaṃ kaṇṭhanālato uddharitvā dānaṃ sīsassāpi nirālambe ākāse avaṭṭhānaṃvyattatarāya girāya sādhippāyañcetaṃ nivedanañceti acchariyaṃ abbhutaṃ adhiṭṭhapubbaṃ assuta pubbañca nimmalacaritaṃ mama mahāparādhakalaṅike neva saddhiṃ cirakālaṃ pavattīssati, aho ahaṃ suciraṭṭhāyinā īdisena akittīsaddena sādhuhi niṇdaniyo bhavissāmi visesato pana niccakālaṃ kalyāṇa mittabhūtassa īdisassa mahānubhāvassa anaparedhassa mahāpurisassa rajjaṃ acchiṇditvā vadhaṃ kāresiṃ aññadatthu mittadubhikammena ahaṃ paḷiveṭhito bhavissāmi”ti cintettoyeva bhayasantā pehi nikkhanta sedo pavedhamāno kathamidisā mahāpāpā mocessāmīti upa parikkhī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">104. Goṭhābhaya, reflecting on the unparalleled virtues of King Sirisaṅghabodhi—his devotion to the Triple Gem from a young age, his constant protection of morality, his deep understanding of the Buddha’s teachings, his mastery of all arts, his indifference to kingship, his generosity, his subduing of demons, and his difficult practices—did not bring joy to his heart. Especially recalling that extraordinary, unprecedented act of immaculate conduct—how, for the sake of a poor traveler's gain of a thousand, the king had severed his own head from his neck with his own hands and offered it, how the head stood unsupported in the air, and how he made this declaration with a very clear voice and intention—he thought: "Such immaculate conduct will not long continue in association with me, who am stained by a great offense. Alas, I will be scorned by the righteous for such an infamous reputation that remains for a long time. Above all, having usurped the kingdom and caused the death of such a noble, mighty, and blameless great man—who was always a good friend—I am now enveloped by the evil of betraying a friend." Thus reflecting, trembling with fear and drenched in sweat, he pondered: "How can I be freed from such great sins?"</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:188">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">105</span>. Atha tassa daṇḍakammassa karaṇavasena uḷāraṃ taraṃ kusalakammaṃ kātabbanti paṭibhāyi. Atha so amacce sannipātetvā tehi saddhiṃ sammantetvā kata nicchayo mahā saṅgheneva tatheva anusiṭṭho <span class="pb hidden-meta" data-ed="O" data-n="0.0022">[O 0.0022]</span> mahatā balakāyena saddhiṃ gantvā tassa araññāyatanassa avidūre senāsannivesaṃ kāretvā tassa mahāpurisassa dukkarapadāna sakkhībhūtaṃ puññaṭṭhānaṃ sayameva gantvā soṇḍikā samīpe anurūpaṭṭhānaṃ sallakkhetvā attano rājānubhāvaṃ dassento āḷāhanaṭṭhānaṃ devanagaramiva alaṅkārāpetvā kevalehi mahantehi caṇdanadāruhi uccataraṃ citakaṃ kāretvā bhārena pamāṇena ca rañño sīsasadisaṃ jambonadakanakehi sakaṇṭha nāḷaṃ sīsākāraṃ sippihi kāretvā kavaṇdharūpe saṅghaṭitvā vividha ratana samujjalaṃ suvaṇṇakirīṭaṃ pilaṇdhāpetvā mahesiñca tatheva alaṃkaritvā te ubhopi kāghikavatthasadisehi mahaggha dukulehi acchādetvā anekaratanakhacitaṃ suvaṇṇasayanaṃ āropetvā caṇdana citakamatthake ṭhapetvā parisuddhajoti pāvakaṃ jāletvā aneka khattiyakumāraparivārito sayameva tattha ṭhatvā anekasappighaṭasatehi siñcitvā āḷāhana mahussavaṃ kāresi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">105. Then it occurred to him that, as an atonement for that deed, a still greater meritorious deed should be performed. So, having assembled his ministers, consulted with them, and made a decision, and being instructed in the same way by the great Saṅgha, he went with a large armed force. Having set up a military camp not far from that forest dwelling, he himself went to that meritorious place, which had become a witness to the great man's arduous undertaking. Near the pond, having selected a suitable spot and displaying his royal power, he had the cremation ground adorned like a city of the gods. Using only the finest sandalwood, he had a very high pyre built. According to the weight and measure of the king's head, he had craftsmen fashion a likeness of a head from Jāmbūnada gold, complete with a neck-tube, and joined it to the form of the headless trunk. He had them place a golden crown, sparkling with various jewels, upon it, and similarly adorned the chief queen. Covering both of them in priceless, fine cloths resembling gossamer garments, he placed them on a golden couch studded with numerous jewels. He then set them atop the sandalwood pyre. Lighting a pure, blazing fire, surrounded by many young nobles, he stood there himself and, sprinkling it with hundreds of pots of ghee, performed a great cremation festival.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:189">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">106</span>. Tatheva dūtiya divasepi mahatā jaṇena āḷāhanaṃ nibbāpetvā tasmiṃ ṭhane cetiya bhavanaṃ vaṭṭulākāretuṃ vaṭṭatīti cintetvā amacce āmantetvā etarahi anekabhūmikaṃ ativisālaṃ kanakamaya vaṭṭulagharaṃ kāretuṃ sakatā āyati parihārakānaṃ abhāvena nappavattati raṭṭhavilepakāpi suvaṇṇalobhena nāsenti tasmā alohanīyaṃ sukhaparihārārahaṃ pamāṇayuttaṃ vaṭṭulagharañca cetiyañca nacirasseva kātuṃ yuttanti mantetvā mahābalakāyaṃ niyojetvā vuttaniyāmeneva dvibhumakaṃ vaṭṭula bhavanaṃ nimmāpetvā tassa abbhantare sugatadhātunidhānaṃ pūjanīyaṃ cetiyañca kārāpetvā mahussadivase mahāsaṅghassa taṃ dassetvā “eso bhante sirisaṅghabodhi mahārājā pubbe ekacchattena laṅkātale rajjaṃ kāresi, idāni mayā tassa rañño cetiyarūpassa kittimaya sarīrassa chattādhichattaṃ viya dvibhumakaṃ vaṭṭulavimānaṃ kāretvā cetiyasīse kirīṭaṃ viya kanakamayaṃ thūpikañca yojetvā sabbehi devamanussehi māna nīyataṃ caṇdanīyataṃva pāpito”ti vatvā cetiyagharassa anekāni gāmakkhettāni parosahassaṃ parivārajanaṃca niyādetvā pabbatapāde anekasatapāsāda pariveṇacaṅkamana rattiṭṭhāna divāṭṭhāna dhammasālāgopurapākārādi avayavasahite vividhe saṅghārāme kāretvā tattha vasantassa anekāni sahassassa bhikkhusaṅghassa niccaṃ paccayalābhāya anekāni saparijanāni gāmakkhettāni datvā “mahā lekharaṭṭhassa samussitadhajāyamāno ayaṃ mahāvihārolaṅkā bhūmisāmikānaṃ khattiya janānaṃ kuladhanabhūto sabbehi khattiyehi aparihāpaniya vibhavo niccaṃ pālanīyo”ti mahājanakāyassa majjhe khattiya kumārānaṃ ādisitvā anurudhapuraṃ <span class="pb hidden-meta" data-ed="O" data-n="0.0023">[O 0.0023]</span> gatopi tasse ca pāpakammassa nirākaranāya tesu tesu vihāresu mahantāni puññakammāni kāropesi, tatoppabhūti laṅkādhipaccāmupagate hi khattiyehi mahā maccādīhi ca so hatthavanagallamahāvihāro antarattarā paṭisaṅkharīyamāno aparihīna parihāro pavattataki.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">106. Similarly, on the second day, after extinguishing the funeral pyre with a great crowd, he thought, 'It is fitting to build a circular cetiya-house at that very spot.' Summoning his ministers, he reflected, 'At present, constructing a multi-storied, exceedingly spacious golden circular house is not possible due to the lack of means for future maintenance, and plunderers of the kingdom would destroy it out of greed for gold. Therefore, it is proper to quickly build a circular house and cetiya of a suitable size, not too costly and easy to maintain.' Having thus consulted, he assigned a large workforce and had a two-story circular building constructed according to the plan. Inside it, he had a venerable cetiya built, enshrining relics of the Sugata. On the day of the great festival, he showed it to the great Saṅgha and said, 'Venerable sirs, King Sirisaṅghabodhi once ruled the land of Laṅkā under a single umbrella. Now, for the artificial body of that king, which is venerable like a cetiya, I have had this two-story circular mansion built like a tiered umbrella over it. I have also had a golden pinnacle placed on the cetiya's dome like a crown, making it worthy of reverence by all gods and humans.' He then endowed the cetiya-house with numerous villages and fields, and over a thousand attendants. At the foot of the mountain, he had various monasteries constructed, complete with hundreds of residences, cloisters, places for rest by night and day, Dhamma halls, gatehouses, walls, and other components. To provide for the perpetual requisites of the many thousands of monks residing there, he granted many villages with their inhabitants. In the midst of a great assembly, he instructed the young nobles, saying, 'This great monastery, rising like a banner in the Mahālekha country, is the ancestral wealth of the Khattiya lords of the land of Laṅkā. Its resources are not to be diminished by any Khattiyas and it is to be perpetually maintained.' Even after returning to Anurādhapura, to atone for that evil deed, he sponsored great meritorious works in various monasteries. From that time onward, whenever Khattiyas, great ministers, and others attained sovereignty over Laṅkā, the Hatthavanagalla Mahāvihāra was repaired from time to time and its maintenance continued undiminished.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:190">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti vaṭṭulavimānuppatti paricchedo navamo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus ends the ninth chapter, concerning the origin of the Round Mansion.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:191">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">107</span>. Athāparena samayena kadāci kasmiṃ vihāre nivasato mahā bhikkhusaṅghassa antare keci mahāthero ambhokāsiko hutvā antovihāre ekasmiṃ padese nisiditvā bhāvanamanuyujanto vipassanaṃ vaḍḍhetvā mahāmedaniyā nigghosena ākāsaṃ pūrento arahattaṃ pāpuṇi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">107. At a later time, among a great community of monks dwelling in a certain monastery, a certain great elder, having become an open-air dweller, sat in a particular place within the monastery. Applying himself to meditation and developing insight, he attained Arahantship, filling the sky with a great roar of the earth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:192">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">108</span>. Tadā upatisso nāma rājā rajjaṃ kārento nisīthasamaye bhayāvahaṃ taṃ pathavisaddaṃ sutvā kiṃ vā mebhavissatiti santāpena niddaṃ alabhamāno sokena santappeti, atha taṃ setacchattā dhivatthā devatā “mahāyi mahārāja! Ito kāraṇākidvite avamaṅgalaṃ natthi hatthavanagallamahāvihāre keci mahāthero arahattaṃ pāpuṇī”ti āha, tassa arahattappattikāle pathaviniggosassa kāraṇaṃ kiṃtu vutte so thero pubbe puññakammaṃ karento ākāsena saddhiṃ pathaviṃ unnādetvā arahā bhaveyyanti patthanaṃ ṭhapesi tassa phalamidanti samassāsesi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">108. At that time, the ruling king, Upatissa by name, heard that terrifying sound of the earth in the middle of the night and, being distressed with the thought, 'What will happen to me?', was unable to sleep and was tormented by sorrow. Then the deity dwelling in his white parasol said, 'Do not fear, great king! There is no ill omen for you from this cause. In the Hatthavanagalla Mahāvihāra, a certain great elder has attained Arahantship.' When asked what the cause of the earth-roar was at the time of his attainment, the deity consoled him, saying: 'That elder, when previously performing a meritorious deed, made an aspiration, "May I, having caused the earth to roar together with the sky, become an Arahant." This is the fruit of that aspiration.'</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:193">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">109</span>. Taṃ sutvā rājā avasesabhikkhūnaṃ arahatthappattito visiṭṭhataro tassa kilesavijayoti pasannahadayo taṃ mahātheraṃ namassitvā tassa asavakkhayassa mahussave āsanabhūtaṃ bhumippadesadva pāsādakaraṇavasena sammānissāmīti cintetvā mahābalakāyamādāya tattha gantvā tasmiṃ padese pañcabhūmakaṃ mahāpāsaṃ kāretvā vividha cittakammehi samalaṅkārāpetvā kanaka khacita tambamaya pattharehi chādetvā devavimānaṃ viya sajjetvā taṃ khīṇāsava mahāteraṃ sabhikkhusaṅghaṃ tattha vāsetvā catūhi paccayehi upaṭṭhāpetvā saparijanāti gāmakkhettāni pāsādasantikāni katvā pakkāmi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">109. Hearing this, the king, with a gladdened heart, thinking that the elder’s victory over the defilements was more distinguished than the attainment of Arahantship by the other monks, paid homage to the great elder. Thinking, 'I shall honor him by having a palace built on the very plot of land that was the seat of the great festival of the destruction of his taints,' he took a large force and went there. At that site, he had a five-storied great palace constructed, had it adorned with various paintings, and had it covered with copper plates inlaid with gold, preparing it like a celestial mansion. He then had the great elder, who was free from taints, reside there together with the community of monks, and supported them with the four requisites. Having made villages and fields, together with their inhabitants, the property of the palace, he departed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:194">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">110</span>. Tato dīghassa addhuno accayena malayadesavāsino keci corā ekato hutvā gāmavilopaṃ katvā mahantena dhanalābhenamattā dhanaṃ datvā balakāyaṃ uppādetvā yebhuyye serino hutvā mahanta mahante vihāreva vilumpannā suvaṇṇapattharacchadanaṃ gaṇhantā mahāpāsādaṃ viddhaṃsitvā pātayiṃsu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">110. Then, after a long period, some robbers residing in the Malayadesa joined together, plundered villages, and, intoxicated by the great wealth they had gained, gave wealth to raise an army. Having become mostly unrestrained, they looted even great monasteries, and seizing the golden slab coverings, they demolished and brought down the great palace.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:195">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">111</span>. Tadā moggallāno nāma rājā rajjaṃ kārento taṃ pavattiṃ sutvā tesaṃ santike care pasetvā dānasāmabhedehi aññamaññaṃ <span class="pb hidden-meta" data-ed="O" data-n="0.0024">[O 0.0024]</span> bhiṇdi, te corā bhiṇdantā itaretarehi yujjhitvā sayameva dubbalā ahesuṃ, athaso rājā te asamagge ñatvā attano senaṃ gahetvā tattha gantvā te visuṃ visuṃ gahetvā niggayha raṭṭhe abhayabheriṃ carāpetvā janapadaṃ suppatiṭṭhitaṃ katvā tehi apaviddhavihāre pākatike kāretvā mahāpāsādaṃ suvaṇṇa gaṇhanakāle pātesuṃ tī sutvā “pubbeviya suvaṇṇapattharehi chādito pacchāpi īdisi vipattijāyissatī”ti ñatvā tebhūmakaṃ kāretvā yathāpure pāsādaṃ nimmāpetvā mattikā pattharehi chādetvā vaṭṭulabhavanaṃ paṭisaṃkhāretvā sabbasaṅghārāmañca pākatikaṃ kāretvā pakkāmi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">111. At that time, King Moggallāna, while ruling the kingdom, heard of this event. He sent spies among them and, through gifts, conciliation, and sowing dissension, set them against one another. The thieves, thus divided, fought among themselves and became weak of their own accord. Then the king, knowing that they were disunited, took his army, went there, captured them individually, and subdued them. He had the drum of safety proclaimed throughout the kingdom, made the countryside well-established, and had the monasteries they had despoiled restored to their original state. Hearing that they had brought down the great palace when seizing the gold, he thought, 'If it is covered with golden slabs as before, such a disaster will arise again in the future.' Knowing this, he had a three-storied palace built as before, covered it with clay slabs, restored the circular building, and had all the monastic residences restored to their original condition before he departed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:196">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti pāsāduppatti paricchedo dasamo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus the tenth chapter, on the origin of the palace.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:197">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">112</span>. Atha laṅkālaṅkārabhūtesu visālapuññiddhivikkamesu ratanattayamāmakesu anekesu laṅkānāthesu kittipuñjāvasesesu jātesu apetanītimaggesu rajjaparipānocitavidhānavirahitesu mudubhūkesvevāmaccajanesuca yebhuyyena aññamaññaṃ viruddhesu vattamānesu laṅkāvāsīnaṃ purākatena kenāpi dāruṇena pāpakammunā nānādesavāsinī aviditasatthusamayā paviṭṭhamicchādiṭhigahaṇā paccatthisenā jambudīpā idhāgamma sakalalaṅkādīpaṃ anekātaṅka saṅkulamakāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">112. Then, while many lords of Lanka had been born who were like ornaments of Lanka, possessing vast merit, psychic power, and valor, devoted to the Triple Gem, and whose fame remained like heaps of merit, they had nevertheless abandoned the path of righteous conduct and lacked the proper methods for ruling the kingdom. Their ministers, too, were mostly weak, and largely at odds with one another. While such a state of affairs prevailed, due to some cruel evil kamma previously done by the inhabitants of Lanka, an enemy army from various lands, ignorant of the Teacher's dispensation and in the grip of wrong views, came here from Jambudīpa and filled the entire island of Lanka with various calamities.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:198">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">113</span>. Tadātāya paccatthisenāya gālhataraṃ nippiḷiyamānā rāja rāja mahāmattādayo anekasahassajanakāyā ca bhayavakitahadayāsakatāṇa gavesino jaḍḍitagāmanigamanagarā tattha tattha gariduggādo kicchena vāsaṃ kappesuṃ tato sugatadasanadhāturakkhādhikatā uttaramūḷavāyino mahāyatayo dantadhātudva pattadhātuvaradva gahetvā kunnamalayābhidhānaṃ giriduggaṃ duppavesaṃjanapadamupāgamma tatthāpi tampaṭijaggitumasamatthā bhūmiyaṃ nidabhitvā yathākāmaṃ gatā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">113. At that time, being severely oppressed by that hostile army, the king, royal chief ministers, and many thousands of people, their hearts trembling with fear and seeking their own refuge, made their dwelling with difficulty in mountain strongholds here and there, while villages, market towns, and cities lay deserted. Then, the great ascetics of Uttaramūla, who were entrusted with the protection of the Sugata's tooth relic, taking the two tooth relics and the two excellent bowl relics, approached a mountainous stronghold, a region difficult to enter, called Kunnamalaya. Unable even there to care for them, they buried them in the ground and departed as they pleased.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:199">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">114</span>. Tato pubbe jayamahābodhidumiṇdena saha sakalajambudīpādhipatinā dinakarakulatilakena dhammāsokanariṇdena pesitānaṃ attanā samāna gottānaṃ rājaputtānaṃ nattapannatādiparamparāgatassa vijayamallanarādhipassa orasaputto vijayabāhu nariṇdā nāma rājā suciññātabbasamayantaro sattasamāciṇṇa sunītipatho sampannabalavāhano jambuddoṇiṃ nāma puravaraṃmāpetvā tattha vasanto mahatā balakāyena katasakalapaccatthivijayokunta malayabhūmippadesato bhagavato dantadhātubhaṭṭārakaṃ pattadhātuvarañca āharāpetvā surasandanasadisamativirocamānaṃ vimānaṃ māpetvā tasmiṃ taṃ dhātuyugaḷaṃ nivesetvā mahatā upahāravidhānā sādaramupaṭṭhahanto <span class="pb hidden-meta" data-ed="O" data-n="0.0025">[O 0.0025]</span> bhagavato caturāsītidhammakkhaṇdhane mahantaṃ praññāpadānaṃ janayanto dhammikasirisaṅghabodhimahārājasirodānāpadānasiddhaka khattabhute anekakhīṇāsavasahassa caraṇarajoparipūtamanoharabhūmibhāge goṭhābhayamahārājena kārite hatthavanagallamahāvihāramaṇḍanāyamāne vaṭṭulavimānepurā raṭṭha vilopāgatāya colake raḷādikāya titthiyasenāyamahācetiyaṃ udare bhinnamatte jīvite viya dhātubhaṭṭārake antarahite hadayavatthumaṃsamīva suvaṇṇarantādikama paharitvā viddhastaṃ piṇṇudhāravidhīnā paṭisaṃvaronto pupphādhānatta yato paṭṭhāya sakkaccaṃ vināpetvā mahantaṃ suvaṇṇa thūpikāmabhadva kāretvā saparijanāni gāmakkhettādīni ca datvā tattha nivasantānaṃ bhikkhūnaṃ nibaddhadānavaṭṭaṃ paṭṭhapetvā taṃ hatthavanagalla mahā vihāraṃ sabbathā samiddhamakāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">114. Then, King Vijayabāhu, the legitimate son of King Vijayamalla—who was descended in a lineage of grandsons and great-grandsons from the princes of the same clan sent by King Dhammāsoka, the crest-jewel of the solar dynasty and lord of all Jambudīpa, along with the great Jaya Mahābodhi tree—was renowned for his wisdom, always followed a well-considered and righteous path, and possessed a complete army. He had a beautiful city named Jambuddoṇi built and, residing there, after conquering all enemies with a great army, he had the Blessed One's Lord Tooth Relic and the excellent Bowl Relic brought from the Kunta Malaya region. Having built a palace exceedingly radiant like the abode of the gods and installed that pair of relics therein, he devoutly honored them with great offerings, generating great meritorious deeds in connection with the eighty-four thousand sections of the Blessed One's Dhamma. Being like a proven warrior in the heroic deed of self-sacrifice of the righteous Great King Sirisaṅghabodhi, he restored the circular building that adorned the Hatthavanagalla Mahāvihāra, which had been built by King Goṭhābhaya on a delightful site purified by the dust from the feet of thousands of Arahants. This building had been destroyed when the kingdom was formerly devastated by the Cola, Kerala, and other heretical armies: the great cetiya's interior had been broken, the Lord Relic had disappeared as if life itself had departed, and its golden ornamentation and other precious things had been plundered as if its very heart had been torn out. Repairing it with methods of restoration such as plastering, and from the flower-altar upwards, having meticulously had a great golden pinnacle built, and having given villages, fields, and so forth, together with their inhabitants, he established a perpetual donation for the monks residing there, and in every way made the Hatthavanagalla Mahāvihāra prosperous.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:200">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">115</span>. Atha tasmiṃ laṅkānāthe kittisarīrāvasese jāte tassa tujavaro parakkamabhujo nāmarājā amhākaṃ bhagavato arahato sammāsambuddhassa bodhimūle nisīditvā mārabalaṃ vidhametvā sambodhirajjappattito paṭṭhāya aṭṭhasatādhikavassasahasse catuvīsatiyā ca vaccharesu atikkantesu sampattarajjābhiseko anekavidhasaṅgahavatthuhi saṅgahitamahājano catupaccayadānena satatasamārādhitā nekasahassabhikkhusaṅgho bhujabalavidhutārātirājakulāvalepo aneka maṇi rattasamubbhāsitaratanakaraṇḍakañca pañcahi suvaṇṇasahassehi sovaṇṇakaraṇḍakañca pañcavīsatiyā rajatasahassehi rajatakaṇḍakañca dāṭhādhātubhadantassa kārāpetvā atīca pasannahadayo suhumuttena tattha sampayanto attanonagarañca dhantadhātumaṇdirañca sakkañcaṃ samalaṅkārāpetvā bahumāna purassarodasanadhātuvaramādāya anekāni bhagavato cariyāpadānānī samanussaritvā purā nekabhupatayo pāṭihīrasaṇdassanena pasāditā iti pavattakathāmataraseneva me savanayugaḷaṃ paripīnitamadhunāpi kenaci pāṭihāriyavisesena mama cakkhupaṭilābho saphalo kātabboti sādaramārādhanamakāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">115. Then, when that lord of Lanka had passed away, leaving only his body of fame, his excellent descendant, King Parakkamabahu by name, attained his royal consecration. This was after one thousand eight hundred and twenty-four years had passed since our Blessed One, the Arahant, the Perfectly Self-Enlightened One, seated at the root of the Bodhi tree, had dispelled the forces of Māra and attained supreme enlightenment. King Parakkamabahu conciliated the great multitude with various means of generosity, constantly honored the Saṅgha of many thousands of bhikkhus with the four requisites, and with the power of his arms dispelled the pride of hostile royal lineages. He had many jeweled caskets radiant with gems made, as well as golden caskets made with five thousand [measures of] gold, and silver caskets made with twenty-five thousand [measures of] silver for the noble tooth relic. With a heart exceedingly full of faith, proceeding there with great reverence, he respectfully had his own city and the tooth relic temple adorned. Taking the excellent tooth relic with great reverence, and recalling the many heroic deeds of the Blessed One's life, he thought: 'The nectar of the traditional accounts of how former kings were gladdened by the display of miracles has filled my ears; now also, by some special marvel, may the gift of my sight be made fruitful!' With devoted reverence, he made this aspiration.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:201">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">116</span>. Tasmiṃ khaṇe sā dasanadhātu tassa karapaṅakaje rājahaṃsivilāsamātanvatī pāṭihīramakāsi. Kathanti ce? Yathā antimabhave mātu tucchito jātamattova bodhisatto naravarakaratopanītadukulacumbaṭakato otarantova bālo samānopi soḷasavassuddesiko viya amaṇḍitopi anekavatthābharaṇavibhusito viya bhūmiyā gacchantopi ākāsena gacchanto viya sabbesaṃ janānaṃ paṭihāsi, tatheva tattha tadā dantadhātubhaṭṭārako sugabimbā kāra salakkhaṇāvayavena rūpena bhāsamāno anekavidharaṃsinikare vikiranto tattha santipatitānaṃ janānaṃ mānanaṃ jānesi. Vuttañhi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">116. At that moment, the tooth relic performed a miracle, displaying the grace of a royal swan in his lotus-like hand. How so? Just as in his final existence, the Bodhisatta, though just born and descending from the fold of the fine cloth brought to him by noble men as he emerged from his mother’s womb, appeared to all people like a sixteen-year-old youth—though unadorned, appearing as if adorned with countless garments and ornaments; though walking on the ground, appearing as if gliding through the sky—so too did the venerable tooth relic, shining with a form having the auspicious features of a Buddha image, scatter various kinds of rays of light, inspiring reverence in all who had gathered there. As it is said:</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:202">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">117</span>. <span class="pb hidden-meta" data-ed="O" data-n="0.0026">[O 0.0026]</span></p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">117.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:203">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> “Laṅkādhināthakarapaṅkaja rājahaṃsi,</p>
+<p rend="gatha2">Nimmāya sā dasanadhātu muniṇdarūpaṃ;</p>
+<p rend="gatha3">Nekehi raṃsivisarehi samujjalantī,</p>
+<p rend="gathalast">Sabbādisā ca vidisā samalaṅkarittha.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Like a royal swan on the lotus-like hands of the lord of Laṅkā, that Tooth Relic fashioned the form of the Chief of Sages; shining with numerous streams of rays, she adorned all directions and intermediate directions.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:204">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">118</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">118.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:205">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Disvā tamabbhūtamatīca pasannacitto,</p>
+<p rend="gatha2">Sampattacakkaratano viya cakkavatti;</p>
+<p rend="gatha3">Seṭṭhehi nekaratanābharaṇādikehi,</p>
+<p rend="gathalast">Pūjesi dhātumasamaṃ manujādhinātho.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Seeing that wondrous sight, his heart was exceedingly gladdened, like a wheel-turning monarch who had obtained the wheel-treasure; with the finest jewels, ornaments, and so forth, the lord of men honored the unequalled relic.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:206">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">119</span>. Tato jinadantadhātuvarappasādakālamhi tejobalaparakkamamahimo parakkamabāhumahānariṇdo pulatthipuranivāsiniṃ kataloka sāsanavilopaṃ sarājikamanekasahassasaṃkha colakeraḷavāhinica nekadesamahipālamattamātaṅgakesarivikkamaṃ duratikkamaṃ lokasāsanasaṅgahakaraṇavasena vacitasakalalokaṃ sampannabalavāhanaṃ laṅkārajjagahaṇatthinaṃ tambaliṅgavisayāgatamatisāhasaṃ vandabhānumanujādhipaṃva sasāmantakabhavanamupanīya sakala laṅkādīpamekacchattaṃvidhāya attanopitumahārājato diguṇaṃlokasāsanasaṅgahaṃ karonto kadāci saṅghassa kaṭhinacīvarānidātukāmo kappāsaparikammakantanādikāni sabbakaraṇīyāni ekāheneva naṭṭhapetvā paccekamanekamahaggha garubhaṇḍamaṇḍitāni sasāmaṇikaparikkhārāni asītimattāni kaṭhinacīvarāni dāpetvā lokassa sādhuvādena dasadisaṃ pūresi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">119. Then, at a time when faith was inspired by the excellent tooth relic of the Conqueror, the great King Parakkamabāhu, whose glory was of the might of splendor and valor, residing in Pulatthipura, brought to his own palace, along with his feudatories, the very audacious lord of men, Vandabhānu—who had come from the Tambaliṅga region desiring to seize the kingdom of Laṅkā, possessing abundant forces and vehicles; who was difficult to overcome, with valor like that of an intoxicated elephant or a lion; who was accompanied by the Cola and Kerala armies numbering many thousands, along with their kings and many regional rulers; who had caused the destruction of the world and the Dispensation, and had deceived the entire world under the guise of protecting the world and the Dispensation. Having thus brought the entire island of Laṅkā under one parasol, and providing twice the support for the world and the Dispensation as his royal father, he, on one occasion desiring to offer Kaṭhina robes to the Saṅgha, had all the necessary tasks—such as preparing cotton and spinning thread—completed in a single day. He then had eighty Kaṭhina robes given, each adorned with many precious and costly articles and accompanied by the requisites for novices, filling the ten directions with the world’s acclamation.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:207">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">120</span>. Evamaññānipi bahūni lokavimbhayakarāni puññapadānāni sampādento so parakkamabāhumahānariṇdo hatthavanagalla vihāre attano pitumahārañño āḷāhanaṭṭhāne mahācetiyaṃ baṇdhāpetvā tattheva aṇekakhīṇāsavasahassaparibhuttaṃ pāsādavaraṃ cirakāla cinaṭṭhaṃ sutvā dhanuketakivatthuvaṃse jātaṃ saddhādiguṇasampatti samuditaṃ patirājadeva nāmakaṃ amaccavaraṃ pesetvā tena anekasahassadhanapariccāgena bhumittitayamaṇḍitaṃ sumanobharaṃ pure piyataṃ pāsādaṃ kārāpetvā tattha nivasantānaṃ anekasaṃ bhikkhunaṃ nibaddha paccayadānaṃ pavattesi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">120. Thus, accomplishing many other meritorious deeds that inspired awe in the world, the great King Parakkamabāhu had a great cetiya built in the Hatthavanagalla Monastery at the cremation site of his father, the great king. Hearing that a splendid palace there, long fallen into disrepair, had once been used by thousands of arahants, he sent his chief minister, a man named Patirājadeva—who was born in the Dhanuketakivatthu lineage and endowed with the qualities of faith and so forth. Through him, at the cost of many thousands in wealth, he had that delightful palace, beloved in the city and adorned with three stories, rebuilt. There, he instituted a continuous offering of requisites to the many bhikkhus who dwelt within.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:208">
+  <div class="pair-col col-pali">
+<p rend="bodytext"><span class="paranum">121</span>. Tattheva vaṭṭulavimānassa heṭṭhimatale gopānasiyo ṭhapetvā samantā chadanarūpaṃ kāretvā dvibhumakaṃ vimānaṃ tibhumakamakāsi tatthevalaṅkādīpe abhūtapubbaṃ jinamaṇdiraṃ kārāpetukāmo vaṭṭulavimānato uttaradisābhāge paṭhamaṃ porisappamāṇaṃ silātalapariyantaṃ khaṇitvā paṃsūni apanetvā nadīvālukāhi pūretvā kuñjararājavirājitaādhārabaṇdhakato paṭṭhāya yāva phupikaṃ aṭṭhaṃsavibhāgena bhitticchadanāni <span class="pb hidden-meta" data-ed="O" data-n="0.0027">[O 0.0027]</span> vibhattāni katvā paccekaṃ nānāvaṇṇavicittānamaṭṭhavidhānaṃ bhittībhāgānamupari keliparihāsarasajanakanānāvesavilāsabhūsitapahūtabhūtakiṃkaraparigataviṭaddhakamaṇḍalamaṇḍitaṃ pamukhapariyante vividhacittarūpamanoharamuccataraṃ iḍhikāhi nivitaṃ katasudhāparikammaṃ makaratoraṇamaṇḍalañca nimminitvā antoviracitāti manoharamālākammalatā kammādi nānāvidha cittakamma samujjalaṃ suvihitasopānadvārakavāṭaṃ samalaṅkataṭṭhānalīḷhamanohara sajīvajinasaṃ kāsapaṭibimbarūpavibhūsitaṃ paṭibimbassa dakkhiṇato ghanasilāvihita sugatarūpapatimaṇḍitaṃ tibhūmakaṃ mahā vimānaṃ kāresi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">121. In that same place, on the lower level of the circular mansion, he had rafters installed and a roof made all around, thus making the two-story mansion into a three-story one. Desiring to have an unprecedented shrine for the Victor built there on the island of Laṅkā, in the northern part of the circular mansion, he first had the ground excavated to the depth of a man's height down to the stone foundation, removing the earth and filling it with river sand. Starting from the foundation, which was adorned with figures of elephant kings, up to the pinnacle, he had the walls and roofs made divided into eight sections. Above each of the eight wall sections, which were variegated with many colors, he had it adorned with ornamental circles surrounded by numerous attendants in the form of sprites, decorated in various costumes and graceful poses that generated delight and amusement. At the front edges, he constructed very high and charming makara archways, adorned with various painted figures, covered with tiles, and finished with fine plasterwork. Inside, he made it radiant with various artistic works, such as exceedingly charming garland-work, vine-work, and other intricate designs. He fitted it with well-arranged staircases, doors, and door panels, and embellished it with charming and graceful sculpted figures and with images resembling the living Jina. To the right of the main image, he adorned it with an image of the Sugata made of solid stone. Thus he had a great three-story mansion built.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:209">
+  <div class="pair-col col-pali">
+<p rend="centre">Iti aṭṭhaṃsa vimānuppattiparicchedo ekādasamo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Thus ends the eleventh chapter, 'The Origin of the Octagonal Mansion'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:210">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">122</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">122.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1206n_nrf:211">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Viddhastasaṃkharaṇato navakammunāvā,</p>
+<p rend="gatha2">Khettādidānavidhināca anāgatepi;</p>
+<p rend="gatha3">Ye sādhavo pariharanti imaṃ vihāraṃ,</p>
+<p rend="gathalast">Nāmadva kārampi tesamihālikhantu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Those virtuous ones who in the future maintain this monastery, whether by repairing what is decayed, by new construction, or by the donation of fields and so forth—let their names and deeds be inscribed here.</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

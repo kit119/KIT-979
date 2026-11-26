@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1002n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">Pali | Trans.</button><button type="button" data-mode="view-stack">Pali — Trans.</button><button type="button" data-mode="view-pali-only">Pali Only</button><button type="button" data-mode="view-trans-only">Trans. Only</button><button type="button" id="toggle-meta-btn">Note</button></div>
+<div class="pair-row" data-id="e1002n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre"> Namo tassa bhagavato arahato sammāsambuddhassa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Homage to the Blessed One, the Arahant, the Perfectly Self-Enlightened One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="chapter">Nītimañjarī</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">Nītimañjarī</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kulakkhaye <span class="pb hidden-meta" data-ed="M" data-n="0.0001">[M 0.0001]</span> vinassanti,</p>
+<p rend="gatha2">Kuladhammā sanantanā;</p>
+<p rend="gatha3">Dhamme naṭṭhe kulaṃ sabbaṃ,</p>
+<p rend="gathalast">Adhammo abhibhū khalaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When a family declines, its ancient traditions perish; when the Dhamma is lost, unrighteousness overwhelms the entire wicked family.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Adhammābhibhavā dantā,</p>
+<p rend="gatha2">Padussanti kulitthiyo;</p>
+<p rend="gatha3">Thīsu duṭṭhā sva dhammena,</p>
+<p rend="gathalast">Jāyate vaṇṇasaṅkaro.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">From the prevalence of unrighteousness, the women of good family are corrupted; when women are corrupted, a confusion of castes arises.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Piyaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0011">[M 0.0011]</span> bhāse guṇaggāho,</p>
+<p rend="gatha2">Sūro siyā vikantano;</p>
+<p rend="gatha3">Dātā candasamā nārī,</p>
+<p rend="gathalast">Diṭṭhaṃ diṭṭhaṃ nahāsaye.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One should speak pleasantly, be a grasper of virtues; one should be a hero, a cutter-off. A woman should be generous, like the moon; one should not belittle whatever is seen.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">4</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">4.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kutotthi <span class="pb hidden-meta" data-ed="M" data-n="0.0016">[M 0.0016]</span> kumitte saccaṃ,</p>
+<p rend="gatha2">Kudāre rativaḍḍhanaṃ;</p>
+<p rend="gatha3">Kudesamhi mano rammaṃ,</p>
+<p rend="gathalast">Kurāje bhogasampadaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Where is truth in a bad friend? Where is the increase of delight in a bad wife? Where in a bad country is the mind delighted? Where under a bad king is the accomplishment of wealth?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Saṅketeva <span class="pb hidden-meta" data-ed="M" data-n="0.0017">[M 0.0017]</span> amittasmiṃ,</p>
+<p rend="gatha2">Mittasmiṃ pi navissase;</p>
+<p rend="gatha3">Abhayā bhaya muppannaṃ,</p>
+<p rend="gathalast">Api mūlāni kantati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One should be suspicious of an enemy; even in a friend, one should not place trust. Fear that arises from a place of safety cuts even the roots.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Adiṭṭhova <span class="pb hidden-meta" data-ed="M" data-n="0.0018">[M 0.0018]</span> paro seyyo,</p>
+<p rend="gathalast">Dummitto no vissāsiko.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Better is an unseen stranger; a bad friend is not to be trusted.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Aggihomaphalaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0023">[M 0.0023]</span> vedo,</p>
+<p rend="gatha2">Satthaṃsīlaphalaṃ mataṃ;</p>
+<p rend="gatha3">Ratiputtaphalaṃ nārī,</p>
+<p rend="gathalast">Dānabhuttiphalaṃ dhanaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The Veda is the fruit of the fire sacrifice; virtue is considered the fruit of scripture; delight and a son are the fruit of a woman; giving and enjoyment are the fruit of wealth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Asaccaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0024">[M 0.0024]</span> sāhasaṃ māyā,</p>
+<p rend="gatha2">Mūḷhatta ma tilobhatā;</p>
+<p rend="gatha3">Asocaṃ niddayattañca,</p>
+<p rend="gathalast">Thīnaṃ dosā sabhāvajā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Untruth, rashness, deceit, folly, excessive greed, impurity, and heartlessness—these are the faults natural to women.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Jāyāya <span class="pb hidden-meta" data-ed="M" data-n="0.0026">[M 0.0026]</span> bhattuno bhāro,</p>
+<p rend="gatha2">Sissena guruno kato;</p>
+<p rend="gatha3">Amaccakehi rājassa,</p>
+<p rend="gathalast">Pitarānaṃ nijenaca.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The husband's burden is borne by the wife; the teacher's, by the student; the king's, by the ministers; and the parents', by their own child.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Uyyamena <span class="pb hidden-meta" data-ed="M" data-n="0.0027">[M 0.0027]</span> hi sijjhanti,</p>
+<p rend="gatha2">Kammāni na manorathā;</p>
+<p rend="gatha3">Na hi suttassa sīhassa,</p>
+<p rend="gathalast">Pavīsanti mukhe migā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By effort, indeed, are deeds accomplished, not by wishes; for deer do not enter the mouth of a sleeping lion.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Atisītaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0031">[M 0.0031]</span> atiuṇhaṃ,</p>
+<p rend="gatha2">Atisāyamidaṃ ahu;</p>
+<p rend="gatha3">Iti visaṭṭhakammante,</p>
+<p rend="gathalast">Khaṇā accenti māṇave.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">'It is too cold, it is too hot, it has become too late in the evening'—thus, for the young man who abandons his tasks, the moments pass by.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Ādānassa padānassa,</p>
+<p rend="gatha2">Kattabbassa ca kammuno;</p>
+<p rend="gatha3">Khippaṃ akayyamānassa,</p>
+<p rend="gathalast">Kāle pivati sampadaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For one who does not promptly perform the acts of receiving, giving, and other duties, time drinks away his prosperity.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Nādabbe <span class="pb hidden-meta" data-ed="M" data-n="0.0032">[M 0.0032]</span> nihitā kāci,</p>
+<p rend="gatha2">Kriyā phalavatī bhave;</p>
+<p rend="gatha3">Nabyāpārasatenāpi,</p>
+<p rend="gathalast">Sukova pāṭhate bako.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">No action placed in an unworthy vessel becomes fruitful; even with a hundred efforts, a heron cannot be taught like a parrot.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0034">[M 0.0034]</span> dandhakāle tarati,</p>
+<p rend="gatha2">Taraṇīye ca dandhaye;</p>
+<p rend="gatha3">Sukkhapaṇṇaṃ va akkamma,</p>
+<p rend="gathalast">Atthaṃ bhañjati attano.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who hurries when it is time to be slow, and is slow when it is time to hurry, destroys his own welfare, like one who tramples a dry leaf.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0035">[M 0.0035]</span> dadāti yaṃ bhuñjati,</p>
+<p rend="gatha2">Tadeva dhanino dhanaṃ;</p>
+<p rend="gatha3">Aññe matassa kīḷanti,</p>
+<p rend="gathalast">Dārehipi dhanehipi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">What one gives and what one enjoys, that alone is the wealth of the wealthy. When one is dead, others sport with his wives and riches.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Dānopabhogahīnena<span class="pb hidden-meta" data-ed="M" data-n="0.0039">[M 0.0039]</span>,</p>
+<p rend="gatha2">Dhanena dhanino sukhaṃ;</p>
+<p rend="gatha3">Ko viseso daliddassa,</p>
+<p rend="gathalast">Adhikaṃ dhanarakkhaṇaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">What happiness is there for the wealthy man with wealth devoid of giving and enjoyment? What is the difference from a poor man, other than the additional burden of guarding that wealth?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Nijasokhyaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0040">[M 0.0040]</span> nirundhanto,</p>
+<p rend="gatha2">Nīcabhogo mitampaco;</p>
+<p rend="gatha3">Dhanaṃ sañcayate yo so,</p>
+<p rend="gathalast">Parabhāravaho pasu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who, suppressing his own happiness, with base enjoyments and cooking little, accumulates wealth—that person is a beast of burden for others.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Yaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0041">[M 0.0041]</span> ussukā saṅkharonti,</p>
+<p rend="gatha2">Alakkhikā bahuṃ dhanaṃ;</p>
+<p rend="gatha3">Sippavanto asippāvā,</p>
+<p rend="gathalast">Lakkhi vā tāni bhuñjati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The great wealth which the diligent but unlucky accumulate, whether they be skilled or unskilled, a fortunate person enjoys.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sampatyaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0048">[M 0.0048]</span> mahataṃ cittaṃ,</p>
+<p rend="gatha2">Bhave uppale komalaṃ;</p>
+<p rend="gatha3">Vipatyaṃca mahāsela,</p>
+<p rend="gathalast">Silāsaṅghātakakkasaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In prosperity, the mind of the great becomes as soft as a lotus; and in adversity, as hard as a great rock, a solid mass of stone.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Asambhabyaguṇaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0053">[M 0.0053]</span> thutvā,</p>
+<p rend="gatha2">Khedo mudhāva jāyate;</p>
+<p rend="gatha3">Avhāyaṃ canda mu llokya,</p>
+<p rend="gathalast">Nacandota mu pāgamī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having praised an unattainable quality, vexation arises in vain; though one calls to the moon, looking up, the moon does not approach.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">9</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">9.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saccaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0059">[M 0.0059]</span> mukhamhi dhāreyya,</p>
+<p rend="gatha2">Kaṇṇe sutaṃ bhuje jayaṃ;</p>
+<p rend="gatha3">Hadayamhi khamaṃ vīraṃ,</p>
+<p rend="gathalast">Lokādāsaṃca locane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One should hold truth in the mouth, what has been heard in the ear, victory in the arm, patience and heroism in the heart, and the mirror of the world in the eyes.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Saddamattaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0063">[M 0.0063]</span> naphandeyya,</p>
+<p rend="gatha2">Aññatvā saddakāraṇaṃ;</p>
+<p rend="gatha3">Saddahetuṃ pariññāya,</p>
+<p rend="gathalast">Pamodo vā bhayo tathā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One should not tremble at a mere sound without knowing its cause. Having fully understood the reason for the sound, then there is either joy or fear accordingly.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Sabbasuta <span class="pb hidden-meta" data-ed="M" data-n="0.0064">[M 0.0064]</span> ma dhīyeyya,</p>
+<p rend="gathalast">Hīnamukkaṭṭhamajjhimaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One should not learn everything that is heard, whether it be inferior, superior, or middling.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">10</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">10.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dunnāriyā <span class="pb hidden-meta" data-ed="M" data-n="0.0068">[M 0.0068]</span> kulaṃ suddhaṃ,</p>
+<p rend="gatha2">Putto nassati lālanā;</p>
+<p rend="gatha3">Samiddhi anayā bandhu,</p>
+<p rend="gathalast">Pavāsā madanā hirī.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A wicked woman ruins a pure family; an indulged son perishes; prosperity becomes a misfortune for relatives; shame is lost through living abroad and intoxication.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Lālaye <span class="pb hidden-meta" data-ed="M" data-n="0.0075">[M 0.0075]</span> pañcavassāni,</p>
+<p rend="gatha2">Dasavassāni tālaye;</p>
+<p rend="gatha3">Pattetu soḷasevasse,</p>
+<p rend="gathalast">Puttaṃ mittaṃva ācare.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One should indulge a child for five years, and chastise for ten years; but upon reaching the sixteenth year, one should treat a son like a friend.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Lālane bahavo dosā,</p>
+<p rend="gathalast">Lālane bahavo guṇā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In indulgence, there are many faults; in chastisement, there are many virtues.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Pāpā <span class="pb hidden-meta" data-ed="M" data-n="0.0077">[M 0.0077]</span> nivārayati yojayate hitāya,</p>
+<p rend="gatha2">Guyhāni gūhati guṇaṃ pakaṭīkaroti;</p>
+<p rend="gatha3">Āpattikañca najahāti dadāti kāle,</p>
+<p rend="gathalast">Sammitta lakkhaṇamidaṃ pavadanti santo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He restrains one from evil and encourages what is beneficial; he conceals one's secrets and proclaims one's virtues; he does not forsake one in misfortune and gives when there is need—this, the good declare, is the mark of a true friend.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">11</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">11.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Dujjano <span class="pb hidden-meta" data-ed="M" data-n="0.0080">[M 0.0080]</span> jīyate yutyā,</p>
+<p rend="gatha2">Niggahena nadhīmatā;</p>
+<p rend="gatha3">Nipātyate mahārukkho,</p>
+<p rend="gathalast">Tassamīpa khatikkhayā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A wicked person is conquered by strategy, not by suppression. A great tree is felled by the gradual digging away at its base.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Vane <span class="pb hidden-meta" data-ed="M" data-n="0.0083">[M 0.0083]</span> migāca luddhānaṃ,</p>
+<p rend="gatha2">Dujjanānañca sajjanā;</p>
+<p rend="gatha3">Akāraṇaverī honti,</p>
+<p rend="gathalast">Tiṇabhakkhā supesalā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">To hunters, deer in the forest, and to the wicked, good people, become enemies without cause, though the deer are grass-eaters and very gentle.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Pādalaggaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0086">[M 0.0086]</span> karaṭṭhena,</p>
+<p rend="gathalast">Kaṇḍakeneva kaṇḍakaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">That which is stuck in the foot is removed by a potsherd, just as a thorn is removed by a thorn.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Bālaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0087">[M 0.0087]</span> napasse nasuṇe,</p>
+<p rend="gatha2">Nacabālena saṃvase;</p>
+<p rend="gatha3">Bālenāllāpasallāpaṃ,</p>
+<p rend="gathalast">Nakare nacarocaye.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One should not see a fool, nor hear a fool, nor associate with a fool. One should not engage in conversation or discussion with a fool, nor approve of it.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">12</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">12.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Upa kattuṃ yathā khuddo,</p>
+<p rend="gatha2">Samattho natathāmahā;</p>
+<p rend="gatha3">Kūpo hi hanti pipāsaṃ,</p>
+<p rend="gathalast">Natu pāyo mahambudhi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A small person is able to help in a way a great one is not. Indeed, a well quenches thirst, but not the great ocean.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">13</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">13.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ādānassa <span class="pb hidden-meta" data-ed="M" data-n="0.0095">[M 0.0095]</span> padānassa,</p>
+<p rend="gatha2">Kattabbassaca kammuno;</p>
+<p rend="gatha3">Khippaṃ akaramānassa,</p>
+<p rend="gathalast">Kālo bhakkhati taṃ rasaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Of one who does not promptly undertake receiving, giving, and deeds that ought to be done, time consumes the essence.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Nakkhattaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0103">[M 0.0103]</span> paṭimānentaṃ,</p>
+<p rend="gatha2">Attho bālaṃ upajjhagā;</p>
+<p rend="gatha3">Attho atthassa nakkhattaṃ,</p>
+<p rend="gathalast">Kiṃ karissanti tārakā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Opportunity passes by the fool who waits for the auspicious stars. Opportunity itself is the auspicious star; what can the stars do?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Ajarāmarova <span class="pb hidden-meta" data-ed="M" data-n="0.0105">[M 0.0105]</span> pañño,</p>
+<p rend="gatha2">Vijjamatthañca cintaye;</p>
+<p rend="gatha3">Gahitoviya kesesu,</p>
+<p rend="gathalast">Maccunā dhammamācare.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A wise one, as if ageless and immortal, should reflect on knowledge and purpose. As if seized by the hair by Death, one should practice the Dhamma.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">14</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">14.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vajjā gurūca mantīca,</p>
+<p rend="gatha2">Tayo raṭṭhābhisaṅkhatā;</p>
+<p rend="gatha3">Jīvīta dakkha kosānaṃ,</p>
+<p rend="gathalast">Vaḍḍhanā nāsanāca te.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Physicians, teachers, and counselors—these three are the constituents of a kingdom. They are the increase and the destruction of livelihood, skill, and treasuries.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">15</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">15.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Thirena <span class="pb hidden-meta" data-ed="M" data-n="0.0117">[M 0.0117]</span> kammaṃ vaḍḍhati,</p>
+<p rend="gatha2">Athirena turena no;</p>
+<p rend="gatha3">Phalanti samaye rukkhā,</p>
+<p rend="gathalast">Sittāpi bahuvārinā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Work prospers through steadiness, not through unsteadiness or haste. Trees bear fruit in their season, even when watered with much water.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Vāyāmetheva <span class="pb hidden-meta" data-ed="M" data-n="0.0120">[M 0.0120]</span> puriso,</p>
+<p rend="gathalast">Nanibbindeyya paṇḍito.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A person should indeed strive; a wise one should not grow weary.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Payatano <span class="pb hidden-meta" data-ed="M" data-n="0.0122">[M 0.0122]</span> tādiso neva,</p>
+<p rend="gatha2">Kayyo yena phalaṃ nahi;</p>
+<p rend="gatha3">Selagge kūpakhaṇanā,</p>
+<p rend="gathalast">Kathaṃ toyasamāgamo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One should never make such an effort that yields no fruit. By digging a well on a mountaintop, how can water be obtained?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Ñāṇaṅkusena <span class="pb hidden-meta" data-ed="M" data-n="0.0123">[M 0.0123]</span> sammaggaṃ,</p>
+<p rend="gathalast">Niyyatyussāhakuñjaro.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The elephant of effort is led onto the right path by the goad of knowledge.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Asamekkhitakammantaṃ,</p>
+<p rend="gatha2">Turitābhi nipātinaṃ;</p>
+<p rend="gatha3">Tānikammāni tappenti,</p>
+<p rend="gathalast">Uṇhaṃ va jjhohitaṃ mukhe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Ill-considered actions, undertaken in haste, bring torment, like something hot put into the mouth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">16</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">16.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Chaddosā <span class="pb hidden-meta" data-ed="M" data-n="0.0126">[M 0.0126]</span> puriseneha,</p>
+<p rend="gatha2">Hātabbā bhūtimicchantā;</p>
+<p rend="gatha3">Niddā majjaṃ bhayaṃ kodho,</p>
+<p rend="gathalast">Ālasyaṃ dīghasuttatā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">These six faults should be abandoned by a person in this world who desires prosperity: sleep, intoxication, fear, anger, laziness, and procrastination.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Na <span class="pb hidden-meta" data-ed="M" data-n="0.0130">[M 0.0130]</span> divā suppasīlena,</p>
+<p rend="gatha2">Rattimuṭṭhānadessinā;</p>
+<p rend="gatha3">Niccasoṇḍena mattena,</p>
+<p rend="gathalast">Sakkā āvasituṃ gharaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">It is not possible to manage a household for one who is accustomed to sleeping by day, dislikes rising at night, and is perpetually drunk and intoxicated.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Abhetabbamhi <span class="pb hidden-meta" data-ed="M" data-n="0.0137">[M 0.0137]</span> bhāyanti,</p>
+<p rend="gatha2">Bhāyitabbe nabhāyare;</p>
+<p rend="gatha3">Bhayābhaya vimuḷhā te,</p>
+<p rend="gathalast">Jimhānugā ujuñjahā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">They fear what should not be feared, and do not fear what should be feared. Confused about what is fearful and what is not, they follow a crooked course, having abandoned the straight path.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Yassa <span class="pb hidden-meta" data-ed="M" data-n="0.0139">[M 0.0139]</span> manussabhūtassa,</p>
+<p rend="gatha2">Natthi bhogāca sippakaṃ;</p>
+<p rend="gatha3">Kiṃ phalaṃ tassa mānussaṃ,</p>
+<p rend="gathalast">Dvipādaṭṭho hi so migo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For one who, having become human, has neither wealth nor skill, what is the fruit of that humanity? Indeed, that one is a two-footed beast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">17</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">17.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nānopāyova <span class="pb hidden-meta" data-ed="M" data-n="0.0142">[M 0.0142]</span> kattabbo,</p>
+<p rend="gatha2">Sace bhaveyya attano;</p>
+<p rend="gatha3">Atthasiddhi yathākāmaṃ,</p>
+<p rend="gathalast">Upāyo hi hitañjaso.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Various means should indeed be employed, if they are one's own to use. The success of one's purpose is according to one's wish, for a skillful means is indeed a direct path to welfare.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Lañjadānabālisena<span class="pb hidden-meta" data-ed="M" data-n="0.0150">[M 0.0150]</span>,</p>
+<p rend="gatha2">Kūṭaḍḍakāradhīvarā;</p>
+<p rend="gatha3">Vinicchayamahāmacchaṃ,</p>
+<p rend="gathalast">Oṭṭenti lobhasāgare.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Deceitful fishermen, with the fish-hook of bribery, drag the great fish of judgment down into the ocean of greed.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Yassete caturo dhammā,</p>
+<p rend="gatha2">Vānarinda yathātava;</p>
+<p rend="gatha3">Saccaṃ dhammo dhīti cāgo,</p>
+<p rend="gathalast">Diṭṭhaṃ so ativattati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever possesses these four qualities, O King of Monkeys, as you do—truth, righteousness, steadfastness, and generosity—transcends all that is seen.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">18</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">18.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vidvāca <span class="pb hidden-meta" data-ed="M" data-n="0.0162">[M 0.0162]</span> ratanaṃ nārī,</p>
+<p rend="gatha2">Vīṇā sātthaṃ giraṃmahī;</p>
+<p rend="gatha3">Guṇavisesa māgamma,</p>
+<p rend="gathalast">Guṇāni aguṇānica.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A learned man, a jewel, a woman, a lute, meaningful speech, the earth; by recourse to a special quality, one knows virtues and their opposites.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Dhanavā <span class="pb hidden-meta" data-ed="M" data-n="0.0164">[M 0.0164]</span> balavā loke,</p>
+<p rend="gathalast">Dhanā bhavati paṇḍito.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A wealthy person is powerful in the world; from wealth, one becomes wise.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Sumane <span class="pb hidden-meta" data-ed="M" data-n="0.0165">[M 0.0165]</span> nissito kīṭo,</p>
+<p rend="gatha2">Nigguṇo hīnako sayaṃ;</p>
+<p rend="gatha3">Taṃ pupphehi maṇḍentānaṃ,</p>
+<p rend="gathalast">Raññaṃ siropi rohati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">An insect that has resorted to a flower, though itself without virtue and lowly, ascends even to the head of kings when they are adorned with that flower.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Alakkhikehi <span class="pb hidden-meta" data-ed="M" data-n="0.0168">[M 0.0168]</span> sañcītā,</p>
+<p rend="gatha2">Dhanabhogāca cintitā;</p>
+<p rend="gatha3">Lakkhikassa bhavantete,</p>
+<p rend="gathalast">Lakkhivā suṭṭhubhuñjati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Wealth and possessions amassed and planned for by the unlucky, these become the property of the lucky one; the fortunate one enjoys them well.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Khattiyo <span class="pb hidden-meta" data-ed="M" data-n="0.0171">[M 0.0171]</span> seṭṭho jane tasmiṃ,</p>
+<p rend="gatha2">Yo gottapaṭisārino;</p>
+<p rend="gatha3">Vijjācaraṇasampanno,</p>
+<p rend="gathalast">So seṭṭho devamānuse.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Among those folk who rely on lineage, a Khattiya is held to be best; but one endowed with knowledge and conduct is best among gods and humans.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Visāpi <span class="pb hidden-meta" data-ed="M" data-n="0.0182">[M 0.0182]</span> amataṃ gaṇhe,</p>
+<p rend="gatha2">Gūthato maṇimuttamaṃ;</p>
+<p rend="gatha3">Kaṇṭakapādapā pupphaṃ,</p>
+<p rend="gathalast">Thirataṃ dukkulā varaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One should take nectar even from poison, an excellent jewel from filth, a flower from a thorny tree, and a noble quality from a low-born person.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Dhanissarādiguṇommi <span class="pb hidden-meta" data-ed="M" data-n="0.0189">[M 0.0189]</span>-</p>
+<p rend="gathalast">Vegena vāhitā pajā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">People are carried away by the force of the wave of such qualities as wealth and lordship.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">19</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">19.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yassa tthi satataṃ mettā,</p>
+<p rend="gatha2">Sabbalokasuvallabhā;</p>
+<p rend="gatha3">Kūpāyate samuddopi,</p>
+<p rend="gathalast">Aggi tassa jalāyate.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For one who constantly possesses loving-kindness, which is beloved by all the world, even the ocean becomes like a well, and fire becomes like water.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">20</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">20.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sakkharāyati merūpi,</p>
+<p rend="gatha2">Visabhakkho sudhāyate;</p>
+<p rend="gatha3">Sasāyate migarāja,</p>
+<p rend="gatha2">Byālo mālāguṇāyate;</p>
+<p rend="gatha3">Dolāyate chamācālo,</p>
+<p rend="gathalast">Nānāvudhā tiṇāyare.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Even Meru becomes like gravel, eaten poison becomes like nectar, the king of beasts becomes like a hare, a serpent becomes like a string of flowers, the trembling earth becomes like a swing, and various weapons become like blades of grass.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">21</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">21.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sameva <span class="pb hidden-meta" data-ed="M" data-n="0.0202">[M 0.0202]</span> sati ussāhe,</p>
+<p rend="gatha2">Sukhavāho hitaṅkaro;</p>
+<p rend="gatha3">Ūne-dhike tathā nohi,</p>
+<p rend="gathalast">Majjhago sādhu sabbadā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When effort is balanced, it brings happiness and creates welfare. It is not so when deficient or excessive; the middle course is always good.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1002n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Sādhu <span class="pb hidden-meta" data-ed="M" data-n="0.0208">[M 0.0208]</span> kho paṇḍitonāma,</p>
+<p rend="gathalast">Natveva atipaṇḍito.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Good indeed is one called wise, but not one who is excessively wise.</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

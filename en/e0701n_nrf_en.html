@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cūḷaganthavaṃsapāḷi</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">Pali | Trans.</button><button type="button" data-mode="view-stack">Pali — Trans.</button><button type="button" data-mode="view-pali-only">Pali Only</button><button type="button" data-mode="view-trans-only">Trans. Only</button><button type="button" id="toggle-meta-btn">Note</button></div>
+<div class="pair-row" data-id="e0701n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre"> Namo tassa bhagavato arahato sammāsambuddhassa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Homage to the Blessed One, the Arahant, the Perfectly Self-Enlightened One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="book">Cūḷaganthavaṃsapāḷi</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="book">The Minor Lineage of Texts</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="chapter">1. Piṭakattayaparicchedo</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">1. Chapter on the Three Piṭakas</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Namassetvāna sambuddhaṃ, aggavaṃsavaraṃvaraṃ;</p>
+<p rend="gathalast">Natvāna dhammaṃ buddhajaṃ, saṅghañcāpiniraṅgaṇaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having paid homage to the Perfectly Enlightened One, the supreme, the most excellent of the noble lineage; having bowed to the Dhamma born of the Buddha, and also to the stainless Sangha.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Ganthavaṃsampi nissāya, ganthavaṃsaṃ pakathissaṃ;</p>
+<p rend="gathalast">Tipeṭakasamāhāraṃ, sādhunaṃ jaṅghadāsakaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Relying on the Lineage of Texts, I shall proclaim the Lineage of Texts, a compilation of the Tipiṭaka, a support for the legs of the virtuous.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Vimatinodanamārambhaṃ, taṃ me suṇātha sādhavo;</p>
+<p rend="gathalast">Sabbampi buddhavacanaṃ, vimutti ca sahetukaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Listen to me, O virtuous ones, as I begin this dispeller of doubt. All the word of the Buddha is liberation along with its cause.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Hoti ekavidhaṃyeva, tividhaṃ piṭakena ca;</p>
+<p rend="gathalast">Tañca sabbampi kevalaṃ, pañcavidhaṃ nikāyato.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">It is of a single kind, and threefold by way of the Piṭakas; and all of that, in its entirety, is fivefold by way of the Nikāyas.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Aṅgato ca navavidhaṃ, dhammakkhandhagaṇanato;</p>
+<p rend="gathalast">Caturāsīti sahassa, dhammakkhandhapabhedananti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">It is ninefold by way of its parts, and by the count of the Dhamma aggregates, there are eighty-four thousand divisions of Dhamma aggregates.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Kathaṃ piṭakato piṭakañhi tividhaṃ hoti?</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">How is it threefold by way of the Piṭakas?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Vinayapiṭakaṃ, abhidhammapiṭakaṃ suttantapiṭakanti. Tattha katamaṃ vinaya piṭakaṃ? Pārājikakaṇḍaṃ, pācittiyakaṇḍaṃ, mahāvaggakaṇḍaṃ, cullavaggakaṇḍaṃ, parivārakaṇḍanti. Imāni kaṇḍāni vinayapiṭakaṃ nāma.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The Vinaya Piṭaka, the Abhidhamma Piṭaka, and the Suttanta Piṭaka. Therein, what is the Vinaya Piṭaka? The Pārājika section, the Pācittiya section, the Mahāvagga section, the Cullavagga section, and the Parivāra section. These sections are called the Vinaya Piṭaka.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Katamaṃ abhidhammapiṭakaṃ? Dhammasaṅgaṇī-pakaraṇaṃ, vibhaṅga-pakaraṇaṃ, dhātukathā-pakaraṇaṃ, puggalapaññatti-pakaraṇaṃ, kathāvatthu-pakaraṇaṃ, yamaka-pakaraṇaṃ, paṭṭhāna-pakaraṇanti. Imāni satta pakaraṇāni abhidhammapiṭakaṃ nāma. Katamaṃ suttantapiṭakaṃ? Sīlakkhandhavaggādikaṃ, avasesaṃ buddhavacanaṃ suttantapiṭakaṃ nāma.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">What is the Abhidhamma Piṭaka? The Dhammasaṅgaṇī treatise, the Vibhaṅga treatise, the Dhātukathā treatise, the Puggalapaññatti treatise, the Kathāvatthu treatise, the Yamaka treatise, and the Paṭṭhāna treatise. These seven treatises are called the Abhidhamma Piṭaka. What is the Suttanta Piṭaka? The Sīlakkhandhavagga and so on; the remaining word of the Buddha is called the Suttanta Piṭaka.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Kathaṃ nikāyato? Nikāyā pañca vidhā honti. Dīghanikāyo, majjhimanikāyo, saṃyuttanikāyo, aṅguttaranikāyo, khuddakanikāyoti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">How is it fivefold by way of the Nikāyas? The Nikāyas are of five kinds: the Dīgha Nikāya, the Majjhima Nikāya, the Saṃyutta Nikāya, the Aṅguttara Nikāya, and the Khuddaka Nikāya.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Tattha katamo dīgha-nikāyo? Sīlakkhandhavaggo, mahāvaggo, pāthikavaggoti, ime tayo vaggā dīghanikāyo nāma. Imesu tīsu vaggesu, catutiṃsa vaggāni ca honti. [Catutiṃseva suttantā, sīlakkhandhavaggādikā, yassa bhavanti so yeva dīghanikāya nāma hoti.]</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Therein, what is the Dīgha Nikāya? The Sīlakkhandhavagga, the Mahāvagga, and the Pāthikavagga—these three divisions are called the Dīgha Nikāya. In these three divisions, there are thirty-four suttas. [That which has thirty-four suttas, beginning with the Sīlakkhandhavagga, is the Dīgha Nikāya.]</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Katamo majjhimanikāyo? Mūlapaṇṇāso, majjhimapaṇṇāso, uparipaṇṇāsoti, ime tayo paṇṇāsā majjhimanikāyo nāma. Imesu tīsu paṇṇāsesu dvepaññāsādhika-sutta-satāni honti [diyaḍḍhasatasuttantā, dvi suttaṃ yassa santiso, majjhimanikāyo nāmo mūlapaṇṇāsamādi hoti.]</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">What is the Majjhima Nikāya? The Mūlapaṇṇāsa, the Majjhimapaṇṇāsa, and the Uparipaṇṇāsa—these three Fifties are called the Majjhima Nikāya. In these three Fifties, there are one hundred and fifty-two suttas. [That which has one hundred and fifty-two suttas, beginning with the Mūlapaṇṇāsa, is the Majjhima Nikāya.]</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Katamo saṃyuttanikāyo? Sagāthāvaggo, nidānavaggo, khandhakavaggo, saḷāyatanavaggo, mahāvaggoti, ime pañca vaggā saṃyuttanikāyo nāma. Imesu pañcasu vaggesu dvāsaṭṭhisuttasattasatādhikasatta-suttasahassāni honti. [Dvāsaṭṭhi-satta-satāni, sattasahassakāni ca.] Suttāni yassa honti so, sagāthādikavaggako, saṃyuttanikāyo nāmo veditabbo ca viññūnāti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">What is the Saṃyutta Nikāya? The Sagāthāvagga, the Nidānavagga, the Khandhakavagga, the Saḷāyatanavagga, and the Mahāvagga—these five divisions are called the Saṃyutta Nikāya. In these five divisions, there are seven thousand, seven hundred, and sixty-two suttas. [That collection beginning with the Sagāthāvagga, which has seven thousand, seven hundred, and sixty-two suttas, should be known by the wise as the Saṃyutta Nikāya.]</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Katamo aṅguttaranikāyo? Ekkanipāto, dukkanipāto, tikkanipāto, catukkanipāto, pañcakanipāto, chakkanipāto, sattakanipāto, aṭṭhakanipāto, navakanipāto, dasakanipāto, ekādasanipātoti, ime ekādasa nipātā aṅguttaranikāyo nāma. Imesu ekādasa nipātesu satta-paññāsa-pañca-satādhikanava-sutta-sahassāni honti. [Navasuttasahassāni, pañcasatamattāni ca, sattapaññāsādhikāni, suttāni yassa honti so, aṅguttaranikāyoti, ekkanipātakādikoti.]</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">What is the Aṅguttara Nikāya? The Nipāta of Ones, the Nipāta of Twos, the Nipāta of Threes, the Nipāta of Fours, the Nipāta of Fives, the Nipāta of Sixes, the Nipāta of Sevens, the Nipāta of Eights, the Nipāta of Nines, the Nipāta of Tens, and the Nipāta of Elevens—these eleven Nipātas are called the Aṅguttara Nikāya. In these eleven Nipātas, there are nine thousand, five hundred, and fifty-seven suttas. [That which has nine thousand, five hundred, and fifty-seven suttas, beginning with the Nipāta of Ones, is the Aṅguttara Nikāya.]</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Katamo khuddakanikāyo? Khuddakapāṭho, dhammapadaṃ, udānaṃ, itivuttakaṃ, suttanipāto, vimānavatthu, petavatthu, therakathā, therīkathā, jātakaṃ, mahāniddeso, paṭisambhidāmaggo, apadānaṃ, buddhavaṃso, cariyāpiṭakaṃ, vinayapiṭakaṃ, abhidhammapiṭakanti. Imesu sattarasasu ganthesu anekāni sutta-sahassāni honti. [Anekāni sutta-sahassāni, niddiṭṭhāni mahesinā, nikāye pañcame ime, khuddake iti visuteti.]</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">What is the Khuddaka Nikāya? The Khuddakapāṭha, Dhammapada, Udāna, Itivuttaka, Suttanipāta, Vimānavatthu, Petavatthu, Theragāthā, Therīgāthā, Jātaka, Mahāniddesa, Paṭisambhidāmagga, Apadāna, Buddhavaṃsa, Cariyāpiṭaka, the Vinaya Piṭaka, and the Abhidhamma Piṭaka. In these seventeen books, there are many thousands of suttas. [Many thousands of suttas were pointed out by the Great Seer in this fifth Nikāya, renowned as the Khuddaka.]</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Kathaṃ aṅgato aṅgahi nava vidhaṃ hoti? Suttaṃ, geyyaṃ, veyyākaraṇaṃ, gāthā, udānaṃ, itivuttakaṃ, jātakaṃ, abbhutadhammaṃ, vedallanti, navappabhedaṃ hoti. Tattha ubhato vibhaṅganiddesakhandhakaparivārā, suttanipāte, maṅgalasutta, ratanasutta, tuvaṭṭakasuttāni. Aññampi suttanāmakaṃ tathāgatavacanaṃ, suttanti veditabbaṃ. Sabbaṃ sagāthakaṃ geyyanti veditabbaṃ. Visesanasaṃyuttake sakalopi sagāthakavaggo, sakalaṃ abhidhammapiṭakaṃ nigāthakañca suttayañca aññampi aṭṭhahi aṅgehi asaṅgahitaṃ buddhavacanaṃ taṃ veyyākaraṇanti veditabbaṃ. Dhammapadaṃ, therakathā, therīkathā, suttanipāte, no suttanāmikā suddhikagāthā, gāthāti veditabbā. Somanassa ñāṇamayikagāthā paṭika-saṃyuttā dve asītisuttantā udānanti veditabbā. Vuttañhetaṃ bhagavatātiādinayappavattā dasuttarasatasuttantā, itivuttakanti veditabbā. Apaṇṇakajātakādīni paññāsādikāni. Pañcajātakasatāni, jātakanti veditabbaṃ. Cattāro me bhikkhave acchariyā abhūtadhammā, ānandetiādinayappavattā sabbepi acchariya abhūtadhammapaṭisaṃyuttā suttantā abhūtadhammanti veditabbā. Cullavedalla, mahāvedalla, sammādiṭṭhi, sakkapañha, saṅkhārabhājaniya, mahāpuṇṇamasuttantādayo sabbepi vedañca tuṭṭhiñca laddhā [puccha] laddhā pucchitasuttantā, vedallanti veditabbā. Katamāni caturāsīti dhammakkhandhasahassāni dujānāni, caturāsīti dhammakkhandhasahassāni sace vitthārena kathissaṃ atipapañco bhavissati. Tasmā naya vasena kathissāmi. Ekaṃ vatthu, eko dhammakkhandho, ekaṃ nidānaṃ eko dhammakkhandho, ekaṃ pañhā pucchantaṃ eko dhammakkhandho, ekaṃ pañhā visajjanaṃ eko dhammakkhandho, caturāsīti dhammakkhandhasahassāni kena bhāsitāni, kattha bhāsitāni, kadā bhāsitāni, kamārabbha bhāsitāni, kimatthaṃ bhāsitāni, kena dhāritāni, kenābhatāni, kimatthaṃ pariyāpuṇitabbāni. Tatrāyaṃ visajjanā, kena bhāsitānīti? Buddhānu buddhehi bhāsitāni. Kattha bhāsitānīti? Devesu ca mānussesu ca, bhāsitāni. Kadā bhāsitānīti? Bhagavato dharamānakāle ceva pacchimakāle ca bhāsitāni. Katamārabbha bhāsitānīti? Pañcavaggiyādike veneyya bandhave ārabbha bhāsitānīti. Kimatthaṃ bhāsitānīti? Tivajjañca avajjañca ñatvā vajjaṃ pahāya avajje paṭipattitvā nibbānapariyante. Diṭṭha-dhammikasamparāyikatthe sampāpuṇituṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">How is it ninefold by way of its parts? Sutta, geyya, veyyākaraṇa, gāthā, udāna, itivuttaka, jātaka, abbhutadhamma, and vedalla; thus it is of nine kinds. Therein, the two Vibhaṅgas, the Niddesa, the Khandhakas, and the Parivāra; in the Suttanipāta, the Maṅgala Sutta, Ratana Sutta, and Tuvaṭṭaka Sutta; and any other word of the Tathāgata called a 'sutta' is to be known as sutta. All that is accompanied by verse is to be known as geyya. In the Saṃyutta Nikāya, the entire Sagāthāvagga is geyya. The entire Abhidhamma Piṭaka, suttas without verse, and any other word of the Buddha not included in the other eight parts is to be known as veyyākaraṇa. The Dhammapada, Theragāthā, Therīgāthā, and the pure verses in the Suttanipāta not designated as suttas, are to be known as gāthā. The eighty-two suttas connected with verses of joyous knowledge are to be known as udāna. The one hundred and ten suttas that proceed in the manner of 'This was said by the Blessed One...' are to be known as itivuttaka. The five hundred and fifty Jātakas, beginning with the Apaṇṇaka Jātaka, are to be known as jātaka. All suttas connected with wonderful and marvelous phenomena, which proceed in the manner of 'Bhikkhus, there are these four wonderful and marvelous qualities in Ānanda...' are to be known as abbhutadhamma. The Cūḷavedalla, Mahāvedalla, Sammādiṭṭhi, Sakkapañha, Saṅkhārabhājaniya, Mahāpuṇṇama suttas, and all other suttas asked after having attained knowledge and satisfaction, are to be known as vedalla. What are the eighty-four thousand Dhamma aggregates? They are difficult to know. If I were to explain the eighty-four thousand Dhamma aggregates in detail, it would be a great proliferation. Therefore, I will explain by way of a method. One topic is one Dhamma aggregate; one causal account is one Dhamma aggregate; one question asked is one Dhamma aggregate; one answer given is one Dhamma aggregate. By whom were the eighty-four thousand Dhamma aggregates spoken? Where were they spoken? When were they spoken? In reference to whom were they spoken? For what purpose were they spoken? By whom were they remembered? By whom were they transmitted? For what purpose should they be mastered? Here is the answer: By whom were they spoken? By the Buddha and the subsequent enlightened ones. Where were they spoken? Among devas and humans. When were they spoken? During the Blessed One's lifetime and in the time after. In reference to whom were they spoken? In reference to the group of five and other trainable disciples. For what purpose were they spoken? So that, having understood what is faulty and what is faultless, having abandoned the faulty and practiced the faultless, one might attain the goal of Nibbāna and accomplish welfare in this life and in the lives to come.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Kena dhāritānīti? Anubuddhehi ceva sissānusissehi ca dhāritāni. Kenā bhatānīti? Ācariya paraṃparehi ābhatāni. Kimatthaṃ pariyāpuṇitabbānīti? Vajjañca avajjañca ñatvā vajjaṃ pahāya avajje paṭipattitvā nibbānapariyante diṭṭhadhammikasamparāyikatthe, saṃpāpuṇituṃ, yadevaṃ tāya nibbānapariyante diṭṭhadhammikasamparāyikatthe sādhikāni honti. Teva tattha kehi appamattena pariyāpuṇitabbāni dhāretabbāni dhāretabbāni vācetabbāni sajjhāyaṃ kātabbānīti [iti cullaganthavaṃse piṭakattaya dīpako nāma paṭhamo paricchedo.]</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">By whom were they remembered? They were remembered by the subsequent enlightened ones and by their pupils and grand-pupils. By whom were they transmitted? They were transmitted by the succession of teachers. For what purpose should they be mastered? So that, having understood what is faulty and what is faultless, having abandoned the faulty and practiced the faultless, one might attain the goal of Nibbāna and accomplish welfare in this life and in the lives to come. Since they are thus conducive to the goal of Nibbāna and to welfare in this life and in the lives to come, they should be diligently mastered, remembered, recited, and chanted. [Thus ends the first chapter, called 'The Elucidation of the Three Piṭakas,' in the Minor Lineage of Texts.]</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="chapter">2. Ganthakārakācariya-paricchedo</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">2. The Chapter on the Author-Teachers</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Ācariyo pana atthi. Porāṇācariyā atthi, aṭṭhakathācariyā atthi, ganthakārakācariyā atthi, tividhanāmikācariyā. Katame porāṇācariyā? Paṭhamasaṅgāyanāyaṃ pañcasatā khīṇāsavā pañcannaṃ nikāyānaṃ nāmañca atthañca adhippāyañca yadañca byañjana sodhanañca avasesaṃ kiccaṃ kariṃsu. Dutiyasaṅgāyanāyaṃ sattasatā khīṇāsavā tesaṃyeva saddatthādikaṃ kiccaṃ puna kariṃsu. Tatiyasaṅgāyanāyaṃ sahassamattā khīṇāsavā tesaṃyeva saddatthādikaṃ kiccaṃ puna kariṃsu. Iccevaṃ dvesatādhikā dvesahassa khīṇāsavā mahākaccāyanaṃ ṭhapetvā avasesā porāṇācariyā nāma. Ye porāṇācariyā teyeva aṭṭhakathācariyā nāma. Katame ganthakārakācariyā? Mahāaṭṭhakathikāpebhadaanekācariyā ganthakārakācariyā nāma. Katame tividha nāmācariyā mahākaccāyano tividhanāmaṃ. Katame ganthā mahākaccāyanena katā? Kaccāyanagantho, mahāniruttigantho, cullaniruttigantho, yamakagantho, nettigantho, peṭakopadesaganthoti, ime cha ganthā mahākaccāyanena katā. Katame anekācariyena katā ganthā? Mahāpaccarikācariyo mahāpaccariyaṃ nāma ganthaṃ akāsi. Mahākurundikācariyo kurundi nāma ganthaṃ akāsi. Aññataro ācariyo mahāpaccariya ganthassa aṭṭhakathaṃ akāsi. Aññataro ācariyo kurundi ganthassa aṭṭhakathaṃ akāsi, mahābuddhaghosā nāmacariyo visuddhimaggo dīghanikāyassa sumaṅgalavilāsani nāma aṭṭhakathā, majjhimanikāyassa papañcasūdanī nāma aṭṭhakathā, saṃyuttanikāyassa sāratthappakāsinī nāma aṭṭhakathā, aṅguttaranikāyassa manorathapūraṇī nāma aṭṭhakathā, pañcavinaya ganthānaṃ samantapāsādikā nāma aṭṭhakathā, sattannaṃ abhidhammaganthānaṃ paramatthakathā nāma aṭṭhakathā, pātimokkha saṃkhātāya mātikāya kaṅkhāvitaraṇīti visuddhi nāma aṭṭhakathā, dhammapadassa aṭṭhakathā, jātakassa aṭṭhakathā, khuddakapāṭhassa aṭṭhakathā, suttanipātassa aṭṭhakathā, apadānassa aṭṭhakathāti, ime terasa ganthe akāsi. Buddhadattonāmācariyo vinaya vinicchayo, uttaravinicchayo, abhidhammāvatāro, buddhavaṃsassa madhuratthavilāsinī nāma aṭṭhakathāti, ime cattāro ganthe akāsi. Ānandonāmācariyā sattābhidhammaganthaṭṭhakathāya mūṭīkaṃ nāma ṭīkaṃ akāsi. Dhammapālācariyo nettippakaraṇaṭṭhakathā, itivuttakaṭṭhakathā, udānaṭṭhakathā, cariyāpiṭakaṭṭhakathā, therakathaṭṭhakathā, therīkathaṭṭhakathā, vimānavatthussa vimalavilāsini nāma aṭṭhakathā, petavatthussa vimalavilāsini nāma aṭṭhakathā, visuddhimaggassa paramatthamañjūsā nāma ṭīkā, dīghanikāyassa aṭṭhakathādīnaṃ catunnaṃ aṭṭhakathānaṃ līnatthappakāsani nāma ṭīkā, jātakaṭṭhakathāya līnatthappakāsani nāma ṭīkā, nettipakaraṇaṭṭhakathāya ṭīkā, buddhavaṃsaṭṭhakathāya paramatthadīpanī nāma ṭīkā, abhidhammaṭṭhakathāyaṭīkā līnatthavaṇṇanā nāma anuṭīkāti ime cuddasa matte ganthe akāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Now, there are teachers. There are ancient teachers, commentary teachers, authors of texts, and teachers with three kinds of names. Who are the ancient teachers? At the First Council, five hundred arahants accomplished the task of determining the name, meaning, intention, and purification of the phrasing for the five Nikāyas, and the remaining duties. At the Second Council, seven hundred arahants again performed the same task concerning the words and meaning. At the Third Council, a thousand arahants again performed the same task concerning the words and meaning. Thus, these two thousand two hundred arahants, with the exception of Mahākaccāyana, are called the ancient teachers. Those who are the ancient teachers are themselves called the commentary teachers. Who are the authors of texts? The venerable authors of the Great Commentary and many other teachers are called the authors of texts. Who are the teachers with three kinds of names? Mahākaccāyana has three kinds of names. Which texts were composed by Mahākaccāyana? The Kaccāyana Treatise, the Mahānirutti Treatise, the Cullanirutti Treatise, the Yamaka Treatise, the Netti Treatise, and the Peṭakopadesa Treatise—these six texts were composed by Mahākaccāyana. Which texts were composed by various teachers? The teacher Mahāpaccarikā composed the text called Mahāpaccariya. The teacher Mahākurundikā composed the text called Kurundi. Another teacher composed a commentary on the Mahāpaccariya text. Another teacher composed a commentary on the Kurundi text. The teacher named Mahābuddhaghosa composed the Visuddhimagga; the Sumaṅgalavilāsinī, the commentary on the Dīghanikāya; the Papañcasūdanī, the commentary on the Majjhimanikāya; the Sāratthappakāsinī, the commentary on the Saṃyuttanikāya; the Manorathapūraṇī, the commentary on the Aṅguttaranikāya; the Samantapāsādikā, the commentary on the five Vinaya texts; the Paramatthakathā, the commentary on the seven Abhidhamma texts; the Kaṅkhāvitaraṇī, the commentary on the Pātimokkha Mātikā; the commentary on the Dhammapada; the commentary on the Jātaka; the commentary on the Khuddakapāṭha; the commentary on the Suttanipāta; and the commentary on the Apadāna—he composed these thirteen texts. The teacher named Buddhaddatta composed four texts: the Vinayavinicchaya, the Uttaravinicchaya, the Abhidhammāvatāra, and the Madhuratthavilāsinī, the commentary on the Buddhavaṃsa. The teacher named Ānanda composed a sub-commentary called Mūṭīkā on the commentary on the seven Abhidhamma texts. The teacher Dhammapāla composed the commentary on the Nettippakaraṇa, the commentary on the Itivuttaka, the commentary on the Udāna, the commentary on the Cariyāpiṭaka, the commentary on the Theragāthā, the commentary on the Therīgāthā, the Vimalavilāsinī, the commentary on the Vimānavatthu, the Vimalavilāsinī, the commentary on the Petavatthu, the Paramatthamañjūsā, a sub-commentary on the Visuddhimagga, the Līnatthappakāsanī, a sub-commentary on the commentaries of the four Nikāyas, the Līnatthappakāsanī, a sub-commentary on the Jātaka commentary, the sub-commentary on the Nettippakaraṇa commentary, the Paramatthadīpanī, a sub-commentary on the Buddhavaṃsa commentary, and the Līnatthavaṇṇanā, a sub-sub-commentary on the Abhidhamma commentary—he composed these fourteen texts.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Dve pubbācariyānāmā cariyānirutti mañjūsaṃ nāma cullanirutti ṭīkañca mahānirutti saṅkhepañca akaṃsu. Mahāvajirabuddhināmācariyo vinayagaṇṭhināma pakaraṇaṃ akāsi. Dīpaṅkarasaṅkhāto vimalabuddhi nāmācariyo mukhamattadīpanī nāmakaṃ nyāsappakaraṇaṃ akāsi. Cullavajirabuddhi nāmācariyo atthabyākhyānaṃ nāma pakaraṇaṃ akāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Two ancient teachers composed the sub-commentary on the Cullanirutti named Mañjūsā and the Mahānirutti Saṅkhepa. The teacher named Mahāvajirabuddhi composed the treatise called Vinayagaṇṭhi. The teacher named Vimalabuddhi, known as Dīpaṅkara, composed the Nyāsa treatise called Mukhamattadīpanī. The teacher named Cullavajirabuddhi composed the treatise called Atthabyākhyāna.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Dīpaṅkaro nāmācariyo rūpasiddhi pakaraṇaṃ, rūpasiddhi ṭīkaṃ, sampapañca suttañceti tividhaṃ pakaraṇaṃ akāsi. Ānandācariyassa jeṭṭhasisso dhammapālo nāmācariyo saccasaṅkhepaṃ nāma pakaraṇaṃ akāsi. Kassapo nāmācariyo mohavicchedanī, vimaticchedanī, dasabuddhavaṃso, anāgatavaṃsoti, catuvidhaṃ pakaraṇaṃ akāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The teacher named Dīpaṅkara composed three treatises: the Rūpasiddhi, the sub-commentary on the Rūpasiddhi, and the Sampapañcasutta. The teacher named Dhammapāla, the eldest disciple of the teacher Ānanda, composed the treatise called the Saccasaṅkhepa. The teacher named Kassapa composed four treatises: the Mohavicchedanī, the Vimaticchedanī, the Dasabuddhavaṃsa, and the Anāgatavaṃsa.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Mahānāmo nāmācariyo, saddhammapakāsanī nāma paṭisambhidāmaggassa aṭṭhakathaṃ akāsi. Dīpavaṃso, thūpavaṃso, bodhivaṃso, cūlavaṃso, mahāvaṃso, paṭisambhidāmaggaṭṭhakathā gaṇṭhi ceti ime cha ganthā mahānāmācari visuṃ visuṃ katā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The teacher named Mahānāma composed the Saddhammapakāsanī, the commentary on the Paṭisambhidāmagga. The Dīpavaṃsa, the Thūpavaṃsa, the Bodhivaṃsa, the Cūlavaṃsa, the Mahāvaṃsa, and the gloss on the commentary on the Paṭisambhidāmagga—these six texts were composed separately by the teacher Mahānāma.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Navo mahānāmo nāmācariyo navaṃ mahāvaṃsa nāma pakaraṇaṃ akāsi. Upaseno nāmācariyo saddhammapajjotikaṃ nāma mahāniddesassa aṭṭhakathaṃ akāsi. Moggalāno nāmācariyo moggalānabyākaraṇaṃ nāma pakaraṇaṃ akāsi. Saṅgharakkhito nāmācariyo, subodhālaṅkāraṃ nāma pakaraṇaṃ akāsi. Vuttodayakāro nāmācariyo vuttodayaṃ nāma pakaraṇaṃ akāsi. Dhammasiri nāmācariyo khuddakasikkhaṃ nāma pakaraṇaṃ akāsi. Purāṇakhuddasikkhāya ṭīkā, mūlasikkhā ceti, ime dve ganthā dvehācariyehi visuṃ visuṃ katā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The teacher named Mahānāma the New composed a treatise called the New Mahāvaṃsa. The teacher named Upasena composed the Saddhammapajjotikā, the commentary on the Mahāniddesa. The teacher named Moggallāna composed the treatise called the Moggallānabyākaraṇa. The teacher named Saṅgharakkhita composed the treatise called the Subodhālaṅkāra. The author of the Vuttodaya composed the treatise called the Vuttodaya. The teacher named Dhammasiri composed the treatise called the Khuddasikkhā. A sub-commentary on the ancient Khuddasikkhā and the Mūlasikkhā—these two texts were composed separately by two teachers.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Anuruddho nāmācariyo paramatthavinicchayaṃ, nāmarūpaparicchedaṃ, abhidhammatthasaṅgahaṃ ceti tividhaṃ pakaraṇaṃ akāsi. Khemo nāmācariyo khemaṃ nāma pakaraṇaṃ akāsi. Sāriputto nāmācariyo vinayaṭṭhakathāya sāratthadīpanī nāma ṭīkaṃ; vinayasaṅgahapakaraṇaṃ, vinayasaṅgahassaṭīkaṃ; aṅguttaraṭṭhakathāya sāratthamañjūsaṃ nāma navaṃ ṭīkaṃ; pañcikā ṭīkañceti, ime pañca ganthe akāsi. Buddhanāgo nāmācariyo vinayatthamañjūsaṃ nāma kaṅkhāvitaraṇīyā ṭīkaṃ akāsi. Navo moggalāno nāmācariyo abhidhānappadīpikaṃ nāma pakaraṇaṃ akāsi. Vācissaro nāmācariyo mahāsāmi nāma subodhālaṅkārassa ṭīkā, vuttodaya vivaraṇaṃ, sumaṅgalappasādani nāma khuddasikkhāya ṭīkā; sambandhacintā, sambandhacintāya ṭīkā; bālāvatāro, moggalānabyākaraṇassa pañcikāya ṭīkā; yogavinicchayo, vinayavinicchayassa ṭīkā, uttaravinicchayassa ṭīkā, nāmarūpa-paricchedassa vibhāgo, saddatthassa padarūpavibhāvanaṃ; khemassa pakaraṇassa ṭīkā, sīmālaṅkāro, mūlasikkhāya ṭīkā, rūpavibhāgo, paccayasaṅgaho, saccasaṅkhepassa ṭīkā ceti, ime aṭṭhārasa ganthe akāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The teacher named Anuruddha composed three treatises: the Paramatthavinicchaya, the Nāmarūpapariccheda, and the Abhidhammatthasaṅgaha. The teacher named Khema composed a treatise called Khema. The teacher named Sāriputta composed five works: the Sāratthadīpanī, a sub-commentary on the Vinaya commentary; the Vinayasaṅgaha treatise and its sub-commentary; the Sāratthamañjūsā, a new sub-commentary on the Aṅguttara commentary; and the Pañcikā sub-commentary. The teacher named Buddhanāga composed the Vinayatthamañjūsā, a sub-commentary on the Kaṅkhāvitaraṇī. The new Moggallāna composed the treatise called Abhidhānappadīpikā. The teacher named Vācissara, also known as Mahāsāmi, composed eighteen works: a sub-commentary on the Subodhālaṅkāra; the Vuttodaya Vivaraṇa; the Sumaṅgalappasādani, a sub-commentary on the Khuddasikkhā; the Sambandhacintā and its sub-commentary; the Bālāvatāra; a sub-commentary on the Pañcikā of the Moggallānabyākaraṇa; the Yogavinicchaya; sub-commentaries on the Vinayavinicchaya and the Uttaravinicchaya; a Vibhāga on the Nāmarūpapariccheda; the Padarūpavibhāvana on the meaning of words; a sub-commentary on Khema's treatise; the Sīmālaṅkāra; a sub-commentary on the Mūlasikkhā; the Rūpavibhāga; the Paccayasaṅgaha; and a sub-commentary on the Saccasaṅkhepa.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Sumaṅgalo nāmācariyo abhidhammāvatārassaṭīkaṃ, abhidhammatthasaṅgahassaṭīkañca duvidhaṃ pakaraṇaṃ akāsi. Buddhapiyo nāmācariyo sāratthasaṅgahaṃ nāma pakaraṇaṃ akāsi. Dhammakitti nāmācariyo dantadhātu pakaraṇaṃ akāsi. Medhaṅkaro nāmācariyo jinacaritaṃ nāma pakaraṇaṃ akāsi. Buddharakkhito nāmācariyo jinalaṅkāraṃ, jinalaṅkārassa ṭīkañcāti duvidhaṃ pakaraṇaṃ akāsi. Upatisso nāmācariyo anāgatavaṃsassa aṭṭhakathaṃ akāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The teacher named Sumaṅgala composed two treatises: a sub-commentary on the Abhidhammāvatāra and a sub-commentary on the Abhidhammatthasaṅgaha. The teacher named Buddhapiya composed the treatise called Sāratthasaṅgaha. The teacher named Dhammakitti composed a treatise on the Tooth Relic. The teacher named Medhaṅkara composed the treatise called Jinacarita. The teacher named Buddharakkhita composed two treatises: the Jinalaṅkāra and a sub-commentary on it. The teacher named Upatissa composed the commentary on the Anāgatavaṃsa.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Kaṅkhāvitaraṇīyā līnatthappakāsini, nisandeho, dhammānusāraṇī, ñeyyāsantati, ñeyyāsantatiyā ṭīkā, sumatādāvatāro, lokapaññatti pakaraṇaṃ, tathāgatuppatti pakaraṇaṃ, nalāṭadhātu vaṇṇanā, sīhaḷavatthu, dhammadīpako, paṭipattisaṅgaho, visuddhimaggaṇṭhi, abhidhammagaṇṭhi, nettipakaraṇagaṇṭhi, visuddhimaggacullanavaṭīkā, sotabbamālinī, pasādajananī, okāsaloko, subodhālaṅkārassa nava ṭīkā ceti, ime vīsati ganthā vīsatācariyehi visuṃ visuṃ katā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The Līnatthappakāsinī on the Kaṅkhāvitaraṇī; the Nisandeha; the Dhammānusāraṇī; the Ñeyyāsantati; the sub-commentary on the Ñeyyāsantati; the Sumatāvatāra; the Lokapaññatti treatise; the Tathāgatuppatti treatise; the Nalāṭadhātuvaṇṇanā; the Sīhaḷavatthu; the Dhammadīpaka; the Paṭipattisaṅgaho; the gloss on the Visuddhimagga; the gloss on the Abhidhamma; the gloss on the Nettippakaraṇa; the Cullanavaṭīkā on the Visuddhimagga; the Sotabbamālinī; the Pasādajananī; the Okāsaloka; and the new sub-commentary on the Subodhālaṅkāra—these twenty texts were composed separately by twenty teachers.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Saddhammasiri nāmācariyo saddatthabhedacintā nāma pakaraṇaṃ akāsi. Devo nāmācariyo sumana kūṭavaṇṇanaṃ nāma pakaraṇaṃ akāsi. Cullabuddhaghoso nāmācariyo sotatthakinidānaṃ nāma pakaraṇaṃ akāsi. Raṭṭhapālo nāmācariyo madhurasaṅgāhaṇīkitti nāma pakaraṇaṃ akāsi. Subhūtacando nāmācariyo liṅgatthavivaraṇa-pakaraṇaṃ akāsi. Aggavaṃso nāmācariyo saddanīti pakaraṇaṃ nāma akāsi. Vajirabuddhi nāmācariyo mahāṭīkaṃ nāma nyāsapakaraṇaṭīkaṃ akāsi. Guṇasāgaro nāmācariyo mukhamattasāraṃ, mukhamattasārassa ṭīkañca duvidhaṃ pakaraṇaṃ akāsi. Abhayo nāmācariyo saddatthabhedacintāya mahāṭīkaṃ akāsi. Ñāṇasāgaro nāmācariyo liṅgatthavivaraṇappakāsanaṃ nāma pakaraṇaṃ akāsi. Aññataro ācariyo gūḷatthaṭīkaṃ, bālappabodhanañca duvidhaṃ pakaraṇaṃ akāsi. Aññataro ācariyo saddattha-bhedacintāya majjhimaṭīkaṃ akāsi. Uttamo nāmācariyo bālāvatāraṭīkaṃ, liṅgatthavivaraṇaṭīkañca duvidhaṃ pakaraṇaṃ akāsi. Aññataro ācariyo saddatthabhedacintāya nava-ṭīkaṃ akāsi. Eko amacco abhidhānappadīpikāyaṭīkaṃ, gaṇṭhipakaraṇassa daṇḍīppakaraṇassa māgadhabhūtaṃ ṭīkaṃ, koladdhajanassa sakaṭabhāsāya kataṭīkañca tividhaṃ pakaraṇaṃ akāsi. Dhammasenāpati nāmācariyo kārikaṃ, etimāsapidīpanī, manohārañca tividhaṃ pakaraṇaṃ akāsi. Aññataro ācariyo kārikāya ṭīkaṃ akāsi. Aññataro ācariyo etimāsapidīpikāya ṭīkaṃ akāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The teacher named Saddhammasiri composed a treatise called Saddatthabhedacintā. The teacher named Deva composed a treatise called Sumanakūṭavaṇṇanā. The teacher named Cullabuddhaghosa composed a treatise called Sotatthakīnidāna. The teacher named Raṭṭhapāla composed a treatise called Madhurasaṅgāhaṇīkitti. The teacher named Subhūtacanda composed a treatise called Liṅgatthavivaraṇa. The teacher named Aggavaṃsa composed a treatise called Saddanīti. The teacher named Vajirabuddhi composed a sub-commentary called Mahāṭīkā, a sub-commentary on the Nyāsapakaraṇa. The teacher named Guṇasāgara composed two treatises: the Mukhamattasāra and a sub-commentary on it. The teacher named Abhaya composed a major sub-commentary on the Saddatthabhedacintā. The teacher named Ñāṇasāgara composed a treatise called Liṅgatthavivaraṇappakāsana. A certain teacher composed two treatises: the Gūḷhatthaṭīkā and the Bālappabodhana. A certain teacher composed a middle sub-commentary on the Saddatthabhedacintā. The teacher named Uttama composed two treatises: the Bālāvatāraṭīkā and the Liṅgatthavivaraṇaṭīkā. A certain teacher composed a new sub-commentary on the Saddatthabhedacintā. A certain minister composed three treatises: a sub-commentary on the Abhidhānappadīpikā, a sub-commentary on the Gaṇṭhipakaraṇa and Daṇḍīpakaraṇa in the Māgadhī language, and a sub-commentary on a work of Koladdhajana in the Sakaṭa language. The teacher named Dhammasenāpati composed three treatises: the Kārikā, the Etimāsapidīpanī, and the Manohāra. A certain teacher composed a sub-commentary on the Kārikā. A certain teacher composed a sub-commentary on the Etimāsapidīpanī.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Aññataro ācariyo saddabindu nāma pakaraṇaṃ akāsi. Saddhammaguru nāmācariyo saddavuttippakāsakaṃ nāma pakaraṇaṃ akāsi. Sāriputto nāmācariyo saddavuttippakāsakassa ṭīkaṃ akāsi. Aññataro ācariyo kaccāyanasāraṃ nāma pakaraṇaṃ kaccāyanasārassa ṭīkañca duvidhaṃ pakaraṇaṃ akāsi. Navo medhaṅkaro nāmācariyo lokadīpakasāraṃ nāma pakaraṇaṃ akāsi. Aggapaṇḍito nāmācariyo lokuppatti nāma pakaraṇaṃ akāsi. Cīvaro nāmācariyo jaṅghadāsakassa ṭīkaṃ akāsi. Mātikatthadīpanī, abhidhammatthasaṅgahavaṇṇanā, sīmālaṅkārassaṭīkā, vinayasamuṭṭhānadīpanī ṭīkā, gaṇṭhi sāro, paṭṭhānagaṇanā nayo, suttaniddeso, pātimokkho, ceti, ime aṭṭha ganthe saddhammajotipālācariyo akāsi. Vimalabuddhi nāmācariyo abhidhamma-pannarasaṭṭhānaṃ nāma pakaraṇaṃ akāsi. Navo vimalabuddhi nāmācariyo saddasāratthajālinī, saddasāratthajāliniyā ṭīkā, vuttodaya ṭīkā, paramatthamañjūsā nāma abhidhammasaṅgahaṭīkāya anuṭīkā dasagaṇṭhivaṇṇanā, māgadhabhūtāvidaggamukhamaṇḍanaṭīkā ceti ime cha ganthe akāsi. Aññataro ācariyo pañcapakaraṇaṭīkāya navānuṭīkaṃ akāsi. Ariyavaṃso nāmācariyo abhidhammasaṅgaha-ṭīkāya [paramattha] maṇisāramañjūsaṃ nāma navānuṭīkaṃ akāsi. Abhidhammatthasaṅgahassa ṭīkā, peṭakopadesassa ṭīkā, catubhāṇavārassa aṭṭhakathā, mahāsārapakāsanī, mahādīpanī, sāratthadīpanī gati pakaraṇaṃ, hatthasāro, bhummasaṅgaho, bhummaniddeso, dasavatthukāyaviratiṭīkā, jotanā nirutti, vibhattikathā, kaccāyanavivaraṇā, saddhammamālinī, pañcagati vaṇṇanā, bālacittapabodhanaṃ, dhammacakkasuttassa navaṭṭhakathā, dantadhātu pakaraṇassa ṭīkā ceti, ime vīsati ganthā nānācariyehi katā, aññāni pana pakaraṇāni atthi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">A certain teacher composed a treatise called Saddabindu. The teacher named Saddhammaguru composed a treatise called Saddavuttippakāsaka. The teacher named Sāriputta composed a sub-commentary on the Saddavuttippakāsaka. Another teacher composed two treatises: the Kaccāyanasāra and a sub-commentary on it. The new teacher named Medhaṅkara composed a treatise called Lokadīpakasāra. The teacher named Aggapaṇḍita composed a treatise called Lokuppatti. The teacher named Cīvara composed a sub-commentary on the Jaṅghadāsaka. The teacher Saddhammajotipāla composed these eight texts: the Mātikatthadīpanī, the Abhidhammatthasaṅgahavaṇṇanā, the Sīmālaṅkāraṭīkā, the Vinayasamuṭṭhānadīpanīṭīkā, the Gaṇṭhisāra, the Paṭṭhānagaṇanānaya, the Suttaniddesa, and the Pātimokkha. The teacher named Vimalabuddhi composed a treatise called Abhidhammapannarasaṭṭhāna. The new teacher named Vimalabuddhi composed these six texts: the Saddasāratthajālinī, a sub-commentary on the Saddasāratthajālinī, the Vuttodayaṭīkā, the Paramatthamañjūsā which is an anuṭīkā on the Abhidhammasaṅgahaṭīkā, the Dasagaṇṭhivaṇṇanā, and the Māgadhabhūtāvidaggamukhamaṇḍanaṭīkā. Another teacher composed a new anuṭīkā on the Pañcapakaraṇaṭīkā. The teacher named Ariyavaṃsa composed a new anuṭīkā on the Abhidhammasaṅgahaṭīkā called Paramatthamaṇisāramañjūsā. Various teachers composed these twenty texts: a sub-commentary on the Abhidhammatthasaṅgaha, a sub-commentary on the Peṭakopadesa, a commentary on the Catubhāṇavāra, the Mahāsārapakāsanī, the Mahādīpanī, the Sāratthadīpanī, the Gatipakaraṇa, the Hatthasāra, the Bhummasaṅgaha, the Bhummaniddesa, a sub-commentary on the Dasavatthukāyavirati, the Jotanānirutti, the Vibhattikathā, the Kaccāyanavivaraṇa, the Saddhammamālinī, the Pañcagativaṇṇanā, the Bālacittapabodhana, a new commentary on the Dhammacakkasutta, and a sub-commentary on the Dantadhātupakaraṇa. There are also other treatises.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Katamāni saddhammo pāyano, bālappabodhanapakaraṇassa ṭīkā ca, jinālaṅkārapakaraṇassa navaṭīkā ca, liṅgatthavivaraṇaṃ, liṅgavinicchayo; pātimokkhavivaraṇaṃ, paramatthakathāvivaraṇaṃ, samantapāsādikā vivaraṇaṃ, catubhāṇavāraṭṭhakathā vivaraṇaṃ, abhidhammatthasaṅgahavivaraṇaṃ, saccasaṅkhepavivaraṇaṃ, saddatthabhedacintāvivaraṇaṃ, saddavuttivivaraṇaṃ, kaccāyanasāravivaraṇaṃ, abhidhammatthasaṅgahassa ṭīkā vivaraṇaṃ, mahāvessantarājātakassa vivaraṇaṃ, sakkābhimataṃ, mahāvessantarajātakassa navaṭṭhakathā, paṭhama saṃbodhi, lokanetti ca, buddhaghosācariyanidānaṃ milindapañhā vaṇṇanā, caturā rakkhā, caturakkhāya aṭṭhakathā, saddavuttipakaraṇassa navaṭīkā, iccevaṃ pañcavīsati pamāṇāni pakaraṇāni laṅko dīpādīsuṭṭhānesu paṇḍitehi katāni ahesuṃ, sambuddhegāthā ca, naradeva nāma gāthā ca, dātave cīratti gāthā ca, vīsati ovādagāthā ca, dānasattari, sīlasattari, sappādānavaṇṇanā, anantabuddhavandanagāthā ca, aṭṭhavīsati buddhavandanagāthā ca, atītānāgatapaccuppannavandanagāthā ca, asītimahāsāvakavandanagāthā ca, navahāraguṇavaṇṇanā cāti, ime buddhapaṇāma-gāthādikā gāthā yo paṇḍitehi laṅkādīpādisuṭṭhānesu katā ahesuṃ [iti cullaganthavaṃse ganthakārakācariya dīpako nāma dutiyo paricchedo]</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">What are the texts of the True Dhamma? The sub-commentary on the Bālappabodhanapakaraṇa, a new sub-commentary on the Jinālaṅkārapakaraṇa, the Liṅgatthavivaraṇa, the Liṅgavinicchaya; the Pātimokkhavivaraṇa, the Paramatthakathāvivaraṇa, the Samantapāsādikāvivaraṇa, the Catubhāṇavāraṭṭhakathāvivaraṇa, the Abhidhammatthasaṅgahavivaraṇa, the Saccasaṅkhepavivaraṇa, the Saddatthabhedacintāvivaraṇa, the Saddavuttivivaraṇa, the Kaccāyanasāravivaraṇa, an exposition of the sub-commentary on the Abhidhammatthasaṅgaha, the Mahāvessantarajātakavivaraṇa, the Sakkābhimata, the new commentary on the Mahāvessantarajātaka, the Paṭhamasambodhi, and the Lokanetti; the origin story of the Venerable Buddhaghosa, the Milindapañhāvaṇṇanā, the Caturārakkhā, the commentary on the Caturārakkhā, and a new sub-commentary on the Saddavuttipakaraṇa—thus, these twenty-five treatises were composed by scholars in places like the island of Laṅkā. Also, the Sambuddhegāthā, the verses called Naradeva, the verses called Dātavecīrattigāthā, the twenty verses of advice, the Dānasattari, the Sīlasattari, the Sappādānavaṇṇanā, the Anantabuddhavandanagāthā, the Aṭṭhavīsatibuddhavandanagāthā, the Atītānāgatapaccuppannavandanagāthā, the Asītimahāsāvakavandanagāthā, and the Navahāraguṇavaṇṇanā—these verses of homage to the Buddha and others were composed by scholars in places like the island of Laṅkā. [Thus ends the second chapter, named “A Beacon on the Authors of the Texts,” in the Minor Chronicle of Texts.]</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="chapter">3. Ācariyānaṃ sañjātaṭṭhānaparicchedo</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">3. Chapter on the Birthplaces of the Teachers.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Ācariyesu ca atthi jambudīpikācariyā atthi, laṅkādīpikācariyā. Katame jambudīpikācariyā? Katame laṅkādīpikācariyā? Mahākaccāyano jambudīpikācariyo so hi avantiraṭṭhe ujjenī nagare candapajjotassa nāma rañño purohito hutvā kāmānaṃ ādīnavaṃ disvā, gharāvāsaṃ pahāya satthusāsane pabbajjitvā heṭṭhā vuttappakāre ganthe akāsi. Mahāaṭṭhakathācariyo jambudīpiko, mahāpaccarikācariyo, mahākurundikācariyo, aññataro ācariyā dveti ime ca bhūvācariyā. Laṅkādīpikācariyā nāma te kira buddhaghosācariyassa pūre bhūtācariye kāle ahesuṃ. Mahābuddhaghosācariyo jambudīpiko. So kira magadharaṭṭhe ghosakagāme rañño purohitassa kesi nāma brāhmaṇassa putto, satthusāsane pabbajjitvā laṅkādīpaṃ gato heṭṭhā vuttappakāre ganthe akāsi.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Among the teachers, there are teachers from Jambudīpa and teachers from Laṅkādīpa. Who are the teachers from Jambudīpa? Who are the teachers from Laṅkādīpa? Mahākaccāyana was a teacher from Jambudīpa. He, having been the chaplain to King Candapajjota in the city of Ujjeni in the Avanti kingdom, and having seen the dangers of sensual pleasures, renounced household life and went forth into the Teacher's dispensation; he composed the texts as previously described. The teacher of the Mahāaṭṭhakathā, the teacher of the Mahāpaccari, the teacher of the Mahākurundi, and two other teachers were from Jambudīpa; these were the ancient teachers. The teachers from Laṅkādīpa, it is said, existed in the time before the teacher Buddhaghosa. The great teacher Buddhaghosa was from Jambudīpa. It is said that he was the son of a brahmin named Kesi, the chaplain of a king, in the village of Ghosaka in the Magadha kingdom. After going forth into the Teacher's dispensation, he went to Laṅkādīpa and composed the texts as previously described.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Buddhadattācariyo, ānandācariyo, dhammapālācariyo, dve bubbācariyo, mahāvajira-buddhācariyo, cullavajira-buddhācariyo, vimalabuddhasaṅkhāto dīpaṅkarācariyo, culladīpaṅkarācariyo, culladhammapālācariyo, kassapācariyoti ime ekādasacariyā jambudīpikā heṭṭhā vuttapakāre ganthe akaṃsu. Mahānāmācariyo, aññatarācariyā, cullamahānāmācariyo, upasenācariyo, moggalānācariyo, saṅgharakkhitācariyo, vuttodayakārācariyo, dhammasirācariyo, aññatarā dvācariyā, anuruddhācariyo, khemācariyo, sāriputtācariyo, buddhanāgācariyo, cullamoggalānācariyo, vācissavācariyo, sumaṅgalācariyo, buddhapiyācariyo, dhammakitti ācariyo medhaṅkarācariyo, buddharakkhitācariyo, upatissā cariyo, aññatarā vīsatācariyā, saddhammasirācariyo, devācariyo, cullabuddhaghosācariyo, sāriputtācariyo, raṭṭhapālācariyoti ime dve paññāsācariyā laṅkādīpikācariyā nāma. Subhūtacandācariyo, aggavaṃsācariyo, navo vajirabuddhācariyo, guṇasāgarācariyo, abhayācariyo, ñāṇasāgarācariyo, aññatarā dvācariyā, uttamācariyo, aññataro ācariyo, aññataro mahāmacco, dhammasenāpatācariyo, aññatarā tayo ācariyā, saddhammaguru ācariyo, sāriputtācariyo, aññataro ekā ācariyo, medhaṅkarācariyo, aggapaṇḍitācariyo, cīvarācariyo, saddhammajotipālācariyo, vimalabuddhācariyoti ime tevīsati ācariyā jambudīpikā heṭṭhā vuttappakāre ganthe pukkāma saṅkhāte arimaddana nagare akaṃsu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The teacher Buddhadatta, the teacher Ānanda, the teacher Dhammapāla, the two teachers Bubba, the teacher Mahāvajirabuddha, the teacher Cullavajirabuddha, the teacher Dīpaṅkara known as Vimalabuddha, the teacher Culladīpaṅkara, the teacher Culladhammapāla, and the teacher Kassapa—these eleven teachers from Jambudīpa composed texts in the manner previously described. The teacher Mahānāma, another teacher, the teacher Cullamahānāma, the teacher Upasena, the teacher Moggallāna, the teacher Saṅgharakkhita, the teacher Vuttodayakāra, the teacher Dhammasiri, another two teachers, the teacher Anuruddha, the teacher Khema, the teacher Sāriputta, the teacher Buddhanāga, the teacher Cullamoggallāna, the teacher Vācissara, the teacher Sumaṅgala, the teacher Buddhappiya, the teacher Dhammakitti, the teacher Medhaṅkara, the teacher Buddharakkhita, the teacher Upatissa, another twenty teachers, the teacher Saddhammasiri, the teacher Deva, the teacher Cullabuddhaghosa, the teacher Sāriputta, and the teacher Raṭṭhapāla—these fifty-two teachers are known as the teachers from the island of Laṅkā. The teacher Subhūtacanda, the teacher Aggavaṃsa, the new teacher Vajirabuddha, the teacher Guṇasāgara, the teacher Abhaya, the teacher Ñāṇasāgara, another two teachers, the teacher Uttama, another teacher, another great minister, the teacher Dhammasenāpati, another three teachers, the teacher Saddhammaguru, the teacher Sāriputta, another single teacher, the teacher Medhaṅkara, the teacher Aggapaṇḍita, the teacher Cīvara, the teacher Saddhammajotipāla, and the teacher Vimalabuddha—these twenty-three teachers from Jambudīpa composed texts in the manner previously described in the city of Arimaddana, known as Pukkāma.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Navovimalabuddhācariyo jambudīpiko heṭṭhā vuttappakāre ganthe paṃyanagare akāsi. Aññatarācariyo ariyavaṃsācariyoti ime dvācariyā jambudīpikā heṭṭhā vuttappakāre ganthe ati [navi] pure akaṃsu, aññatarā vīsatācariyā jambudīpikā heṭṭhā vuttappakāre ganthe kiñci purādighare akaṃsu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The teacher Navovimalabuddha from Jambudīpa composed texts as previously described in the city of Paṃya. Another teacher and the teacher Ariyavaṃsa—these two teachers from Jambudīpa—composed texts as previously described in the city of Ati[navi]pura. Another twenty teachers from Jambudīpa composed certain texts as previously described in Purādighara.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="bodytext">[Iti cullaganthavaṃse ācariyānaṃ sañjātaṭṭhāna dīpako nāma tatiyo paricchedo.]</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Thus ends the third chapter in the Minor Chronicle of Texts, entitled 'A Lamp Illuminating the Places of Origin of the Teachers'.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="chapter">4. Āyāyakācariya-paricchedo</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">4. The Chapter on the Requesters of the Teachers</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Ganthā pana siyā āyācanena ācariyehi katā, siyā anāyācanena ācariyehi katā. Katame ganthā āyācanena, katame anāyācanena katā? Mahākaccāyana gantho, mahāaṭṭhakathā gantho, mahāpaccariya gantho, mahākurundi gantho, mahāpaccariyaganthassa aṭṭhakathā gantho, mahākurundi ganthassa aṭṭhakathā ganthoti. Imehi cha ganthehi attano matiyā sāsanuggahanatthāya saddhammaṭhitiyā katā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Now, texts are composed by teachers either on request or without request. Which texts were composed on request and which without request? The Mahākaccāyana text, the Mahā-aṭṭhakathā text, the Mahāpaccariya text, the Mahākurundī text, the commentary on the Mahāpaccariya text, and the commentary on the Mahākurundī text—these six texts were composed on their own initiative for the support of the Dispensation and for the stability of the good Dhamma.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="subhead">Ka. buddhaghosācariya-ganthadīpanā</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">A. An Elucidation of the Texts of the Teacher Buddhaghosa</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Buddhaghosācariya ganthesu pana visuddhimaggo, saṅghapālena nāma saṅghatherena āyācitena buddhaghosācariyena kato. Dīghanikāyassa aṭṭhakathā gantho dāṭhā nāmena saṅghatherena āyācitena buddhaghosācariyena kato. Majjhimanikāyassa aṭṭhakathā gantho buddhamittanāmena therena āyācitena buddhaghosācariyena kato. Saṃyuttanikāyassa aṭṭhakathā gantho jotipālena nāma therena āyācitena buddhaghosācariyena kato. Aṅguttaranikāyassa aṭṭhakathā gantho bhaddantā nāma therena sahaājīvakena upāsakena ca āyācitena buddhaghosācariyena kato. Samantapāsādikā nāma aṭṭhakathā gantho buddhasiri nāmena therena āyācitena buddhaghosācariyena kato. Sattannaṃ abhidhamma-ganthānaṃ aṭṭhakathā gantho cullabuddhaghosena bhikkhunā āyācitena buddhaghosācariyena kato. Dhammapadassaaṭṭhakathā gantho kumārakassapanāmena therena āyācitena buddhaghosācariyena kato. Jātakassaaṭṭhakathā gantho atthadassī, buddhamitta, buddhapiyadeva saṅkhātehi tīhi therehi āyācitena buddhaghosācariyena kato. Khuddakapāṭhassa aṭṭhakathā gantho, suttanipātassa aṭṭhakathā gantho attano matiyā buddhaghosācariyena kato. Apadānassa aṭṭhakathā gantho pañcanikāya viññūhi pañcahi therehi āyācitena buddhaghosācariyena kato.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Now, among the texts of the Teacher Buddhaghosa, the Visuddhimagga was composed by the Teacher Buddhaghosa at the request of the Elder Saṅghapāla. The commentary on the Dīgha Nikāya was composed by the Teacher Buddhaghosa at the request of the Elder Dāṭhā. The commentary on the Majjhima Nikāya was composed by the Teacher Buddhaghosa at the request of the Elder Buddhamitta. The commentary on the Saṃyutta Nikāya was composed by the Teacher Buddhaghosa at the request of the Elder Jotipāla. The commentary on the Aṅguttara Nikāya was composed by the Teacher Buddhaghosa at the request of the Elder Bhaddanta and a lay follower who was his companion. The commentary named Samantapāsādikā was composed by the Teacher Buddhaghosa at the request of the Elder Buddhasiri. The commentary on the seven Abhidhamma texts was composed by the Teacher Buddhaghosa at the request of the monk Cullabuddhaghosa. The commentary on the Dhammapada was composed by the Teacher Buddhaghosa at the request of the Elder Kumārakassapa. The commentary on the Jātaka was composed by the Teacher Buddhaghosa at the request of the three Elders named Atthadassī, Buddhamitta, and Buddhapiyadeva. The commentary on the Khuddakapāṭha and the commentary on the Suttanipāta were composed by the Teacher Buddhaghosa on his own initiative. The commentary on the Apadāna was composed by the Teacher Buddhaghosa at the request of five learned Elders versed in the five Nikāyas.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="centre">Buddhaghosācariya-ganthadīpanā niṭṭhitā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Elucidation of the Texts of the Teacher Buddhaghosa is concluded.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="subhead">Kha. buddhadattācariya-ganthadīpanā</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">B. The Exposition of the Texts of Ācariya Buddhadatta</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Buddhattācariya ganthesu pana vinaya-vinicchayagantho attano sissena buddhasīhena nāma therena āyācitena buddhattācariyā kato. Uttara-vinicchayagantho saṅghapālena nāmena therena āyācitena buddhadattācariyena kato. Abhidhammāvatāro nāma gantho attano sissena sumati therena āyācitena buddhadattācariyena kato. Buddhavaṃsassa aṭṭhakathā gantho teneva buddhasīhanāma therena āyācitena buddhadattācariyena kato.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Now, among the texts of Ācariya Buddhadatta, the text Vinayavinicchaya was composed by Ācariya Buddhadatta at the request of his own disciple, the Elder named Buddhasīha. The text Uttaravinicchaya was composed by Ācariya Buddhadatta at the request of the Elder named Saṅghapāla. The text named Abhidhammāvatāra was composed by Ācariya Buddhadatta at the request of his own disciple, the Elder Sumati. The commentary on the Buddhavaṃsa was composed by Ācariya Buddhadatta at the request of that same Elder named Buddhasīha.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="centre">Buddhadattācariya-ganthadīpanā niṭṭhitā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Exposition of the Texts of Ācariya Buddhadatta is finished.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Abhidhammakathāya mūlaṭīkā nāma ṭīkā gantho buddhamittā nāma therena āyācitena ānandācariyena kato.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The subcommentary text named Mūlaṭīkā on the Abhidhammakathā was composed by Ācariya Ānanda at the request of the Elder named Buddhamitta.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="subhead">Ga. dhammapālācariyena-ganthadīpanā</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="subhead">C. The Exposition of the Texts of Ācariya Dhammapāla</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Nettipakaraṇassa aṭṭhakathā gantho dhammarakkhita nāma therena āyācitena dhammapālācariyena kato. Itivuttakaaṭṭhakathā gantho, udānaaṭṭhakathā gantho, cariyāpiṭakaaṭṭhakathā gantho, therakathāaṭṭhakathā gantho, therikathāaṭṭhakathā gantho, vimānavatthuaṭṭhakathā gantho, petavatthuaṭṭhakathā gantho, ime satta ganthā attano matiyā dhammapālācariyena kato. Visuddhimaggaṭīkā gantho dāṭhā nāmena nāma therena āyācitena dhammapālācariyena kato, dīghanikāya-aṭṭhakathādīnaṃ catunnaṃ aṭṭhakathānaṃ ṭīkā gantho, abhidhammaṭṭhakathāya anuṭīkā gantho, nettipakaraṇaṭṭhakathāya ṭīkā gantho, buddhavaṃsaṭṭhakathāya ṭīkā gantho, jātakaṭṭhakathāya ṭīkā gantho ceti ime pañca ganthā attano matiyā dhammapālācariyena kato.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The commentary on the Nettipakaraṇa was composed by Ācariya Dhammapāla at the request of the Thera named Dhammarakkhita. The commentary on the Itivuttaka, the commentary on the Udāna, the commentary on the Cariyāpiṭaka, the commentary on the Theragāthā, the commentary on the Therīgāthā, the commentary on the Vimānavatthu, and the commentary on the Petavatthu—these seven texts were composed by Ācariya Dhammapāla according to his own understanding. The subcommentary on the Visuddhimagga was composed by Ācariya Dhammapāla at the request of the Thera named Dāṭhā. The subcommentary on the four commentaries beginning with the commentary on the Dīgha Nikāya, the Anuṭīkā on the Abhidhamma commentary, the subcommentary on the Nettipakaraṇa commentary, the subcommentary on the Buddhavaṃsa commentary, and the subcommentary on the Jātaka commentary—these five texts were composed by Ācariya Dhammapāla according to his own understanding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="centre">Dhammapālācariya-ganthadīpanā niṭṭhitā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Exposition of the Texts of Ācariya Dhammapāla is concluded.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Niruttimañjūsā nāma cullaniruttiṭīkā gantho, mahāniruttisaṅkhepo nāma gantho ca attano matiyā pubbācariyehi viṃsu kato.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The subcommentary on the Cullanirutti named Niruttimañjūsā and the summary text named Mahāniruttisaṅkhepa were composed separately by earlier teachers according to their own understanding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Pañca vinayapakaraṇānaṃ vinayagaṇṭhi nāma gantho attano matiyā mahāvajirabuddhācariyena kato. Nyāsasaṅkhāto mukhamattadīpanī nāma gantho attano matiyā vimalabuddhi ācariyena kato. Atthabyakkhyāno nāma gantho attano matiyā cullavajirabuddhācariyena kato. Rūpasiddhi tassa ca ganthassa ṭīkā gantho sabba pañcasuttañca attano matiyā dīpaṅkarācariyena kato. Saccasaṅkhepo nāma gantho attano matiyā culladhammapālācariyena kato. Mohacchedanī gantho, vimaticchedanī gantho, dasa buddhavaṃso, anāgatavaṃso ca. Attano matiyā kassapācariyena kato. Paṭisambhidāmaggassa aṭṭhakathā gantho mahānāmena upāsakena āyācitena mahānāmācariyena kato. Dīpavaṃso, thūpavaṃso, bodhivaṃso, cullavaṃso, porāṇavaṃso, mahāvaṃso cāti ime cha ganthā attano matiyā mahānāmācariyehi visuṃ katā. Navo mahāvaṃsagantho attano matiyā cullamahānāmācariyena kato. Saddhammapajjotikā nāma mahāniddesassa aṭṭhakathā gantho devena therena āyācitena upasenācariyena kato. Moggalānabyākaraṇaganthe attano matiyā moggalānācariyena kato. Subodhālaṅkāra nāma gantho attano matiyā saṅgharakkhitācariyena kato. Vuttodaya gantho attano matiyā vuttodayakārācariyena kato. Khuddasikkhā nāma gantho attano matiyā dhammasirācariyena kato. Porāṇakhuddasikkhā ṭīkā ca mūlasikkhā cāti, ime dve ganthe attano matiyā aññatarehi dvihācariyehi viṃsu katā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The text named Vinayagaṇṭhi on the five Vinaya treatises was composed by Ācariya Mahāvajirabuddha according to his own understanding. The text named Mukhamattadīpanī, known as the Nyāsa, was composed by Ācariya Vimalabuddhi according to his own understanding. The text named Atthabyakkhyāna was composed by Ācariya Cullavajirabuddha according to his own understanding. The Rūpasiddhi and its subcommentary, along with the entire Pañcasutta, were composed by Ācariya Dīpaṅkara according to his own understanding. The text named Saccasaṅkhepa was composed by Ācariya Culladhammapāla according to his own understanding. The Mohacchedanī, the Vimaticchedanī, the Dasa Buddhavaṃsa, and the Anāgatavaṃsa were composed by Ācariya Kassapa according to his own understanding. The commentary on the Paṭisambhidāmagga was composed by Ācariya Mahānāma at the request of the lay follower Mahānāma. The Dīpavaṃsa, Thūpavaṃsa, Bodhivaṃsa, Cullavaṃsa, Porāṇavaṃsa, and Mahāvaṃsa—these six texts were composed separately by the Ācariyas Mahānāma according to their own understanding. The new Mahāvaṃsa text was composed by Ācariya Cullamahānāma according to his own understanding. The text named Saddhammapajjotikā, a commentary on the Mahāniddesa, was composed by Ācariya Upasena at the request of the Thera Deva. The Moggalānabyākaraṇa text was composed by Ācariya Moggalāna according to his own understanding. The text named Subodhālaṅkāra was composed by Ācariya Saṅgharakkhita according to his own understanding. The Vuttodaya text was composed by the author of the Vuttodaya according to his own understanding. The text named Khuddasikkhā was composed by Ācariya Dhammasiri according to his own understanding. The Porāṇakhuddasikkhāṭīkā and the Mūlasikkhā—these two texts were composed separately by two other teachers according to their own understanding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Paramatthavinicchayaṃ nāma gantho saṅgharakkhitena therena āyācitena anuruddhācariyena kato. Nāmarūpa-paricchedo nāma gantho attano matiyā anuruddhācariyena kato. Abhidhammatthasaṅgahaṃ nāma gantho namma nāmena upāsakena āyācitena anuruddhācariyena kato. Khemo nāma gantho attano matiyā khemācariyena kato. Sāratthadīpanī nāma vinayaṭṭhakathāya ṭīkā gantho, vinayasaṅgahaṃ, vinayasaṅgahassa ṭīkā gantho, aṅguttaraṭṭhakathāya navo ṭīkā ganthoti ime cattāro ganthā parakkamabāhu nāmena laṅkādīpissarena raññā āyācitena sāriputtācariyena kato. Sakaṭasaddasatthassa pañcikāya ṭīkā gantho attano matiyā sāriputtācariyena kato. Kaṅkhāvitaraṇiyā vinayatthamañjūsā nāma ṭīkā gantho sumedhā nāmatherena āyācitena buddhanāgācariyena kato. Abhidhānappadīpiko nāma gantho attano matiyā cūlamoggalānācariyena kato. Subodhālaṅkārassa mahāsāmi nāma ṭīkā, vuttodaya vivaraṇañcāti ime dve ganthā attano matiyā vācissarena katā. Khuddasikkhāya sumaṅgalappasādani nāma navo ṭīkā gantho sumaṅgalena āyācitena navācissarena kato. Sambandhacintāṭīkā bālāvatāro, moggalānabyākaraṇassa ṭīkā cāti ime tayo ganthā, sumaṅgala, buddhamitta, mahākassapa saṅkhātehi tīhi therehi ca, dhammakitti nāma upāsakena, vānijjā bhātu upāsakena ca āyācitena vācissarena kato. Nāmarūpaparicchedassa vibhāgo, saddatthassa padarūpa-vibhāvanaṃ, khemapakaraṇassa ṭīkā, sīmālaṅkāro, mūlasikkhāya ṭīkā, rūpavibhāgo, paccayasaṅgaho cāti ime satta ganthā attano matiyā vācissarena katā. Saccasaṅkhepassa ṭīkā gantho sāriputta-nāmena therena āyācitena vācissarena kato. Abhidhammāvatārassa ṭīkā, abhidhammatthasaṅgahassa ṭīkā cāti ime dve ganthā attano matiyā sumaṅgalācariyena katā. Sāratthasaṅgahaṃ nāma gantho attano matiyā buddhappiyena kato dantadhātuvaṇṇanā nāma pakaraṇaṃ</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The text named Paramatthavinicchaya was composed by Ācariya Anuruddha at the request of the Thera Saṅgharakkhita. The text named Nāmarūpapariccheda was composed by Ācariya Anuruddha according to his own understanding. The text named Abhidhammatthasaṅgaha was composed by Ācariya Anuruddha at the request of the lay follower named Namma. The text named Khema was composed by Ācariya Khema according to his own understanding. The subcommentary named Sāratthadīpanī on the Vinaya commentary, the Vinayasaṅgaha, the subcommentary on the Vinayasaṅgaha, and the new subcommentary on the Aṅguttara commentary—these four texts were composed by Ācariya Sāriputta at the request of King Parakkamabāhu, lord of the island of Laṅkā. The subcommentary on the Pañcikā of the Sakaṭasaddasattha was composed by Ācariya Sāriputta according to his own understanding. The subcommentary on the Kaṅkhāvitaraṇī named Vinayatthamañjūsā was composed by Ācariya Buddhanāga at the request of the Thera Sumedha. The text named Abhidhānappadīpikā was composed by Ācariya Cūḷamoggalāna according to his own understanding. The subcommentary named Mahāsāmi on the Subodhālaṅkāra and the Vuttodayavivaraṇa—these two texts were composed by Vācissara according to his own understanding. The new subcommentary on the Khuddasikkhā named Sumaṅgalappasādani was composed by Navavācissara at the request of Sumaṅgala. The Sambandhacintāṭīkā, the Bālāvatāra, and the subcommentary on the Moggalānabyākaraṇa—these three texts were composed by Vācissara at the request of the three Theras Sumaṅgala, Buddhamitta, and Mahākassapa, the lay follower named Dhammakitti, and the lay follower who was the brother of a merchant. The Vibhāga on the Nāmarūpapariccheda, the Padarūpavibhāvana on the Saddattha, the subcommentary on the Khemapakaraṇa, the Sīmālaṅkāra, the subcommentary on the Mūlasikkhā, the Rūpavibhāga, and the Paccayasaṅgaha—these seven texts were composed by Vācissara according to his own understanding. The subcommentary on the Saccasaṅkhepa was composed by Vācissara at the request of the Thera named Sāriputta. The subcommentary on the Abhidhammāvatāra and the subcommentary on the Abhidhammatthasaṅgaha—these two texts were composed by Ācariya Sumaṅgala according to his own understanding. The text named Sāratthasaṅgaha was composed by Buddhappiya according to his own understanding; the treatise named Dantadhātuvaṇṇanā</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Laṅkādīpissarassa rañño senāpatinā āyācitena dhammakittināmācariyena kataṃ. Jinacaritaṃ nāma pakaraṇaṃ attano matiyā medhaṅkarācariyena kataṃ. Jinālaṅkāro, jinālaṅkārassa ṭīkā attano matiyā buddharakkhitācariyena kato. Amatadharassa nāma anāgatavaṃsassa attano matiyā aṭṭhakathā upatissācariyena katā. Kaṅkhāvitaraṇīyā līnatthapakāsinī, nisandeho, dhammānusāraṇī, ñeyyā-santati, ñeyyā-santatiyā ṭīkā, sumatāvatāro, lokapaññatti pakaraṇaṃ, tathāgatuppatti pakaraṇaṃ, nalāṭadhātuvaṇṇanā, sīhaḷavatthu, dhammadīpako paṭipatti saṅgaho, visuddhimaggassa gaṇṭhi, abhidhammagaṇṭhi, nettipakaraṇagaṇṭhi, visuddhimaggacūla-navaṭīkā, sotabbamālinī, pasādajananī, okassaloko, subodhālaṅkārassa nava ṭīkā ceti, ime vīsati ganthā attano matiyā vīsatācariyehi viṃsu viṃsu katā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">was composed by the Ācariya named Dhammakitti at the request of the general of the king, the lord of the island of Laṅkā. The treatise named Jinacarita was composed by Ācariya Medhaṅkara according to his own understanding. The Jinālaṅkāra and its subcommentary were composed by Ācariya Buddharakkhita according to his own understanding. The commentary on the Anāgatavaṃsa, named Amatadhara, was composed by Ācariya Upatissa according to his own understanding. The Līnatthapakāsinī on the Kaṅkhāvitaraṇī, the Nisandeha, the Dhammānusāraṇī, the Ñeyyasantati, the subcommentary on the Ñeyyasantati, the Sumatāvatāra, the Lokapaññatti treatise, the Tathāgatuppatti treatise, the Nalāṭadhātuvaṇṇanā, the Sīhaḷavatthu, the Dhammadīpaka Paṭipattisaṅgaha, the summary of the Visuddhimagga, the summary of the Abhidhamma, the summary of the Nettipakaraṇa, the new minor subcommentary on the Visuddhimagga, the Sotabbamālinī, the Pasādajananī, the Okāsaloka, and the new subcommentary on the Subodhālaṅkāra—these twenty texts were composed separately by twenty teachers according to their own understanding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Saddattha bhedacintā nāma pakaraṇaṃ attano matiyā saddhammasirināmācariyena kataṃ. Sumana-kūṭavaṇṇanaṃ nāma pakaraṇaṃ, rāhulā nāma therena āyācitena vācissarenadevatherena kataṃ. Sotattha kiṃ mahānidānaṃ nāma pakaraṇaṃ attano matiyā cullabuddhaghosācariyena kataṃ. Madhurasaṅgāhani nāma pakaraṇaṃ attano matiyā raṭṭhapālācariyena kataṃ. Liṅgatthavivaraṇaṃ nāma pakaraṇaṃ attano matiyā subhūtacandācariyena kataṃ. Saddanītipakaraṇaṃ attano matiyā aggavaṃsācariyena kataṃ. Nyāsapakaraṇassa mahāṭīkā nāma ṭīkā attano matiyā vajirabuddhācariyena katā. Mukhamattasāro attano matiyā guṇasāgarācariyena kato. Mukhamattasārassa ṭīkā sutasampanna nāmena dhammarājino gurunā saṅghatherena āyācitena guṇasāgarācariyena katā. Saddatthabhedacintāya mahāṭīkā attano matiyā abhayācariyena katā. Liṅgatthavivaraṇappakāsakaṃ nāma pakaraṇaṃ attano matiyā ñāṇasāgarācariyena kataṃ. Guḷhatthassa ṭīkā bālappabodhanañca duvidhaṃ pakaraṇaṃ attano matiyā aññatarācariyena kataṃ. Saddatthabhedacintāya majjhimaṭīkā attano matiyā aññatarācariyena katā. Bālāvatārassa ṭīkā, liṅgatthavivaraṇā ṭīkā ca attano matiyā uttamācariyena katā. Saddatthabhedacintāya nava ṭīkā attano matiyā aññatarācariyena katā. Abhidhānappadīpikāya ṭīkā daṇḍīpakaraṇassa magagha-bhūtā ṭīkā cāti duvidhā ṭīkāyo attano mati, sīhasūra nāma rañño ekena amaccena katā. Koladdhajanassaṭīkā pāsādikena nāma therena āyācitena teneva mahāmaccena katā. Kārikaṃ nāma pakaraṇaṃ ñāṇagambhīranāmena bhikkhunā āyācitena dhammasenāpatācariyena kataṃ. Etimāsamidīpanī [vā etimāsamidīpikā] nāma pakaraṇaṃ manohārañca attano matiyā teneva dhammasenāpatācariyena kataṃ. Kārikāya ṭīkā attano matiyā aññatarācariyena katā. Etimāsamidīpikāya ṭīkā attano matiyā aññatarācariyena katā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The treatise called Saddatthabhedacintā was composed by the teacher Saddhammasiri according to his own understanding. The treatise called Sumana-kūṭavaṇṇana was composed by the elder Vācissara at the request of the elder Rāhula. The treatise called Sotatthakiṃmahānidāna was composed by the teacher Cullabuddhaghosa according to his own understanding. The treatise called Madhurasaṅgāhani was composed by the teacher Raṭṭhapāla according to his own understanding. The treatise called Liṅgatthavivaraṇa was composed by the teacher Subhūtacanda according to his own understanding. The Saddanītipakaraṇa was composed by the teacher Aggavaṃsa according to his own understanding. The great commentary called Mahāṭīkā on the Nyāsapakaraṇa was composed by the teacher Vajirabuddha according to his own understanding. The Mukhamattasāro was composed by the teacher Guṇasāgara according to his own understanding. The commentary on the Mukhamattasāro, called Sutasampanna, was composed by the teacher Guṇasāgara at the request of Saṅghathera, the preceptor of King Dhammarāja. The great commentary on the Saddatthabhedacintā was composed by the teacher Abhaya according to his own understanding. The treatise called Liṅgatthavivaraṇappakāsaka was composed by the teacher Ñāṇasāgara according to his own understanding. The commentary on the Guḷhattha and the treatise called Bālappabodhana—these two works—were composed by a certain teacher according to his own understanding. The middle commentary on the Saddatthabhedacintā was composed by a certain teacher according to his own understanding. The commentary on the Bālāvatāra and the commentary on the Liṅgatthavivaraṇa were composed by the teacher Uttama according to his own understanding. A new commentary on the Saddatthabhedacintā was composed by a certain teacher according to his own understanding. The commentary on the Abhidhānappadīpikā and the commentary called Magadhabhūtā on the Daṇḍīpakaraṇa—these two commentaries—were composed by a certain minister of King Sīhasūra according to his own understanding. The commentary on the Koladdhajanassa was composed by that very same great minister at the request of the elder Pāsādika. The treatise called Kārika was composed by the teacher Dhammasenāpati at the request of the monk Ñāṇagambhīra. The treatise called Etimāsamidīpanī (or Etimāsamidīpikā), which is also delightful, was composed by that very same teacher Dhammasenāpati according to his own understanding. The commentary on the Kārikā was composed by a certain teacher according to his own understanding. The commentary on the Etimāsamidīpikā was composed by a certain teacher according to his own understanding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Saddabindupakaraṇaṃ attano matiyā dhammarājassa gurunā aññatarācariyena kataṃ. Saddavuttippakāsakaṃ nāma pakaraṇaṃ aññatarena bhikkhunā āyācitena saddhammaguru nāmācariyena kataṃ. Saddavuttippakāsakassa ṭīkā attano matiyā sāriputtācariyena katā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The treatise Saddabindu was composed by a certain teacher, the preceptor of King Dhammarāja, according to his own understanding. The treatise named Saddavuttippakāsaka was composed by a teacher named Saddhammaguru at the request of a certain monk. The commentary on Saddavuttippakāsaka was composed by the teacher Sāriputta according to his own understanding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Kaccāyana sāro ca kaccāyanasārassa ṭīkā cāti duvidhaṃ pakaraṇaṃ attano matiyā aññatarācariyena kataṃ. Lokadīpakasāraṃ nāma pakaraṇaṃ attano matiyā navenamedhaṅkarācariyena kataṃ. Lokuppattipakaraṇaṃ attano matiyā aggapaṇḍitācariyena kataṃ. Jaṅghadāsakassa ṭīkā bhūtā magadhaṭīkā attano matiyā cīvarācariyena katā. Mātikatthadīpanī, abhidhammatthasaṅgahavaṇṇanā, sīmālaṅkārassaṭīkā, gaṇṭhisāro, paṭṭhānagaṇanānayo cāti ime pañca pakaraṇāni attano matiyā saddhammajotipālācariyena katāni. Saṅkhepavaṇṇanā parakkamabāhu-nāmena jambudīpissarena rañño āyācite teneva saddhammajotipālācariyena katā. Kaccāyanassa suttaniddeso attano sissena dhammacārinā therena āyācitena saddhammajotipālācariyena kato. Vinayasamuṭṭhānadīpanī nāma pakaraṇaṃ, attano gurunā saṅghatherena āyācitena saddhamma-jotipālācariyena kataṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The Kaccāyanasāra and the commentary on the Kaccāyanasāra—these two treatises were composed by a certain teacher according to his own understanding. The treatise known as the Lokadīpakasāra was composed by the new teacher Medhaṅkara according to his own understanding. The treatise on the Lokuppatti was composed by the chief scholar-teacher Aggapaṇḍita according to his own understanding. The commentary on Jaṅghadāsaka, called the Magadhaṭīkā, was composed by the teacher Cīvara according to his own understanding. The Mātikatthadīpanī, the Abhidhammatthasaṅgahavaṇṇanā, the Sīmālaṅkārassaṭīkā, the Gaṇṭhisāra, and the Paṭṭhānagaṇanānaya—these five treatises were composed by the teacher Saddhammajotipāla according to his own understanding. The Saṅkhepavaṇṇanā was composed by that same teacher Saddhammajotipāla at the request of King Parakkamabāhu, the lord of Jambudīpa. The Kaccāyanasuttaniddesa was composed by the teacher Saddhammajotipāla at the request of his own pupil, the elder Dhammacārin. The treatise called the Vinayasamuṭṭhānadīpanī was composed by the teacher Saddhammajotipāla at the request of his own preceptor, the elder Saṅgha.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Sattapakaraṇāni pana tena pukkāmanagare katāni. Saṅkhepavaṇṇanāva laṅkādīpe katā. Abhidhamma-pannarasaṭṭhānavaṇṇānaṃ nāma pakaraṇaṃ attano matiyā navena-vimalabuddhācariyena katā. Saddasāratthajālinī nāma pakaraṇaṃ attano matiyā navena-vimalabuddhācariyena kataṃ. Saddasārattha-jāliniyā ṭīkā, paṃyanagare rañño gurunā saṅgharājena āyācitena teneva navena vimalabuddhācariyena katā. Vuttodayassa ṭīkā, abhidhammasaṅgahassa ṭīkāya paramatthamañjūsā nāma anuṭīkā, dasagaṇṭhivaṇṇanaṃ nāma pakaraṇaṃ, magadhabhūtavidaggamukhamaṇḍaniyāṭīkā cāti imāni cattāri pakaraṇāni attano matiyā teneva navena vimalabuddhācariyena katāni.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Seven treatises, however, were composed by him in the city of Pukkāmana. The Saṅkhepavaṇṇanā was composed in the island of Laṅkā. The treatise called Abhidhammapaññarasatthānavanṇanā was composed by the new teacher Vimalabuddha according to his own understanding. The treatise called Saddasāratthajālinī was composed by the new teacher Vimalabuddha according to his own understanding. The commentary on the Saddasāratthajālinī was composed by that same new teacher Vimalabuddha at the request of the Saṅgharāja, the king’s preceptor, in the city of Paṃyana. The commentary on the Vuttodaya, the anuṭīkā named Paramatthamañjūsā on the Abhidhammasaṅgahaṭīkā, the treatise called Dasagaṇṭhivaṇṇanā, and the commentary on the Magadhabhūtavidaggamukhamaṇḍanī—these four treatises were composed by that same new teacher Vimalabuddha according to his own understanding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Pañcapakaraṇaṭīkāya navānuṭīkā attano matiyā aññataro cariyena katā. Abhidhammasaṅgahassa navaṭīkā attano matiyā aññatarācariyena katā. Abhidhammatthasaṅgahaṭīkāya [maṇi] mañjūsā [maṇisāramañjūsā] nāma navānuṭīkā attano matiyā ariyavaṃsācariyena katā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The new anuṭīkā on the Pañcapakaraṇaṭīkā was composed by a certain teacher according to his own understanding. The new commentary on the Abhidhammasaṅgaha was composed by a certain teacher according to his own understanding. The new anuṭīkā on the Abhidhammatthasaṅgahaṭīkā, named Maṇimañjūsā (or Maṇisāramañjūsā), was composed by the teacher Ariyavaṃsa according to his own understanding.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Peṭakopadesassa ṭīkā attano matiyā udumbarināmācariyena pukkāmanagare katā. Catubhāṇavārassa aṭṭhakathā, mahāsārapakāsini, mahādīpanī, sāratthadīpanī, gatipakaraṇaṃ, hatthāsāro, bhummasaṅgaho, bhummaniddeso, dasavatthukāyaviratiṭīkā, codanānirutti, vibhattikathā, saddhammamālini, pañcagativaṇṇanā, bālacitta-pabodhanaṃ, dhammacakkasuttassa navaṭṭhakathā, dantadhātu-pakaraṇassa ṭīkā ca saddhammopāyano bālappabodhanaṭīkā ca, jinālaṅkārassa navaṭīkā ca, liṅgattha-vivaraṇaṃ, liṅgattha-vinicchayo, pātimokkhavivaraṇaṃ, paramatthakathāvivaraṇaṃ, samantapāsādikavivaraṇaṃ, catubhāṇavāraṭṭhakathā vivaraṇaṃ, abhidhammasaṅgahavivaraṇaṃ, saccasaṅkhepavivaraṇaṃ, saddatthabhedacintāvivaraṇaṃ, saddavuttivivaraṇaṃ, kaccāyanasāravivaraṇaṃ, kaccāyanavivaraṇaṃ, abhidhammasaṅgahassaṭīkāvivaraṇaṃ, mahāvessantarajātakassa vivaraṇaṃ, sakkābhimataṃ, mahāvessantarajātakassa navaṭṭhakathā, paṭhama-sambodhi ca lokanetti, buddhaghosācariyanidānaṃ, milinda-pañho vaṇṇanā, caturārakkhā, caturārakkhāyaaṭṭhakathā, saddavuttippakaraṇassa navaṭīkā cāti imāni, ticattālīsa pakaraṇāni attano matiyā sāsanassa jātiyā saddhammassa ṭhitiyā ca laṅkādīpādīsu viṃsu viṃsu katāni.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The commentary on the Peṭakopadesa was composed by the teacher named Udumbara according to his own understanding in the city of Pukkāmana. The commentary on the Catubhāṇavāra, the Mahāsārapakāsinī, the Mahādīpanī, the Sāratthadīpanī, the Gatipakaraṇa, the Hatthāsāra, the Bhummasaṅgaha, the Bhummaniddesa, the commentary on the Dasavatthukāyavirati, the Codanānirutti, the Vibhattikathā, the Saddhammamālini, the Pañcagativaṇṇanā, the Bālacittapabodhana, the new commentary on the Dhammacakkasutta, the commentary on the Dantadhātupakaraṇa, the Saddhammopāyana, the Bālappabodhanaṭīkā, the new commentary on the Jinālaṅkāra, the Liṅgatthavivaraṇa, the Liṅgatthavinicchaya, the Pātimokkhavivaraṇa, the Paramatthakathāvivaraṇa, the Samantapāsādikavivaraṇa, the Catubhāṇavāraṭṭhakathāvivaraṇa, the Abhidhammasaṅgahavivaraṇa, the Saccasaṅkhepavivaraṇa, the Saddatthabhedacintāvivaraṇa, the Saddavuttivivaraṇa, the Kaccāyanasāravivaraṇa, the Kaccāyanavivaraṇa, the Abhidhammasaṅgahassaṭīkāvivaraṇa, the Mahāvessantarajātakavivaraṇa, the Sakkābhimata, the new commentary on the Mahāvessantarajātaka, the Paṭhamasambodhi, the Lokanetti, the Buddhaghosācariyanidāna, the Milindapañha Vaṇṇanā, the Caturārakkhā, the Caturārakkhāya Aṭṭhakathā, and the new commentary on the Saddavuttippakaraṇa—these forty-three treatises were composed according to his own understanding, in various places in Laṅkādīpa and other islands, for the sake of the Dispensation's lineage and the True Dhamma's stability.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Sambuddhe gāthā ca…pe… navahāraguṇavaṇṇanā cāti ime buddhapaṇāmādikā gāthāyo. Attano attano buddhaguṇapakāsanatthāya attano ca pare ca anantapaññāpavattanatthāya ca paṇḍitehi laṅkādīpādīsu viṃsu viṃsu katā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Verses in honor of the Fully Enlightened One…pe…and the description of the nine qualities—these are verses such as homage to the Buddha. Wise ones composed them in various places in Laṅkādīpa and other islands to reveal the qualities of the Buddha for their own sake, and to initiate boundless wisdom for themselves and others.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="bodytext">[Iti culla-ganthavaṃse āyācakācariyadīpako nāma catuttho paricchedo.]</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Thus ends the fourth chapter, named “The Light on the Teacher Āyācaka,” in the Cūḷaganthavaṃsa.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="chapter">5. Pakiṇṇaka-paricchedo</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">5. The Miscellaneous Chapter</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Nāmaṃ āropanaṃ potthakaṃ ganthakārassa ca. Lekhaṃlekhāpanañceva, vadāmi tadanantaranti. Tattha caturāsītiyā dhammakkhandhasahassāni piṭaka, nikāyaṅga, vagga, nipātādikaṃ nāmaṃ, kenāropitaṃ, kattha āropitaṃ, kadā āropitaṃ, kimatthaṃ āropitanti? Tatrāyaṃ pivisajjanākena āropitanti pañcasatakhīṇāsavehi āropitaṃ. Tehi sabbabuddhavacanaṃ saṅgāyanti, idaṃ piṭakaṃ, ayaṃ nikāyo, idaṃ aṅgaṃ, ayaṃ vaggo, ayaṃ nipātoti. Evamādikaṃ nāmaṃ āropenti. Kattha āropitanti? Rājagahe vebhārapabbatassa pāde dhammamaṇḍappe āropitaṃ. Kadā āropitanti? Bhagavato parinibbute paṭhamasaṅgāyanakāle āropitaṃ. Kimatthaṃ āropitanti? Dhammakkhandhānaṃ vohārasukhatthāya sukhadhāraṇatthāya ca āropitaṃ. Saṅgītikāle pañcasatā khīṇāsavā tesañca dhammakkhandhānaṃ nāma vagganipātato. Imassa dhammakkhandhassa ayaṃ nāmo hotu, imassa ca pakaraṇassa ayaṃ nāmoti, abravuṃ sabbaṃ nāmādikaṃ kiccaṃ akaṃsu. Te khīṇāsavā, yadi nāmādikaṃ kiccaṃ akataṃ na supākataṃ tasmā vohārasukhatthāyanāmādikaṃ kiccaṃ kataṃ anāgate panatthāya nāmādikaṃ pavattitaṃ asañjātanāmo na suṭṭhu pākato sabbaso bhaveti. Dhammakkhandhānaṃ nāma dīpanā niṭṭhitā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">I shall speak of the assigning of names, the book, and the author, and also the writing and causing to be written, immediately thereafter. There, regarding the eighty-four thousand Dhamma-aggregates—the names of the Baskets, Collections, Divisions, Sections, Nipātas, and so on—by whom were they assigned, where were they assigned, when were they assigned, and for what purpose were they assigned? Here is the explanation: By whom were they assigned? They were assigned by the five hundred arahants. Chanting all the Buddha’s words, they said, "This is a Basket, this is a Collection, this is a Division, this is a Section, this is a Nipāta." Thus, they assigned these and other names. Where were they assigned? They were assigned at the Dhamma pavilion at the foot of Vebhāra Mountain in Rājagaha. When were they assigned? They were assigned at the time of the First Council after the Blessed One’s Parinibbāna. For what purpose were they assigned? They were assigned for the ease of designation and for the ease of retention of the Dhamma-aggregates. During the Council, the five hundred arahants, regarding the names of those Dhamma-aggregates by section and nipāta, declared, "Let this Dhamma-aggregate have this name, and let this treatise have this name." They performed all the tasks related to naming and so on. Those arahants reasoned that if the task of naming and so on had not been done, it would not have been well-manifest. Therefore, for the sake of ease of designation, the task of naming and so on was done. For the benefit of the future, naming and so on was established, for that which has not been named is not at all well-manifest. The explanation of the assigning of names to the Dhamma-aggregates is concluded.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Caturāsīti dhammakkhandhasahassāni kena potthake āropitāni, kadā āropitāni, kimatthaṃ āropitānīti. Tatrāyaṃ visajjanā kenāropitāniti? Khīṇāsavamahānāgehi āropitāni. Kattha āropitānīti? Laṅkādīpe āropitāni. Kadā āropitānīti? Saddhātissassarājino puttassa vaṭṭagāmani rājassa kāle āropitāni. Kimatthaṃ āropitānīti? Dhammakkhandhānaṃ avidhaṃsanatthāya saddhammaṭṭhitiyā ca āropitāni.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The eighty-four thousand Dhamma-aggregates: by whom were they inscribed in books, when were they inscribed, and for what purpose were they inscribed? Here is the explanation: By whom were they inscribed? They were inscribed by the great nāgas, the arahants. Where were they inscribed? They were inscribed on the island of Laṅkā. When were they inscribed? They were inscribed in the time of King Vaṭṭagāmaṇi, son of King Saddhātissa. For what purpose were they inscribed? They were inscribed for the non-destruction of the Dhamma-aggregates and for the stability of the True Dhamma.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Dharamāno hi bhagavā, amhākaṃ sugatodhīro;</p>
+<p rend="gathalast">Nikāye pañcadeseti, yāva nibbānagamanā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Indeed, the Blessed One, our Sugata, the steadfast one, while living, taught the five Nikāyas until his attainment of Parinibbāna.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Sabbepi te bhikkhu ādi, manasā vacasāhāro;</p>
+<p rend="gathalast">Sabbe ca vācuggatā honti, mahāpaññāsativarā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">All those monks from the beginning, having taken it up by mind and speech, were all skilled in oral transmission, possessing great wisdom and excellent mindfulness.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Nibbūte lokanāthamhi, tato vassasataṃ bhave;</p>
+<p rend="gathalast">Ariyānariyā cāpi ca, sabbe vācuggatā dhuvaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When the Protector of the World had attained Nibbāna, for a hundred years thereafter, both the noble and the non-noble disciples were all surely skilled in oral transmission.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Tato paraṃ aṭṭharasaṃ, dvisataṃvassa gaṇanaṃ;</p>
+<p rend="gathalast">Sabbe puthujjanā ceva, ariyā ca sabbepite.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Then after that, for a count of two hundred and eighteen years, all the worldlings and all the noble ones,</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Manasāvacasāyeva, vācuggatāva sabbadā;</p>
+<p rend="gathalast">Duṭṭhagāmaṇirañño ca, kāle vācuggatā dhuvaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">were always skilled in oral transmission by mind and speech; and in the time of King Duṭṭhagāmaṇi, they were surely skilled in oral transmission.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Ariyānariyāpi ca, nikāye dhāraṇāsadā;</p>
+<p rend="gathalast">Tato paramhi rājā ca, tato cuto ca tusite.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Both the noble and the non-noble disciples were always retainers of the Nikāyas; then after that, the king, having passed away from there, was in Tusita.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Uppajji deva loke so, devehi parivārito;</p>
+<p rend="gatha2">Saddhā tissoti nāmena, tassa kaniṭṭhako hito.</p>
+<p rend="gathalast">Tato laddharaṭṭho hoti, buddhasāsanapālako.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He arose in the deva world, surrounded by devas. His younger brother, named Saddhātissa, was devoted to him. Then, having obtained the kingdom, he became a protector of the Buddha’s Dispensation.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Tadā kāle bhikkhū āsuṃ, sabbe vācuggatā sadā;</p>
+<p rend="gatha2">Nikāye pañcavedheva, yāva rañño ca dhāraṇā;</p>
+<p rend="gatha3">Tato cuto so rājā ca, tussīte upapajjati;</p>
+<p rend="gathalast">Devalokeṭṭhito santo, tadā vācuggatā tato.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">At that time, the monks were always skilled in oral transmission; the fivefold Nikāyas were retained even during the king’s reign. Then that king, having passed away, was reborn in Tusita; while he was established in the deva world, the oral transmission continued from that time.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Tassa puttāpi ahesuṃ, anekā varajjaṃ gatā;</p>
+<p rend="gatha2">Anukkamena cutate, devalokaṃ gatā dhuvaṃ;</p>
+<p rend="gatha3">Tadāpite sabbe bhikkhū, vācuggatāva sabbadā;</p>
+<p rend="gathalast">Nikāye pañcavidheva, dhāraṇāvasatimatā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He also had many sons who attained excellent rule; passing away in succession, they surely went to the deva world. Even then, all the monks were always skilled in oral transmission; the fivefold Nikāyas were retained by those with mindfulness and mastery.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Tato paraṃ potthakesu, nikāyā pañca piṭṭhitā;</p>
+<p rend="gatha2">Tadā aṭṭhakathā ṭīkā, sabbe ganthā potthake gatā;</p>
+<p rend="gatha3">Sabbe potthesu ye ganthā, pāḷi aṭṭhakathā ṭīkā;</p>
+<p rend="gathalast">Saṃṭṭhitāsaṃ ṭhitā honti, sabbepi no na santite.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Thereafter, the five Nikāyas were inscribed in books; then the commentaries and sub-commentaries, all texts went into books. All the texts that were in the books—the Pāli, the commentaries, and the sub-commentaries—were established and firm; all of them, not one was lost.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Tadā te potthakeyeva, nikāyā piṭhitā khilā;</p>
+<p rend="gathalast">Tadā aṭṭhakathādīni, bhavantīti vadanti ca.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">At that time, in those very books, the Nikāyas were inscribed and made unshakeable; and they say that then the commentaries and so on came into being.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Parihāro paṇḍitehi vattabbova;</p>
+<p rend="gatha2">Laṅkādīpassa raññova, saddhā tissassa rājino.</p>
+<p rend="gatha3">Puttako laṅkādīpassa, issaro dhammiko varo;</p>
+<p rend="gathalast">Tadā khīṇāsavā sabbe, olokenti anagate.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">This preservation should be spoken of by the wise. It concerns the son of King Saddhātissa, king of Laṅkādīpa, a righteous and excellent lord. At that time, all the arahants looked into the future.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Khīṇāsavā passanti te, dupaññeva puthujjane;</p>
+<p rend="gatha2">Sabbepi te bhikkhū āsuṃ, bahuṃtarā puthujjanā;</p>
+<p rend="gatha3">Na sakkhissanti te pañca, nikāye vācuggataṃ iti;</p>
+<p rend="gathalast">Potthakesu sabbe pañca, āropenti khīṇāsavā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The arahants saw the worldlings as being of little wisdom; the majority of those monks were worldlings. They thought, 'They will not be able to master the five Nikāyas by oral transmission.' Therefore, the arahants inscribed all five in books.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Saddhammaṭṭhiti cirattāya, janānaṃ puññatthāya ca;</p>
+<p rend="gatha2">Tato paṭṭhāyate sabbe, nikāyā honti potthake;</p>
+<p rend="gathalast">Aṭṭhakathā ṭīkā sabbe, te honti potthakeṭṭhitā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For the long-lasting stability of the True Dhamma, and for the sake of the people’s merit; from then on, all the Nikāyas were in books. The commentaries and sub-commentaries, all of them were established in books.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Tato paṭṭhāyate sabbe, bhikkhu ādi mahāgaṇā;</p>
+<p rend="gathalast">Potthakesu ṭhiteyeva, sabbe passanti sabbadā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">From then on, all the monks and other great communities always saw everything as it was established in the books.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="bodytext">[Potthake āropana dīpakā niṭṭhitā.]</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">[The Elucidation of Inscribing in Books is concluded.]</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Yo koci paṇḍito dhīro, aṭṭhakathādikaṃ ganthaṃ karoti vā kārāpeti vā, tassa anantako hoti puññasaṃcayo, anantako hoti puññānisaṃso. Caturāsīti cetiyasahassa karaṇasadiso, caturāsīti buddharūpasahassa karaṇasadiso, caturāsīti bodhirukkhasahassaropanasadiso, caturāsīti vihārasahassa karaṇasadiso, yo ca buddhavacanamañjūsaṃ karoti vā kārāpeti vā, yo ca buddhavacanaṃ maṇḍanaṃ karoti vā kārāpeti vā, yo ca buddhavacanaṃ lekhaṃ karoti vā kārāpeti vā, yo ca potthakaṃ vā, yo ca potthakamūlaṃ vā, deti vā dāpeti vā, yo ca telaṃ vā cuṇṇaṃ vā, dhaññaṃ vā potthakabhañjanatthāya yaṃ kiñci nitthaṃ vā potthakachidde āvunatthāya, yaṃ kiñci suttaṃ vā kaṭṭhaphalakadvayaṃ vā potthakaṃ puṭanatthāya yaṃ kiñci vatthaṃ vā, potthaka-bandhanatthāya, yaṃ kiñci yottaṃ vā potthakalāpa pūṭanatthāya yaṃ kiñci thavikaṃ deti vā dāpeti vā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Whatever wise and steadfast person composes or causes to be composed a commentary or other text, for them there is an endless accumulation of merit, an endless fruit of merit. It is like creating eighty-four thousand shrines, like creating eighty-four thousand Buddha images, like planting eighty-four thousand Bodhi trees, like constructing eighty-four thousand monasteries. Whoever makes or causes to be made a treasury of the Buddha’s words, whoever adorns or causes to be adorned the Buddha’s words, whoever writes or causes to be written the Buddha’s words; whoever gives or causes to be given a book or the price of a book; or oil, powder, or grain for the repair of a damaged book; or anything needed to fill holes in a book; or thread, or a pair of wooden boards for binding a book; or cloth for wrapping a book; or a cord for tying a book; or a bag for a bundle of books—whoever gives or causes any of these to be given, for them there is an endless accumulation of merit.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Yo ca haritālena vā manosilāya vā, suvaṇṇena vā rajatena vā potthakamaṇḍanaṃ vā kaṭṭhaphalakamaṇḍanaṃ vā karoti vā kārāpeti vā, tassa anantako hoti puññasaṃcayo, anantako hoti puññānisaṃso. Caturāsīti cetiyasahassa karaṇasadiso, caturāsīti vihārasahassa karaṇasadiso.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Whoever adorns a book or decorates a wooden board with orpiment or red arsenic, with gold or silver, whether doing it themselves or causing it to be done, for them there is an endless accumulation of merit, an endless fruit of merit. It is like creating eighty-four thousand shrines, like constructing eighty-four thousand monasteries.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Bhave nibbattamāno so, sīlaguṇamupāgatā;</p>
+<p rend="gathalast">Mahā tejo sadā hoti, sīhanādo visārado.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Being reborn in existence, he is endowed with virtue and good qualities; he is always of great splendor, confident, and utters a lion's roar.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Āyuvaṇṇabaluppeto, dhammakāmo bhave saddā;</p>
+<p rend="gathalast">Devamanussalokesu, mahesakkho anāmayo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Endowed with long life, beauty, and strength, he becomes a lover of the Dhamma, full of faith; in the worlds of devas and humans, he is greatly powerful and free from affliction.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Bhave nibbattamāno so, paññavā susamāhito;</p>
+<p rend="gathalast">Adhipacca parivāro, sabbasukhādhi gacchati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Being reborn in existence, he is wise and well-composed; possessing sovereignty and a retinue, he attains all happiness.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Saddohīrimā vadaññū, saṃvigga mānaso bhave;</p>
+<p rend="gathalast">Aṅgapaccaṅga sampanno, āroha pariṇāhavā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He has faith, moral shame, and is generous, with a mind stirred by spiritual urgency; endowed with perfect major and minor limbs, he is well-proportioned in height and girth.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Sabbe sattāpi yo loke, sabbattha pūjitābhave;</p>
+<p rend="gathalast">Devamanussa sañcaro, mittasahāya pālito.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He becomes one honored everywhere in the world by all beings; wandering among devas and humans, he is protected by friends and companions.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Devamanussa sampattiṃ, anubhoti punappunaṃ;</p>
+<p rend="gathalast">Arahatta phalaṃ patto, nibbānaṃ pāpuṇissati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He experiences the good fortune of devas and humans again and again; having attained the fruit of Arahantship, he will attain Nibbāna.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Paṭisambhidā catasso, abhiññā chabbidhe vare;</p>
+<p rend="gathalast">Vimokkhe aṭṭhake seṭṭhe, gamissati anāgate.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The four analytical knowledges, the six kinds of excellent higher knowledges, the eight supreme liberations, he will attain in the future.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Tasmāhi paṇḍito poso, saṃpassaṃ hita mattano;</p>
+<p rend="gathalast">Kāreyya sāma ganthe ca, aññe cāpi kārāpaye.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Therefore, a wise person, seeing his own welfare, should make texts himself, and also cause others to make them.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Potthake ca ṭhite ganthe, pāḷi aṭṭhakathādike;</p>
+<p rend="gathalast">Dhammamañjūsā ganthe ca, lekhaṃ kare kārāpaye.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In established texts within books—the Pāli, commentaries, and so on—and in the Dhammamañjūsā text, one should write or cause to be written.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Potthakaṃ potthakamūlañca, tesaṃ cullathūsampi ca;</p>
+<p rend="gathalast">Pilotikādikaṃ suttaṃ, kaṭṭhaphaladvayamhi ca.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A book and the price of a book, and even their small fragments; rags and so on, thread, and two wooden boards.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Dhammabandhanatthāya ca, yaṃ kiñci mahagghaṃ vatthaṃ;</p>
+<p rend="gathalast">Dhammabandhanayottañca, yaṃ kiñci thavikampi ca.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">And for binding the Dhamma, any costly cloth; and any cord for binding the Dhamma, and any bag.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Dadeyya dhammakhettamhi, vippassannena cetasā;</p>
+<p rend="gathalast">Añño cāpi dajjāpeyya, mittasahāyabandhaveti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One should give in the field of Dhamma with a clear and confident mind; and one should also cause others to give—friends, companions, and relatives.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="centre">Ganthākaralekhalekhāpanānisaṃsa dīpanā niṭṭhitā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The explanation of the benefits of composing texts, writing, and causing to be written is concluded.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="bodytext">[Iti cūlaganthavaṃse pakiṇṇakadīpako nāma pañcamo paricchedo.]</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Thus ends the fifth chapter named 'Miscellaneous Explanation' in the Cūḷaganthavaṃsa.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Sohaṃ haṃsāraṭṭha jāto, nantapaññoti vissuto</p>
+<p rend="gathalast">Saddhā sīla vīrappeto, dhammarasaṃ gavesano.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I, born in the Haṃsa country, known as Nandapañña, endowed with faith, virtue, and energy, seeking the taste of the Dhamma.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Sohaṃ tato gantvā cimaṃ, jina navaṃ yaṃ pūraṃ;</p>
+<p rend="gathalast">Sabba dhammaṃ vicinanto, vīsati vassamāgato.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I, having gone from there to this place which is complete with the new teaching of the Conqueror, examining all the Dhamma, have arrived after twenty years.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Sabba dhammaṃ vissejjento, kikāre neva bhikkhuno;</p>
+<p rend="gathalast">Cha vassānaṃ gaṇaṃ bhitvā, kāmānaṃ abhimaddanaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Abandoning all phenomena, not even for a 'ki' sound from a bhikkhu; breaking through the group of six years, crushing sensual desires.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Santi sabhā ca nibbānaṃ, gavesiñca punappunaṃ;</p>
+<p rend="gatha2">Vasantohaṃ, vanārammaṃ, piṭakattaya saṅgahaṃ;</p>
+<p rend="gathalast">Ganthavaṃsaṃ imaṃ khuddaṃ, ariyasaṅghadāsakanti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Seeking again and again the peaceful state of Nibbāna; dwelling in a forest park, I made a compilation of the Tipiṭaka; this minor Chronicle of Books is by Ariyasaṅghadāsa.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Iti pāmojjatthāya araññavāsinā, nandapaññācariyena kato cūḷaganthavaṃso niṭṭhito.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Thus, for the sake of joy, the Minor Chronicle of Books, composed by the forest-dwelling teacher Nandapaññā, is concluded.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Dhammavaṭaṃsakanāmena visuto thero, yaṃ pakaraṇaṃ likkhitaṃ taṃ paripuṇṇaṃ tena puññena taṃ piṭakaṃ parisippaṃ pariniṭṭhitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The treatise written by the elder renowned as Dhammavaṭaṃsaka is complete. By this merit, may the learning of the Piṭaka be perfected and brought to completion.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Mameva sissasamūhānañca parisippaṃ pariniṭṭhitaṃ. Tave sissānū sissāni ca, parisippaṃ pariniṭṭhitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">May the learning of myself and my multitude of disciples be brought to completion. May the learning of your disciples and their disciples' disciples also be brought to completion.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0701n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="centre">Cūḷaganthavaṃso niṭṭhito.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">The Minor Chronicle of Books is concluded.</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e1006n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">Pali | Trans.</button><button type="button" data-mode="view-stack">Pali — Trans.</button><button type="button" data-mode="view-pali-only">Pali Only</button><button type="button" data-mode="view-trans-only">Trans. Only</button><button type="button" id="toggle-meta-btn">Note</button></div>
+<div class="pair-row" data-id="e1006n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre"> Namo tassa bhagavato arahato sammāsambuddhassa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Homage to the Blessed One, the Arahant, the Perfectly Self-Enlightened One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="chapter">Suttantanīti</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Norm of the Discourses.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Parā <span class="pb hidden-meta" data-ed="M" data-n="0.0003">[M 0.0003]</span> bhavantaṃ purisaṃ,</p>
+<p rend="gatha2">Mayaṃ pucchāma gotamaṃ;</p>
+<p rend="gatha3">Bhavantaṃ puṭṭhu māgamma,</p>
+<p rend="gathalast">Kiṃ parābhavato mukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">We ask the Blessed One, Gotama, about the man who is in decline. Having come to ask the Blessed One, what is the cause of downfall?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Suvijāno <span class="pb hidden-meta" data-ed="M" data-n="0.0004">[M 0.0004]</span> bhavaṃhoti,</p>
+<p rend="gatha2">Duvijāno parābhavo;</p>
+<p rend="gatha3">Dhammakāmo bhavaṃ hoti,</p>
+<p rend="gathalast">Dhammadessī parābhavo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Easy to discern is the one who prospers; hard to discern is the one who declines. One who loves the Dhamma prospers; one who hates the Dhamma declines.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Itihe <span class="pb hidden-meta" data-ed="M" data-n="0.0008">[M 0.0008]</span> taṃ vijānāma,</p>
+<p rend="gatha2">Pathamo so parābhavo;</p>
+<p rend="gatha3">Dutīyaṃ bhagavā brūhi,</p>
+<p rend="gathalast">Kiṃ parābhavato mukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Thus we know this: that is the first cause of downfall. Tell us the second, Blessed One, what is the cause of downfall?</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">4</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">4.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Asantassa <span class="pb hidden-meta" data-ed="M" data-n="0.0009">[M 0.0009]</span> piyo hoti,</p>
+<p rend="gatha2">Sante na kurute piyaṃ;</p>
+<p rend="gatha3">Asataṃ dhammaṃ roceti,</p>
+<p rend="gathalast">Taṃ parābhavato mukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who is dear to the wicked, who does not hold the virtuous dear, and who approves of the doctrine of the wicked—that is the cause of downfall.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Kammāparādhasattānaṃ<span class="pb hidden-meta" data-ed="M" data-n="0.0012">[M 0.0012]</span>,</p>
+<p rend="gatha2">Vināse paccupaṭṭhite;</p>
+<p rend="gatha3">Anayo nayarūpena,</p>
+<p rend="gathalast">Buddhimākamya tiṭṭhati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">When destruction is at hand for beings who have committed wrongful deeds, injustice in the guise of justice overcomes their wisdom.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Niddāsīlī <span class="pb hidden-meta" data-ed="M" data-n="0.0013">[M 0.0013]</span> sabhāsīlī,</p>
+<p rend="gatha2">Anuṭṭhātā ca yo naro;</p>
+<p rend="gatha3">Alaso kodhapaññāṇo,</p>
+<p rend="gathalast">Taṃ parābhavato mukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The man who is fond of sleep, fond of company, unenergetic, lazy, and marked by anger—that is the cause of downfall.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0025">[M 0.0025]</span> mātaraṃ pitaraṃ vā,</p>
+<p rend="gatha2">Jiṇṇakaṃ gatayobbanaṃ;</p>
+<p rend="gatha3">Pahusanto na bharati,</p>
+<p rend="gathalast">Taṃ parābhavato mukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who, being capable, does not support his mother or father who are old and past their youth—that is the cause of downfall.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0030">[M 0.0030]</span> brāhmaṇaṃ samaṇaṃ vā,</p>
+<p rend="gatha2">Aññaṃ vāpi vaṇibbakaṃ;</p>
+<p rend="gatha3">Musāvādena vañceti,</p>
+<p rend="gathalast">Taṃ parābhavato mukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who deceives a brahmin or an ascetic, or any other mendicant with false speech—that is the cause of downfall.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pahutavitto <span class="pb hidden-meta" data-ed="M" data-n="0.0033">[M 0.0033]</span> puriso,</p>
+<p rend="gatha2">Sahirañño sabhojano;</p>
+<p rend="gatha3">Eko bhuñjati sādūni,</p>
+<p rend="gathalast">Taṃ parābhavato mukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A man possessing much wealth, with gold and food aplenty, who eats delicious things alone—that is the cause of downfall.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">9</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">9.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Jātithaddho <span class="pb hidden-meta" data-ed="M" data-n="0.0036">[M 0.0036]</span> dhanathaddho,</p>
+<p rend="gatha2">Gottathaddho ca yo naro;</p>
+<p rend="gatha3">Sañātiṃ atimaññeti,</p>
+<p rend="gathalast">Taṃ parābhavato mukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The man who is proud of his birth, proud of his wealth, and proud of his lineage, and who despises his own kin—that is the cause of downfall.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">10</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">10.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Itthidhutto <span class="pb hidden-meta" data-ed="M" data-n="0.0040">[M 0.0040]</span> surādhutto,</p>
+<p rend="gatha2">Akkhadhutto ca yo naro;</p>
+<p rend="gatha3">Laddhaṃladdhaṃ vināseti,</p>
+<p rend="gathalast">Taṃ parābhavato mukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The man who is a womanizer, a drunkard, and a gambler, and who squanders whatever he has gained—that is the cause of downfall.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Na <span class="pb hidden-meta" data-ed="M" data-n="0.0044">[M 0.0044]</span> bāḷhaṃ itthiṃ gaccheyya,</p>
+<p rend="gatha2">Sampassaṃ tejasaṅkhayaṃ;</p>
+<p rend="gatha3">Kāsaṃ sāsaṃ daraṃ bālyaṃ,</p>
+<p rend="gathalast">Khīṇamedo nigacchati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One should not excessively pursue women, observing the exhaustion of one's vigor; for he whose vitality is wasted undergoes coughing, breathlessness, trembling, and weakness.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Ka)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Ka)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Māyācetā <span class="pb hidden-meta" data-ed="M" data-n="0.0045">[M 0.0045]</span> marīcī ca,</p>
+<p rend="gatha2">Soko rogo upaddavo;</p>
+<p rend="gatha3">Kharā ca bandhanācetā,</p>
+<p rend="gathalast">Maccupāso guhāsayo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">These are illusion and a mirage, sorrow, disease, and calamity; they are harsh things and bonds, the snare of Death, a creature lying in a lair.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Kha)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Kha)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Balavanto dubbalā honti,</p>
+<p rend="gatha2">Thāmavantopi hāyare;</p>
+<p rend="gatha3">Cakkhumā andhakā honti,</p>
+<p rend="gathalast">Mātugāmavasaṃgatā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The strong become weak, the mighty also decline, the clear-sighted become blind—those who have come under the sway of women.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Ga)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Ga)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Guṇavanto <span class="pb hidden-meta" data-ed="M" data-n="0.0046">[M 0.0046]</span> nigguṇā honti,</p>
+<p rend="gatha2">Paññavantopi hāyare;</p>
+<p rend="gatha3">Pamuttā bandhanā senti,</p>
+<p rend="gathalast">Mātugāmavasaṃgatā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The virtuous become devoid of virtue, the wise also decline; the liberated fall into bondage—those who have come under the sway of womankind.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Gha)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Gha)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Yasaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0047">[M 0.0047]</span> kittiṃ dhitiṃ sūraṃ;</p>
+<p rend="gatha2">Bāhussaccaṃ pajānanaṃ;</p>
+<p rend="gatha3">Hāpayanti pamattassa;</p>
+<p rend="gathalast">Kaṭṭhapuñcaṃva pāvako.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Glory, renown, resolution, prowess, great learning, and discernment—these they cause the heedless one to lose, just as fire consumes a pile of wood.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">11</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">11.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sehi <span class="pb hidden-meta" data-ed="M" data-n="0.0051">[M 0.0051]</span> dārehi santuṭṭho,</p>
+<p rend="gatha2">Vesiyāsu padussati;</p>
+<p rend="gatha3">Dussati paradāresu,</p>
+<p rend="gathalast">Taṃ parābhavato mukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He who is not content with his own wives, and is seen among prostitutes and the wives of others—that is the cause of downfall.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Ka)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Ka)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Mayañca <span class="pb hidden-meta" data-ed="M" data-n="0.0060">[M 0.0060]</span> bhariyaṃ nātikkamāma,</p>
+<p rend="gatha2">Amheca bhariyā nātikkamanti;</p>
+<p rend="gatha3">Aññatra tāhi brahmacariyaṃ carāma,</p>
+<p rend="gathalast">Tasmā hi amhaṃ daharā na miyyare.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">We do not transgress against our wives, nor do our wives transgress against us. Apart from them, we live a life of chastity. Therefore, our young ones do not die.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Kha)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Kha)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Etāsu <span class="pb hidden-meta" data-ed="M" data-n="0.0063">[M 0.0063]</span> jāyare suttamāsu,</p>
+<p rend="gatha2">Medhāvino honti pahutapaññā;</p>
+<p rend="gatha3">Bahussutā theraguṇā ca honti,</p>
+<p rend="gathalast">Tasmā hi amhaṃ daharā na miyyare.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Born of these excellent women, they are intelligent and of great wisdom; they are learned and possess the qualities of elders. Therefore, our young ones do not die.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">12</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">12.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Atītayobbano <span class="pb hidden-meta" data-ed="M" data-n="0.0065">[M 0.0065]</span> poso,</p>
+<p rend="gatha2">Āneti timbarutthaniṃ;</p>
+<p rend="gatha3">Tassa issā na supati,</p>
+<p rend="gathalast">Taṃ parābhavato mukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A man whose youth is past brings home a wife with breasts like timbaru fruit; out of jealousy for her, he cannot sleep—that is the cause of downfall.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Ka)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Ka)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Na <span class="pb hidden-meta" data-ed="M" data-n="0.0069">[M 0.0069]</span> dukkhaṃ ahinā daṭṭhaṃ,</p>
+<p rend="gatha2">Na dukkhaṃ sattiyā hataṃ;</p>
+<p rend="gatha3">Tañca dukkhañca tibbañca,</p>
+<p rend="gathalast">Yaṃ passe jiṇṇakaṃ patiṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">To be bitten by a snake is not so painful, nor to be struck by a spear; but that is a sharp and intense pain, to see an aged husband.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Kha)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Kha)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Natthi <span class="pb hidden-meta" data-ed="M" data-n="0.0070">[M 0.0070]</span> khiṭṭā natthi rati,</p>
+<p rend="gatha2">Jiṇṇena patinā saha;</p>
+<p rend="gatha3">Natthi allāpasallāpo,</p>
+<p rend="gathalast">Jagghituṃpi na sobhati.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">There is no play, there is no pleasure, with an aged husband; there is no friendly conversation, and even to laugh is not seemly.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="bodytext">(Ga)</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">(Ga)</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Yadā ca daharo daharī,</p>
+<p rend="gatha2">Mantayiṃsu rahogatā;</p>
+<p rend="gatha3">Sabbe sokā vinassanti,</p>
+<p rend="gathalast">Yekeci hadayassitā.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">But when a youth and a maiden converse in secret, all sorrows vanish, whatever are lodged in the heart.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">13</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">13.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Itthiṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0075">[M 0.0075]</span> soṇḍiṃ vikiraṇiṃ,</p>
+<p rend="gatha2">Purisaṃ vāpi tādisaṃ;</p>
+<p rend="gatha3">Issariyasmiṃ thapeti,</p>
+<p rend="gathalast">Taṃ parābhavato mukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">A woman who is a drunkard and wasteful, or a man of a similar kind; to place such a one in authority, that is a cause of downfall.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">14</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">14.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Appabhogo <span class="pb hidden-meta" data-ed="M" data-n="0.0076">[M 0.0076]</span> mahātaṇho,</p>
+<p rend="gatha2">Khattiye jāyate kule;</p>
+<p rend="gatha3">So ca rajjaṃ patthayati,</p>
+<p rend="gathalast">Taṃ parābhavato mukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One of little wealth but great craving, born into a warrior family; if he should aspire to kingship, that is a cause of downfall.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="gatha1">“Suvijāno <span class="pb hidden-meta" data-ed="M" data-n="0.0081">[M 0.0081]</span> bhavaṃhoti,</p>
+<p rend="gatha2">Duvijāno parābhavo”;</p>
+<p rend="gathalast">Appabhogo mahātaṇho.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">“Easy to discern is prosperity, hard to discern is downfall”; one of little wealth and great craving.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">15</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">15.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ete <span class="pb hidden-meta" data-ed="M" data-n="0.0082">[M 0.0082]</span> parābhave loke,</p>
+<p rend="gatha2">Paṇḍito samavekkhiya;</p>
+<p rend="gatha3">Ariyo dassanasampanno,</p>
+<p rend="gathalast">Sa lokaṃ bhajate sivaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having thoroughly considered these causes of downfall in the world, the wise and noble one, endowed with vision, resorts to that auspicious world.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="chapter">Vasalasutta</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="chapter">The Discourse on the Outcast</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kodhano <span class="pb hidden-meta" data-ed="M" data-n="0.0087">[M 0.0087]</span> upanāhīca,</p>
+<p rend="gatha2">Pāpamakkhī ca yo naro;</p>
+<p rend="gatha3">Vipannadiṭṭhī māyāvī,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whatever person is angry and resentful, evil and contemptuous, of corrupt view, and deceitful—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ekajaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0089">[M 0.0089]</span> vā dvijaṃ vāpi,</p>
+<p rend="gatha2">Yodha pāṇaṃ vihiṃsati;</p>
+<p rend="gatha3">Yassa pāṇe dayā natthi,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever in this world harms living beings, whether once-born or twice-born, who has no compassion for living beings—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0091">[M 0.0091]</span> hanti uparundhati,</p>
+<p rend="gatha2">Gāmāni nigamāni ca;</p>
+<p rend="gatha3">Niggāhako samaññāto,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One who destroys and besieges villages and towns, and is known as an oppressor—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">4</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">4.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Gāme <span class="pb hidden-meta" data-ed="M" data-n="0.0092">[M 0.0092]</span> vā yadi vā raññe,</p>
+<p rend="gatha2">Yaṃ paresaṃ mamāyitaṃ;</p>
+<p rend="gatha3">Theyyā adinnaṃ ādeti,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever, in a village or in the forest, takes by theft what belongs to others and has not been given—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0094">[M 0.0094]</span> have iṇamādāya,</p>
+<p rend="gatha2">Vuccamāno palāyati;</p>
+<p rend="gatha3">Na hi te iṇamatthīti,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever, having taken on a debt, runs away when pressed, saying, ‘I owe you no debt’—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yodha kiñcikkhakamyatā,</p>
+<p rend="gatha2">Pathasmiṃ vajataṃ janaṃ;</p>
+<p rend="gatha3">Hantvā kiñcikkha mādeti;</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever, desiring some trifle, kills a person traveling on the road and takes it—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0098">[M 0.0098]</span> attahetu parahetu,</p>
+<p rend="gatha2">Dhanahetu ca yo naro;</p>
+<p rend="gatha3">Sakkhipuṭṭho musābrūti,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whatever person, for his own sake, for another's sake, or for the sake of wealth, speaks falsely when questioned as a witness—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0102">[M 0.0102]</span> ñātīnaṃ sakhīnaṃ vā,</p>
+<p rend="gatha2">Dāresu paṭidissati;</p>
+<p rend="gatha3">Sahasā sampiyena vā,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever is seen with the wives of his relatives or his friends, whether by force or with their consent—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">9</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">9.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0010">[M 0.0010]</span>4 mātaraṃ pitaraṃ vā,</p>
+<p rend="gatha2">Jiṇṇakaṃ gatayobbanaṃ;</p>
+<p rend="gatha3">Pahusanto na bharati,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever, being able, does not support his mother or father when they are old and past their youth—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">10</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">10.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0105">[M 0.0105]</span> mātaraṃ pitaraṃ vā,</p>
+<p rend="gatha2">Bhātaraṃ bhaginiṃ sassuṃ;</p>
+<p rend="gatha3">Hanti roseti vācāya,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever strikes or provokes with speech his mother, father, brother, sister, or mother-in-law—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">11</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">11.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0107">[M 0.0107]</span> atthaṃ pucchito santo,</p>
+<p rend="gatha2">Anattha manusāsati;</p>
+<p rend="gatha3">Paṭicchannena manteti,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever, being asked about what is beneficial, teaches what is harmful, and counsels in a concealed manner—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">12</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">12.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0111">[M 0.0111]</span> katvā pāpakaṃ kammaṃ,</p>
+<p rend="gatha2">Māmaṃ jaññāti icchati;</p>
+<p rend="gatha3">Yo paṭicchannakammanto,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever, having done an evil deed, wishes, ‘May no one know about me,’ one whose actions are concealed—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">13</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">13.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0114">[M 0.0114]</span> ve parakulaṃ gantvā,</p>
+<p rend="gatha2">Bhutvāna sucibhojanaṃ;</p>
+<p rend="gatha3">Āgataṃ nappaṭipūjeti,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever, having gone to another's home and eaten fine food, does not honor them in return when they come to him—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">14</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">14.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0117">[M 0.0117]</span> samaṇaṃ vā brāhmaṇaṃ,</p>
+<p rend="gatha2">Aññaṃ vāpi vaṇibbakaṃ;</p>
+<p rend="gatha3">Musāvādena vañceti,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever deceives with a lie a recluse, a brahmin, or any other mendicant—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">15</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">15.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo samaṇaṃ vā brāhmaṇaṃ,</p>
+<p rend="gatha2">Bhattakāle upaṭṭhitaṃ;</p>
+<p rend="gatha3">Roseti vā na ca deti,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever provokes a recluse or a brahmin who has arrived at mealtime, and does not give—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">16</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">16.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Asantaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0120">[M 0.0120]</span> yodha pabrūti,</p>
+<p rend="gatha2">Mohena paliguṇṭhito;</p>
+<p rend="gatha3">Kiñcanaṃ nijigīsāno,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever in this world, veiled by delusion, speaks what is false, desiring to gain some trifle—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">17</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">17.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yocattānaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0122">[M 0.0122]</span> samukkaṃse,</p>
+<p rend="gatha2">Pareca mavajānāti;</p>
+<p rend="gatha3">Nihīno sena mānena,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever exalts himself and disparages others, debased by his own conceit—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">18</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">18.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Rosako <span class="pb hidden-meta" data-ed="M" data-n="0.0124">[M 0.0124]</span> kadarīyo ca,</p>
+<p rend="gatha2">Pāpiccho maccharī saṭho;</p>
+<p rend="gatha3">Ahirīko anottappī,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">One who is provocative and miserly, of evil desires, selfish and deceitful, shameless and without fear of wrongdoing—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">19</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">19.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0127">[M 0.0127]</span> buddhaṃ paribhāsati,</p>
+<p rend="gatha2">Athavā tassa sāvakaṃ;</p>
+<p rend="gatha3">Paribbajaṃ gahaṭṭhaṃ vā,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever reviles the Buddha, or his disciple, be they a renunciant or a householder—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="bodytext">Aṭṭhahi <span class="pb hidden-meta" data-ed="M" data-n="0.0129">[M 0.0129]</span> bhikkhave aṅgehi sampannāgatassa upāsakassa patto nikujjitabbo. Bhikkhūnaṃ alābhāya parisakkati, bhikkhūnaṃ anatthāya parisakkati, bhikkhūnaṃ anāvāsāya parisakkati, bhikkhūnaṃ akkosati paribhāsati, bhikkhūbhikkhūhi bhedeti, buddhassa avaṇṇaṃ bhāsati, dhammassa avaṇṇaṃ bhāsati, saṅghassa avaṇṇaṃ bhāsati, anujānāmi bhikkhave imehi aṭṭhahi aṅgehi sampannāgatassa upāsakassa pattaṃ nikujjituṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Monks, the bowl of a lay follower endowed with eight qualities should be overturned. He strives for the non-receipt of gains by the monks, he strives for the harm of the monks, he strives for the non-residence of the monks; he insults and reviles the monks; he creates division between monks; he speaks in dispraise of the Buddha, he speaks in dispraise of the Dhamma, he speaks in dispraise of the Sangha. Monks, I permit the overturning of the bowl for a lay follower endowed with these eight qualities.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">20</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">20.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Yo <span class="pb hidden-meta" data-ed="M" data-n="0.0132">[M 0.0132]</span> anarahaṃ santo,</p>
+<p rend="gatha2">Arahāti paṭijānāti;</p>
+<p rend="gatha3">Coro sabrahmake loke,</p>
+<p rend="gathalast">Taṃ jaññā vasalo iti.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Whoever, being no Arahant, claims to be an Arahant, is a thief in the world with its Brahmās—know him as an outcast.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">21</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">21.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ete <span class="pb hidden-meta" data-ed="M" data-n="0.0135">[M 0.0135]</span> kho vasalā vuttā,</p>
+<p rend="gatha2">Mayā ye te pakāsitā;</p>
+<p rend="gatha3">Na jaccā vasalo hoti,</p>
+<p rend="gathalast">Na jaccā hoti brāhmaṇo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">These indeed are called outcasts, those whom I have declared. Not by birth is one an outcast, not by birth is one a brahmin.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">22</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">22.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kammunā vasalo hoti,</p>
+<p rend="gathalast">Kammunā hoti brāhmaṇo.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">By deed one becomes an outcast; by deed one becomes a brahmin.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">23</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">23.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tadamināpi <span class="pb hidden-meta" data-ed="M" data-n="0.0136">[M 0.0136]</span> jānātha,</p>
+<p rend="gatha2">Yathāhetaṃ nidassanaṃ;</p>
+<p rend="gatha3">Caṇḍālaputto sopāko,</p>
+<p rend="gathalast">Mātaṅgo iti vissuto.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Know this also by this example: Sopāka, the son of a Caṇḍāla, was renowned as Mātaṅga.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">24</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">24.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> So <span class="pb hidden-meta" data-ed="M" data-n="0.0137">[M 0.0137]</span> yasaṃ paramaṃ patto,</p>
+<p rend="gatha2">Mātaṅgo yaṃ sudullabhaṃ;</p>
+<p rend="gatha3">Āgacchuṃ tassupaṭṭhānaṃ,</p>
+<p rend="gathalast">Khattiyā brāhmaṇā bahū.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">He, Mātaṅga, attained supreme fame, which is so very hard to gain; many nobles and brahmins came to attend upon him.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">25</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">25.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> So <span class="pb hidden-meta" data-ed="M" data-n="0.0138">[M 0.0138]</span> devayānaṃ abhiruyha,</p>
+<p rend="gatha2">Virajaṃ so mahāpathaṃ;</p>
+<p rend="gatha3">Kāmarāgaṃ virājetvā,</p>
+<p rend="gathalast">Brahmalokūpago ahu.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Mounting the divine vehicle, the stainless great path, and having become dispassionate towards sensual passion, he became a partaker in the Brahma world.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e1006n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="gatha1">Giriṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0166">[M 0.0166]</span> nakhena khaṇasi,</p>
+<p rend="gatha2">Ayo dantebhi khādasi;</p>
+<p rend="gatha3">Jātavedaṃ padahasi,</p>
+<p rend="gatha3">Yo isiṃ paribhāsati.</p>
+<p rend="gatha1">Āvelitaṃ <span class="pb hidden-meta" data-ed="M" data-n="0.0167">[M 0.0167]</span> piṭṭhito uttamaṅgaṃ,</p>
+<p rend="gatha2">Bāhuṃ pasāreti akampaṇeyyaṃ;</p>
+<p rend="gatha3">Setāni akkhīni yathā matassa,</p>
+<p rend="gathalast">Ko me imaṃ puttamakāsi evaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">You dig a mountain with a fingernail, you chew iron with your teeth, you handle fire—you who revile a sage. With head bent back, arms outstretched and unmoving, eyes white like one who is dead—who has made my son thus?</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

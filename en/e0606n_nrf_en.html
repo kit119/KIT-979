@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e0606n_nrf</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600&display=swap" rel="stylesheet">
+<style>:root { --font-main: "Noto Serif"; }</style>
+<style>
+/* Tipitaka stylesheet (VRI style) - ฟอนต์หลักกำหนดผ่านตัวแปร --font-main */
+body {
+  font-family: var(--font-main), "Noto Sans Thai", Tahoma, "Arial Unicode MS", sans-serif;
+  line-height: 1.6;
+  max-width: 42em;
+  margin: 1.5em auto;
+  padding: 0 1em;
+}
+body.view-column { max-width: 78em; }
+/*
+:root { --column-pali: red; --column-trans: blue; --column-note: green; }
+body.view-column .col-pali { color: var(--column-pali); }
+body.view-column .col-trans { color: var(--column-trans); }
+body.view-column .col-pali .note { color: var(--column-note); }
+*/
+
+@media print {
+  body, body.view-column { max-width: none; margin: 0; padding: 0; }
+  .toolbar { display: none !important; }
+}
+.note { color: blue; }
+.bld { font-weight: bold; }
+.paranum { font-weight: bold; }
+.pb { font-size: 0.78em; color: #777; }
+.hidden-meta { display: none; }
+body.show-meta .hidden-meta { display: inline; }
+
+p { border-top: 0in; border-bottom: 0in; padding-top: 0in; padding-bottom: 0in; margin-top: 0in; margin-bottom: 0.5cm; }
+[rend="indent"] { font-size: 12pt; text-indent: 2em; margin-left: 3em; }
+[rend="bodytext"] { font-size: 12pt; text-indent: 2em; }
+[rend="hangnum"] { font-size: 12pt; margin-bottom: -0.75cm; text-indent: 2em; }
+[rend="centre"], [rend="centered"] { font-size: 12pt; text-align: center; }
+[rend="unindented"] { font-size: 12pt; }
+[rend="book"] { font-size: 21pt; text-align: center; font-weight: bold; }
+[rend="chapter"] { font-size: 18pt; text-align: center; font-weight: bold; }
+[rend="nikaya"] { font-size: 24pt; text-align: center; font-weight: bold; }
+[rend="title"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="subsubhead"] { font-size: 12pt; text-align: center; font-weight: bold; }
+[rend="gatha1"], [rend="gatha2"], [rend="gatha3"] { font-size: 12pt; margin-bottom: 0em; margin-left: 4em; }
+[rend="gathalast"] { font-size: 12pt; margin-bottom: 0.5cm; margin-left: 4em; }
+
+/* แถบเครื่องมือสลับมุมมอง */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  padding: 0.45em 0.6em;
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.toolbar button {
+  border: 1px solid #bbb;
+  background: #f8f8f8;
+  color: #222;
+  padding: 0.25em 0.75em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+.toolbar button:hover { background: #eee; }
+.toolbar button.active {
+  background: #2c5282;
+  color: #fff;
+  border-color: #2c5282;
+}
+
+/* โครงสร้างรายการแบบยืดหยุ่น (รองรับทั้งเรียงต่อ คอลัมน์ และอ่านเดี่ยว) */
+.pair-row {
+  padding: 0.35em 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.pair-row:last-child { border-bottom: none; }
+.pair-col { min-width: 0; }
+.pair-col > p:last-child { margin-bottom: 0.1cm; }
+.pair-col:empty { display: none; }
+
+/* โหมดเทียบคอลัมน์ (ซ้ายบาลี ขวาคำแปล) */
+body.view-column .pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 0.45em 0;
+  align-items: baseline;
+}
+body.view-column .pair-col:empty { display: block; }
+
+/* โหมดเรียงต่อลงมา (บน-ล่าง ในแต่ละรายการ) */
+body.view-stack .pair-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  margin-bottom: 0.35cm;
+}
+body.view-stack .col-pali p { margin-bottom: 0.2cm; }
+body.view-stack .col-pali p[rend="gatha1"],
+body.view-stack .col-pali p[rend="gatha2"],
+body.view-stack .col-pali p[rend="gatha3"] { margin-bottom: 0em; }
+
+/* โหมดเฉพาะบาลี / เฉพาะแปล */
+body.view-pali-only .pair-row,
+body.view-trans-only .pair-row {
+  display: block;
+  border-bottom: none;
+  padding: 0;
+}
+body.view-pali-only .col-trans { display: none; }
+body.view-trans-only .col-pali { display: none; }
+body.view-pali-only .pair-col > p:last-child,
+body.view-trans-only .pair-col > p:last-child { margin-bottom: 0.5cm; }
+
+@media (max-width: 720px) {
+  body.view-column .pair-row { grid-template-columns: 1fr; gap: 0.35em; }
+}
+</style>
+</head>
+<body class="view-column">
+<div class="toolbar"><button type="button" data-mode="view-column" class="active">Pali | Trans.</button><button type="button" data-mode="view-stack">Pali — Trans.</button><button type="button" data-mode="view-pali-only">Pali Only</button><button type="button" data-mode="view-trans-only">Trans. Only</button><button type="button" id="toggle-meta-btn">Note</button></div>
+<div class="pair-row" data-id="e0606n_nrf:0">
+  <div class="pair-col col-pali">
+<p rend="chapter">Kamalāñjali</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">Kamala-añjali</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:1">
+  <div class="pair-col col-pali">
+<p rend="centre"> Namo tassa bhagavato arahato sammāsambuddhassa</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="centre">Homage to the Blessed One, the Arahant, the Perfectly Self-Enlightened One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:2">
+  <div class="pair-col col-pali">
+<p rend="chapter">Kamalāñjali</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="bodytext">The Lotus Salutation</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:3">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">1</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">1.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:4">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kamalāsana kamalāpati pamathādhipa vajirā,</p>
+<p rend="gatha2">Yudhadānava manujoraga bhujagāsana patinaṃ;</p>
+<p rend="gatha3">Makuṭāhita manidīdhiti bhamarāvali bhajitaṃ,</p>
+<p rend="gathalast">Paṇamā’mahaṃ anaghaṃ muni caraṇāmala kamalaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the immaculate lotus feet of the faultless Sage—lotus-seated, lord of lotuses, lord of Pramathas, the thunderbolt-wielder, subduer in battle of dānavas, of nāgas among men, and of the lord of the serpent throne; feet radiant with the light of gems on crowns and frequented by swarms of bees.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:5">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">2</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">2.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:6">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Kamalālaya sadi’saṅkita kalamaṅgala ruciraṃ,</p>
+<p rend="gatha2">Jutirañjitaṃ abhinijjita subhakañcana nalinaṃ;</p>
+<p rend="gatha3">Janitā cira samaye nija pitu bhūpati namitaṃ,</p>
+<p rend="gathalast">Paṇamā’mahaṃ anaghaṃ muni caraṇāmala kamalaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the immaculate lotus feet of the faultless Sage—feet that resemble a lotus abode, are marked with auspicious signs, are beautiful, delightful, and radiant, surpassing a lovely golden lotus; feet of one born long ago, who was honored by his own father, the king.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:7">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">3</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">3.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:8">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saraṇāgata rajanīpati dinasekhara namitaṃ,</p>
+<p rend="gatha2">Bhajitākhila janapāvanaṃ abhikaṅkhita sukhadaṃ;</p>
+<p rend="gatha3">Vasudhātala sayamuggata sarasīruha mahitaṃ,</p>
+<p rend="gathalast">Paṇamā’mahaṃ anaghaṃ muni caraṇāmala kamalaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the immaculate lotus feet of the faultless Sage—feet revered by those who have come for refuge, by the lord of the night and the crest of the day; feet that save all who resort to them, that grant the happiness longed for, and that are honored like a lotus self-arisen from the earth's surface.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:9">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">4</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">4.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:10">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Diradāsana tarupantika ghaṭitāsanaṃ abhayaṃ,</p>
+<p rend="gatha2">Vijayāsana samadhiṭṭhita caturaṅgika viriyaṃ;</p>
+<p rend="gatha3">Dharamānaka suriyehani vijitantaka dhajiniṃ,</p>
+<p rend="gathalast">Paṇamā’mahaṃ abhipātita namuciddhaja vibhavaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the glory that overthrew the banner of Namuci: a fearless seat established beside a tree, the four-limbed energy established on the seat of victory, a banner that conquered Death, dispelling darkness like the sun.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:11">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">5</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">5.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:12">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sadayodita piyabhārati vijitantaka samaraṃ,</p>
+<p rend="gatha2">Dasapārami balakampita sadharādhara dharaniṃ;</p>
+<p rend="gatha3">Girimekhala varavārana sirasānata caraṇaṃ,</p>
+<p rend="gathalast">Paṇamā’mahaṃ abhinandita sanarāmara bhuvanaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to his feet, praised by the world of humans and gods—feet of one whose lovely speech is uttered with compassion, who was victorious in the battle against Māra, whose power from the ten perfections shook the earth with its mountains, and to whom the noble elephant Girimekhala bowed its head.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:13">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">6</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">6.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:14">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nikhilāsava vigame’nativimalīkata hadayaṃ,</p>
+<p rend="gatha2">Tadanantara viditākhila matigocara visayaṃ;</p>
+<p rend="gatha3">Visayīkata bhuvanattayaṃ atilokiya caritaṃ,</p>
+<p rend="gathalast">Paṇamā’mahaṃ aparājitaṃ arahaṃ muniṃ asamaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the incomparable, undefeated Arahant, the Sage, whose heart was utterly purified with the cessation of all taints; who thereupon understood all objects within the range of thought; and whose supramundane conduct has encompassed the three worlds.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:15">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">7</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">7.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:16">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Mudubhārati madhupāsita nalinopama vadanaṃ,</p>
+<p rend="gatha2">Rucirāyata nalinīdala nibha locana yugalaṃ;</p>
+<p rend="gatha3">Udayodita ravimaṇḍala jalitāmala niṭilaṃ,</p>
+<p rend="gathalast">Paṇamā’maha akutobhayaṃ anaghaṃ muni pamukhaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the fearless, faultless chief of sages, he of gentle speech, whose face is like a honey-smeared lotus; whose pair of beautiful, long eyes resembles lotus petals; and whose pure forehead shines like the orb of the rising sun.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:17">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">8</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">8.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:18">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Asitambuda rucikuñcita mudu kuntala lalitaṃ,</p>
+<p rend="gatha2">Bhuvanodara vitatāmita jutisañcaya jalitaṃ;</p>
+<p rend="gatha3">Madamodita diradopama gativibbhama ruciraṃ,</p>
+<p rend="gathalast">Paṇamā’mahaṃ amatandada munipuṅgavaṃ asamaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the incomparable bull among sages, the giver of the deathless, whose soft, curly locks are lovely with their dark-cloud hue; whose immeasurable mass of radiance shines, spreading through the world's expanse; and whose delightful, graceful gait is like that of a joyous elephant in rut.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:19">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">9</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">9.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:20">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Karuṇārasa paribhāvita savaṇāmata vacanaṃ,</p>
+<p rend="gatha2">Virudāvali sataghosita yasapūrita bhuvanaṃ;</p>
+<p rend="gatha3">Sumanohara varalakkhaṇa sirisañcaya sadanaṃ,</p>
+<p rend="gathalast">Paṇamā’mahaṃ uditāmala sasimaṇḍala vadanaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to him whose face is radiant and pure like the risen orb of the moon; whose speech is nectar for the ear, imbued with the essence of compassion; whose glory, proclaimed by hundreds of garlands of praise, fills the world; and who is himself an abode for the fortune of the most lovely, excellent marks.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:21">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">10</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">10.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:22">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vinayāraha janamānasa kumudākara sasinaṃ,</p>
+<p rend="gatha2">Tasināpaga parisosana satadīdhiti tulitaṃ;</p>
+<p rend="gatha3">Tamanāsava munisevitaṃ apalokita sukhadaṃ,</p>
+<p rend="gathalast">Paṇamā’mahaṃ aniketanaṃ akhilāgati vigataṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the homeless one, gone beyond all destinations; who is a moon for the water-lily pond of the minds of those ready for training; who is like a hundred-rayed sun in drying up the river of craving; who is served by taintless sages and gives happiness when looked upon.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:23">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">11</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">11.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:24">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sahitākhila bhayabheravaṃ abhayāgata saranaṃ,</p>
+<p rend="gatha2">Ajarāmara sukhadāyakaṃ anirākata karuṇaṃ;</p>
+<p rend="gatha3">Tamupāsaka janasevita supatiṭṭhita caraṇaṃ,</p>
+<p rend="gathalast">Paṇamā’mahaṃ ahitāpahaṃ anaghuttama caraṇaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to his most faultless feet, the remover of harm—feet that dispel all fear and terror, a refuge for those who come seeking safety; feet of one who bestows the happiness of the ageless and deathless, whose compassion is unfailing, and whose well-established feet are served by his lay followers.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:25">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">12</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">12.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:26">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Karuṇāmata rasapurita vīmalākhila hadayaṃ,</p>
+<p rend="gatha2">Vihitāmita janatāhitaṃ anukampita bhuvanaṃ;</p>
+<p rend="gatha3">Bhuvane sutaṃ avanīpati sata sevita caraṇaṃ,</p>
+<p rend="gathalast">Paṇamā’mahaṃ anaghaṃ muniṃ aghanāsana caturaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the faultless Sage, skilled in destroying evil, whose entire heart is pure and filled with the nectar-like essence of compassion; who works for the immeasurable welfare of beings, has compassion for the world, is famed in the world, and whose feet are served by hundreds of kings.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:27">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">13</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">13.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:28">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Aratīrati paripīlita yatimānasa damanaṃ,</p>
+<p rend="gatha2">Nijasāsana vinivārita puthutitthiya samaṇaṃ;</p>
+<p rend="gatha3">Paravādika janatākata paribhāsita khamanaṃ,</p>
+<p rend="gathalast">Paṇamā’mahaṃ atidevata vara gotama samaṇaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the monk Gotama, the excellent one, surpassing the gods; the tamer of the minds of ascetics afflicted by discontent and lust; who by his own teaching restrains the many sectarian monks; and who patiently endures the abuse uttered by the followers of other doctrines.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:29">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">14</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">14.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:30">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Saraṇāgata bhayanāsana vajirālaya paṇibhaṃ,</p>
+<p rend="gatha2">Bhavasāgara patitāmita janatārana nirataṃ;</p>
+<p rend="gatha3">Sirasāvahaṃ amalañjali puṭapaṅkaja makulaṃ,</p>
+<p rend="gathalast">Paṇamā’mahaṃ akhilalāya vigataṃ muniṃ atulaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">I bow to the incomparable Sage, free from all attachments, whose presence is like a house of diamond, destroying the fears of those who seek refuge; who is devoted to rescuing the countless beings fallen into the ocean of existence; and to whom I reverently offer with my head a pure, lotus-bud-like salutation of cupped hands.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:31">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">15</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">15.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:32">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vimalīkata janamānasa vigatāsava bhagavaṃ,</p>
+<p rend="gatha2">Bhavapāraga vibhavāmata sukhadāyaka satataṃ;</p>
+<p rend="gatha3">Paramādara garugārava vinataṃ jina payataṃ,</p>
+<p rend="gathalast">Padapaṅkaja rajasā mama samalaṅkuru sirasaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">O Blessed One, purifier of the people's minds, free from taints, ever bestowing the happiness of Nibbāna, having crossed to the far shore of existence! With the highest esteem and deep respect I bow to the pure Victor. Adorn my head with the dust of your lotus feet.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:33">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">16</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">16.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:34">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pavanāhata dumapallavaṃ iva nārata capalaṃ,</p>
+<p rend="gatha2">Bhavalālasa malinīkataṃ ajitindriya nivahaṃ;</p>
+<p rend="gatha3">Cira sañcita duritāhataṃ anivārita timisaṃ,</p>
+<p rend="gathalast">Vimalīkuru karuṇābhara sutaraṃ mama hadayaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">My heart is fickle and unsteady like a young leaf struck by the wind, stained by craving for existence, a host of unconquered senses, afflicted by long-accumulated misdeeds, its darkness unwarded off. Purify it swiftly, O you who are laden with compassion!</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:35">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">17</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">17.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:36">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Adaye dayaṃ anaye nayaṃ api yo guṇaṃ aguṇe,</p>
+<p rend="gatha2">Ahite hitaṃ akaro kvacida api kenaci nakataṃ;</p>
+<p rend="gatha3">Sadaye jina sunaye guṇasadane tayi nitaraṃ,</p>
+<p rend="gathalast">Suhite hitacarite’nagha ramate mama hadayaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">You showed compassion to the uncompassionate, principle to the unprincipled, virtue to the virtueless, and benefit to the hostile—a good never done by anyone else anywhere. In you, the compassionate, the principled, the abode of virtue, the beneficial, the one of good conduct, O faultless Jina, my heart exceedingly delights.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:37">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">18</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">18.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:38">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhavasaṅkaṭa patitenapi bhavatā cira caritaṃ,</p>
+<p rend="gatha2">Visame sama caraṇaṃ khalu dasapārami bharaṇaṃ;</p>
+<p rend="gatha3">Sarato’hani sarato nisi supinenapi satataṃ,</p>
+<p rend="gathalast">Ramate jina sumate tvayi sadayaṃ mama hadayaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Though I have fallen into the thicket of existence, I remember how you for long practiced balanced conduct in the unbalanced, indeed fulfilling the ten perfections. Remembering this day and night, constantly, even in dreams, my heart delights in you, O compassionate Jina of good wisdom.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:39">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">19</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">19.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:40">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Atiduddadaṃ adadī bhavaṃ atidukkaraṃ akarī;</p>
+<p rend="gatha2">Atidukkhamaṃ akhamī vata karuṇānidhi’rasamo,</p>
+<p rend="gatha3">Iti te guṇaṃ anaghaṃ muni sarato mama hadayaṃ,</p>
+<p rend="gathalast">Ramate’hani ramate nisi ramate tvayi satataṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">You gave what is very difficult to give, you did what is very difficult to do, you endured what is very difficult to endure—indeed, O unequalled treasure-store of compassion! Thus, recalling your faultless quality, O Sage, my heart rejoices by day, rejoices by night, rejoices in you constantly.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:41">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">20</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">20.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:42">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Atiduccaraṃ acarī bhavaṃ atiduddamaṃ adamī,</p>
+<p rend="gatha2">Atiduddayaṃ adayī vata sadayāpara hadayo;</p>
+<p rend="gatha3">Iti te guṇaṃ anaghaṃ muni sarato mama hadayaṃ,</p>
+<p rend="gathalast">Ramate’hani ramate nisi ramate tvayi satataṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">You practiced what is very difficult to practice, you tamed what is very difficult to tame, you were compassionate to the very uncompassionate—indeed, with a heart compassionate towards others! Thus, recalling your faultless quality, O Sage, my heart rejoices by day, rejoices by night, rejoices in you constantly.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:43">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">21</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">21.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:44">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Atiduggamaṃ agamī bhavaṃ atidujjayaṃ ajayī,</p>
+<p rend="gatha2">Atidussahaṃ asahī vata samupekkhita manaso;</p>
+<p rend="gatha3">Iti te guṇaṃ anaghaṃ muni sarato mama hadayaṃ,</p>
+<p rend="gathalast">Ramate’hani ramate nisi ramate tvayi satataṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">You went where it is very difficult to go, you conquered what is very difficult to conquer, you endured what is very difficult to endure—indeed, O one of equanimous mind! Thus, recalling your faultless quality, O Sage, my heart rejoices by day, rejoices by night, rejoices in you constantly.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:45">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">22</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">22.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:46">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Atidāruna palayānala sadisānala jalite,</p>
+<p rend="gatha2">Niraye vinipatito ciraṃ aghatāpita manaso;</p>
+<p rend="gatha3">Na sariṃ sakida api te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama narasārathi tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Fallen into a hell blazing with a fire like the exceedingly fierce fire of the aeon's end, my mind long tormented by evil, not even once did I remember to worship your lotus feet, O Father. Forgive me, Gotama, charioteer of men, for this fault of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:47">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">23</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">23.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:48">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tiriyaggata-gatiyaṃ ciraṃ anavaṭṭhita carito,</p>
+<p rend="gatha2">Atiniṭṭhura vadhatajjita bhayakampita hadayo;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama purisuttama tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">In the animal realm for a long time, with unsettled conduct, my heart trembling with fear, threatened by exceedingly cruel slaughter, not even once did I remember to serve your lotus feet, O Father. Forgive me, Gotama, supreme among men, for this fault of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:49">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">24</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">24.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:50">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Paridevana nirato ciraṃ atha pettiya visaye,</p>
+<p rend="gatha2">Sujighacchita supipāsita parisosita jaṭhare;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama dipaduttama tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Then, in the realm of the departed, long devoted to lamentation, with my belly parched, exceedingly hungry and thirsty, not even once did I remember to venerate your lotus feet, O Father. Forgive me, Gotama, noblest of bipeds, for this transgression of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:51">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">25</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">25.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:52">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vivaso bhusaṃ aghadūsita manasāsura visaye,</p>
+<p rend="gatha2">Janito ghanatimire ciraṃ atidukkhita hadayo;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama vasisattama tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Powerless, with mind greatly defiled by evil, in the realm of the asuras; born in dense darkness, with heart long and greatly afflicted; not even once did I remember to worship your lotus feet, O Father. Forgive me, Gotama, best of sages, for this fault of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:53">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">26</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">26.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:54">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Manasā cira vihitaṃ saraṃ atikibbisa caritaṃ,</p>
+<p rend="gatha2">Samathenatha suvirājiya taṃ asaññitaṃ upago;</p>
+<p rend="gatha3">Na sariṃ sakida api te pita bhajituṃ pada nalinaṃ,</p>
+<p rend="gathalast">Khama gotama vasipuṅgava tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Then, having become resplendent through serenity, I went to that non-percipient state, a result of past sinful conduct. Not even once did I remember to worship your lotus feet, O Father. Forgive me, Gotama, bull among sages, for this fault of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:55">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">27</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">27.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:56">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vijigucchiya duritaṃ nija vapusā kataṃ amitaṃ,</p>
+<p rend="gatha2">Tanu vajjitaṃ upago bhavaṃ iha bhāvita samatho;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama yatikuñjara tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Having become disgusted with the immeasurable evil done by my own body, and having cultivated serenity here, I went to an existence devoid of form. Not even once did I remember to serve your lotus feet, O Father. Forgive me, Gotama, elephant among ascetics, for this transgression of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:57">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">28</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">28.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:58">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ratanattaya rahite bhusa bahulīkata durite,</p>
+<p rend="gatha2">Janito paravisaye budhajana nindiya carite;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama karuṇānidhi tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Born in a foreign land devoid of the Triple Gem, where evil deeds are greatly multiplied and conduct is censured by the wise, not even once did I remember to worship your lotus feet, O Father. Forgive me, Gotama, treasure of compassion, for this fault of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:59">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">29</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">29.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:60">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Janito yadi manujesupi vikalindriya nivaho,</p>
+<p rend="gatha2">Tanunā karacaraṇādihi vikate’niha dukhito;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama matisāgara tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Even when born among humans, I had a host of deficient faculties, suffering, powerless, with a body deformed in hands, feet, and so on. Not even once did I remember to worship your lotus feet, O Father. Forgive me, Gotama, ocean of wisdom, this transgression of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:61">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">30</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">30.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:62">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vidhināhita matibhāvana rahito tamapihito,</p>
+<p rend="gatha2">Visadesupi kusalādisu tathadassana vimukho;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama narakesari tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Devoid of the methodical development of wisdom, shrouded in darkness, turned away from the vision of reality and from clear qualities such as the wholesome, not even once did I remember to worship your lotus feet, O Father. Forgive me, Gotama, lion among men, for this transgression of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:63">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">31</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">31.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:64">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sucirenapi bhuvi dullabhaṃ asamaṃ khaṇaṃ alabhaṃ,</p>
+<p rend="gatha2">Sanarāmara janatāhita sukhadaṃ muni jananaṃ;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama vadataṃvara tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">For a very long time I did not obtain the incomparable moment, so difficult to find on earth: the birth of the Sage, who bestows welfare and happiness on humans and gods. Not even once did I remember to revere your lotus feet, O Father. Forgive me, Gotama, foremost of speakers, this transgression of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:65">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">32</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">32.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:66">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nisitāyudha vadhasajjita khaḷaniddaya hadayo,</p>
+<p rend="gatha2">Parahiṃsana ruci bhiṃsana yamasodara sadiso;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama munisattama tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">With a cruel and pitiless heart, equipped with sharp weapons for slaughter, delighting in harming others, terrifying like a brother of Yama, not even once did I remember to worship your lotus feet, O Father. Forgive me, Gotama, supreme sage, for this transgression of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:67">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">33</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">33.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:68">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Parasantaka haraṇe katamati bañcana bahulo,</p>
+<p rend="gatha2">Gharasandhika paripanthika sahasākati nirato;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama munipuṅgava tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">With my mind set on taking what belongs to others, abounding in deceit, devoted to house-breaking, highway robbery, and violent deeds, not even once did I remember to worship your lotus feet, O Father. Forgive me this transgression, O Gotama, bull among sages.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:69">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">34</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">34.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:70">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Navayobbana madagabbita parimucchita hadayo,</p>
+<p rend="gatha2">Sucisajjana vijigucchiya paradārika nirato;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama karuṇābhara tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Intoxicated by the pride of new youth, my heart overwhelmed, I despised the virtuous and delighted in the wives of others; never once did I remember, O Father, to worship your lotus feet. Forgive, O Gotama, bearer of compassion, this transgression of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:71">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">35</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">35.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:72">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Madirāsavarata nāgarajana santata bhajito,</p>
+<p rend="gatha2">Garugārava hiridūrita tiriyaggata carito;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama vihatāsava tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Devoted to intoxicating drinks, constantly attended by townspeople, lacking respect and reverence, far from shame, behaving like an animal; never once did I remember, O Father, to worship your lotus feet. Forgive, O Gotama, destroyer of the taints, this transgression of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:73">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">36</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">36.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:74">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sapitāmaha papitāmaha nicitaṃ dhanaṃ amitaṃ,</p>
+<p rend="gatha2">Pitusañcitamapi nāsiya kitavo hatavibhavo;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama vijitantaka tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">The immeasurable wealth amassed by my grandfather, great-grandfather, and also that accumulated by my father, I destroyed as a gambler, my fortune ruined. Never once did I remember, O Father, to worship your lotus feet. Forgive, O Gotama, conqueror of death, this transgression of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:75">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">37</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">37.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:76">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Vitathālika vacano parapiyasuññata karaṇo,</p>
+<p rend="gatha2">Pharusaṃ bhaṇaṃ atinipphala bahubhāsana nipuṇo;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama bhuvanesuta tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Speaking falsehoods and lies, speaking slanderously, speaking harshly, and skilled in much fruitless talk; never once did I remember, O Father, to worship your lotus feet. Forgive, O Gotama, famed throughout the world, this transgression of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:77">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">38</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">38.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:78">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Parasampadaṃ abhijhāyana nirantara dukhito,</p>
+<p rend="gatha2">Nabhirajjhana paramo kvaci phaladassana rahito;</p>
+<p rend="gatha3">Na sariṃ sakidapi te pita bhajituṃ padanalinaṃ,</p>
+<p rend="gathalast">Khama gotama guṇasāgara tamidaṃ mama khalitaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Constantly afflicted by coveting the success of others, never finding delight anywhere, devoid of seeing any fruit; never once did I remember, O Father, to worship your lotus feet. Forgive, O Gotama, ocean of virtues, this transgression of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:79">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">39</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">39.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:80">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bhavato bhavaṃ aparāparaṃ ayatāciraṃ iti me,</p>
+<p rend="gatha2">Vapusā atha vacasāpi ca manasā kataṃ amitaṃ;</p>
+<p rend="gatha3">Khama gotama duritāpaha duritaṃ bahuvihitaṃ,</p>
+<p rend="gathalast">Dada me sivapadaṃ accutaṃ amataṃ bhavavigataṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">From one becoming to the next, again and again, immeasurable wrong has been done by me through body, speech, and mind. Forgive, O Gotama, remover of evil, the manifold evils I have done. Grant me the blissful state, secure, deathless, and free from becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:81">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">40</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">40.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:82">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Timirāvuta kuṇapākula vijigucchiya pavane,</p>
+<p rend="gatha2">Janikāsuci jaṭhare bahu kimisantati sadane;</p>
+<p rend="gatha3">Asayiṃ bhavagahaṇe caraṃ ahaṃ appaṭisaraṇe,</p>
+<p rend="gathalast">Saranaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Enveloped in darkness, crowded with corpses, in a disgusting charnel ground; in the mother’s impure womb, the home of many worms; I have wandered in the thicket of becoming, without a refuge. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:83">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">41</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">41.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:84">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Bahi nikkhamaṃ asakiṃ bhagatiriyaṃ patha patito,</p>
+<p rend="gatha2">Agadaṅkara kata sallaka satakhaṇḍita karaṇo;</p>
+<p rend="gatha3">Amariṃ bhavagahaṇe caraṃ ahaṃ appaṭisaraṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi tarane.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Going forth repeatedly, fallen on the animal path, pierced by the dart of disease, my body torn into a hundred pieces; I have died wandering in the thicket of becoming, without a refuge. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:85">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">42</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">42.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:86">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Patito bahi ratipillaka tanurāmaya mathito,</p>
+<p rend="gatha2">Vadituṃ kimu viditumpi ca na sahaṃ matirahito;</p>
+<p rend="gatha3">Amariṃ bhavagahaṇe caraṃ ahaṃ appaṭisaraṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Fallen, afflicted by lust, crushed by bodily sickness, bereft of wisdom, unable to speak or even to understand; I have died wandering in the thicket of becoming, without a refuge. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:87">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">43</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">43.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:88">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Janito yadi sukhito janadayito piyajanako,</p>
+<p rend="gatha2">Puthuko bahuvidha-kīlananirato gadagahito;</p>
+<p rend="gatha3">Amariṃ bhavagahaṇe caraṃ ahaṃ appaṭisaraṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Though born happy, cherished by my kin, a beloved father, and as a child delighting in many kinds of play, I was seized by illness; I have died wandering in the thicket of becoming, without a refuge. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:89">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">44</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">44.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:90">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Tarunopi hi gharabandhana gathitomita vibhavo,</p>
+<p rend="gatha2">Sahasā gadagahito piyabhariyāsuta viyuto;</p>
+<p rend="gatha3">Amariṃ bhavagahaṇe caraṃ ahaṃ appaṭisaraṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Though young, bound by the fetter of the home, possessed of immense wealth, I was suddenly seized by disease and parted from my beloved wife and children; I have died wandering in the thicket of becoming, without a refuge. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:91">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">45</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">45.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:92">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ajaraṃ tanuṃ abhimaññiya navayobbana vasiko,</p>
+<p rend="gatha2">Jarasā parimathito paraṃ ananuṭṭhita kusalo;</p>
+<p rend="gatha3">Amariṃ bhavagahaṇe caraṃ ahaṃ appaṭisaraṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Conceiving my body to be ageless, under the sway of new youth, I was then crushed by old age, not having undertaken the supreme good; I have died wandering in the thicket of becoming, without a refuge. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:93">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">46</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">46.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:94">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Nirujo dhuvaṃ arujaṃ tanuṃ abhimaññiya samado,</p>
+<p rend="gatha2">Kusalāsaya vimukho bhusaṃ avaso gadanihato;</p>
+<p rend="gatha3">Amariṃ bhavagahaṇe caraṃ ahaṃ appaṭisaraṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Conceiving my body to be free of disease, stable, and healthy, and being conceited, I was greatly averse to wholesome intentions, helpless, struck down by disease; I have died wandering in the thicket of becoming, without a refuge. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:95">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">47</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">47.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:96">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pavicintiya sakajīvitaṃ amaraṃ dhuvaṃ anighaṃ,</p>
+<p rend="gatha2">Iti jīvitamadagabbita matirujjhita kusalo;</p>
+<p rend="gatha3">Amariṃ bhavagahaṇe caraṃ ahaṃ appaṭisaraṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Considering my own life to be immortal, stable, and untroubled, my mind, proud with the pride of life, abandoned what is wholesome; I have died wandering in the thicket of becoming, without a refuge. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:97">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">48</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">48.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:98">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Parahiṃsana dhanamosana paradārika nirato,</p>
+<p rend="gatha2">Dharanīpati gahito bahu vadhabandhana nihato;</p>
+<p rend="gatha3">Amariṃ bhavagahaṇe caraṃ ahaṃ appaṭisaraṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Delighting in harming others, stealing wealth, and pursuing the wives of others, I was seized by the king and struck down by many executions and bonds; I have died wandering in the thicket of becoming, without a refuge. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:99">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">49</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">49.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:100">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Narakodaka patito giritarumatthaka galito,</p>
+<p rend="gatha2">Migavāḷaka gahito visadhara jātihi ḍasito;</p>
+<p rend="gatha3">Amariṃ bhavagahaṇe caraṃ ahaṃ appaṭisaraṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Fallen into the waters of hell, slipped from a mountain or treetop, seized by beasts of prey, bitten by venomous serpents; I have died wandering in the thicket of becoming, without a refuge. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:101">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">50</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">50.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:102">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Abhicāraka vidhikopita nisicāraka gahito,</p>
+<p rend="gatha2">Savisodana sahasādana pabhutīhi ca khalito;</p>
+<p rend="gatha3">Amariṃ bhavagahaṇe caraṃ ahaṃ appaṭisaraṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Incited to rites of sorcery, seized by night-wandering demons, afflicted by such things as poison ordeals and sudden devourings; I have died wandering in the thicket of becoming, without a refuge. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:103">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">51</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">51.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:104">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Sayamevaca sajanopari kupito mativiyuto,</p>
+<p rend="gatha2">Savisādana galakantana pabhutāmita khalito;</p>
+<p rend="gatha3">Amariṃ bhavagahaṇe caraṃ ahaṃ appaṭisaraṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Angered at my own kin, my mind confused, afflicted by immeasurable things like taking poison and cutting my throat; I have died wandering in the thicket of becoming, without a refuge. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:105">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">52</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">52.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:106">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Pitupūjana niratāsaya sukhito pitudayito,</p>
+<p rend="gatha2">Maraṇenaca pituno bhusaṃ anusocana nirato;</p>
+<p rend="gatha3">Parudiṃ ciraṃ atidussaha kasire bhavagahaṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">With a mind delighting in honoring my father, happy and beloved by him, I was devoted to grieving deeply at his death; long have I lamented in the unbearable, wretched thicket of becoming. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:107">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">53</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">53.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:108">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Samupaṭṭhiya janikaṃ nijaṃ abhivādana paramo,</p>
+<p rend="gatha2">Maraṇenaca janikāyanusaritā guṇamahimaṃ;</p>
+<p rend="gatha3">Parudiṃ ciraṃ atidussaha kasire bhavagahaṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Attending upon my own mother, supreme in paying homage, and at her death remembering the greatness of her virtue; long have I lamented in the unbearable, wretched thicket of becoming. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:109">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">54</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">54.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:110">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Gurudevata patimānana paramo piyasuvaco,</p>
+<p rend="gatha2">Samupāsitacaraṇo gurumaraṇenatidukhito;</p>
+<p rend="gatha3">Parudiṃ ciraṃ atidussaha kasire bhavagahaṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Supreme in honoring teachers and deities, of pleasant and good speech, having served at their feet, and exceedingly grieved by my teacher's death; long have I lamented in the unbearable, wretched thicket of becoming. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:111">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">55</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">55.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:112">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Gharamedhitaṃ upagomitavibhavo ratibahulo,</p>
+<p rend="gatha2">Maraṇe piyabhariyāsutaduhitū’natikaruṇaṃ;</p>
+<p rend="gatha3">Parudiṃ ciraṃ atidussaha kasire bhavagahaṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Established in household life, possessed of wealth and abounding in pleasures, at the death of my beloved wife, sons, and daughters I lamented with great pity; long have I lamented in the unbearable, wretched thicket of becoming. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:113">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">56</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">56.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:114">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Piyapubbaja sahajānuja bhagiṇidvaya maraṇe,</p>
+<p rend="gatha2">Nija bandhava-sakha-sissaka maraṇe pyatikaruṇaṃ;</p>
+<p rend="gatha3">Parudiṃ ciraṃ atidussaha kasire bhavagahaṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">At the death of beloved elder and younger brothers and sisters, and at the death of my own relatives, friends, and pupils, I lamented very pitifully; long have I lamented in the unbearable, wretched thicket of becoming. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:115">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">57</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">57.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:116">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Jagatīpati gahaṇā ripujanatakkara haraṇā,</p>
+<p rend="gatha2">Saritodaka vahaṇā puthujalitānala dahaṇā;</p>
+<p rend="gatha3">Parudiṃ hatavibhavo ciramiha duggatigahaṇe,</p>
+<p rend="gathalast">Saraṇaṃ bhava bhagavaṃ mama bhavanīradhi taraṇe.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">From seizure by kings, from plunder by enemies and thieves, from being swept away by rivers, from being burned by widespread fires, I, bereft of wealth, have long lamented here in the thicket of a woeful state. Be my refuge, O Blessed One, for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:117">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">58</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">58.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:118">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Atiduggama visamākula bhavasaṅkaṭa patite,</p>
+<p rend="gatha2">Byasanaṃ ciramiti dussahaṃ anubhūyapi vimitaṃ;</p>
+<p rend="gatha3">Na jahe sukhalavavañcitahadayo bhavatasinaṃ,</p>
+<p rend="gathalast">Tamapākuru karuṇānidhi tasinaṃ mama kasiṇaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Fallen into the very difficult, uneven, and confused straits of becoming, and though having long experienced unbearable and immeasurable disaster, my heart, deceived by a particle of pleasure, does not abandon the thirst for becoming. Therefore, O Treasure of Compassion, remove this entire thirst of mine.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:119">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">59</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">59.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:120">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Jananāvadhi maraṇaṃ viya maraṇāvadhi jananaṃ,</p>
+<p rend="gatha2">Ubhayenapi bhayamevahi bhavato mama niyataṃ;</p>
+<p rend="gatha3">Sivamevaca jananāvadhi maraṇāvadhi rahitaṃ,</p>
+<p rend="gathalast">Dada me sivaṃ amatandada taṃ anāsava bhagavaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Just as death is the limit of birth, and birth the limit of death, for me fear is the certain outcome of both in this round of becoming. Only the peace that is free from the limits of birth and death is secure. Grant me that peace, O Blessed One, Giver of the Deathless, O Taintless One.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:121">
+  <div class="pair-col col-pali">
+<p rend="hangnum"><span class="paranum">60</span>.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="hangnum">60.</p>
+  </div>
+</div>
+<div class="pair-row" data-id="e0606n_nrf:122">
+  <div class="pair-col col-pali">
+<p rend="gatha1"> Ciradikkhitamapi me manaṃ anivārita tasinaṃ,</p>
+<p rend="gatha2">Bhavato bhava ratipīlitaṃ ahaho kalighaṭitaṃ!</p>
+<p rend="gatha3">Tamato pita bhayato mamamava me bhava saraṇaṃ,</p>
+<p rend="gathalast">Bhagavaṃ paṭisaraṇaṃ mama bhavanīradhi taraṇaṃ.</p>
+  </div>
+  <div class="pair-col col-trans">
+<p rend="gathalast">Though my mind has been long disciplined, its craving is unrestrained, oppressed by delight in one state of becoming after another. Alas, how it is yoked to misfortune! Therefore, O Father, protect me from this terror. Be my refuge, O Blessed One, my resort for crossing the ocean of becoming.</p>
+  </div>
+</div>
+<script>
+(function() {
+  const body = document.body;
+  const btns = document.querySelectorAll('.toolbar button[data-mode]');
+  const modes = ['view-column', 'view-stack', 'view-pali-only', 'view-trans-only'];
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      body.classList.remove(...modes);
+      body.classList.add(mode);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  const metaBtn = document.getElementById('toggle-meta-btn');
+  if (metaBtn) {
+    metaBtn.addEventListener('click', () => {
+      body.classList.toggle('show-meta');
+      metaBtn.classList.toggle('active');
+    });
+  }
+})();
+</script>
+</body>
+</html>
