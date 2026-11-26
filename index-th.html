@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KIT-979 | สารบัญพระไตรปิฎก อรรถกถา ฎีกา อนุฎีกา (ฉบับภาษาไทย)</title>
+  <style>
+    :root {
+      --bg: #faf8f5;
+      --card: #ffffff;
+      --text: #252019;
+      --muted: #675b4e;
+      --accent: #9a6b26;
+      --accent-soft: #fdf6ec;
+      --border: #e6dfd5;
+
+      --mul-bg: #e8f5e9;
+      --mul-fg: #1b5e20;
+      --att-bg: #e3f2fd;
+      --att-fg: #0d47a1;
+      --tik-bg: #f3e5f5;
+      --tik-fg: #4a148c;
+      --ext-bg: #fff8e1;
+      --ext-fg: #795548;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Noto Sans Thai", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 1.5rem 1rem 4rem;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.4rem 0.85rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .back-link:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .lang-switch {
+      display: flex;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+    }
+
+    .lang-switch a,
+    .lang-switch span {
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--muted);
+      background: var(--card);
+    }
+
+    .lang-switch span.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    header {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 4px 16px rgba(37, 32, 25, 0.04);
+    }
+
+    .badge-code {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid #eed9b7;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 1.65rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .controls {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .search-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-input {
+      flex: 1 1 280px;
+      padding: 0.65rem 0.95rem;
+      font-size: 0.95rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+      background: #fff;
+    }
+
+    .stats {
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .pill {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .pill:hover {
+      border-color: var(--accent);
+    }
+
+    .pill.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .group-section {
+      margin-bottom: 2rem;
+    }
+
+    .group-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.45rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .group-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .group-count {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .item-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .item-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(154, 107, 38, 0.08);
+    }
+
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .item-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      background: var(--bg);
+      padding: 0.12rem 0.45rem;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+    }
+
+    .tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.14rem 0.5rem;
+      border-radius: 5px;
+    }
+
+    .tag-mul { background: var(--mul-bg); color: var(--mul-fg); }
+    .tag-att { background: var(--att-bg); color: var(--att-fg); }
+    .tag-tik { background: var(--tik-bg); color: var(--tik-fg); }
+    .tag-ext { background: var(--ext-bg); color: var(--ext-fg); }
+
+    .item-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      background: var(--card);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <a href="index.html" class="back-link">← หน้าหลัก KIT-979</a>
+      <div class="lang-switch">
+        <span class="active">ไทย (TH)</span>
+        <a href="index-my.html">မြန်မာ (MY)</a>
+        <a href="index-en.html">EN / Roman</a>
+      </div>
+    </div>
+
+    <header>
+      <div class="badge-code">KIT-979 · ก้าวเจ็ดก้าว · ฉัฏฐสังคีติบาลี</div>
+      <h1>สารบัญคัมภีร์พระไตรปิฎก อรรถกถา ฎีกา และอนุฎีกา</h1>
+      <p class="subtitle">
+        รวมลิงก์เปิดอ่านไฟล์ต้นฉบับฉัฏฐสังคีติบาลี (ชุด <code>_th.html</code>) แยกตามหมวดคัมภีร์และชั้นวรรณกรรม
+      </p>
+    </header>
+
+    <div class="controls">
+      <div class="search-row">
+        <input
+          id="searchInput"
+          type="search"
+          class="search-input"
+          placeholder="ค้นหาชื่อคัมภีร์ หรือรหัสไฟล์ เช่น ธรรมบท, วิสุทธิมรรค, s0201, vin01..."
+          autocomplete="off"
+        />
+        <div id="resultStats" class="stats">กำลังโหลดรายการ...</div>
+      </div>
+
+      <div class="filter-pills" id="categoryPills">
+        <button class="pill active" data-filter="all">ทั้งหมด</button>
+        <button class="pill" data-filter="vin">พระวินัยปิฎก</button>
+        <button class="pill" data-filter="sutta">พระสุตตันตปิฎก</button>
+        <button class="pill" data-filter="abhi">พระอภิธรรมปิฎก</button>
+        <button class="pill" data-filter="extra">ปกรณ์พิเศษ / วิสุทธิมรรค / อื่นๆ</button>
+        <button class="pill" data-filter="layer-mul">เฉพาะมูละ (บาลี)</button>
+        <button class="pill" data-filter="layer-att">เฉพาะอรรถกถา</button>
+        <button class="pill" data-filter="layer-tik">เฉพาะฎีกา / อนุฎีกา</button>
+      </div>
+    </div>
+
+    <div id="catalogContainer"></div>
+    <div id="emptyState" class="empty-state">ไม่พบคัมภีร์ที่ตรงกับคำค้นหาหรือตัวกรองที่เลือก</div>
+  </div>
+
+  <script>
+    // ปรับโฟลเดอร์ปลายทางของไฟล์ *_th.html ได้ที่นี่ (เช่น "th/" หรือ "")
+    const BASE_PATH = "th/";
+
+    // รูปแบบ: [รหัสฐาน, ชื่อคัมภีร์, หมวด ('vin'|'sutta'|'abhi'|'extra'), ชั้น ('mul'|'att'|'tik'|'ext')]
+    const ITEMS = [
+      // พระไตรปิฎก (มูละ)
+      ["vin01m_mul", "ปาราชิกปาฬิ", "vin", "mul"],
+      ["vin02m1_mul", "ปาจิตติยปาฬิ/ภิกขุนีวิภังโค", "vin", "mul"],
+      ["vin02m2_mul", "มหาวรรคปาฬิ (พระวินัย)", "vin", "mul"],
+      ["vin02m3_mul", "จุลวรรคปาฬิ", "vin", "mul"],
+      ["vin02m4_mul", "ปริวารปาฬิ", "vin", "mul"],
+
+      ["s0101m_mul", "สีลขันธวรรคปาฬิ", "sutta", "mul"],
+      ["s0102m_mul", "มหาวรรคปาฬิ (ทีฆนิกาย)", "sutta", "mul"],
+      ["s0103m_mul", "ปาฏิกวรรคปาฬิ", "sutta", "mul"],
+      ["s0201m_mul", "มูลปัณณาสปาฬิ", "sutta", "mul"],
+      ["s0202m_mul", "มัชฌิมปัณณาสปาฬิ", "sutta", "mul"],
+      ["s0203m_mul", "อุปริปัณณาสปาฬิ", "sutta", "mul"],
+      ["s0301m_mul", "สคาถวรรคปาฬิ", "sutta", "mul"],
+      ["s0302m_mul", "นิทานวรรคปาฬิ", "sutta", "mul"],
+      ["s0303m_mul", "ขันธวรรคปาฬิ", "sutta", "mul"],
+      ["s0304m_mul", "สฬายตนวรรคปาฬิ", "sutta", "mul"],
+      ["s0305m_mul", "มหาวรรคปาฬิ (สังยุตตนิกาย)", "sutta", "mul"],
+      ["s0401m_mul", "เอกกนิบาตปาฬิ", "sutta", "mul"],
+      ["s0402m1_mul", "ทุกนิบาตปาฬิ", "sutta", "mul"],
+      ["s0402m2_mul", "ติกนิบาตปาฬิ", "sutta", "mul"],
+      ["s0402m3_mul", "จตุกกนิบาตปาฬิ", "sutta", "mul"],
+      ["s0403m1_mul", "ปัญจกนิบาตปาฬิ", "sutta", "mul"],
+      ["s0403m2_mul", "ฉักกนิบาตปาฬิ", "sutta", "mul"],
+      ["s0403m3_mul", "สัตตกนิบาตปาฬิ", "sutta", "mul"],
+      ["s0404m1_mul", "อัฏฐกนิบาตปาฬิ", "sutta", "mul"],
+      ["s0404m2_mul", "นวกนิบาตปาฬิ", "sutta", "mul"],
+      ["s0404m3_mul", "ทสกนิบาตปาฬิ", "sutta", "mul"],
+      ["s0404m4_mul", "เอกาทสกนิบาตปาฬิ", "sutta", "mul"],
+      ["s0501m_mul", "ขุททกปาฐปาฬิ", "sutta", "mul"],
+      ["s0502m_mul", "ธรรมบทปาฬิ", "sutta", "mul"],
+      ["s0503m_mul", "อุทานปาฬิ", "sutta", "mul"],
+      ["s0504m_mul", "อิติวุตตกปาฬิ", "sutta", "mul"],
+      ["s0505m_mul", "สุตตนิบาตปาฬิ", "sutta", "mul"],
+      ["s0506m_mul", "วิมานวัตถุปาฬิ", "sutta", "mul"],
+      ["s0507m_mul", "เปตวัตถุปาฬิ", "sutta", "mul"],
+      ["s0508m_mul", "เถรคาถาปาฬิ", "sutta", "mul"],
+      ["s0509m_mul", "เถรีคาถาปาฬิ", "sutta", "mul"],
+      ["s0510m1_mul", "อปทานปาฬิ ๑", "sutta", "mul"],
+      ["s0510m2_mul", "อปทานปาฬิ ๒/เถรีอปทานปาฬิ", "sutta", "mul"],
+      ["s0511m_mul", "พุทธวงศ์ปาฬิ", "sutta", "mul"],
+      ["s0512m_mul", "จริยาปิฎกปาฬิ", "sutta", "mul"],
+      ["s0513m_mul", "ชาดกปาฬิ ๑", "sutta", "mul"],
+      ["s0514m_mul", "ชาดกปาฬิ ๒", "sutta", "mul"],
+      ["s0515m_mul", "มหานิทเทสปาฬิ", "sutta", "mul"],
+      ["s0516m_mul", "จูฬนิทเทสปาฬิ", "sutta", "mul"],
+      ["s0517m_mul", "ปฏิสัมภิทามรรคปาฬิ", "sutta", "mul"],
+      ["s0518m_nrf", "มิลินทปัญหาปาฬิ", "sutta", "mul"],
+      ["s0519m_mul", "เนตติปกรณ์ปาฬิ", "sutta", "mul"],
+      ["s0520m_nrf", "เปฏโกปเทสปาฬิ", "sutta", "mul"],
+
+      ["abh01m_mul", "ธัมมสังคณีปาฬิ", "abhi", "mul"],
+      ["abh02m_mul", "วิภังคปาฬิ", "abhi", "mul"],
+      ["abh03m1_mul", "ธาตุกถาปาฬิ", "abhi", "mul"],
+      ["abh03m2_mul", "ปุคคลบัญญัติปาฬิ", "abhi", "mul"],
+      ["abh03m3_mul", "กถาวัตถุปาฬิ", "abhi", "mul"],
+      ["abh03m4_mul", "ยมกปาฬิ ๑", "abhi", "mul"],
+      ["abh03m5_mul", "ยมกปาฬิ ๒", "abhi", "mul"],
+      ["abh03m6_mul", "ยมกปาฬิ ๓", "abhi", "mul"],
+      ["abh03m7_mul", "ปัฏฐานปาฬิ ๑", "abhi", "mul"],
+      ["abh03m8_mul", "ปัฏฐานปาฬิ ๒", "abhi", "mul"],
+      ["abh03m9_mul", "ปัฏฐานปาฬิ ๓", "abhi", "mul"],
+      ["abh03m10_mul", "ปัฏฐานปาฬิ ๔", "abhi", "mul"],
+      ["abh03m11_mul", "ปัฏฐานปาฬิ ๕", "abhi", "mul"],
+
+      // อรรถกถา
+      ["vin01a_att", "อรรถกถาปาราชิกกัณฑ์", "vin", "att"],
+      ["vin02a1_att", "อรรถกถาปาจิตติยะ/อรรถกถาภิกขุนีวิภังควรรณนา", "vin", "att"],
+      ["vin02a2_att", "อรรถกถามหาวรรค", "vin", "att"],
+      ["vin02a3_att", "อรรถกถาจุลวรรค", "vin", "att"],
+      ["vin02a4_att", "อรรถกถาปริวาร", "vin", "att"],
+
+      ["s0101a_att", "อรรถกถาสีลขันธวรรค", "sutta", "att"],
+      ["s0102a_att", "อรรถกถามหาวรรค", "sutta", "att"],
+      ["s0103a_att", "อรรถกถาปาฏิกวรรค", "sutta", "att"],
+      ["s0201a_att", "อรรถกถามูลปัณณาส", "sutta", "att"],
+      ["s0202a_att", "อรรถกถามัชฌิมปัณณาส", "sutta", "att"],
+      ["s0203a_att", "อรรถกถาอุปริปัณณาส", "sutta", "att"],
+      ["s0301a_att", "อรรถกถาสคาถวรรค", "sutta", "att"],
+      ["s0302a_att", "อรรถกถานิทานวรรค", "sutta", "att"],
+      ["s0303a_att", "อรรถกถาขันธวรรค", "sutta", "att"],
+      ["s0304a_att", "อรรถกถาสฬายตนวรรค", "sutta", "att"],
+      ["s0305a_att", "อรรถกถามหาวรรค", "sutta", "att"],
+      ["s0401a_att", "อรรถกถาเอกกนิบาต", "sutta", "att"],
+      ["s0402a_att", "อรรถกถาทุก ติก จตุกกนิบาต", "sutta", "att"],
+      ["s0403a_att", "อรรถกถาปัญจก ฉักก สัตตกนิบาต", "sutta", "att"],
+      ["s0404a_att", "อรรถกถาอัฏฐกาทินิบาต", "sutta", "att"],
+      ["s0501a_att", "อรรถกถาขุททกปาฐ", "sutta", "att"],
+      ["s0502a_att", "อรรถกถาธรรมบท", "sutta", "att"],
+      ["s0503a_att", "อรรถกถาอุทาน", "sutta", "att"],
+      ["s0504a_att", "อรรถกถาอิติวุตตกะ", "sutta", "att"],
+      ["s0505a_att", "อรรถกถาสุตตนิบาต", "sutta", "att"],
+      ["s0506a_att", "อรรถกถาวิมานวัตถุ", "sutta", "att"],
+      ["s0507a_att", "อรรถกถาเปตวัตถุ", "sutta", "att"],
+      ["s0508a1_att", "อรรถกถาเถรคาถา ๑", "sutta", "att"],
+      ["s0508a2_att", "อรรถกถาเถรคาถา ๒", "sutta", "att"],
+      ["s0509a_att", "อรรถกถาเถรีคาถา", "sutta", "att"],
+      ["s0510a_att", "อรรถกถาอปทาน", "sutta", "att"],
+      ["s0511a_att", "อรรถกถาพุทธวงศ์", "sutta", "att"],
+      ["s0512a_att", "อรรถกถาจริยาปิฎก", "sutta", "att"],
+      ["s0513a1_att", "อรรถกถาชาดก ๑", "sutta", "att"],
+      ["s0513a2_att", "อรรถกถาชาดก ๒", "sutta", "att"],
+      ["s0513a3_att", "อรรถกถาชาดก ๓", "sutta", "att"],
+      ["s0513a4_att", "อรรถกถาชาดก ๔", "sutta", "att"],
+      ["s0514a1_att", "อรรถกถาชาดก ๕", "sutta", "att"],
+      ["s0514a2_att", "อรรถกถาชาดก ๖", "sutta", "att"],
+      ["s0514a3_att", "อรรถกถาชาดก ๗", "sutta", "att"],
+      ["s0515a_att", "อรรถกถามหานิทเทส", "sutta", "att"],
+      ["s0516a_att", "อรรถกถาจูฬนิทเทส", "sutta", "att"],
+      ["s0517a_att", "อรรถกถาปฏิสัมภิทามรรค", "sutta", "att"],
+      ["s0519a_att", "อรรถกถาเนตติปกรณ์", "sutta", "att"],
+
+      ["abh01a_att", "อรรถกถาธัมมสังคณี", "abhi", "att"],
+      ["abh02a_att", "อรรถกถาSammohavinodanī", "abhi", "att"],
+      ["abh03a_att", "อรรถกถาPañcapakaraṇa", "abhi", "att"],
+
+      // ฎีกาและอนุฎีกา
+      ["vin01t1_tik", "ฎีกาSāratthadīpanī ๑", "vin", "tik"],
+      ["vin01t2_tik", "ฎีกาSāratthadīpanī ๒", "vin", "tik"],
+      ["vin02t_tik", "ฎีกาSāratthadīpanī ๓", "vin", "tik"],
+      ["vin04t_nrf", "เทวมาติกาปาฬิ", "vin", "tik"],
+      ["vin05t_nrf", "อรรถกถาVinayasaṅgaha", "vin", "tik"],
+      ["vin06t_nrf", "ฎีกาVajirabuddhi", "vin", "tik"],
+      ["vin07t_nrf", "ฎีกาVimativinodanī", "vin", "tik"],
+      ["vin08t_nrf", "ฎีกาVinayālaṅkāra", "vin", "tik"],
+      ["vin09t_nrf", "ฎีกาKaṅkhāvitaraṇīpurāṇa/ฎีกาKaṅkhāvitaraṇī-abhinavaṭīkā", "vin", "tik"],
+      ["vin10t_nrf", "วินัยวินิจฉัย-อุตตรวินิจฉัย", "vin", "tik"],
+      ["vin11t_nrf", "ฎีกาVinayavinicchaya", "vin", "tik"],
+      ["vin12t_nrf", "ปาจิตตยาทิโยชนาปาฬิ", "vin", "tik"],
+      ["vin13t_nrf", "ขุททกสิกขา-มูลสิกขา", "vin", "tik"],
+
+      ["s0101t_tik", "ฎีกาสีลขันธวรรค", "sutta", "tik"],
+      ["s0102t_tik", "ฎีกามหาวรรค", "sutta", "tik"],
+      ["s0103t_tik", "ฎีกาปาฏิกวรรค", "sutta", "tik"],
+      ["s0104t_nrf", "สีลขันธวรรค อภินวฎีกา ๑", "sutta", "tik"],
+      ["s0105t_nrf", "สีลขันธวรรค อภินวฎีกา ๒", "sutta", "tik"],
+      ["s0201t_tik", "ฎีกามูลปัณณาส", "sutta", "tik"],
+      ["s0202t_tik", "ฎีกามัชฌิมปัณณาส", "sutta", "tik"],
+      ["s0203t_tik", "ฎีกาอุปริปัณณาส", "sutta", "tik"],
+      ["s0301t_tik", "ฎีกาสคาถวรรค", "sutta", "tik"],
+      ["s0302t_tik", "ฎีกานิทานวรรค", "sutta", "tik"],
+      ["s0303t_tik", "ฎีกาขันธวรรค", "sutta", "tik"],
+      ["s0304t_tik", "ฎีกาสฬายตนวรรค", "sutta", "tik"],
+      ["s0305t_tik", "ฎีกามหาวรรค", "sutta", "tik"],
+      ["s0401t_tik", "ฎีกาเอกกนิบาต", "sutta", "tik"],
+      ["s0402t_tik", "ฎีกาทุก ติก จตุกกนิบาต", "sutta", "tik"],
+      ["s0403t_tik", "ฎีกาปัญจก ฉักก สัตตกนิบาต", "sutta", "tik"],
+      ["s0404t_tik", "ฎีกาอัฏฐกาทินิบาต", "sutta", "tik"],
+      ["s0519t_tik", "ฎีกาเนตติปกรณ์", "sutta", "tik"],
+      ["s0501t_nrf", "เนตติวิภาวินี", "sutta", "tik"],
+
+      ["abh01t_tik", "ธัมมสังคณี มูลฎีกา", "abhi", "tik"],
+      ["abh02t_tik", "วิภังค์ มูลฎีกา/วิภังค์ อนุฎีกา", "abhi", "tik"],
+      ["abh03t_tik", "Pañcapakaraṇa มูลฎีกา", "abhi", "tik"],
+      ["abh04t_nrf", "ธัมมสังคณี อนุฎีกา", "abhi", "tik"],
+      ["abh05t_nrf", "Pañcapakaraṇa อนุฎีกา", "abhi", "tik"],
+      ["abh06t_nrf", "อภิธัมมาวตาร-นามรูปปริจเฉท", "abhi", "tik"],
+      ["abh07t_nrf", "อภิธัมมัตถสังคหะ/อภิธัมมัตถวิภาวินีฎีกา", "abhi", "tik"],
+      ["abh08t_nrf", "ฎีกาAbhidhammāvatāra Purāṇaṭīkā", "abhi", "tik"],
+      ["abh09t_nrf", "อภิธัมมมาติกาปาฬิ/โมหวิจเฉทนี", "abhi", "tik"],
+
+      // ปกรณ์พิเศษ วิสุทธิมรรค และหมวด e01-e12
+      ["e0101n_mul", "วิสุทธิมรรค ๑ปาฬิ", "extra", "mul"],
+      ["e0102n_mul", "วิสุทธิมรรค ๒ปาฬิ", "extra", "mul"],
+      ["e0103n_att", "อรรถกถาวิสุทธิมรรค Mahāṭīkā ๑", "extra", "att"],
+      ["e0104n_att", "อรรถกถาวิสุทธิมรรค Mahāṭīkā ๒", "extra", "att"],
+      ["e0105n_nrf", "วิสุทธิมรรค Nidānakathā", "extra", "ext"],
+      ["e0901n_nrf", "ทีฆนิกาย", "extra", "ext"],
+      ["e0902n_nrf", "มัชฌิมนิกาย", "extra", "ext"],
+      ["e0903n_nrf", "สังยุตตนิกาย", "extra", "ext"],
+      ["e0904n_nrf", "อังคุตตรนิกาย", "extra", "ext"],
+      ["e0905n_nrf", "พระวินัยปิฎก", "extra", "ext"],
+      ["e0906n_nrf", "พระอภิธรรมปิฎก", "extra", "ext"],
+      ["e0907n_nrf", "อรรถกถาAṭṭhakathā", "extra", "att"],
+      ["e0201n_nrf", "นิรุตติทีปนี", "extra", "ext"],
+      ["e0301n_nrf", "ฎีกาParamatthadīpanī Saṅgahamahāṭīkāpāṭha", "extra", "tik"],
+      ["e0401n_nrf", "อนุทีปนีปาฐะ", "extra", "tik"],
+      ["e0501n_nrf", "ปัฏฐานุทเทสทีปนีปาฐะ", "extra", "ext"],
+      ["e0601n_nrf", "ฎีกาNamakkāraṭīkā", "extra", "tik"],
+      ["e0602n_nrf", "มหาปณามปาฐะ", "extra", "ext"],
+      ["e0603n_nrf", "ลักขณะโตพุทธโถมนาคาถา", "extra", "ext"],
+      ["e0604n_nrf", "สุตวันทนา", "extra", "ext"],
+      ["e0606n_nrf", "กมลาญชลี", "extra", "ext"],
+      ["e0605n_nrf", "ชินาลังการ", "extra", "ext"],
+      ["e0607n_nrf", "ปัชชะมธุ", "extra", "ext"],
+      ["e0608n_nrf", "พุทธคุณคาถาวลี", "extra", "ext"],
+      ["e0701n_nrf", "จูฬคันธวงศ์", "extra", "ext"],
+      ["e0703n_nrf", "มหาวงศ์", "extra", "ext"],
+      ["e0702n_nrf", "ศาสนวงศ์", "extra", "ext"],
+      ["e0802n_nrf", "กัจจายนะไวยากรณ์", "extra", "ext"],
+      ["e0801n_nrf", "โมคคัลลานสุตตปาฐ/โมคคัลลานไวยากรณ์", "extra", "ext"],
+      ["e0803n_nrf", "ปทรูปสิทธิ", "extra", "ext"],
+      ["e0804n_nrf", "พาลัปปะโพธนะ", "extra", "ext"],
+      ["e0805n_nrf", "รูปสิทธิทีปนี", "extra", "ext"],
+      ["e0806n_nrf", "โมคคัลลานปัญจิกา", "extra", "ext"],
+      ["e0807n_nrf", "ปโยคสิทธิปาฐะ", "extra", "ext"],
+      ["e0808n_nrf", "วุตโตทัยปาฐะ", "extra", "ext"],
+      ["e0809n_nrf", "อภิธานัปปทีปิกาปาฐะ", "extra", "ext"],
+      ["e0810n_nrf", "ฎีกาAbhidhānappadīpikāṭīkā", "extra", "tik"],
+      ["e0811n_nrf", "สุโพธาลังการปาฐะ", "extra", "ext"],
+      ["e0812n_nrf", "ฎีกาSubodhālaṅkāraṭīkā", "extra", "tik"],
+      ["e0813n_nrf", "พาลาวตาร-คันฐิปทัตถวินิจฉยสาร", "extra", "ext"],
+      ["e1005n_nrf", "โลกนีติ", "extra", "ext"],
+      ["e1006n_nrf", "สุตตันตนีติ", "extra", "ext"],
+      ["e1007n_nrf", "สุรัสสตีนีติ", "extra", "ext"],
+      ["e1004n_nrf", "ธัมมปทัฏฐกถาคาถา (นีติ)", "extra", "ext"],
+      ["e1003n_nrf", "ราชนีติ", "extra", "ext"],
+      ["e1001n_nrf", "ธรรมนีติ", "extra", "ext"],
+      ["e1002n_nrf", "มหานีติ", "extra", "ext"],
+      ["e1009n_nrf", "นรทักขทีปนี", "extra", "ext"],
+      ["e1010n_nrf", "จตุรารักขทีปนี", "extra", "ext"],
+      ["e1008n_nrf", "จาณักยนีติ", "extra", "ext"],
+      ["e1101n_nrf", "รสวาหินี", "extra", "ext"],
+      ["e1102n_nrf", "สีหฬวัตถุ", "extra", "ext"],
+      ["e1103n_nrf", "สหัสสวัตถุ", "extra", "ext"],
+      ["e1201n_nrf", "โมคคัลลานวุตติวิรณปัญจิกา", "extra", "ext"],
+      ["e1202n_nrf", "ปัญจิกาประทีป", "extra", "ext"],
+      ["e1203n_nrf", "สัมโมหาวินทนี", "extra", "ext"],
+      ["e1204n_nrf", "สัมโมหาวินทนียันตประทีป", "extra", "ext"],
+      ["e1205n_nrf", "สัททะสารัตถชาลินี", "extra", "ext"],
+      ["e1206n_nrf", "สัททะสารัตถชาลินีฎีกา", "extra", "tik"],
+      ["e1207n_nrf", "ธาตุวัตถุ", "extra", "ext"],
+      ["e1208n_nrf", "สัททะนีติทีปนี", "extra", "ext"],
+      ["e1209n_nrf", "จุลลนิรุตติ", "extra", "ext"],
+      ["e1210n_nrf", "นิรุตติสรชาลินี", "extra", "ext"],
+      ["e1211n_nrf", "พาลัปปโพธนะ (สิงหล)", "extra", "ext"],
+      ["e1212n_nrf", "ปทสาธนะ", "extra", "ext"],
+      ["e1213n_nrf", "สัททพินทุปกรณ์", "extra", "ext"],
+      ["e1214n_nrf", "กัจจายนะธาตุสัญชุสา", "extra", "ext"],
+      ["e1215n_nrf", "วินัยธรปโรหนะ", "extra", "ext"]
+    ];
+
+    const GROUP_META = {
+      vin:   { title: "พระวินัยปิฎก (Vinaya Piṭaka)", order: 1 },
+      sutta: { title: "พระสุตตันตปิฎก (Sutta Piṭaka)", order: 2 },
+      abhi:  { title: "พระอภิธรรมปิฎก (Abhidhamma Piṭaka)", order: 3 },
+      extra: { title: "ปกรณ์พิเศษ วิสุทธิมรรค ไวยากรณ์ นิติ และประวัติศาสตร์", order: 4 }
+    };
+
+    const LAYER_BADGE = {
+      mul: { label: "มูละ / บาลี", cls: "tag-mul" },
+      att: { label: "อรรถกถา", cls: "tag-att" },
+      tik: { label: "ฎีกา / อนุฎีกา", cls: "tag-tik" },
+      ext: { label: "ปกรณ์พิเศษ", cls: "tag-ext" }
+    };
+
+    let activeFilter = "all";
+    let searchQuery = "";
+
+    const catalogEl = document.getElementById("catalogContainer");
+    const emptyEl = document.getElementById("emptyState");
+    const statsEl = document.getElementById("resultStats");
+    const searchInput = document.getElementById("searchInput");
+
+    function matchesFilter(item) {
+      const [code, title, cat, layer] = item;
+      if (activeFilter === "all") return true;
+      if (activeFilter.startsWith("layer-")) {
+        return layer === activeFilter.replace("layer-", "");
+      }
+      return cat === activeFilter;
+    }
+
+    function matchesSearch(item) {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.trim().toLowerCase();
+      const [code, title] = item;
+      const fileName = `${code}_th.html`.toLowerCase();
+      return title.toLowerCase().includes(q) || code.toLowerCase().includes(q) || fileName.includes(q);
+    }
+
+    function render() {
+      const filtered = ITEMS.filter(it => matchesFilter(it) && matchesSearch(it));
+      statsEl.textContent = `แสดง ${filtered.length} จาก ${ITEMS.length} รายการ`;
+
+      if (filtered.length === 0) {
+        catalogEl.innerHTML = "";
+        emptyEl.style.display = "block";
+        return;
+      }
+
+      emptyEl.style.display = "none";
+
+      const grouped = { vin: [], sutta: [], abhi: [], extra: [] };
+      for (const item of filtered) {
+        grouped[item[2]].push(item);
+      }
+
+      const sectionsHtml = Object.entries(GROUP_META)
+        .sort((a, b) => a[1].order - b[1].order)
+        .filter(([key]) => grouped[key].length > 0)
+        .map(([key, meta]) => {
+          const cards = grouped[key].map(([code, title, , layer]) => {
+            const fileName = `${code}_th.html`;
+            const href = `${BASE_PATH}${fileName}`;
+            const badge = LAYER_BADGE[layer] || LAYER_BADGE.ext;
+
+            return `
+              <a class="item-card" href="${href}" title="เปิดไฟล์ ${fileName}">
+                <div class="item-top">
+                  <span class="item-code">${fileName}</span>
+                  <span class="tag ${badge.cls}">${badge.label}</span>
+                </div>
+                <div class="item-title">${title}</div>
+              </a>
+            `;
+          }).join("");
+
+          return `
+            <section class="group-section">
+              <div class="group-header">
+                <h2 class="group-title">${meta.title}</h2>
+                <span class="group-count">${grouped[key].length} ไฟล์</span>
+              </div>
+              <div class="item-grid">${cards}</div>
+            </section>
+          `;
+        }).join("");
+
+      catalogEl.innerHTML = sectionsHtml;
+    }
+
+    document.getElementById("categoryPills").addEventListener("click", (e) => {
+      const btn = e.target.closest(".pill");
+      if (!btn) return;
+      document.querySelectorAll("#categoryPills .pill").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      activeFilter = btn.dataset.filter;
+      render();
+    });
+
+    searchInput.addEventListener("input", (e) => {
+      searchQuery = e.target.value;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

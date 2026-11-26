@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KIT-979 | Seven Steps — Chaṭṭha Saṅgāyana Tipiṭaka</title>
+  <style>
+    :root {
+      --bg: #faf8f5;
+      --card: #ffffff;
+      --text: #2c251d;
+      --muted: #6b5e50;
+      --accent: #9a6b26;
+      --accent-hover: #7c541b;
+      --border: #e6dfd5;
+      --badge-ready: #e8f5e9;
+      --badge-ready-text: #2e7d32;
+      --badge-soon: #f3efe9;
+      --badge-soon-text: #7a6f63;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 20px rgba(44, 37, 29, 0.04);
+    }
+
+    .project-code {
+      display: inline-block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      background: #fdf6ec;
+      border: 1px solid #eed9b7;
+      padding: 0.25rem 0.85rem;
+      border-radius: 999px;
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .subtitle {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 680px;
+      margin: 0 auto 1.25rem;
+    }
+
+    .vision-quote {
+      font-size: 0.92rem;
+      color: var(--muted);
+      font-style: italic;
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 2rem 0 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    a.card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: 0 6px 18px rgba(154, 107, 38, 0.1);
+    }
+
+    .card.disabled {
+      opacity: 0.72;
+      cursor: default;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .lang-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .lang-native {
+      font-size: 0.95rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    .badge.ready {
+      background: var(--badge-ready);
+      color: var(--badge-ready-text);
+    }
+
+    .badge.soon {
+      background: var(--badge-soon);
+      color: var(--badge-soon-text);
+    }
+
+    .card-desc {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+    }
+
+    .scope-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .scope-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+      list-style: none;
+    }
+
+    .scope-list li {
+      font-size: 0.92rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="project-code">PROJECT KIT-979 · SEVEN STEPS</div>
+      <h1>Chaṭṭha Saṅgāyana Pāḷi Tipiṭaka</h1>
+      <p class="subtitle">
+        Digital repository of Tipiṭaka (Mūla), Aṭṭhakathā, Ṭīkā, Anuṭīkā, and Visuddhimagga — 
+        presented across regional scripts and global translations.
+      </p>
+      <p class="vision-quote">
+        “Inspired by the Seven Lotus Steps at the Buddha’s birth — carrying the Dhamma across the seven continents.”
+      </p>
+    </header>
+
+    <div class="section-title">
+      <span>1. Core Editions &amp; Scripts (Phase 1)</span>
+    </div>
+
+    <div class="grid">
+      <!-- Thai -->
+      <a href="index-th.html" class="card">
+        <div>
+          <div class="card-header">
+            <div>
+              <div class="lang-name">Thai Edition</div>
+              <div class="lang-native">อักษรไทย · ฉัฏฐสังคีติ</div>
+            </div>
+            <span class="badge ready">Available</span>
+          </div>
+          <p class="card-desc">
+            Complete Vinaya, Sutta, Abhidhamma, and Extra Texts (Mūla, Aṭṭhakathā, Ṭīkā, Anuṭīkā) in Thai Pāḷi script.
+          </p>
+        </div>
+      </a>
+
+      <!-- Myanmar -->
+      <a href="index-my.html" class="card">
+        <div>
+          <div class="card-header">
+            <div>
+              <div class="lang-name">Myanmar Edition</div>
+              <div class="lang-native">မြန်မာအက္ခရာ · ဆဋ္ဌသင်္ဂါယနာ</div>
+            </div>
+            <span class="badge soon">In Progress</span>
+          </div>
+          <p class="card-desc">
+            Sixth Buddhist Council (Chaṭṭha Saṅgāyana) original Myanmar script edition &amp; translations.
+          </p>
+        </div>
+      </a>
+
+      <!-- English / Roman -->
+      <a href="index-en.html" class="card">
+        <div>
+          <div class="card-header">
+            <div>
+              <div class="lang-name">English / Roman Pāḷi</div>
+              <div class="lang-native">International Edition</div>
+            </div>
+            <span class="badge soon">In Progress</span>
+          </div>
+          <p class="card-desc">
+            Romanized Pāḷi script (IAST / VRI) and English translations for global readers and scholars.
+          </p>
+        </div>
+      </a>
+    </div>
+
+    <div class="section-title">
+      <span>2. Origins &amp; Global Expansion (Seven Continents)</span>
+    </div>
+
+    <div class="grid">
+      <div class="card disabled">
+        <div class="card-header">
+          <div>
+            <div class="lang-name">India (Origin)</div>
+            <div class="lang-native">देवनागरी · हिन्दी</div>
+          </div>
+          <span class="badge soon">Planned</span>
+        </div>
+        <p class="card-desc">Devanāgarī Pāḷi script and Hindi translations from the homeland of Buddhism.</p>
+      </div>
+
+      <div class="card disabled">
+        <div class="card-header">
+          <div>
+            <div class="lang-name">Sri Lanka</div>
+            <div class="lang-native">සිංහල · විසුද්ධිමග්ග</div>
+          </div>
+          <span class="badge soon">Planned</span>
+        </div>
+        <p class="card-desc">Sinhala Pāḷi script, Mahāvihāra tradition, and Visuddhimagga studies.</p>
+      </div>
+
+      <div class="card disabled">
+        <div class="card-header">
+          <div>
+            <div class="lang-name">Indonesian</div>
+            <div class="lang-native">Bahasa Indonesia</div>
+          </div>
+          <span class="badge soon">Planned</span>
+        </div>
+        <p class="card-desc">Southeast Asian Theravāda study resources in Bahasa Indonesia.</p>
+      </div>
+
+      <div class="card disabled">
+        <div class="card-header">
+          <div>
+            <div class="lang-name">Chinese</div>
+            <div class="lang-native">中文 · 巴利三藏</div>
+          </div>
+          <span class="badge soon">Planned</span>
+        </div>
+        <p class="card-desc">Chinese translations and cross-references with the Pāḷi Canon.</p>
+      </div>
+
+      <div class="card disabled">
+        <div class="card-header">
+          <div>
+            <div class="lang-name">Russian · French · German</div>
+            <div class="lang-native">Русский · Français · Deutsch</div>
+          </div>
+          <span class="badge soon">Planned</span>
+        </div>
+        <p class="card-desc">European translations and classical Pāḷi philology editions.</p>
+      </div>
+    </div>
+
+    <div class="scope-box">
+      <strong>Canon Structure Included in This Repository</strong>
+      <ul class="scope-list">
+        <li><strong>Vinaya Piṭaka (vin)</strong> — Monastic Discipline</li>
+        <li><strong>Sutta Piṭaka (s01–s05)</strong> — Dīgha, Majjhima, Saṃyutta, Aṅguttara, Khuddaka</li>
+        <li><strong>Abhidhamma Piṭaka (abh)</strong> — Higher Doctrine (7 Books)</li>
+        <li><strong>Extra Texts (e01–e12)</strong> — Visuddhimagga, Aṭṭhakathā &amp; Anuṭīkā</li>
+      </ul>
+    </div>
+
+    <footer>
+      <p>KIT-979 Open Dhamma Archive · Hosted on GitHub Pages</p>
+    </footer>
+  </div>
+</body>
+</html>
