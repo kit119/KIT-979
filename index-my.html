@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KIT-979 | ဆဋ္ဌသင်္ဂါယနာ ပါဠိတော်၊ အဋ္ဌကထာ၊ ဋီကာ နှင့် အနုဋီကာ ကျမ်းစာရင်း</title>
+  <style>
+    :root {
+      --bg: #faf8f5;
+      --card: #ffffff;
+      --text: #252019;
+      --muted: #675b4e;
+      --accent: #9a6b26;
+      --accent-soft: #fdf6ec;
+      --border: #e6dfd5;
+
+      --mul-bg: #e8f5e9;
+      --mul-fg: #1b5e20;
+      --att-bg: #e3f2fd;
+      --att-fg: #0d47a1;
+      --tik-bg: #f3e5f5;
+      --tik-fg: #4a148c;
+      --ext-bg: #fff8e1;
+      --ext-fg: #795548;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Noto Sans Myanmar", "Padauk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 1.5rem 1rem 4rem;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.4rem 0.85rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .back-link:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .lang-switch {
+      display: flex;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+    }
+
+    .lang-switch a,
+    .lang-switch span {
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--muted);
+      background: var(--card);
+    }
+
+    .lang-switch span.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    header {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 4px 16px rgba(37, 32, 25, 0.04);
+    }
+
+    .badge-code {
+      display: inline-block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid #eed9b7;
+      padding: 0.2rem 0.75rem;
+      border-radius: 999px;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 1.55rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .controls {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .search-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-input {
+      flex: 1 1 280px;
+      padding: 0.65rem 0.95rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+      background: #fff;
+    }
+
+    .stats {
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .pill {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .pill:hover {
+      border-color: var(--accent);
+    }
+
+    .pill.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .group-section {
+      margin-bottom: 2rem;
+    }
+
+    .group-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.45rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .group-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .group-count {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .item-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .item-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(154, 107, 38, 0.08);
+    }
+
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .item-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      background: var(--bg);
+      padding: 0.12rem 0.45rem;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+    }
+
+    .tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.14rem 0.5rem;
+      border-radius: 5px;
+    }
+
+    .tag-mul { background: var(--mul-bg); color: var(--mul-fg); }
+    .tag-att { background: var(--att-bg); color: var(--att-fg); }
+    .tag-tik { background: var(--tik-bg); color: var(--tik-fg); }
+    .tag-ext { background: var(--ext-bg); color: var(--ext-fg); }
+
+    .item-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+      line-height: 1.55;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      background: var(--card);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <a href="index.html" class="back-link">← KIT-979 ပင်မစာမျက်နှာ</a>
+      <div class="lang-switch">
+        <a href="index-th.html">ไทย (TH)</a>
+        <span class="active">မြန်မာ (MY)</span>
+        <a href="index-en.html">EN / Roman</a>
+      </div>
+    </div>
+
+    <header>
+      <div class="badge-code">KIT-979 · ခြေခုနစ်လှမ်း · ဆဋ္ဌသင်္ဂါယနာ မူရင်း</div>
+      <h1>ဆဋ္ဌသင်္ဂါယနာ ပါဠိတော်၊ အဋ္ဌကထာ၊ ဋီကာ နှင့် အနုဋီကာ ကျမ်းစာရင်း</h1>
+      <p class="subtitle">
+        ဆဋ္ဌသင်္ဂါယနာတင် မြန်မာအက္ခရာ ပါဠိကျမ်းစာများ (<code>_my.html</code>) ကို ပိဋကတ်အလိုက် စုစည်းထားပါသည်
+      </p>
+    </header>
+
+    <div class="controls">
+      <div class="search-row">
+        <input
+          id="searchInput"
+          type="search"
+          class="search-input"
+          placeholder="ကျမ်းအမည် သို့မဟုတ် ဖိုင်ကုဒ် ရှာဖွေရန် (ဥပမာ - ဓမ္မပဒ, ဝိသုဒ္ဓိမဂ္ဂ, s0201, vin01)..."
+          autocomplete="off"
+        />
+        <div id="resultStats" class="stats">စာရင်းများ ဖတ်နေပါသည်...</div>
+      </div>
+
+      <div class="filter-pills" id="categoryPills">
+        <button class="pill active" data-filter="all">အားလုံး</button>
+        <button class="pill" data-filter="vin">ဝိနည်းပိဋကတ်</button>
+        <button class="pill" data-filter="sutta">သုတ္တန်ပိဋကတ်</button>
+        <button class="pill" data-filter="abhi">အဘိဓမ္မာပိဋကတ်</button>
+        <button class="pill" data-filter="extra">အညကျမ်း / ဝိသုဒ္ဓိမဂ် / အခြား</button>
+        <button class="pill" data-filter="layer-mul">မူလ (ပါဠိတော်)</button>
+        <button class="pill" data-filter="layer-att">အဋ္ဌကထာ</button>
+        <button class="pill" data-filter="layer-tik">ဋီကာ / အနုဋီကာ</button>
+      </div>
+    </div>
+
+    <div id="catalogContainer"></div>
+    <div id="emptyState" class="empty-state">ရှာဖွေမှုနှင့် ကိုက်ညီသော ကျမ်းစာ မတွေ့ပါ</div>
+  </div>
+
+  <script>
+    // ဖိုင်များထားရှိရာ ဖိုလ်ဒါလမ်းကြောင်း (ဥပမာ - "my/" သို့မဟုတ် "")
+    const BASE_PATH = "my/";
+
+    // ပုံစံ: [ဖိုင်ကုဒ်, ကျမ်းအမည်, ပိဋကတ်အမျိုးအစား ('vin'|'sutta'|'abhi'|'extra'), ကျမ်းအဆင့် ('mul'|'att'|'tik'|'ext')]
+    const ITEMS = [
+      // ပိဋကတ်သုံးပုံ (မူလ - ပါဠိတော်)
+      ["vin01m_mul", "ပါရာဇိကပါဠိ", "vin", "mul"],
+      ["vin02m1_mul", "ပါစိတ္တိယပါဠိ / ဘိက္ခုနီဝိဘင်္ဂေါ", "vin", "mul"],
+      ["vin02m2_mul", "မဟာဝဂ္ဂပါဠိ (ဝိနည်း)", "vin", "mul"],
+      ["vin02m3_mul", "စူဠဝဂ္ဂပါဠိ", "vin", "mul"],
+      ["vin02m4_mul", "ပရိဝါရပါဠိ", "vin", "mul"],
+
+      ["s0101m_mul", "သီလက္ခန္ဓဝဂ္ဂပါဠိ", "sutta", "mul"],
+      ["s0102m_mul", "မဟာဝဂ္ဂပါဠိ (ဒီဃနိကာယ်)", "sutta", "mul"],
+      ["s0103m_mul", "ပါထိကဝဂ္ဂပါဠိ", "sutta", "mul"],
+      ["s0201m_mul", "မူလပဏ္ဏာသပါဠိ", "sutta", "mul"],
+      ["s0202m_mul", "မဇ္ဈိမပဏ္ဏာသပါဠိ", "sutta", "mul"],
+      ["s0203m_mul", "ဥပရိပဏ္ဏာသပါဠိ", "sutta", "mul"],
+      ["s0301m_mul", "သဂါထာဝဂ္ဂပါဠိ", "sutta", "mul"],
+      ["s0302m_mul", "နိဒါနဝဂ္ဂပါဠိ", "sutta", "mul"],
+      ["s0303m_mul", "ခန္ဓဝဂ္ဂပါဠိ", "sutta", "mul"],
+      ["s0304m_mul", "သဠာယတနဝဂ္ဂပါဠိ", "sutta", "mul"],
+      ["s0305m_mul", "မဟာဝဂ္ဂပါဠိ (သံယုတ္တနိကာယ်)", "sutta", "mul"],
+      ["s0401m_mul", "ဧကကနိပါတပါဠိ", "sutta", "mul"],
+      ["s0402m1_mul", "ဒုကနိပါတပါဠိ", "sutta", "mul"],
+      ["s0402m2_mul", "တိကနိပါတပါဠိ", "sutta", "mul"],
+      ["s0402m3_mul", "စတုက္ကနိပါတပါဠိ", "sutta", "mul"],
+      ["s0403m1_mul", "ပဉ္စကနိပါတပါဠိ", "sutta", "mul"],
+      ["s0403m2_mul", "ဆက္ကနိပါတပါဠိ", "sutta", "mul"],
+      ["s0403m3_mul", "သတ္တကနိပါတပါဠိ", "sutta", "mul"],
+      ["s0404m1_mul", "အဋ္ဌကနိပါတပါဠိ", "sutta", "mul"],
+      ["s0404m2_mul", "နဝကနိပါတပါဠိ", "sutta", "mul"],
+      ["s0404m3_mul", "ဒသကနိပါတပါဠိ", "sutta", "mul"],
+      ["s0404m4_mul", "ဧကာဒသကနိပါတပါဠိ", "sutta", "mul"],
+      ["s0501m_mul", "ခုဒ္ဒကပါဌပါဠိ", "sutta", "mul"],
+      ["s0502m_mul", "ဓမ္မပဒပါဠိ", "sutta", "mul"],
+      ["s0503m_mul", "ဥဒါနပါဠိ", "sutta", "mul"],
+      ["s0504m_mul", "ဣတိဝုတ္တကပါဠိ", "sutta", "mul"],
+      ["s0505m_mul", "သုတ္တနိပါတပါဠိ", "sutta", "mul"],
+      ["s0506m_mul", "ဝိမာနဝတ္ထုပါဠိ", "sutta", "mul"],
+      ["s0507m_mul", "ပေတဝတ္ထုပါဠိ", "sutta", "mul"],
+      ["s0508m_mul", "ထေရဂါထာပါဠိ", "sutta", "mul"],
+      ["s0509m_mul", "ထေရီဂါထာပါဠိ", "sutta", "mul"],
+      ["s0510m1_mul", "အပဒါနပါဠိ ၁", "sutta", "mul"],
+      ["s0510m2_mul", "အပဒါနပါဠိ ၂ / ထေရီအပဒါနပါဠိ", "sutta", "mul"],
+      ["s0511m_mul", "ဗုဒ္ဓဝံသပါဠိ", "sutta", "mul"],
+      ["s0512m_mul", "စရိယာပိဋကပါဠိ", "sutta", "mul"],
+      ["s0513m_mul", "ဇာတကပါဠိ ၁", "sutta", "mul"],
+      ["s0514m_mul", "ဇာတကပါဠိ ၂", "sutta", "mul"],
+      ["s0515m_mul", "မဟာနိဒ္ဒေသပါဠိ", "sutta", "mul"],
+      ["s0516m_mul", "စူဠနိဒ္ဒေသပါဠိ", "sutta", "mul"],
+      ["s0517m_mul", "ပဋိသမ္ဘိဒါမဂ္ဂပါဠိ", "sutta", "mul"],
+      ["s0518m_nrf", "မိလိန္ဒပဉှာပါဠိ", "sutta", "mul"],
+      ["s0519m_mul", "နေတ္တိပကရဏပါဠိ", "sutta", "mul"],
+      ["s0520m_nrf", "ပေဋကောပဒေသပါဠိ", "sutta", "mul"],
+
+      ["abh01m_mul", "ဓမ္မသင်္ဂဏီပါဠိ", "abhi", "mul"],
+      ["abh02m_mul", "ဝိဘင်္ဂပါဠိ", "abhi", "mul"],
+      ["abh03m1_mul", "ဓာတုကထာပါဠိ", "abhi", "mul"],
+      ["abh03m2_mul", "ပုဂ္ဂလပညတ္တိပါဠိ", "abhi", "mul"],
+      ["abh03m3_mul", "ကထာဝတ္ထုပါဠိ", "abhi", "mul"],
+      ["abh03m4_mul", "ယမကပါဠိ ၁", "abhi", "mul"],
+      ["abh03m5_mul", "ယမကပါဠိ ၂", "abhi", "mul"],
+      ["abh03m6_mul", "ယမကပါဠိ ၃", "abhi", "mul"],
+      ["abh03m7_mul", "ပဋ္ဌာနပါဠိ ၁", "abhi", "mul"],
+      ["abh03m8_mul", "ပဋ္ဌာနပါဠိ ၂", "abhi", "mul"],
+      ["abh03m9_mul", "ပဋ္ဌာနပါဠိ ၃", "abhi", "mul"],
+      ["abh03m10_mul", "ပဋ္ဌာနပါဠိ ၄", "abhi", "mul"],
+      ["abh03m11_mul", "ပဋ္ဌာနပါဠိ ၅", "abhi", "mul"],
+
+      // အဋ္ဌကထာ
+      ["vin01a_att", "ပါရာဇိကကဏ္ဍ-အဋ္ဌကထာ", "vin", "att"],
+      ["vin02a1_att", "ပါစိတ္တိယ-အဋ္ဌကထာ / ဘိက္ခုနီဝိဘင်္ဂဝဏ္ဏနာ", "vin", "att"],
+      ["vin02a2_att", "မဟာဝဂ္ဂ-အဋ္ဌကထာ", "vin", "att"],
+      ["vin02a3_att", "စူဠဝဂ္ဂ-အဋ္ဌကထာ", "vin", "att"],
+      ["vin02a4_att", "ပရိဝါရ-အဋ္ဌကထာ", "vin", "att"],
+
+      ["s0101a_att", "သီလက္ခန္ဓဝဂ္ဂ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0102a_att", "မဟာဝဂ္ဂ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0103a_att", "ပါထိကဝဂ္ဂ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0201a_att", "မူလပဏ္ဏာသ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0202a_att", "မဇ္ဈိမပဏ္ဏာသ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0203a_att", "ဥပရိပဏ္ဏာသ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0301a_att", "သဂါထာဝဂ္ဂ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0302a_att", "နိဒါနဝဂ္ဂ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0303a_att", "ခန္ဓဝဂ္ဂ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0304a_att", "သဠာယတနဝဂ္ဂ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0305a_att", "မဟာဝဂ္ဂ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0401a_att", "ဧကကနိပါတ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0402a_att", "ဒုက တိက စတုက္ကနိပါတ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0403a_att", "ပဉ္စက ဆက္က သတ္တကနိပါတ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0404a_att", "အဋ္ဌကာဒိနိပါတ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0501a_att", "ခုဒ္ဒကပါဌ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0502a_att", "ဓမ္မပဒ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0503a_att", "ဥဒါန-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0504a_att", "ဣတိဝုတ္တက-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0505a_att", "သုတ္တနိပါတ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0506a_att", "ဝိမာနဝတ္ထု-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0507a_att", "ပေတဝတ္ထု-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0508a1_att", "ထေရဂါထာ-အဋ္ဌကထာ ၁", "sutta", "att"],
+      ["s0508a2_att", "ထေရဂါထာ-အဋ္ဌကထာ ၂", "sutta", "att"],
+      ["s0509a_att", "ထေရီဂါထာ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0510a_att", "အပဒါန-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0511a_att", "ဗုဒ္ဓဝံသ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0512a_att", "စရိယာပိဋက-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0513a1_att", "ဇာတက-အဋ္ဌကထာ ၁", "sutta", "att"],
+      ["s0513a2_att", "ဇာတက-အဋ္ဌကထာ ၂", "sutta", "att"],
+      ["s0513a3_att", "ဇာတက-အဋ္ဌကထာ ၃", "sutta", "att"],
+      ["s0513a4_att", "ဇာတက-အဋ္ဌကထာ ၄", "sutta", "att"],
+      ["s0514a1_att", "ဇာတက-အဋ္ဌကထာ ၅", "sutta", "att"],
+      ["s0514a2_att", "ဇာတက-အဋ္ဌကထာ ၆", "sutta", "att"],
+      ["s0514a3_att", "ဇာတက-အဋ္ဌကထာ ၇", "sutta", "att"],
+      ["s0515a_att", "မဟာနိဒ္ဒေသ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0516a_att", "စူဠနိဒ္ဒေသ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0517a_att", "ပဋိသမ္ဘိဒါမဂ္ဂ-အဋ္ဌကထာ", "sutta", "att"],
+      ["s0519a_att", "နေတ္တိပကရဏ-အဋ္ဌကထာ", "sutta", "att"],
+
+      ["abh01a_att", "အဋ္ဌသာလိနီ (ဓမ္မသင်္ဂဏီ-အဋ္ဌကထာ)", "abhi", "att"],
+      ["abh02a_att", "သမ္မောဟဝိနောဒနီ (ဝိဘင်္ဂ-အဋ္ဌကထာ)", "abhi", "att"],
+      ["abh03a_att", "ပဉ္စပကရဏ-အဋ္ဌကထာ", "abhi", "att"],
+
+      // ဋီကာ နှင့် အနုဋီကာ
+      ["vin01t1_tik", "သာရတ္ထဒီပနီ-ဋီကာ ၁", "vin", "tik"],
+      ["vin01t2_tik", "သာရတ္ထဒီပနီ-ဋီကာ ၂", "vin", "tik"],
+      ["vin02t_tik", "သာရတ္ထဒီပနီ-ဋီကာ ၃", "vin", "tik"],
+      ["vin04t_nrf", "ဒွေမာတိကာပါဠိ", "vin", "tik"],
+      ["vin05t_nrf", "ဝိနယသင်္ဂဟ-အဋ္ဌကထာ", "vin", "tik"],
+      ["vin06t_nrf", "ဝဇိရဗုဒ္ဓိ-ဋီကာ", "vin", "tik"],
+      ["vin07t_nrf", "ဝိမတိဝိနောဒနီ-ဋီကာ", "vin", "tik"],
+      ["vin08t_nrf", "ဝိနယာလင်္ကာရ-ဋီကာ", "vin", "tik"],
+      ["vin09t_nrf", "ကင်္ခါဝိတရဏီပုရာဏ-ဋီကာ / အဘိနဝဋီကာ", "vin", "tik"],
+      ["vin10t_nrf", "ဝိနယဝိနိစ္ဆယ-ဥတ္တရဝိနိစ္ဆယ", "vin", "tik"],
+      ["vin11t_nrf", "ဝိနယဝိနိစ္ဆယ-ဋီကာ", "vin", "tik"],
+      ["vin12t_nrf", "ပါစိတျာဒိယောဇနာပါဠိ", "vin", "tik"],
+      ["vin13t_nrf", "ခုဒ္ဒသိက္ခာ-မူလသိက္ခာ", "vin", "tik"],
+
+      ["s0101t_tik", "သီလက္ခန္ဓဝဂ္ဂ-ဋီကာ", "sutta", "tik"],
+      ["s0102t_tik", "မဟာဝဂ္ဂ-ဋီကာ", "sutta", "tik"],
+      ["s0103t_tik", "ပါထိကဝဂ္ဂ-ဋီကာ", "sutta", "tik"],
+      ["s0104t_nrf", "သီလက္ခန္ဓဝဂ္ဂ အဘိနဝဋီကာ ၁", "sutta", "tik"],
+      ["s0105t_nrf", "သီလက္ခန္ဓဝဂ္ဂ အဘိနဝဋီကာ ၂", "sutta", "tik"],
+      ["s0201t_tik", "မူလပဏ္ဏာသ-ဋီကာ", "sutta", "tik"],
+      ["s0202t_tik", "မဇ္ဈိမပဏ္ဏာသ-ဋီကာ", "sutta", "tik"],
+      ["s0203t_tik", "ဥပရိပဏ္ဏာသ-ဋီကာ", "sutta", "tik"],
+      ["s0301t_tik", "သဂါထာဝဂ္ဂ-ဋီကာ", "sutta", "tik"],
+      ["s0302t_tik", "နိဒါနဝဂ္ဂ-ဋီကာ", "sutta", "tik"],
+      ["s0303t_tik", "ခန္ဓဝဂ္ဂ-ဋီကာ", "sutta", "tik"],
+      ["s0304t_tik", "သဠာယတနဝဂ္ဂ-ဋီကာ", "sutta", "tik"],
+      ["s0305t_tik", "မဟာဝဂ္ဂ-ဋီကာ", "sutta", "tik"],
+      ["s0401t_tik", "ဧကကနိပါတ-ဋီကာ", "sutta", "tik"],
+      ["s0402t_tik", "ဒုက တိက စတုက္ကနိပါတ-ဋီကာ", "sutta", "tik"],
+      ["s0403t_tik", "ပဉ္စက ဆက္က သတ္တကနိပါတ-ဋီကာ", "sutta", "tik"],
+      ["s0404t_tik", "အဋ္ဌကာဒိနိပါတ-ဋီကာ", "sutta", "tik"],
+      ["s0519t_tik", "နေတ္တိပကရဏ-ဋီကာ", "sutta", "tik"],
+      ["s0501t_nrf", "နေတ္တိဝိဘာဝိနီ", "sutta", "tik"],
+
+      ["abh01t_tik", "ဓမ္မသင်္ဂဏီ မူလဋီကာ", "abhi", "tik"],
+      ["abh02t_tik", "ဝိဘင်္ဂ မူလဋီကာ / အနုဋီကာ", "abhi", "tik"],
+      ["abh03t_tik", "ပဉ္စပကရဏ မူလဋီကာ", "abhi", "tik"],
+      ["abh04t_nrf", "ဓမ္မသင်္ဂဏီ အနုဋီကာ", "abhi", "tik"],
+      ["abh05t_nrf", "ပဉ္စပကရဏ အနုဋီကာ", "abhi", "tik"],
+      ["abh06t_nrf", "အဘိဓမ္မာဝတာရ-နာမရူပပရိစ္ဆေဒ", "abhi", "tik"],
+      ["abh07t_nrf", "အဘိဓမ္မတ္ထသင်္ဂဟ / အဘိဓမ္မတ္ထဝိဘာဝိနီဋီကာ", "abhi", "tik"],
+      ["abh08t_nrf", "အဘိဓမ္မာဝတာရ ပုရာဏဋီကာ", "abhi", "tik"],
+      ["abh09t_nrf", "အဘိဓမ္မမာတိကာပါဠိ / မောဟဝိစ္ဆေဒနီ", "abhi", "tik"],
+
+      // အညကျမ်းများ - ဝိသုဒ္ဓိမဂ်၊ သဒ္ဒါ၊ ဝံသ၊ နီတိ (e01-e12)
+      ["e0101n_mul", "ဝိသုဒ္ဓိမဂ္ဂပါဠိ ၁", "extra", "mul"],
+      ["e0102n_mul", "ဝိသုဒ္ဓိမဂ္ဂပါဠိ ၂", "extra", "mul"],
+      ["e0103n_att", "ဝိသုဒ္ဓိမဂ္ဂ-မဟာဋီကာ ၁", "extra", "att"],
+      ["e0104n_att", "ဝိသုဒ္ဓိမဂ္ဂ-မဟာဋီကာ ၂", "extra", "att"],
+      ["e0105n_nrf", "ဝိသုဒ္ဓိမဂ္ဂ နိဒါနကထာ", "extra", "ext"],
+      ["e0901n_nrf", "ဒီဃနိကာယ (သင်္ဂါယနာပုစ္ဆာဝိသဇ္ဇနာ)", "extra", "ext"],
+      ["e0902n_nrf", "မဇ္ဈိမနိကာယ (သင်္ဂါယနာပုစ္ဆာဝိသဇ္ဇနာ)", "extra", "ext"],
+      ["e0903n_nrf", "သံယုတ္တနိကာယ (သင်္ဂါယနာပုစ္ဆာဝိသဇ္ဇနာ)", "extra", "ext"],
+      ["e0904n_nrf", "အင်္ဂုတ္တရနိကာယ (သင်္ဂါယနာပုစ္ဆာဝိသဇ္ဇနာ)", "extra", "ext"],
+      ["e0905n_nrf", "ဝိနယပိဋက (သင်္ဂါယနာပုစ္ဆာဝိသဇ္ဇနာ)", "extra", "ext"],
+      ["e0906n_nrf", "အဘိဓမ္မပိဋက (သင်္ဂါယနာပုစ္ဆာဝိသဇ္ဇနာ)", "extra", "ext"],
+      ["e0907n_nrf", "အဋ္ဌကထာ (သင်္ဂါယနာပုစ္ဆာဝိသဇ္ဇနာ)", "extra", "att"],
+      ["e0201n_nrf", "နိရုတ္တိဒီပနီပါဌ", "extra", "ext"],
+      ["e0301n_nrf", "ပရမတ္ထဒီပနီ သင်္ဂဟမဟာဋီကာပါဌ", "extra", "tik"],
+      ["e0401n_nrf", "အနုဒီပနီပါဌ", "extra", "tik"],
+      ["e0501n_nrf", "ပဋ္ဌာနုဒ္ဒေသဒီပနီပါဌ", "extra", "ext"],
+      ["e0601n_nrf", "နမက္ကာရဋီကာ", "extra", "tik"],
+      ["e0602n_nrf", "မဟာပဏာမပါဌ", "extra", "ext"],
+      ["e0603n_nrf", "လက္ခဏတောဗုဒ္ဓထောမနာဂါထာ", "extra", "ext"],
+      ["e0604n_nrf", "သုတဝန္ဒနာ", "extra", "ext"],
+      ["e0606n_nrf", "ကမလာဉ္ဇလီ", "extra", "ext"],
+      ["e0605n_nrf", "ဇိနာလင်္ကာရ", "extra", "ext"],
+      ["e0607n_nrf", "ပဇ္ဇမဓု", "extra", "ext"],
+      ["e0608n_nrf", "ဗုဒ္ဓဂုဏဂါထာဝလီ", "extra", "ext"],
+      ["e0701n_nrf", "စူဠဂန္ထဝံသ", "extra", "ext"],
+      ["e0703n_nrf", "မဟာဝံသ", "extra", "ext"],
+      ["e0702n_nrf", "သာသနဝံသ", "extra", "ext"],
+      ["e0802n_nrf", "ကစ္စာယနဗျာကရဏ", "extra", "ext"],
+      ["e0801n_nrf", "မောဂ္ဂလ္လာနသုတ္တပါဌ / မောဂ္ဂလ္လာနဗျာကရဏ", "extra", "ext"],
+      ["e0803n_nrf", "ပဒရူပသိဒ္ဓိ", "extra", "ext"],
+      ["e0804n_nrf", "ဗာလပ္ပဗောဓန", "extra", "ext"],
+      ["e0805n_nrf", "ရူပသိဒ္ဓိဒီပနီ", "extra", "ext"],
+      ["e0806n_nrf", "မောဂ္ဂလ္လာနပဉ္စိကာ", "extra", "ext"],
+      ["e0807n_nrf", "ပယောဂသိဒ္ဓိပါဌ", "extra", "ext"],
+      ["e0808n_nrf", "ဝုတ္တောဒယပါဌ", "extra", "ext"],
+      ["e0809n_nrf", "အဘိဓာနပ္ပဒီပိကာပါဌ", "extra", "ext"],
+      ["e0810n_nrf", "အဘိဓာနပ္ပဒီပိကာဋီကာ", "extra", "tik"],
+      ["e0811n_nrf", "သုဗောဓာလင်္ကာရပါဌ", "extra", "ext"],
+      ["e0812n_nrf", "သုဗောဓာလင်္ကာရဋီကာ", "extra", "tik"],
+      ["e0813n_nrf", "ဗာလာဝတာရ-ဂဏ္ဌိပဒတ္ထဝိနိစ္ဆယသာရ", "extra", "ext"],
+      ["e1005n_nrf", "လောကနီတိ", "extra", "ext"],
+      ["e1006n_nrf", "သုတ္တန္တနီတိ", "extra", "ext"],
+      ["e1007n_nrf", "သူရဿတီနီတိ", "extra", "ext"],
+      ["e1004n_nrf", "ဓမ္မပဒဋ္ဌကထာဂါထာ (နီတိ)", "extra", "ext"],
+      ["e1003n_nrf", "ရာဇနီတိ", "extra", "ext"],
+      ["e1001n_nrf", "ဓမ္မနီတိ", "extra", "ext"],
+      ["e1002n_nrf", "မဟာနီတိ", "extra", "ext"],
+      ["e1009n_nrf", "နရဒက္ခဒီပနီ", "extra", "ext"],
+      ["e1010n_nrf", "စတုရာရက္ခဒီပနီ", "extra", "ext"],
+      ["e1008n_nrf", "စာဏကျနီတိ", "extra", "ext"],
+      ["e1101n_nrf", "ရသဝါဟိနီ", "extra", "ext"],
+      ["e1102n_nrf", "သီဟဠဝတ္ထု", "extra", "ext"],
+      ["e1103n_nrf", "သဟဿဝတ္ထု", "extra", "ext"],
+      ["e1201n_nrf", "မောဂ္ဂလ္လာနဝုတ္တိဝိဝရဏပဉ္စိကာ", "extra", "ext"],
+      ["e1202n_nrf", "ပဉ္စိကာပဒီပ", "extra", "ext"],
+      ["e1203n_nrf", "သမ္မောဟဝိနောဒနီ", "extra", "ext"],
+      ["e1204n_nrf", "သမ္မောဟဝိနောဒနီယန္တပဒီပ", "extra", "ext"],
+      ["e1205n_nrf", "သဒ္ဒသာရတ္ထဇာလိနီ", "extra", "ext"],
+      ["e1206n_nrf", "သဒ္ဒသာရတ္ထဇာလိနီဋီကာ", "extra", "tik"],
+      ["e1207n_nrf", "ဓာတုဝတ္ထု", "extra", "ext"],
+      ["e1208n_nrf", "သဒ္ဒနီတိဒီပနီ", "extra", "ext"],
+      ["e1209n_nrf", "စူဠနိရုတ္တိ", "extra", "ext"],
+      ["e1210n_nrf", "နိရုတ္တိသာရဇာလိနီ", "extra", "ext"],
+      ["e1211n_nrf", "ဗာလပ္ပဗောဓန (သီဟဠ)", "extra", "ext"],
+      ["e1212n_nrf", "ပဒသာဓန", "extra", "ext"],
+      ["e1213n_nrf", "သဒ္ဒဗိန္ဒုပကရဏ", "extra", "ext"],
+      ["e1214n_nrf", "ကစ္စာယနဓာတုမဉ္ဇူသာ", "extra", "ext"],
+      ["e1215n_nrf", "ဝိနယဓရပရောဟဏ", "extra", "ext"]
+    ];
+
+    const GROUP_META = {
+      vin:   { title: "ဝိနည်းပိဋကတ် (Vinaya Piṭaka)", order: 1 },
+      sutta: { title: "သုတ္တန်ပိဋကတ် (Sutta Piṭaka)", order: 2 },
+      abhi:  { title: "အဘိဓမ္မာပိဋကတ် (Abhidhamma Piṭaka)", order: 3 },
+      extra: { title: "အညကျမ်းများ — ဝိသုဒ္ဓိမဂ်၊ သဒ္ဒါ၊ ဝံသ နှင့် နီတိ", order: 4 }
+    };
+
+    const LAYER_BADGE = {
+      mul: { label: "မူလ / ပါဠိတော်", cls: "tag-mul" },
+      att: { label: "အဋ္ဌကထာ", cls: "tag-att" },
+      tik: { label: "ဋီကာ / အနုဋီကာ", cls: "tag-tik" },
+      ext: { label: "အညကျမ်း", cls: "tag-ext" }
+    };
+
+    let activeFilter = "all";
+    let searchQuery = "";
+
+    const catalogEl = document.getElementById("catalogContainer");
+    const emptyEl = document.getElementById("emptyState");
+    const statsEl = document.getElementById("resultStats");
+    const searchInput = document.getElementById("searchInput");
+
+    function matchesFilter(item) {
+      const [code, title, cat, layer] = item;
+      if (activeFilter === "all") return true;
+      if (activeFilter.startsWith("layer-")) {
+        return layer === activeFilter.replace("layer-", "");
+      }
+      return cat === activeFilter;
+    }
+
+    function matchesSearch(item) {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.trim().toLowerCase();
+      const [code, title] = item;
+      const fileName = `${code}_my.html`.toLowerCase();
+      return title.toLowerCase().includes(q) || code.toLowerCase().includes(q) || fileName.includes(q);
+    }
+
+    function render() {
+      const filtered = ITEMS.filter(it => matchesFilter(it) && matchesSearch(it));
+      statsEl.textContent = `စုစုပေါင်း ${ITEMS.length} ကျမ်းမှ ${filtered.length} ကျမ်း ပြသထားသည်`;
+
+      if (filtered.length === 0) {
+        catalogEl.innerHTML = "";
+        emptyEl.style.display = "block";
+        return;
+      }
+
+      emptyEl.style.display = "none";
+
+      const grouped = { vin: [], sutta: [], abhi: [], extra: [] };
+      for (const item of filtered) {
+        grouped[item[2]].push(item);
+      }
+
+      const sectionsHtml = Object.entries(GROUP_META)
+        .sort((a, b) => a[1].order - b[1].order)
+        .filter(([key]) => grouped[key].length > 0)
+        .map(([key, meta]) => {
+          const cards = grouped[key].map(([code, title, , layer]) => {
+            const fileName = `${code}_my.html`;
+            const href = `${BASE_PATH}${fileName}`;
+            const badge = LAYER_BADGE[layer] || LAYER_BADGE.ext;
+
+            return `
+              <a class="item-card" href="${href}" title="${fileName} ဖွင့်ကြည့်ရန်">
+                <div class="item-top">
+                  <span class="item-code">${fileName}</span>
+                  <span class="tag ${badge.cls}">${badge.label}</span>
+                </div>
+                <div class="item-title">${title}</div>
+              </a>
+            `;
+          }).join("");
+
+          return `
+            <section class="group-section">
+              <div class="group-header">
+                <h2 class="group-title">${meta.title}</h2>
+                <span class="group-count">${grouped[key].length} ဖိုင်</span>
+              </div>
+              <div class="item-grid">${cards}</div>
+            </section>
+          `;
+        }).join("");
+
+      catalogEl.innerHTML = sectionsHtml;
+    }
+
+    document.getElementById("categoryPills").addEventListener("click", (e) => {
+      const btn = e.target.closest(".pill");
+      if (!btn) return;
+      document.querySelectorAll("#categoryPills .pill").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      activeFilter = btn.dataset.filter;
+      render();
+    });
+
+    searchInput.addEventListener("input", (e) => {
+      searchQuery = e.target.value;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

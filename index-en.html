@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KIT-979 | Chaṭṭha Saṅgāyana Tipiṭaka, Aṭṭhakathā, Ṭīkā &amp; Anuṭīkā (English / Roman)</title>
+  <style>
+    :root {
+      --bg: #faf8f5;
+      --card: #ffffff;
+      --text: #252019;
+      --muted: #675b4e;
+      --accent: #9a6b26;
+      --accent-soft: #fdf6ec;
+      --border: #e6dfd5;
+
+      --mul-bg: #e8f5e9;
+      --mul-fg: #1b5e20;
+      --att-bg: #e3f2fd;
+      --att-fg: #0d47a1;
+      --tik-bg: #f3e5f5;
+      --tik-fg: #4a148c;
+      --ext-bg: #fff8e1;
+      --ext-fg: #795548;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 1.5rem 1rem 4rem;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.4rem 0.85rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .back-link:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .lang-switch {
+      display: flex;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+    }
+
+    .lang-switch a,
+    .lang-switch span {
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--muted);
+      background: var(--card);
+    }
+
+    .lang-switch span.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    header {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 4px 16px rgba(37, 32, 25, 0.04);
+    }
+
+    .badge-code {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid #eed9b7;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 1.65rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .controls {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .search-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-input {
+      flex: 1 1 280px;
+      padding: 0.65rem 0.95rem;
+      font-size: 0.95rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+      background: #fff;
+    }
+
+    .stats {
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .pill {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .pill:hover {
+      border-color: var(--accent);
+    }
+
+    .pill.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .group-section {
+      margin-bottom: 2rem;
+    }
+
+    .group-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.45rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .group-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .group-count {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .item-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .item-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(154, 107, 38, 0.08);
+    }
+
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .item-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      background: var(--bg);
+      padding: 0.12rem 0.45rem;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+    }
+
+    .tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.14rem 0.5rem;
+      border-radius: 5px;
+    }
+
+    .tag-mul { background: var(--mul-bg); color: var(--mul-fg); }
+    .tag-att { background: var(--att-bg); color: var(--att-fg); }
+    .tag-tik { background: var(--tik-bg); color: var(--tik-fg); }
+    .tag-ext { background: var(--ext-bg); color: var(--ext-fg); }
+
+    .item-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      background: var(--card);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <a href="index.html" class="back-link">← KIT-979 Home</a>
+      <div class="lang-switch">
+        <a href="index-th.html">ไทย (TH)</a>
+        <a href="index-my.html">မြန်မာ (MY)</a>
+        <span class="active">EN / Roman</span>
+      </div>
+    </div>
+
+    <header>
+      <div class="badge-code">KIT-979 · Seven Steps · Chaṭṭha Saṅgāyana Pāḷi</div>
+      <h1>Tipiṭaka, Aṭṭhakathā, Ṭīkā &amp; Anuṭīkā Index</h1>
+      <p class="subtitle">
+        Direct links to Chaṭṭha Saṅgāyana Pāḷi texts (<code>_en.html</code> edition), organized by canon division and commentarial layer.
+      </p>
+    </header>
+
+    <div class="controls">
+      <div class="search-row">
+        <input
+          id="searchInput"
+          type="search"
+          class="search-input"
+          placeholder="Search title or file code, e.g. Dhammapada, Visuddhimagga, s0201, vin01..."
+          autocomplete="off"
+        />
+        <div id="resultStats" class="stats">Loading catalog...</div>
+      </div>
+
+      <div class="filter-pills" id="categoryPills">
+        <button class="pill active" data-filter="all">All Texts</button>
+        <button class="pill" data-filter="vin">Vinaya Piṭaka</button>
+        <button class="pill" data-filter="sutta">Sutta Piṭaka</button>
+        <button class="pill" data-filter="abhi">Abhidhamma Piṭaka</button>
+        <button class="pill" data-filter="extra">Extra Texts / Visuddhimagga / Others</button>
+        <button class="pill" data-filter="layer-mul">Mūla (Canonical) Only</button>
+        <button class="pill" data-filter="layer-att">Aṭṭhakathā Only</button>
+        <button class="pill" data-filter="layer-tik">Ṭīkā / Anuṭīkā Only</button>
+      </div>
+    </div>
+
+    <div id="catalogContainer"></div>
+    <div id="emptyState" class="empty-state">No texts matched your search or selected filter.</div>
+  </div>
+
+  <script>
+    // Target directory for *_en.html files (e.g., "en/" or "")
+    const BASE_PATH = "en/";
+
+    // Format: [baseCode, title, category ('vin'|'sutta'|'abhi'|'extra'), layer ('mul'|'att'|'tik'|'ext')]
+    const ITEMS = [
+      // Tipiṭaka (Mūla)
+      ["vin01m_mul", "Pārājikapāḷi", "vin", "mul"],
+      ["vin02m1_mul", "Pācittiyapāḷi / Bhikkhunīvibhaṅgo", "vin", "mul"],
+      ["vin02m2_mul", "Mahāvaggapāḷi (Vinaya)", "vin", "mul"],
+      ["vin02m3_mul", "Cūḷavaggapāḷi", "vin", "mul"],
+      ["vin02m4_mul", "Parivārapāḷi", "vin", "mul"],
+
+      ["s0101m_mul", "Sīlakkhandhavaggapāḷi", "sutta", "mul"],
+      ["s0102m_mul", "Mahāvaggapāḷi (Dīgha Nikāya)", "sutta", "mul"],
+      ["s0103m_mul", "Pāthikavaggapāḷi", "sutta", "mul"],
+      ["s0201m_mul", "Mūlapaṇṇāsapāḷi", "sutta", "mul"],
+      ["s0202m_mul", "Majjhimapaṇṇāsapāḷi", "sutta", "mul"],
+      ["s0203m_mul", "Uparipaṇṇāsapāḷi", "sutta", "mul"],
+      ["s0301m_mul", "Sagāthāvaggapāḷi", "sutta", "mul"],
+      ["s0302m_mul", "Nidānavaggapāḷi", "sutta", "mul"],
+      ["s0303m_mul", "Khandhavaggapāḷi", "sutta", "mul"],
+      ["s0304m_mul", "Saḷāyatanavaggapāḷi", "sutta", "mul"],
+      ["s0305m_mul", "Mahāvaggapāḷi (Saṃyutta Nikāya)", "sutta", "mul"],
+      ["s0401m_mul", "Ekakanipātapāḷi", "sutta", "mul"],
+      ["s0402m1_mul", "Dukanipātapāḷi", "sutta", "mul"],
+      ["s0402m2_mul", "Tikanipātapāḷi", "sutta", "mul"],
+      ["s0402m3_mul", "Catukkanipātapāḷi", "sutta", "mul"],
+      ["s0403m1_mul", "Pañcakanipātapāḷi", "sutta", "mul"],
+      ["s0403m2_mul", "Chakkanipātapāḷi", "sutta", "mul"],
+      ["s0403m3_mul", "Sattakanipātapāḷi", "sutta", "mul"],
+      ["s0404m1_mul", "Aṭṭhakanipātapāḷi", "sutta", "mul"],
+      ["s0404m2_mul", "Navakanipātapāḷi", "sutta", "mul"],
+      ["s0404m3_mul", "Dasakanipātapāḷi", "sutta", "mul"],
+      ["s0404m4_mul", "Ekādasakanipātapāḷi", "sutta", "mul"],
+      ["s0501m_mul", "Khuddakapāṭhapāḷi", "sutta", "mul"],
+      ["s0502m_mul", "Dhammapadapāḷi", "sutta", "mul"],
+      ["s0503m_mul", "Udānapāḷi", "sutta", "mul"],
+      ["s0504m_mul", "Itivuttakapāḷi", "sutta", "mul"],
+      ["s0505m_mul", "Suttanipātapāḷi", "sutta", "mul"],
+      ["s0506m_mul", "Vimānavatthupāḷi", "sutta", "mul"],
+      ["s0507m_mul", "Petavatthupāḷi", "sutta", "mul"],
+      ["s0508m_mul", "Theragāthāpāḷi", "sutta", "mul"],
+      ["s0509m_mul", "Therīgāthāpāḷi", "sutta", "mul"],
+      ["s0510m1_mul", "Apadānapāḷi 1", "sutta", "mul"],
+      ["s0510m2_mul", "Apadānapāḷi 2 / Therī-apadānapāḷi", "sutta", "mul"],
+      ["s0511m_mul", "Buddhavaṃsapāḷi", "sutta", "mul"],
+      ["s0512m_mul", "Cariyāpiṭakapāḷi", "sutta", "mul"],
+      ["s0513m_mul", "Jātakapāḷi 1", "sutta", "mul"],
+      ["s0514m_mul", "Jātakapāḷi 2", "sutta", "mul"],
+      ["s0515m_mul", "Mahāniddesapāḷi", "sutta", "mul"],
+      ["s0516m_mul", "Cūḷaniddesapāḷi", "sutta", "mul"],
+      ["s0517m_mul", "Paṭisambhidāmaggapāḷi", "sutta", "mul"],
+      ["s0518m_nrf", "Milindapañhapāḷi", "sutta", "mul"],
+      ["s0519m_mul", "Nettippakaraṇapāḷi", "sutta", "mul"],
+      ["s0520m_nrf", "Peṭakopadesapāḷi", "sutta", "mul"],
+
+      ["abh01m_mul", "Dhammasaṅgaṇīpāḷi", "abhi", "mul"],
+      ["abh02m_mul", "Vibhaṅgapāḷi", "abhi", "mul"],
+      ["abh03m1_mul", "Dhātukathāpāḷi", "abhi", "mul"],
+      ["abh03m2_mul", "Puggalapaññattipāḷi", "abhi", "mul"],
+      ["abh03m3_mul", "Kathāvatthupāḷi", "abhi", "mul"],
+      ["abh03m4_mul", "Yamakapāḷi 1", "abhi", "mul"],
+      ["abh03m5_mul", "Yamakapāḷi 2", "abhi", "mul"],
+      ["abh03m6_mul", "Yamakapāḷi 3", "abhi", "mul"],
+      ["abh03m7_mul", "Paṭṭhānapāḷi 1", "abhi", "mul"],
+      ["abh03m8_mul", "Paṭṭhānapāḷi 2", "abhi", "mul"],
+      ["abh03m9_mul", "Paṭṭhānapāḷi 3", "abhi", "mul"],
+      ["abh03m10_mul", "Paṭṭhānapāḷi 4", "abhi", "mul"],
+      ["abh03m11_mul", "Paṭṭhānapāḷi 5", "abhi", "mul"],
+
+      // Aṭṭhakathā (Commentaries)
+      ["vin01a_att", "Pārājikakaṇḍa-aṭṭhakathā", "vin", "att"],
+      ["vin02a1_att", "Pācittiya-aṭṭhakathā / Bhikkhunīvibhaṅgavaṇṇanā", "vin", "att"],
+      ["vin02a2_att", "Mahāvagga-aṭṭhakathā (Vinaya)", "vin", "att"],
+      ["vin02a3_att", "Cūḷavagga-aṭṭhakathā", "vin", "att"],
+      ["vin02a4_att", "Parivāra-aṭṭhakathā", "vin", "att"],
+
+      ["s0101a_att", "Sīlakkhandhavagga-aṭṭhakathā", "sutta", "att"],
+      ["s0102a_att", "Mahāvagga-aṭṭhakathā (Dīgha Nikāya)", "sutta", "att"],
+      ["s0103a_att", "Pāthikavagga-aṭṭhakathā", "sutta", "att"],
+      ["s0201a_att", "Mūlapaṇṇāsa-aṭṭhakathā", "sutta", "att"],
+      ["s0202a_att", "Majjhimapaṇṇāsa-aṭṭhakathā", "sutta", "att"],
+      ["s0203a_att", "Uparipaṇṇāsa-aṭṭhakathā", "sutta", "att"],
+      ["s0301a_att", "Sagāthāvagga-aṭṭhakathā", "sutta", "att"],
+      ["s0302a_att", "Nidānavagga-aṭṭhakathā", "sutta", "att"],
+      ["s0303a_att", "Khandhavagga-aṭṭhakathā", "sutta", "att"],
+      ["s0304a_att", "Saḷāyatanavagga-aṭṭhakathā", "sutta", "att"],
+      ["s0305a_att", "Mahāvagga-aṭṭhakathā (Saṃyutta Nikāya)", "sutta", "att"],
+      ["s0401a_att", "Ekakanipāta-aṭṭhakathā", "sutta", "att"],
+      ["s0402a_att", "Duka-Tika-Catukkanipāta-aṭṭhakathā", "sutta", "att"],
+      ["s0403a_att", "Pañcaka-Chakka-Sattakanipāta-aṭṭhakathā", "sutta", "att"],
+      ["s0404a_att", "Aṭṭhakādinipāta-aṭṭhakathā", "sutta", "att"],
+      ["s0501a_att", "Khuddakapāṭha-aṭṭhakathā", "sutta", "att"],
+      ["s0502a_att", "Dhammapada-aṭṭhakathā", "sutta", "att"],
+      ["s0503a_att", "Udāna-aṭṭhakathā", "sutta", "att"],
+      ["s0504a_att", "Itivuttaka-aṭṭhakathā", "sutta", "att"],
+      ["s0505a_att", "Suttanipāta-aṭṭhakathā", "sutta", "att"],
+      ["s0506a_att", "Vimānavatthu-aṭṭhakathā", "sutta", "att"],
+      ["s0507a_att", "Petavatthu-aṭṭhakathā", "sutta", "att"],
+      ["s0508a1_att", "Theragāthā-aṭṭhakathā 1", "sutta", "att"],
+      ["s0508a2_att", "Theragāthā-aṭṭhakathā 2", "sutta", "att"],
+      ["s0509a_att", "Therīgāthā-aṭṭhakathā", "sutta", "att"],
+      ["s0510a_att", "Apadāna-aṭṭhakathā", "sutta", "att"],
+      ["s0511a_att", "Buddhavaṃsa-aṭṭhakathā", "sutta", "att"],
+      ["s0512a_att", "Cariyāpiṭaka-aṭṭhakathā", "sutta", "att"],
+      ["s0513a1_att", "Jātaka-aṭṭhakathā 1", "sutta", "att"],
+      ["s0513a2_att", "Jātaka-aṭṭhakathā 2", "sutta", "att"],
+      ["s0513a3_att", "Jātaka-aṭṭhakathā 3", "sutta", "att"],
+      ["s0513a4_att", "Jātaka-aṭṭhakathā 4", "sutta", "att"],
+      ["s0514a1_att", "Jātaka-aṭṭhakathā 5", "sutta", "att"],
+      ["s0514a2_att", "Jātaka-aṭṭhakathā 6", "sutta", "att"],
+      ["s0514a3_att", "Jātaka-aṭṭhakathā 7", "sutta", "att"],
+      ["s0515a_att", "Mahāniddesa-aṭṭhakathā", "sutta", "att"],
+      ["s0516a_att", "Cūḷaniddesa-aṭṭhakathā", "sutta", "att"],
+      ["s0517a_att", "Paṭisambhidāmagga-aṭṭhakathā", "sutta", "att"],
+      ["s0519a_att", "Nettippakaraṇa-aṭṭhakathā", "sutta", "att"],
+
+      ["abh01a_att", "Dhammasaṅgaṇī-aṭṭhakathā (Aṭṭhasālinī)", "abhi", "att"],
+      ["abh02a_att", "Sammohavinodanī-aṭṭhakathā", "abhi", "att"],
+      ["abh03a_att", "Pañcapakaraṇa-aṭṭhakathā", "abhi", "att"],
+
+      // Ṭīkā & Anuṭīkā (Sub-commentaries)
+      ["vin01t1_tik", "Sāratthadīpanī-ṭīkā 1", "vin", "tik"],
+      ["vin01t2_tik", "Sāratthadīpanī-ṭīkā 2", "vin", "tik"],
+      ["vin02t_tik", "Sāratthadīpanī-ṭīkā 3", "vin", "tik"],
+      ["vin04t_nrf", "Dvemātikāpāḷi", "vin", "tik"],
+      ["vin05t_nrf", "Vinayasaṅgaha-aṭṭhakathā", "vin", "tik"],
+      ["vin06t_nrf", "Vajirabuddhi-ṭīkā", "vin", "tik"],
+      ["vin07t_nrf", "Vimativinodanī-ṭīkā", "vin", "tik"],
+      ["vin08t_nrf", "Vinayālaṅkāra-ṭīkā", "vin", "tik"],
+      ["vin09t_nrf", "Kaṅkhāvitaraṇīpurāṇa-ṭīkā / Kaṅkhāvitaraṇī-abhinavaṭīkā", "vin", "tik"],
+      ["vin10t_nrf", "Vinayavinicchaya-Uttaravinicchaya", "vin", "tik"],
+      ["vin11t_nrf", "Vinayavinicchaya-ṭīkā", "vin", "tik"],
+      ["vin12t_nrf", "Pācityādiyojanāpāḷi", "vin", "tik"],
+      ["vin13t_nrf", "Khuddasikkhā-Mūlasikkhā", "vin", "tik"],
+
+      ["s0101t_tik", "Sīlakkhandhavagga-ṭīkā", "sutta", "tik"],
+      ["s0102t_tik", "Mahāvagga-ṭīkā (Dīgha Nikāya)", "sutta", "tik"],
+      ["s0103t_tik", "Pāthikavagga-ṭīkā", "sutta", "tik"],
+      ["s0104t_nrf", "Sīlakkhandhavagga-abhinavaṭīkā 1", "sutta", "tik"],
+      ["s0105t_nrf", "Sīlakkhandhavagga-abhinavaṭīkā 2", "sutta", "tik"],
+      ["s0201t_tik", "Mūlapaṇṇāsa-ṭīkā", "sutta", "tik"],
+      ["s0202t_tik", "Majjhimapaṇṇāsa-ṭīkā", "sutta", "tik"],
+      ["s0203t_tik", "Uparipaṇṇāsa-ṭīkā", "sutta", "tik"],
+      ["s0301t_tik", "Sagāthāvagga-ṭīkā", "sutta", "tik"],
+      ["s0302t_tik", "Nidānavagga-ṭīkā", "sutta", "tik"],
+      ["s0303t_tik", "Khandhavagga-ṭīkā", "sutta", "tik"],
+      ["s0304t_tik", "Saḷāyatanavagga-ṭīkā", "sutta", "tik"],
+      ["s0305t_tik", "Mahāvagga-ṭīkā (Saṃyutta Nikāya)", "sutta", "tik"],
+      ["s0401t_tik", "Ekakanipāta-ṭīkā", "sutta", "tik"],
+      ["s0402t_tik", "Duka-Tika-Catukkanipāta-ṭīkā", "sutta", "tik"],
+      ["s0403t_tik", "Pañcaka-Chakka-Sattakanipāta-ṭīkā", "sutta", "tik"],
+      ["s0404t_tik", "Aṭṭhakādinipāta-ṭīkā", "sutta", "tik"],
+      ["s0519t_tik", "Nettippakaraṇa-ṭīkā", "sutta", "tik"],
+      ["s0501t_nrf", "Nettivibhāvinī", "sutta", "tik"],
+
+      ["abh01t_tik", "Dhammasaṅgaṇī-mūlaṭīkā", "abhi", "tik"],
+      ["abh02t_tik", "Vibhaṅga-mūlaṭīkā / Vibhaṅga-anuṭīkā", "abhi", "tik"],
+      ["abh03t_tik", "Pañcapakaraṇa-mūlaṭīkā", "abhi", "tik"],
+      ["abh04t_nrf", "Dhammasaṅgaṇī-anuṭīkā", "abhi", "tik"],
+      ["abh05t_nrf", "Pañcapakaraṇa-anuṭīkā", "abhi", "tik"],
+      ["abh06t_nrf", "Abhidhammāvatāra-Nāmarūpapariccheda", "abhi", "tik"],
+      ["abh07t_nrf", "Abhidhammatthasaṅgaha / Abhidhammatthavibhāvinī-ṭīkā", "abhi", "tik"],
+      ["abh08t_nrf", "Abhidhammāvatāra-purāṇaṭīkā", "abhi", "tik"],
+      ["abh09t_nrf", "Abhidhammamātikāpāḷi / Mohavicchedanī", "abhi", "tik"],
+
+      // Extra Texts, Visuddhimagga & e01-e12
+      ["e0101n_mul", "Visuddhimagga 1", "extra", "mul"],
+      ["e0102n_mul", "Visuddhimagga 2", "extra", "mul"],
+      ["e0103n_att", "Visuddhimagga-mahāṭīkā 1", "extra", "att"],
+      ["e0104n_att", "Visuddhimagga-mahāṭīkā 2", "extra", "att"],
+      ["e0105n_nrf", "Visuddhimagga-nidānakathā", "extra", "ext"],
+      ["e0901n_nrf", "Dīgha Nikāya (Saṅgāyana Pucchā)", "extra", "ext"],
+      ["e0902n_nrf", "Majjhima Nikāya (Saṅgāyana Pucchā)", "extra", "ext"],
+      ["e0903n_nrf", "Saṃyutta Nikāya (Saṅgāyana Pucchā)", "extra", "ext"],
+      ["e0904n_nrf", "Aṅguttara Nikāya (Saṅgāyana Pucchā)", "extra", "ext"],
+      ["e0905n_nrf", "Vinaya Piṭaka (Saṅgāyana Pucchā)", "extra", "ext"],
+      ["e0906n_nrf", "Abhidhamma Piṭaka (Saṅgāyana Pucchā)", "extra", "ext"],
+      ["e0907n_nrf", "Aṭṭhakathā (Saṅgāyana Pucchā)", "extra", "att"],
+      ["e0201n_nrf", "Niruttidīpanī", "extra", "ext"],
+      ["e0301n_nrf", "Paramatthadīpanī Saṅgahamahāṭīkāpāṭha", "extra", "tik"],
+      ["e0401n_nrf", "Anudīpanīpāṭha", "extra", "tik"],
+      ["e0501n_nrf", "Paṭṭhānuddesadīpanīpāṭha", "extra", "ext"],
+      ["e0601n_nrf", "Namakkāra-ṭīkā", "extra", "tik"],
+      ["e0602n_nrf", "Mahāpaṇāmapāṭha", "extra", "ext"],
+      ["e0603n_nrf", "Lakkhaṇāto Buddhathomanāgāthā", "extra", "ext"],
+      ["e0604n_nrf", "Sutavandanā", "extra", "ext"],
+      ["e0606n_nrf", "Kamalāñjali", "extra", "ext"],
+      ["e0605n_nrf", "Jinālaṅkāra", "extra", "ext"],
+      ["e0607n_nrf", "Pajjamadhu", "extra", "ext"],
+      ["e0608n_nrf", "Buddhaguṇagāthāvalī", "extra", "ext"],
+      ["e0701n_nrf", "Cūḷaganthavaṃsa", "extra", "ext"],
+      ["e0703n_nrf", "Mahāvaṃsa", "extra", "ext"],
+      ["e0702n_nrf", "Sāsanavaṃsa", "extra", "ext"],
+      ["e0802n_nrf", "Kaccāyanabyākaraṇa", "extra", "ext"],
+      ["e0801n_nrf", "Moggallānasuttapāṭha / Moggallānabyākaraṇa", "extra", "ext"],
+      ["e0803n_nrf", "Padarūpasiddhi", "extra", "ext"],
+      ["e0804n_nrf", "Bālappabodhana", "extra", "ext"],
+      ["e0805n_nrf", "Rūpasiddhi-dīpanī", "extra", "ext"],
+      ["e0806n_nrf", "Moggallānapañcikā", "extra", "ext"],
+      ["e0807n_nrf", "Payogasiddhipāṭha", "extra", "ext"],
+      ["e0808n_nrf", "Vuttodayapāṭha", "extra", "ext"],
+      ["e0809n_nrf", "Abhidhānappadīpikāpāṭha", "extra", "ext"],
+      ["e0810n_nrf", "Abhidhānappadīpikā-ṭīkā", "extra", "tik"],
+      ["e0811n_nrf", "Subodhālaṅkārapāṭha", "extra", "ext"],
+      ["e0812n_nrf", "Subodhālaṅkāra-ṭīkā", "extra", "tik"],
+      ["e0813n_nrf", "Bālāvatāra-Gaṇṭhipadatthavinicchayasāra", "extra", "ext"],
+      ["e1005n_nrf", "Lokanīti", "extra", "ext"],
+      ["e1006n_nrf", "Suttantanīti", "extra", "ext"],
+      ["e1007n_nrf", "Sūrassatīnīti", "extra", "ext"],
+      ["e1004n_nrf", "Dhammapadaṭṭhakathāgāthā (Nīti)", "extra", "ext"],
+      ["e1003n_nrf", "Rājanīti", "extra", "ext"],
+      ["e1001n_nrf", "Dhammanīti", "extra", "ext"],
+      ["e1002n_nrf", "Mahānīti", "extra", "ext"],
+      ["e1009n_nrf", "Naradakkhadīpanī", "extra", "ext"],
+      ["e1010n_nrf", "Caturārakkhadīpanī", "extra", "ext"],
+      ["e1008n_nrf", "Cāṇakyanīti", "extra", "ext"],
+      ["e1101n_nrf", "Rasavāhinī", "extra", "ext"],
+      ["e1102n_nrf", "Sīhaḷavatthu", "extra", "ext"],
+      ["e1103n_nrf", "Sahassavatthu", "extra", "ext"],
+      ["e1201n_nrf", "Moggallānavuttivivaraṇapañcikā", "extra", "ext"],
+      ["e1202n_nrf", "Pañcikāpadīpa", "extra", "ext"],
+      ["e1203n_nrf", "Sammohavinodanī (Grammar)", "extra", "ext"],
+      ["e1204n_nrf", "Sammohavinodanī-yantapadīpa", "extra", "ext"],
+      ["e1205n_nrf", "Saddasāratthajālinī", "extra", "ext"],
+      ["e1206n_nrf", "Saddasāratthajālinī-ṭīkā", "extra", "tik"],
+      ["e1207n_nrf", "Dhātuvatthu", "extra", "ext"],
+      ["e1208n_nrf", "Saddanītidīpanī", "extra", "ext"],
+      ["e1209n_nrf", "Cullanirutti", "extra", "ext"],
+      ["e1210n_nrf", "Niruttisārajālinī", "extra", "ext"],
+      ["e1211n_nrf", "Bālappabodhana (Sinhala)", "extra", "ext"],
+      ["e1212n_nrf", "Padasādhana", "extra", "ext"],
+      ["e1213n_nrf", "Saddabindupakaraṇa", "extra", "ext"],
+      ["e1214n_nrf", "Kaccāyanadhātumañjūsā", "extra", "ext"],
+      ["e1215n_nrf", "Vinayadharaparohana", "extra", "ext"]
+    ];
+
+    const GROUP_META = {
+      vin:   { title: "Vinaya Piṭaka (Monastic Discipline)", order: 1 },
+      sutta: { title: "Sutta Piṭaka (Discourses)", order: 2 },
+      abhi:  { title: "Abhidhamma Piṭaka (Higher Doctrine)", order: 3 },
+      extra: { title: "Extra Texts, Visuddhimagga, Grammar, Nīti & Chronicles", order: 4 }
+    };
+
+    const LAYER_BADGE = {
+      mul: { label: "Mūla / Pāḷi", cls: "tag-mul" },
+      att: { label: "Aṭṭhakathā", cls: "tag-att" },
+      tik: { label: "Ṭīkā / Anuṭīkā", cls: "tag-tik" },
+      ext: { label: "Extra Text", cls: "tag-ext" }
+    };
+
+    let activeFilter = "all";
+    let searchQuery = "";
+
+    const catalogEl = document.getElementById("catalogContainer");
+    const emptyEl = document.getElementById("emptyState");
+    const statsEl = document.getElementById("resultStats");
+    const searchInput = document.getElementById("searchInput");
+
+    function matchesFilter(item) {
+      const [code, title, cat, layer] = item;
+      if (activeFilter === "all") return true;
+      if (activeFilter.startsWith("layer-")) {
+        return layer === activeFilter.replace("layer-", "");
+      }
+      return cat === activeFilter;
+    }
+
+    function matchesSearch(item) {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.trim().toLowerCase();
+      const [code, title] = item;
+      const fileName = `${code}_en.html`.toLowerCase();
+      return title.toLowerCase().includes(q) || code.toLowerCase().includes(q) || fileName.includes(q);
+    }
+
+    function render() {
+      const filtered = ITEMS.filter(it => matchesFilter(it) && matchesSearch(it));
+      statsEl.textContent = `Showing ${filtered.length} of ${ITEMS.length} texts`;
+
+      if (filtered.length === 0) {
+        catalogEl.innerHTML = "";
+        emptyEl.style.display = "block";
+        return;
+      }
+
+      emptyEl.style.display = "none";
+
+      const grouped = { vin: [], sutta: [], abhi: [], extra: [] };
+      for (const item of filtered) {
+        grouped[item[2]].push(item);
+      }
+
+      const sectionsHtml = Object.entries(GROUP_META)
+        .sort((a, b) => a[1].order - b[1].order)
+        .filter(([key]) => grouped[key].length > 0)
+        .map(([key, meta]) => {
+          const cards = grouped[key].map(([code, title, , layer]) => {
+            const fileName = `${code}_en.html`;
+            const href = `${BASE_PATH}${fileName}`;
+            const badge = LAYER_BADGE[layer] || LAYER_BADGE.ext;
+
+            return `
+              <a class="item-card" href="${href}" title="Open ${fileName}">
+                <div class="item-top">
+                  <span class="item-code">${fileName}</span>
+                  <span class="tag ${badge.cls}">${badge.label}</span>
+                </div>
+                <div class="item-title">${title}</div>
+              </a>
+            `;
+          }).join("");
+
+          return `
+            <section class="group-section">
+              <div class="group-header">
+                <h2 class="group-title">${meta.title}</h2>
+                <span class="group-count">${grouped[key].length} files</span>
+              </div>
+              <div class="item-grid">${cards}</div>
+            </section>
+          `;
+        }).join("");
+
+      catalogEl.innerHTML = sectionsHtml;
+    }
+
+    document.getElementById("categoryPills").addEventListener("click", (e) => {
+      const btn = e.target.closest(".pill");
+      if (!btn) return;
+      document.querySelectorAll("#categoryPills .pill").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      activeFilter = btn.dataset.filter;
+      render();
+    });
+
+    searchInput.addEventListener("input", (e) => {
+      searchQuery = e.target.value;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
