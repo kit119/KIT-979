@@ -286,13 +286,14 @@
   </style>
 </head>
 <body>
+
   <div class="container">
     <div class="topbar">
       <a href="index.html" class="back-link">← หน้าหลัก KIT-979</a>
       <div class="lang-switch">
         <span class="active">ไทย (TH)</span>
         <a href="index-my.html">မြန်မာ (MY)</a>
-        <a href="index-en.html">EN / Roman</a>
+        <a href="index-en.html">Roman (EN)</a>
       </div>
     </div>
 
@@ -334,8 +335,9 @@
 
   <script>
     // ปรับโฟลเดอร์ปลายทางของไฟล์ *_th.html ได้ที่นี่ (เช่น "th/" หรือ "")
-    const BASE_PATH = "th/";
-
+    const BASE_PATH = "https://kit119.github.io/KIT-979/th/";
+    const ARCH_PATH = "https://archive.org/download/universal-tripitaka-aitrans-th/";
+    
     // รูปแบบ: [รหัสฐาน, ชื่อคัมภีร์, หมวด ('vin'|'sutta'|'abhi'|'extra'), ชั้น ('mul'|'att'|'tik'|'ext')]
     const ITEMS = [
       // พระไตรปิฎก (มูละ)
@@ -631,18 +633,20 @@
         .filter(([key]) => grouped[key].length > 0)
         .map(([key, meta]) => {
           const cards = grouped[key].map(([code, title, , layer]) => {
-            const fileName = `${code}_th.html`;
-            const href = `${BASE_PATH}${fileName}`;
+            const base = `${code}_th`; 
             const badge = LAYER_BADGE[layer] || LAYER_BADGE.ext;
 
             return `
-              <a class="item-card" href="${href}" title="เปิดไฟล์ ${fileName}">
+              <div class="item-card">
+                <a class="item-title" href="${BASE_PATH}${base}.html" target="_blank" style="text-decoration:none; color:inherit;">${title}</a>
                 <div class="item-top">
-                  <span class="item-code">${fileName}</span>
+                  <div style="display:flex; gap:6px; align-items:center;">
+                    <a class="item-code" href="${ARCH_PATH}${base}.pdf" target="_blank">📕</a>
+                    <a class="item-code" onclick="playMp3('${ARCH_PATH}${base}.mp3', '${title}')">🎧</a>
+                  </div>
                   <span class="tag ${badge.cls}">${badge.label}</span>
                 </div>
-                <div class="item-title">${title}</div>
-              </a>
+              </div>
             `;
           }).join("");
 
@@ -656,7 +660,7 @@
             </section>
           `;
         }).join("");
-
+        
       catalogEl.innerHTML = sectionsHtml;
     }
 
@@ -675,6 +679,11 @@
     });
 
     render();
+    
   </script>
+  
+  <script>function playMp3(e,l){var t=document.getElementById("mp3Player");t.style.display="block",t.title=l,t.src.endsWith(e)&&!t.paused?t.pause():(t.src=e,t.play())}</script>
+  <audio id="mp3Player" controls preload="none" style="position:fixed;bottom:0;left:0;width:100%;z-index:99;background:#fff;box-shadow:0 -4px 16px rgba(0,0,0,.12);display:none;"></audio>
+
 </body>
 </html>
